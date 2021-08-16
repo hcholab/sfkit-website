@@ -1,0 +1,4 @@
+Flask==2.0.1
+waitress==2.0.0
+google_api_python_client==2.15.0
+protobuf==3.17.3

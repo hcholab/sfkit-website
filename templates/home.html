@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h2>{% block title %} Hi! Let's run Secure GWAS, shall we? {% endblock %}</h2>
+{% endblock %}
+
+{% block content %}
+  <form method="post">
+    What Role are you? 
+    <input type="number" name="role" value={{role}}><br>
+    <input type="submit" value="Submit">
+  </form>
+{% endblock %}
