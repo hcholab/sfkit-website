@@ -163,12 +163,12 @@ def get_vm_external_ip_address(compute, project, zone, instance):
 def get_ip_addresses_from_bucket():
     print("Getting ip_addresses from bucket")
     storage_client = storage.Client(project=constants.PROJECT_NAME)
-    for i in range(101):
+    for i in range(1001):
         if len(list(storage_client.list_blobs(constants.BUCKET_NAME, prefix="ip_addresses/"))) < 4:
             time.sleep(1)
         else:
             break
-        if i == 100:
+        if i == 1000:
             print("The other parties don't seem to be showing up...")
             raise Exception("The other parties don't seem to be showing up...")
     ip_addresses = []

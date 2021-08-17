@@ -1,4 +1,5 @@
 Flask==2.0.1
 waitress==2.0.0
-google_api_python_client==2.15.0
+google_api_python_client==2.17.0
+google-cloud-storage
 protobuf==3.17.3

@@ -114,8 +114,12 @@ def start_gwas(project, instance, role):
 if __name__ == "__main__":
     app.secret_key = os.urandom(12).hex()
 
-    p = 5000
-    if len(sys.argv) > 1:
-        p = sys.argv[1]
-    serve(app, host="127.0.0.1", port=p)
+    # p = 5000
+    # if len(sys.argv) > 1:
+    #     p = sys.argv[1]
+    # # serve(app, host="127.0.0.1", port=p)
+    # p = os.environ.get('PORT')
+    serve(app, port=8080)
     # app.run(debug=False, port=p)
+
+    # app.run()
