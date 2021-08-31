@@ -1,5 +1,5 @@
 # TODO: make dynamic
-PROJECT_NAME = "broad-cho-priv1"
+SERVER_PROJECT_NAME = "broad-cho-priv1"
 ZONE = "us-central1-a"
 REGION = "us-central1"
 NETWORK_NAME = "secure-gwas"

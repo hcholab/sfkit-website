@@ -1,5 +1,6 @@
 
 import os
+import sys
 import time
 
 from flask import Flask, flash, redirect, render_template, request, url_for
@@ -10,16 +11,23 @@ from utils.google_cloud.google_cloud_compute import GoogleCloudCompute
 from utils.google_cloud.google_cloud_storage import GoogleCloudStorage
 
 app = Flask(__name__)
+app.secret_key = os.urandom(12).hex()
 
-gcloudCompute = GoogleCloudCompute(constants.PROJECT_NAME)
-gcloudStorage = GoogleCloudStorage(constants.PROJECT_NAME)
+gcloudCompute: GoogleCloudCompute
+gcloudStorage = GoogleCloudStorage(constants.SERVER_PROJECT_NAME)
 
 
 @app.route("/", methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
-        role = request.form['role']
+        project: str = request.form['project']
+        if not project:
+            flash("Project is required")
 
+        global gcloudCompute
+        gcloudCompute = GoogleCloudCompute(project)
+
+        role: str = request.form['role']
         if not role:
             flash("Role is required")
         else:
@@ -38,15 +46,13 @@ def home():
             blob = bucket.blob("ip_addresses/IP_ADDR_P" + role)
             blob.upload_from_string(vm_external_ip_address)
 
-            return redirect(url_for("start_gwas", project=constants.PROJECT_NAME, instance=instance, role=role))
+            return redirect(url_for("start_gwas", project=project, instance=instance, role=role))
 
-    return render_template('home.html', project=constants.PROJECT_NAME)
+    return render_template('home.html', project=constants.SERVER_PROJECT_NAME)
 
 
 @app.route("/start_gwas/<string:project>/<string:instance>/<string:role>", methods=['GET'])
 def start_gwas(project, instance, role):
-    # TODO: make peerings? - only necessary for working with distinct projects
-
     ip_addresses = gcloudStorage.get_ip_addresses_from_bucket()
     time.sleep(1 + 5 * int(role))
 
@@ -67,20 +73,15 @@ def start_gwas(project, instance, role):
                               "ip_addresses/IP_ADDR_P" + role)
 
     # Stop running instances
-    gcloudCompute.stop_instance(project, constants.ZONE, instance)
+    gcloudCompute.stop_instance(constants.ZONE, instance)
 
     return "I love gwas so much!"
 
 
 if __name__ == "__main__":
-    app.secret_key = os.urandom(12).hex()
 
-    # p = 5000
-    # if len(sys.argv) > 1:
-    #     p = sys.argv[1]
-    # # serve(app, host="127.0.0.1", port=p)
-    # p = os.environ.get('PORT')
-    serve(app, port=5000)
+    p = 5000
+    if len(sys.argv) > 1:
+        p = sys.argv[1]
+    serve(app, port=p)
     # app.run(debug=False, port=p)
-
-    # app.run()

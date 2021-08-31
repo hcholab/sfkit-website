@@ -1,8 +1,8 @@
 
 import time
 
-from google.cloud import storage
 import constants
+from google.cloud import storage
 from utils.google_cloud_general import GoogleCloudGeneral
 
 
@@ -10,8 +10,8 @@ class GoogleCloudStorage(GoogleCloudGeneral):
 
     def __init__(self, project) -> None:
         super().__init__(project)
-        self.storage_client = storage.Client(project=constants.PROJECT_NAME)
-        
+        self.storage_client = storage.Client(project=self.project)
+
     def validate_buckets(self):
         buckets = [bucket.name for bucket in self.storage_client.list_buckets()]
 

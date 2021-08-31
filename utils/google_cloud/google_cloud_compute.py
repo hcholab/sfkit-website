@@ -14,7 +14,7 @@ class GoogleCloudCompute(GoogleCloudGeneral):
 
     def validate_networking(self):
         existing_nets = [net['name'] for net in self.compute.networks().list(
-            project=constants.PROJECT_NAME).execute()['items']]
+            project=self.project).execute()['items']]
 
         if constants.NETWORK_NAME not in existing_nets:
             self.create_network(constants.NETWORK_NAME)
@@ -210,4 +210,4 @@ class GoogleCloudCompute(GoogleCloudGeneral):
                     role=role),
                 'echo completed GwasClient',
             ]
-            self.execute_shell_scrilt_on_instance(instance, cmds)
+            self.execute_shell_script_on_instance(instance, cmds)
