@@ -13,10 +13,6 @@ from utils.google_cloud.google_cloud_storage import GoogleCloudStorage
 app = Flask(__name__)
 app.secret_key = os.urandom(12).hex()
 
-gcloudCompute: GoogleCloudCompute
-gcloudStorage = GoogleCloudStorage(constants.SERVER_PROJECT_NAME)
-
-
 @app.route("/", methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
@@ -24,8 +20,8 @@ def home():
         if not project:
             flash("Project is required")
 
-        global gcloudCompute
         gcloudCompute = GoogleCloudCompute(project)
+        gcloudStorage = GoogleCloudStorage(constants.SERVER_PROJECT_NAME)
 
         role: str = request.form['role']
         if not role:
@@ -53,6 +49,10 @@ def home():
 
 @app.route("/start_gwas/<string:project>/<string:instance>/<string:role>", methods=['GET'])
 def start_gwas(project, instance, role):
+
+    gcloudCompute = GoogleCloudCompute(project)
+    gcloudStorage = GoogleCloudStorage(constants.SERVER_PROJECT_NAME)
+
     ip_addresses = gcloudStorage.get_ip_addresses_from_bucket()
     time.sleep(1 + 5 * int(role))
 

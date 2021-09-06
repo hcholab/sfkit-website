@@ -1,3 +1,4 @@
+import os
 import time
 
 import constants
@@ -81,6 +82,11 @@ class GoogleCloudCompute(GoogleCloudGeneral):
         return self.get_vm_external_ip_address(constants.ZONE, instance)
 
     def create_instance(self, zone, name):
+
+        startup_script = open(
+            os.path.join(
+                os.path.dirname(__file__), '../../startup-script.sh'), 'r').read()
+
         instance_body = {
             "name": name,
             "machineType": "zones/{}/machineTypes/{}".format(zone, constants.MACHINE_TYPE),
@@ -96,16 +102,28 @@ class GoogleCloudCompute(GoogleCloudGeneral):
                 "initializeParams": {
                     "sourceImage": "projects/debian-cloud/global/images/family/debian-9"
                 }
-            }]
+            }],
+            # Allow the instance to access cloud storage and logging.
+            # Logging access necessary for the startup-script to work.
+            "serviceAccounts": [{
+                'email': 'default',
+                'scopes': [
+                    'https://www.googleapis.com/auth/logging.write'
+                ]
+            }],
+            'metadata': {
+                'items': [{
+                    # Startup script is automatically executed by the
+                    # instance upon startup.
+                    'key': 'startup-script',
+                    'value': startup_script
+                }]
+            }
         }
         operation = self.compute.instances().insert(
             project=self.project, zone=zone, body=instance_body).execute()
 
         self.wait_for_zoneOperation(zone, operation['name'])
-        time.sleep(10)
-        self.transfer_file_to_instance(name, 'startup-script.sh', '~/')
-
-        self.execute_shell_script_on_instance(name, ['chmod u+x startup-script.sh', './startup-script.sh'])
 
     def start_instance(self, zone, instance):
         operation = self.compute.instances().start(
@@ -175,25 +193,25 @@ class GoogleCloudCompute(GoogleCloudGeneral):
 
     def update_ip_addresses_on_vm(self, ip_addresses, instance, role):
         cmds = [
-            'cd ~/secure-gwas; rm log/*; rm cache/*'
+            'cd /home/secure-gwas; rm log/*; rm cache/*'
         ]
         for (k, v) in ip_addresses:
             cmds.append(
-                'sed -i "s|^{k}.*$|{k} {v}|g" ~/secure-gwas/par/test.par.{role}.txt'.format(k=k, v=v, role=role))
+                'sed -i "s|^{k}.*$|{k} {v}|g" /home/secure-gwas/par/test.par.{role}.txt'.format(k=k, v=v, role=role))
         self.execute_shell_script_on_instance(instance, cmds)
 
     def run_data_sharing(self, instance, role):
         cmds = []
         if str(role) != "3":
             cmds = [
-                'cd ~/secure-gwas/code',
+                'cd /home/secure-gwas/code',
                 'bin/DataSharingClient {role} ../par/test.par.{role}.txt'.format(
                     role=role),
                 'echo completed DataSharing',
             ]
         else:
             cmds = [
-                'cd ~/secure-gwas/code',
+                'cd /home/secure-gwas/code',
                 'bin/DataSharingClient {role} ../par/test.par.{role}.txt ../test_data/'.format(
                     role=role),
                 'echo completed'
@@ -205,7 +223,7 @@ class GoogleCloudCompute(GoogleCloudGeneral):
         cmds = []
         if str(role) != "3":
             cmds = [
-                'cd ~/secure-gwas/code',
+                'cd /home/secure-gwas/code',
                 'bin/GwasClient {role} ../par/test.par.{role}.txt'.format(
                     role=role),
                 'echo completed GwasClient',
