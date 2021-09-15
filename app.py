@@ -33,7 +33,7 @@ def home():
             gcloudCompute.validate_networking()
 
             # Check/Set-up correct VM instance(s)
-            vm_external_ip_address = gcloudCompute.validate_instance(instance)
+            vm_external_ip_address = gcloudCompute.validate_instance(instance, role)
 
             # Check/Set-up correct Storage bucket(s)
             bucket = gcloudStorage.validate_buckets()

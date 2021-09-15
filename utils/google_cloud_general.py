@@ -11,7 +11,6 @@ class GoogleCloudGeneral:
 
     # Execute series of shell commands on Google Cloud Compute Instance
     def execute_shell_script_on_instance(self, instance, cmds):
-        cmds = ['cd ..'] + cmds
         cmd = '; '.join(cmds)
         script = 'gcloud compute ssh {} --project {} --command \'{}\''.format(
             instance, self.project, cmd)

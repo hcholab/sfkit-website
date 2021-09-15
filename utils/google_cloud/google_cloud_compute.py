@@ -70,11 +70,12 @@ class GoogleCloudCompute(GoogleCloudGeneral):
             project=self.project, body=firewall_body).execute()
         self.wait_for_operation(operation['name'])
 
-    def validate_instance(self, instance):
+    def validate_instance(self, instance, role):
         existing_instances = self.list_instances(constants.ZONE)
 
         if not existing_instances or instance not in existing_instances:
             self.create_instance(constants.ZONE, instance)
+            self.wait_for_startup_script(role)
 
         self.start_instance(constants.ZONE, instance)
         time.sleep(5)
@@ -82,14 +83,21 @@ class GoogleCloudCompute(GoogleCloudGeneral):
         return self.get_vm_external_ip_address(constants.ZONE, instance)
 
     def create_instance(self, zone, name):
+        print("Creating VM instance with name ", name)
 
+        image_response = self.compute.images().getFromFamily(
+            project='debian-cloud', family='debian-11').execute()
+        source_disk_image = image_response['selfLink']
+
+        # Configure the machine
+        machine_type = "zones/%s/machineTypes/e2-medium" % zone
         startup_script = open(
             os.path.join(
                 os.path.dirname(__file__), '../../startup-script.sh'), 'r').read()
 
         instance_body = {
             "name": name,
-            "machineType": "zones/{}/machineTypes/{}".format(zone, constants.MACHINE_TYPE),
+            "machineType": machine_type,
             "networkInterfaces": [{
                 'network': 'projects/{}/global/networks/{}'.format(self.project, constants.NETWORK_NAME),
                 'subnetwork': 'regions/{}/subnetworks/{}'.format(constants.REGION, constants.SUBNET_NAME),
@@ -99,8 +107,9 @@ class GoogleCloudCompute(GoogleCloudGeneral):
             }],
             "disks": [{
                 "boot": True,
+                "autoDelete": True,
                 "initializeParams": {
-                    "sourceImage": "projects/debian-cloud/global/images/family/debian-9"
+                    "sourceImage": source_disk_image
                 }
             }],
             # Allow the instance to access cloud storage and logging.
@@ -108,7 +117,9 @@ class GoogleCloudCompute(GoogleCloudGeneral):
             "serviceAccounts": [{
                 'email': 'default',
                 'scopes': [
-                    'https://www.googleapis.com/auth/logging.write'
+                    'https://www.googleapis.com/auth/devstorage.read_write',
+                    'https://www.googleapis.com/auth/logging.write',
+                    'https://www.googleapis.com/auth/pubsub'
                 ]
             }],
             'metadata': {
@@ -124,13 +135,61 @@ class GoogleCloudCompute(GoogleCloudGeneral):
             project=self.project, zone=zone, body=instance_body).execute()
 
         self.wait_for_zoneOperation(zone, operation['name'])
+        
+    def wait_for_startup_script(self, role):
+        from concurrent.futures import TimeoutError
+        from google.cloud import pubsub_v1
+        import socket
+
+        project_id = "broad-cho-priv2"
+        topic_id = "secure-gwas" + role
+        subscription_id = socket.gethostname() + "-subscribing-to-" + topic_id  
+        timeout = 1200 # seconds
+
+        project_path = f"projects/{project_id}"
+        publisher = pubsub_v1.PublisherClient()
+        topic_path = publisher.topic_path(project_id, topic_id)
+        subscriber = pubsub_v1.SubscriberClient()
+        subscription_path = subscriber.subscription_path(project_id, subscription_id)
+        
+        topic_list = publisher.list_topics(request={"project": project_path})
+        topic_list = list(map(lambda topic: str(topic).split('"')[1], topic_list))
+        if topic_path not in topic_list:
+            print(f"Creating topic {topic_path}")
+            publisher.create_topic(name=topic_path)
+
+        subscription_list = subscriber.list_subscriptions(request={"project": project_path})
+        subscription_list = list(map(lambda topic: str(topic).split('"')[1], subscription_list))
+        if subscription_path not in subscription_list:
+            print(f"Creating subscription {subscription_path}")
+            subscriber.create_subscription(name = subscription_path, topic = topic_path)
+
+        prevTime = time.time()
+        def callback(message: pubsub_v1.subscriber.message.Message) -> None:
+            print(f"Received {message}.")
+            message.ack()
+            streaming_pull_future.cancel()
+            streaming_pull_future.result()
+            print(f"The startup took {time.time() - prevTime} seconds.")
+
+        streaming_pull_future = subscriber.subscribe(subscription_path, callback=callback)
+        print(f"Listening for messages on topic {topic_path}...\n")
+
+        with subscriber:
+            try:
+                streaming_pull_future.result(timeout=timeout)
+            except TimeoutError:
+                streaming_pull_future.cancel()
+                streaming_pull_future.result()
 
     def start_instance(self, zone, instance):
+        print("Starting VM instance with name ", instance)
         operation = self.compute.instances().start(
             project=self.project, zone=zone, instance=instance).execute()
         self.wait_for_zoneOperation(zone, operation['name'])
 
     def stop_instance(self, zone, instance):
+        print("Stopping VM instance with name ", instance)
         operation = self.compute.instances().stop(
             project=self.project, zone=zone, instance=instance).execute()
         self.wait_for_zoneOperation(zone, operation['name'])
@@ -141,6 +200,7 @@ class GoogleCloudCompute(GoogleCloudGeneral):
         return [instance['name'] for instance in result['items']] if 'items' in result else None
 
     def delete_instance(self, zone, name):
+        print("Deleting VM isntance with name ", name)
         return self.compute.instances().delete(project=self.project, zone=zone, instance=name).execute()
 
     def wait_for_operation(self, operation):
@@ -197,7 +257,7 @@ class GoogleCloudCompute(GoogleCloudGeneral):
         ]
         for (k, v) in ip_addresses:
             cmds.append(
-                'sed -i "s|^{k}.*$|{k} {v}|g" /home/secure-gwas/par/test.par.{role}.txt'.format(k=k, v=v, role=role))
+                'sudo sed -i "s|^{k}.*$|{k} {v}|g" par/test.par.{role}.txt'.format(k=k, v=v, role=role))
         self.execute_shell_script_on_instance(instance, cmds)
 
     def run_data_sharing(self, instance, role):
@@ -205,14 +265,14 @@ class GoogleCloudCompute(GoogleCloudGeneral):
         if str(role) != "3":
             cmds = [
                 'cd /home/secure-gwas/code',
-                'bin/DataSharingClient {role} ../par/test.par.{role}.txt'.format(
+                'sudo bin/DataSharingClient {role} ../par/test.par.{role}.txt'.format(
                     role=role),
                 'echo completed DataSharing',
             ]
         else:
             cmds = [
                 'cd /home/secure-gwas/code',
-                'bin/DataSharingClient {role} ../par/test.par.{role}.txt ../test_data/'.format(
+                'sudo bin/DataSharingClient {role} ../par/test.par.{role}.txt ../test_data/'.format(
                     role=role),
                 'echo completed'
             ]
