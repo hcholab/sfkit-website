@@ -1,14 +1,18 @@
 #!/bin/bash
 
+# Sanity check that the startup-script is working
 touch /home/test.txt
-sudo apt-get --assume-yes update
-sudo apt-get --assume-yes install build-essential
-sudo apt-get --assume-yes install clang-3.9
-sudo apt-get --assume-yes install libgmp3-dev
-sudo apt-get --assume-yes install libssl-dev
-sudo apt-get --assume-yes install libomp-dev
-sudo apt-get --assume-yes install git
-sudo apt-get --assume-yes install python3-pip
+
+# Many of the commands need root privileges for the VM
+sudo -s 
+apt-get --assume-yes update
+apt-get --assume-yes install build-essential
+apt-get --assume-yes install clang-3.9
+apt-get --assume-yes install libgmp3-dev
+apt-get --assume-yes install libssl-dev
+apt-get --assume-yes install libomp-dev
+apt-get --assume-yes install git
+apt-get --assume-yes install python3-pip
 pip3 install numpy
 pip3 install google-cloud-pubsub
 echo "done installing packages"
@@ -24,11 +28,11 @@ cp secure-gwas/code/NTL_mod/ZZ.cpp ntl-10.3.0/src/
 cd ntl-10.3.0/src
 ./configure NTL_THREAD_BOOST=on
 make all
-sudo make install
+make install
 echo "done installing NTL library"
 
 cd /home/secure-gwas/code
-COMP=$(which clang++-3.9)
+COMP=$(which clang++)
 sed -i "s|^CPP.*$|CPP = ${COMP}|g" Makefile
 sed -i "s|^INCPATHS.*$|INCPATHS = -I/usr/local/include|g" Makefile
 sed -i "s|^LDPATH.*$|LDPATH = -L/usr/local/lib|g" Makefile
@@ -40,4 +44,3 @@ cd /home
 git clone https://github.com/simonjmendelsohn/secure-gwas-pubsub /home/secure-gwas-pubsub
 python3 secure-gwas-pubsub/publish.py
 echo "done with startup-script"
-

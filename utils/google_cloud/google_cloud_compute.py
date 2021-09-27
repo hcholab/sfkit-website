@@ -74,7 +74,7 @@ class GoogleCloudCompute(GoogleCloudGeneral):
         existing_instances = self.list_instances(constants.ZONE)
 
         if not existing_instances or instance not in existing_instances:
-            self.create_instance(constants.ZONE, instance)
+            self.create_instance(constants.ZONE, instance, role)
             self.wait_for_startup_script(role)
 
         self.start_instance(constants.ZONE, instance)
@@ -82,7 +82,7 @@ class GoogleCloudCompute(GoogleCloudGeneral):
 
         return self.get_vm_external_ip_address(constants.ZONE, instance)
 
-    def create_instance(self, zone, name):
+    def create_instance(self, zone, name, role):
         print("Creating VM instance with name ", name)
 
         image_response = self.compute.images().getFromFamily(
@@ -90,7 +90,8 @@ class GoogleCloudCompute(GoogleCloudGeneral):
         source_disk_image = image_response['selfLink']
 
         # Configure the machine
-        machine_type = "zones/%s/machineTypes/e2-medium" % zone
+        # machine_type = "zones/%s/machineTypes/e2-medium" % zone
+        machine_type = "zones/%s/machineTypes/c2-standard-4" % zone
         startup_script = open(
             os.path.join(
                 os.path.dirname(__file__), '../../startup-script.sh'), 'r').read()
@@ -101,6 +102,7 @@ class GoogleCloudCompute(GoogleCloudGeneral):
             "networkInterfaces": [{
                 'network': 'projects/{}/global/networks/{}'.format(self.project, constants.NETWORK_NAME),
                 'subnetwork': 'regions/{}/subnetworks/{}'.format(constants.REGION, constants.SUBNET_NAME),
+                'networkIP': '10.0.0.{}'.format(str(int(role) + 10)),
                 'accessConfigs': [
                     {'type': 'ONE_TO_ONE_NAT', 'name': 'External NAT'}
                 ]
@@ -252,13 +254,28 @@ class GoogleCloudCompute(GoogleCloudGeneral):
         return response['networkInterfaces'][0]['accessConfigs'][0]['natIP']
 
     def update_ip_addresses_on_vm(self, ip_addresses, instance, role):
-        cmds = [
-            'cd /home/secure-gwas; rm log/*; rm cache/*'
-        ]
-        for (k, v) in ip_addresses:
-            cmds.append(
-                'sudo sed -i "s|^{k}.*$|{k} {v}|g" par/test.par.{role}.txt'.format(k=k, v=v, role=role))
-        self.execute_shell_script_on_instance(instance, cmds)
+        from google.cloud import pubsub_v1
+        import socket
+
+        project_id = "broad-cho-priv2"
+
+        topic_id = "web-server"
+
+        publisher = pubsub_v1.PublisherClient()
+        project_path = f"projects/{project_id}"
+        topic_path = publisher.topic_path(project_id, topic_id)
+
+        topic_list = publisher.list_topics(request={"project": project_path})
+        topic_list = list(map(lambda topic: str(topic).split('"')[1], topic_list))
+        if topic_path not in topic_list:
+            print(f"Creating topic {topic_path}")
+            publisher.create_topic(name=topic_path)
+
+        data = " ".join(ip_addresses).encode("utf-8")
+        future = publisher.publish(topic_path, data)
+        print(future.result())
+        print(f"Finished publishing message(s) to {topic_path}")
+
 
     def run_data_sharing(self, instance, role):
         cmds = []
@@ -284,7 +301,7 @@ class GoogleCloudCompute(GoogleCloudGeneral):
         if str(role) != "3":
             cmds = [
                 'cd /home/secure-gwas/code',
-                'bin/GwasClient {role} ../par/test.par.{role}.txt'.format(
+                'sudo bin/GwasClient {role} ../par/test.par.{role}.txt'.format(
                     role=role),
                 'echo completed GwasClient',
             ]

@@ -56,10 +56,6 @@ def start_gwas(project, instance, role):
     ip_addresses = gcloudStorage.get_ip_addresses_from_bucket()
     time.sleep(1 + 5 * int(role))
 
-    # Update parameter files on instaces with correct ip addresses
-    gcloudCompute.update_ip_addresses_on_vm(ip_addresses, instance, role)
-    time.sleep(1 + 10 * int(role))
-
     # Run Data Sharing Client
     gcloudCompute.run_data_sharing(instance, role)
     print("\n\nSLEEPING FOR A COUPLE OF MINUTES; PLEASE TAKE THIS TIME TO EAT SOME CHOCOLATE\n\n")

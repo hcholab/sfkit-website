@@ -14,5 +14,4 @@ class GoogleCloudGeneral:
         cmd = '; '.join(cmds)
         script = 'gcloud compute ssh {} --project {} --command \'{}\''.format(
             instance, self.project, cmd)
-        # os.system(script)
         return subprocess.Popen(script, shell=True).wait()
