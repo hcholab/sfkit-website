@@ -12,7 +12,7 @@ class GoogleCloudStorage(GoogleCloudGeneral):
         super().__init__(project)
         self.storage_client = storage.Client(project=self.project)
 
-    def validate_buckets(self):
+    def validate_bucket(self):
         buckets = [bucket.name for bucket in self.storage_client.list_buckets()]
 
         if constants.BUCKET_NAME not in buckets:

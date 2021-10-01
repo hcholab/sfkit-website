@@ -1,17 +1,16 @@
 
 import os
 import sys
-import time
 
 from flask import Flask, flash, redirect, render_template, request, url_for
 from waitress import serve
 
 import constants
 from utils.google_cloud.google_cloud_compute import GoogleCloudCompute
-from utils.google_cloud.google_cloud_storage import GoogleCloudStorage
 
 app = Flask(__name__)
 app.secret_key = os.urandom(12).hex()
+
 
 @app.route("/", methods=['GET', 'POST'])
 def home():
@@ -21,7 +20,6 @@ def home():
             flash("Project is required")
 
         gcloudCompute = GoogleCloudCompute(project)
-        gcloudStorage = GoogleCloudStorage(constants.SERVER_PROJECT_NAME)
 
         role: str = request.form['role']
         if not role:
@@ -33,49 +31,15 @@ def home():
             gcloudCompute.validate_networking()
 
             # Check/Set-up correct VM instance(s)
-            vm_external_ip_address = gcloudCompute.validate_instance(instance, role)
+            gcloudCompute.validate_instance(instance, role)
 
-            # Check/Set-up correct Storage bucket(s)
-            bucket = gcloudStorage.validate_buckets()
-
-            # Put IP address in bucket for all to see...
-            blob = bucket.blob("ip_addresses/IP_ADDR_P" + role)
-            blob.upload_from_string(vm_external_ip_address)
-
-            return redirect(url_for("start_gwas", project=project, instance=instance, role=role))
+            print("I've done what I can.  GWAS should be running now.")
+            return "I love gwas so much!"
 
     return render_template('home.html', project=constants.SERVER_PROJECT_NAME)
 
 
-@app.route("/start_gwas/<string:project>/<string:instance>/<string:role>", methods=['GET'])
-def start_gwas(project, instance, role):
-
-    gcloudCompute = GoogleCloudCompute(project)
-    gcloudStorage = GoogleCloudStorage(constants.SERVER_PROJECT_NAME)
-
-    ip_addresses = gcloudStorage.get_ip_addresses_from_bucket()
-    time.sleep(1 + 5 * int(role))
-
-    # Run Data Sharing Client
-    gcloudCompute.run_data_sharing(instance, role)
-    print("\n\nSLEEPING FOR A COUPLE OF MINUTES; PLEASE TAKE THIS TIME TO EAT SOME CHOCOLATE\n\n")
-    time.sleep(120 + 15 * int(role))
-
-    # Run GWAS client
-    gcloudCompute.run_gwas_client(instance, role)
-
-    # Clean up IP_Addresses
-    gcloudStorage.delete_blob(constants.BUCKET_NAME,
-                              "ip_addresses/IP_ADDR_P" + role)
-
-    # Stop running instances
-    gcloudCompute.stop_instance(constants.ZONE, instance)
-
-    return "I love gwas so much!"
-
-
 if __name__ == "__main__":
-
     p = 5000
     if len(sys.argv) > 1:
         p = sys.argv[1]
