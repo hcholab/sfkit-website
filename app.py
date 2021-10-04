@@ -2,7 +2,7 @@
 import os
 import sys
 
-from flask import Flask, flash, redirect, render_template, request, url_for
+from flask import Flask, redirect, render_template, request, url_for
 from waitress import serve
 
 import constants
@@ -15,33 +15,30 @@ app.secret_key = os.urandom(12).hex()
 @app.route("/", methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
+        role: str = request.form['role']
         project: str = request.form['project']
-        if not project:
-            flash("Project is required")
 
+        global gcloudCompute
         gcloudCompute = GoogleCloudCompute(project)
 
-        role: str = request.form['role']
-        if not role:
-            flash("Role is required")
-        else:
-            instance = constants.INSTANCE_NAME_ROOT + str(role)
+        instance = constants.INSTANCE_NAME_ROOT + role
 
-            # Check/Set-up correct network, subnet, and firewall
-            gcloudCompute.validate_networking()
+        # Validate/Set-up correct network, subnet, and firewall
+        gcloudCompute.validate_networking()
 
-            # Check/Set-up correct VM instance(s)
-            gcloudCompute.validate_instance(instance, role)
+        # Set-up correct VM instance(s)
+        gcloudCompute.create_instance(constants.ZONE, instance, role)
 
-            print("I've done what I can.  GWAS should be running now.")
-            return "I love gwas so much!"
+        print("I've done what I can.  GWAS should be running now.")
+        return redirect(url_for("running", role=role))
 
     return render_template('home.html', project=constants.SERVER_PROJECT_NAME)
 
+@app.route("/running/<role>", methods=['GET', 'POST'])
+def running(role):
+    gcloudCompute.listen_to_startup_script(role)
+    return render_template('running.html', status=constants.STATUS)
 
 if __name__ == "__main__":
-    p = 5000
-    if len(sys.argv) > 1:
-        p = sys.argv[1]
+    p = sys.argv[1] if len(sys.argv) > 1 else 5000
     serve(app, port=p)
-    # app.run(debug=False, port=p)

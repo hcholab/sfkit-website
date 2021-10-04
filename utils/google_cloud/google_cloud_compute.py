@@ -75,7 +75,7 @@ class GoogleCloudCompute(GoogleCloudGeneral):
 
         if not existing_instances or instance not in existing_instances:
             self.create_instance(constants.ZONE, instance, role)
-            self.wait_for_startup_script(role)
+            self.listen_to_startup_script(role)
 
         self.start_instance(constants.ZONE, instance)
         time.sleep(5)
@@ -83,7 +83,7 @@ class GoogleCloudCompute(GoogleCloudGeneral):
         return self.get_vm_external_ip_address(constants.ZONE, instance)
 
     def create_instance(self, zone, name, role):
-        print("Creating VM instance with name ", name)
+        print("Creating VM instance with name", name)
 
         image_response = self.compute.images().getFromFamily(
             project='debian-cloud', family='debian-11').execute()
@@ -138,7 +138,7 @@ class GoogleCloudCompute(GoogleCloudGeneral):
 
         self.wait_for_zoneOperation(zone, operation['name'])
         
-    def wait_for_startup_script(self, role):
+    def listen_to_startup_script(self, role):
         from concurrent.futures import TimeoutError
         from google.cloud import pubsub_v1
         import socket
@@ -146,7 +146,7 @@ class GoogleCloudCompute(GoogleCloudGeneral):
         project_id = "broad-cho-priv2"
         topic_id = "secure-gwas" + role
         subscription_id = socket.gethostname() + "-subscribing-to-" + topic_id  
-        timeout = 1200 # seconds
+        timeout = 5 # seconds
 
         project_path = f"projects/{project_id}"
         publisher = pubsub_v1.PublisherClient()
@@ -166,13 +166,10 @@ class GoogleCloudCompute(GoogleCloudGeneral):
             print(f"Creating subscription {subscription_path}")
             subscriber.create_subscription(name = subscription_path, topic = topic_path)
 
-        prevTime = time.time()
         def callback(message: pubsub_v1.subscriber.message.Message) -> None:
             print(f"Received {message}.")
             message.ack()
-            streaming_pull_future.cancel()
-            streaming_pull_future.result()
-            print(f"The startup took {time.time() - prevTime} seconds.")
+            constants.STATUS = max(constants.STATUS, str(message.data.decode("utf-8")), key=lambda x: x.split()[-1])
 
         streaming_pull_future = subscriber.subscribe(subscription_path, callback=callback)
         print(f"Listening for messages on topic {topic_path}...\n")
@@ -306,3 +303,6 @@ class GoogleCloudCompute(GoogleCloudGeneral):
                 'echo completed GwasClient',
             ]
             self.execute_shell_script_on_instance(instance, cmds)
+
+    def getStatusUpdate(self):
+        return "Cheese"

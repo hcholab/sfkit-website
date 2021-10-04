@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 
 {% block header %}
-<h2>{% block title %} Hi! Let's run Secure GWAS, shall we? {% endblock %}</h2>
+<h2>Hi! Let's run Secure GWAS, shall we?</h2>
 {% endblock %}
 
 {% block content %}
 <form method="post">
   What Role are you?
-  <input type="number" name="role" value={{role}} required><br>
+  <input type="number" name="role" value={{role}} min="0" max="3" step="1" required><br>
   What GCP Project are you using? 
   <input type="text" name="project" value={{project}} required><br>
   <input type="submit" value="Submit">
