@@ -142,7 +142,7 @@ class GoogleCloudCompute(GoogleCloudGeneral):
         from google.cloud import pubsub_v1
         import socket
 
-        project_id = "broad-cho-priv2"
+        project_id = constants.SERVER_PROJECT_NAME
         topic_id = "secure-gwas" + role
         subscription_id = socket.gethostname() + "-subscribing-to-" + topic_id  
         timeout = 5 # seconds
@@ -259,7 +259,7 @@ class GoogleCloudCompute(GoogleCloudGeneral):
         from google.cloud import pubsub_v1
         import socket
 
-        project_id = "broad-cho-priv2"
+        project_id = constants.SERVER_PROJECT_NAME
 
         topic_id = "web-server"
 

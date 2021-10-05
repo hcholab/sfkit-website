@@ -56,8 +56,8 @@ printf "\n\n done compiling secure gwas code \n\n"
 
 printf "\n\n Update IP addresses in parameter files"
 role=$(hostname | tail -c 2)
-gsutil cp -r gs://broad-cho-priv2-secure-gwas-data/ .
-cd /home/broad-cho-priv2-secure-gwas-data/ip_addresses/
+gsutil cp -r gs://broad-cho-priv1-secure-gwas-data/ .
+cd /home/broad-cho-priv1-secure-gwas-data/ip_addresses/
 P0=$(<P0); P1=$(<P1); P2=$(<P2); P3=$(<P3);
 cd /home/secure-gwas/par/
 for i in 0 1 2 3; do
