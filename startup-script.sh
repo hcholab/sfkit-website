@@ -6,7 +6,7 @@ touch /home/test.txt
 # Many of the commands need root privileges for the VM
 sudo -s
 
-echo "\n\n Begin installing dependencies \n\n"
+printf "\n\n Begin installing dependencies \n\n"
 apt-get --assume-yes update
 apt-get --assume-yes install build-essential
 apt-get --assume-yes install clang-3.9
@@ -18,19 +18,19 @@ apt-get --assume-yes install git
 apt-get --assume-yes install python3-pip
 pip3 install numpy
 pip3 install google-cloud-pubsub
-echo "\n\n Done installing dependencies \n\n"
+printf "\n\n Done installing dependencies \n\n"
 
-echo "\n\n Setting up pubsub to let web server know the progress \n\n"
+printf "\n\n Setting up pubsub to let web server know the progress \n\n"
 cd /home
 git clone https://github.com/simonjmendelsohn/secure-gwas-pubsub /home/secure-gwas-pubsub
 python3 secure-gwas-pubsub/publish.py done_installing_dependencies
 
-echo "\n\n Begin installing GWAS repo \n\n"
+printf "\n\n Begin installing GWAS repo \n\n"
 cd /home
 git clone https://github.com/simonjmendelsohn/secure-gwas /home/secure-gwas
-echo "\n\n Done installing GWAS repo \n\n"
+printf "\n\n Done installing GWAS repo \n\n"
 
-echo "\n\n Begin installing NTL library \n\n"
+printf "\n\n Begin installing NTL library \n\n"
 curl https://libntl.org/ntl-10.3.0.tar.gz --output ntl-10.3.0.tar.gz
 tar -zxvf ntl-10.3.0.tar.gz
 cp secure-gwas/code/NTL_mod/ZZ.h ntl-10.3.0/include/NTL/
@@ -41,9 +41,9 @@ make all
 make install
 cd /home
 python3 secure-gwas-pubsub/publish.py done_installing_NTL
-echo "\n\n Done installing NTL library \n\n"
+printf "\n\n Done installing NTL library \n\n"
 
-echo "\n\n Begin compiling secure gwas code \n\n"
+printf "\n\n Begin compiling secure gwas code \n\n"
 cd /home/secure-gwas/code
 COMP=$(which clang++)
 sed -i "s|^CPP.*$|CPP = ${COMP}|g" Makefile
@@ -52,23 +52,36 @@ sed -i "s|^LDPATH.*$|LDPATH = -L/usr/local/lib|g" Makefile
 make
 cd /home
 python3 secure-gwas-pubsub/publish.py done_compiling_gwas
-echo "\n\n done compiling secure gwas code \n\n"
+printf "\n\n done compiling secure gwas code \n\n"
 
-echo "\n\n Waiting for all other VMs to be ready for GWAS \n\n"
+printf "\n\n Update IP addresses in parameter files"
 role=$(hostname | tail -c 2)
+gsutil cp -r gs://broad-cho-priv2-secure-gwas-data/ .
+cd /home/broad-cho-priv2-secure-gwas-data/ip_addresses/
+P0=$(<P0); P1=$(<P1); P2=$(<P2); P3=$(<P3);
+cd /home/secure-gwas/par/
+for i in 0 1 2 3; do
+    temp="P${i}"
+    sed -i "s/^IP_ADDR_P${i}.*$/IP_ADDR_P${i} ${!temp}/g" test.par.${role}.txt
+done
+cd /home 
+python3 secure-gwas-pubsub/publish.py IP_addresses_are_ready
+
+printf "\n\n Waiting for all other VMs to be ready for GWAS \n\n"
 nc -k -l -p 8055 &
 for i in 0 1 2 3; do
+    temp="P${i}"
     false
     while [ $? == 1 ]; do
-        echo "Waiting for VM secure-gwas${i} to be done setting up"
+        printf "Waiting for VM secure-gwas${i} to be done setting up"
         sleep 30
-        nc -w 5 -v -z 10.0.0.1${i} 8055 &>/dev/null
+        nc -w 5 -v -z ${!temp} 8055 &>/dev/null
     done
 done
 python3 secure-gwas-pubsub/publish.py all_vms_are_ready
-echo "\n\n All VMs are ready to begin GWAS \n\n"
+printf "\n\n All VMs are ready to begin GWAS \n\n"
 
-echo "\n\n Starting DataSharing and GWAS \n\n"
+printf "\n\n Starting DataSharing and GWAS \n\n"
 cd /home/secure-gwas/code
 sleep $((5 * ${role}))
 if [[ $role -eq "3" ]]; then
@@ -80,11 +93,11 @@ else
 
     python3 /home/secure-gwas-pubsub/publish.py DataSharing_completed
 
-    echo "\n\n Waiting a couple minutes between DataSharing and GWAS... \n\n"
+    printf "\n\n Waiting a couple minutes between DataSharing and GWAS... \n\n"
     sleep $((120 + 15 * ${role}))
     bin/GwasClient ${role} ../par/test.par.${role}.txt
 
     cd /home
     python3 secure-gwas-pubsub/publish.py GWAS_completed
 fi
-echo "\n\n Done with GWAS \n\n"
+printf "\n\n Done with GWAS \n\n"

@@ -20,6 +20,22 @@ class GoogleCloudStorage(GoogleCloudGeneral):
             time.sleep(1)
 
         return self.storage_client.bucket(constants.BUCKET_NAME)
+    
+    def add_bucket_iam_member(self, bucket_name, role, member):
+        """Add a new member to an IAM Policy"""
+        # bucket_name = "your-bucket-name"
+        # role = "IAM role, e.g., roles/storage.objectViewer"
+        # member = "IAM identity, e.g., user: name@example.com"
+
+        bucket = self.storage_client.bucket(bucket_name)
+
+        policy = bucket.get_iam_policy(requested_policy_version=3)
+
+        policy.bindings.append({"role": role, "members": {member}})
+
+        bucket.set_iam_policy(policy)
+
+        print("Added {} with role {} to {}.".format(member, role, bucket_name))
 
     def get_ip_addresses_from_bucket(self):
         print("Getting ip_addresses from bucket")

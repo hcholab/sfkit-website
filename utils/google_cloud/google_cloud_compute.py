@@ -102,7 +102,6 @@ class GoogleCloudCompute(GoogleCloudGeneral):
             "networkInterfaces": [{
                 'network': 'projects/{}/global/networks/{}'.format(self.project, constants.NETWORK_NAME),
                 'subnetwork': 'regions/{}/subnetworks/{}'.format(constants.REGION, constants.SUBNET_NAME),
-                'networkIP': '10.0.0.{}'.format(str(int(role) + 10)),
                 'accessConfigs': [
                     {'type': 'ONE_TO_ONE_NAT', 'name': 'External NAT'}
                 ]
@@ -245,10 +244,16 @@ class GoogleCloudCompute(GoogleCloudGeneral):
             time.sleep(1)
 
     def get_vm_external_ip_address(self, zone, instance):
-        print("Getting the IP address for VM instance ", instance)
+        print("Getting the IP address for VM instance", instance)
         response = self.compute.instances().get(
             project=self.project, zone=zone, instance=instance).execute()
         return response['networkInterfaces'][0]['accessConfigs'][0]['natIP']
+    
+    def get_service_account_for_vm(self, zone, instance) -> str:
+        print("Getting the service account for VM instance", instance)
+        response = self.compute.instances().get(
+            project=self.project, zone=zone, instance=instance).execute()
+        return response['serviceAccounts'][0]['email']
 
     def update_ip_addresses_on_vm(self, ip_addresses, instance, role):
         from google.cloud import pubsub_v1
