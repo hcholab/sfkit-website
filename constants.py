@@ -1,6 +1,7 @@
 from datetime import datetime
 # TODO: make dynamic
-SERVER_PROJECT_NAME = "broad-cho-priv1"
+SERVER_PROJECT = "broad-cho-priv1"
+CLIENT_PROJECT = ""
 ZONE = "us-central1-a"
 REGION = "us-central1"
 NETWORK_NAME = "secure-gwas"
