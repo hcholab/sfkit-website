@@ -26,11 +26,9 @@ class GoogleCloudPubsub(GoogleCloudGeneral):
             request={"project": self.project_path})
         topic_list = list(
             map(lambda topic: str(topic).split('"')[1], topic_list))
-        if self.topic_path in topic_list:
-            print(f"Deleting topic {self.topic_path}")
-            self.publisher.delete_topic(request={"topic": self.topic_path})
-        print(f"Creating topic {self.topic_path}")
-        self.publisher.create_topic(name=self.topic_path)
+        if self.topic_path not in topic_list:
+            print(f"Creating topic {self.topic_path}")
+            self.publisher.create_topic(name=self.topic_path)
 
         subscription_list = self.subscriber.list_subscriptions(
             request={"project": self.project_path})

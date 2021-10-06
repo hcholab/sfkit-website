@@ -1,4 +1,5 @@
 
+from sys import prefix
 import time
 
 import constants
@@ -12,12 +13,15 @@ class GoogleCloudStorage(GoogleCloudGeneral):
         super().__init__(project)
         self.storage_client = storage.Client(project=self.project)
 
-    def validate_bucket(self):
-        buckets = [bucket.name for bucket in self.storage_client.list_buckets()]
+    def validate_bucket(self, role):
+        buckets_list = [bucket.name for bucket in self.storage_client.list_buckets()]
 
-        if constants.BUCKET_NAME not in buckets:
+        if constants.BUCKET_NAME not in buckets_list:
+            print(f"Creating bucket {constants.BUCKET_NAME}")
             self.storage_client.create_bucket(constants.BUCKET_NAME)
             time.sleep(1)
+
+        self.delete_blob(constants.BUCKET_NAME, "ip_addresses/IP_ADDR_P" + role)
 
         return self.storage_client.bucket(constants.BUCKET_NAME)
     
@@ -63,6 +67,8 @@ class GoogleCloudStorage(GoogleCloudGeneral):
         # blob_name = "your-object-name"
         bucket = self.storage_client.bucket(bucket_name)
         blob = bucket.blob(blob_name)
-        blob.delete()
-
-        print("Blob {} deleted.".format(blob_name))
+        if blob.name in [b.name for b in bucket.list_blobs()]:
+            blob.delete()
+            print("Blob {} deleted.".format(blob_name))
+        else:
+            print(f"Blob {blob_name} didn't exist")

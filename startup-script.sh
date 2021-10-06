@@ -54,7 +54,7 @@ cd /home
 python3 secure-gwas-pubsub/publish.py done_compiling_gwas
 printf "\n\n done compiling secure gwas code \n\n"
 
-printf "\n\n Update IP addresses in parameter files"
+printf "\n\n Update IP addresses in parameter files \n\n"
 role=$(hostname | tail -c 2)
 gsutil cp -r gs://broad-cho-priv1-secure-gwas-data/ .
 while [ "$(ls /home/broad-cho-priv1-secure-gwas-data/ip_addresses/ | wc -l)" != "4" ]; do
@@ -80,8 +80,8 @@ for i in 0 1 2 3; do
     temp="P${i}"
     false
     while [ $? == 1 ]; do
-        printf "Waiting for VM secure-gwas${i} to be done setting up"
-        sleep 30
+        printf "Waiting for VM secure-gwas${i} to be done setting up \n"
+        sleep 5
         nc -w 5 -v -z ${!temp} 8055 &>/dev/null
     done
 done
@@ -90,7 +90,7 @@ printf "\n\n All VMs are ready to begin GWAS \n\n"
 
 printf "\n\n Starting DataSharing and GWAS \n\n"
 cd /home/secure-gwas/code
-sleep $((5 * ${role}))
+sleep $((30 * ${role}))
 if [[ $role -eq "3" ]]; then
     bin/DataSharingClient ${role} ../par/test.par.${role}.txt ../test_data/
     cd /home
@@ -101,7 +101,7 @@ else
     python3 /home/secure-gwas-pubsub/publish.py DataSharing_completed
 
     printf "\n\n Waiting a couple minutes between DataSharing and GWAS... \n\n"
-    sleep $((120 + 15 * ${role}))
+    sleep $((100 + 30 * ${role}))
     bin/GwasClient ${role} ../par/test.par.${role}.txt
 
     cd /home

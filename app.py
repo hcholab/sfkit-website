@@ -41,7 +41,7 @@ def home():
         gcloudPubsub.add_pub_iam_member("roles/pubsub.publisher", member)
 
         # Create bucket to store the ip addresses; this will be read-only for the VMs
-        bucket = gcloudStorage.validate_bucket()
+        bucket = gcloudStorage.validate_bucket(role)
         blob = bucket.blob("ip_addresses/P" + role)
         blob.upload_from_string(vm_external_ip_address)
 
