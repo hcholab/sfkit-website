@@ -136,49 +136,6 @@ class GoogleCloudCompute(GoogleCloudGeneral):
             project=self.project, zone=zone, body=instance_body).execute()
 
         self.wait_for_zoneOperation(zone, operation['name'])
-        
-    def listen_to_startup_script(self, role):
-        from concurrent.futures import TimeoutError
-        from google.cloud import pubsub_v1
-        import socket
-
-        project_id = constants.SERVER_PROJECT
-        topic_id = "secure-gwas" + role
-        subscription_id = socket.gethostname() + "-subscribing-to-" + topic_id  
-        timeout = 5 # seconds
-
-        project_path = f"projects/{project_id}"
-        publisher = pubsub_v1.PublisherClient()
-        topic_path = publisher.topic_path(project_id, topic_id)
-        subscriber = pubsub_v1.SubscriberClient()
-        subscription_path = subscriber.subscription_path(project_id, subscription_id)
-        
-        topic_list = publisher.list_topics(request={"project": project_path})
-        topic_list = list(map(lambda topic: str(topic).split('"')[1], topic_list))
-        if topic_path not in topic_list:
-            print(f"Creating topic {topic_path}")
-            publisher.create_topic(name=topic_path)
-
-        subscription_list = subscriber.list_subscriptions(request={"project": project_path})
-        subscription_list = list(map(lambda topic: str(topic).split('"')[1], subscription_list))
-        if subscription_path not in subscription_list:
-            print(f"Creating subscription {subscription_path}")
-            subscriber.create_subscription(name = subscription_path, topic = topic_path)
-
-        def callback(message: pubsub_v1.subscriber.message.Message) -> None:
-            print(f"Received {message}.")
-            message.ack()
-            constants.STATUS = max(constants.STATUS, str(message.data.decode("utf-8")), key=lambda x: x.split()[-1])
-
-        streaming_pull_future = subscriber.subscribe(subscription_path, callback=callback)
-        print(f"Listening for messages on topic {topic_path}...\n")
-
-        with subscriber:
-            try:
-                streaming_pull_future.result(timeout=timeout)
-            except TimeoutError:
-                streaming_pull_future.cancel()
-                streaming_pull_future.result()
 
     def start_instance(self, zone, instance):
         print("Starting VM instance with name ", instance)
