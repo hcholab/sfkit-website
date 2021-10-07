@@ -1,26 +1,26 @@
 import os
 import time
 
-import constants
+import global_variables
 import googleapiclient.discovery
 from flask import flash
-from utils.google_cloud_general import GoogleCloudGeneral
 
 
-class GoogleCloudCompute(GoogleCloudGeneral):
+class GoogleCloudCompute():
 
     def __init__(self, project) -> None:
-        super().__init__(project)
+        self.project = project
         self.compute = googleapiclient.discovery.build('compute', 'v1')
 
     def validate_networking(self):
         existing_nets = [net['name'] for net in self.compute.networks().list(
             project=self.project).execute()['items']]
 
-        if constants.NETWORK_NAME not in existing_nets:
-            self.create_network(constants.NETWORK_NAME)
-            self.create_subnet(constants.REGION, constants.NETWORK_NAME)
-            self.create_firewalls(constants.NETWORK_NAME)
+        if global_variables.NETWORK_NAME not in existing_nets:
+            self.create_network(global_variables.NETWORK_NAME)
+            self.create_subnet(global_variables.REGION,
+                               global_variables.NETWORK_NAME)
+            self.create_firewalls(global_variables.NETWORK_NAME)
 
     def create_network(self, network_name):
         flash("Creating new network for GWAS")
@@ -43,7 +43,7 @@ class GoogleCloudCompute(GoogleCloudGeneral):
                 network_url = net['selfLink']
 
         req_body = {
-            'name': constants.SUBNET_NAME,
+            'name': global_variables.SUBNET_NAME,
             'network': network_url,
             'ipCidrRange': '10.0.0.0/28'
 
@@ -69,20 +69,17 @@ class GoogleCloudCompute(GoogleCloudGeneral):
         operation = self.compute.firewalls().insert(
             project=self.project, body=firewall_body).execute()
         self.wait_for_operation(operation['name'])
+        
+    def setup_instance(self, zone, name):
+        existing_instances = self.list_instances(global_variables.ZONE)
+        
+        if existing_instances and name in existing_instances:
+            self.delete_instance(zone, name)
+        self.create_instance(zone, name)
+        
+        return self.get_vm_external_ip_address(zone, name)
 
-    def validate_instance(self, instance, role):
-        existing_instances = self.list_instances(constants.ZONE)
-
-        if not existing_instances or instance not in existing_instances:
-            self.create_instance(constants.ZONE, instance, role)
-            self.listen_to_startup_script(role)
-
-        self.start_instance(constants.ZONE, instance)
-        time.sleep(5)
-
-        return self.get_vm_external_ip_address(constants.ZONE, instance)
-
-    def create_instance(self, zone, name, role):
+    def create_instance(self, zone, name):
         print("Creating VM instance with name", name)
 
         image_response = self.compute.images().getFromFamily(
@@ -90,7 +87,6 @@ class GoogleCloudCompute(GoogleCloudGeneral):
         source_disk_image = image_response['selfLink']
 
         # Configure the machine
-        # machine_type = "zones/%s/machineTypes/e2-medium" % zone
         machine_type = "zones/%s/machineTypes/c2-standard-4" % zone
         startup_script = open(
             os.path.join(
@@ -100,8 +96,8 @@ class GoogleCloudCompute(GoogleCloudGeneral):
             "name": name,
             "machineType": machine_type,
             "networkInterfaces": [{
-                'network': 'projects/{}/global/networks/{}'.format(self.project, constants.NETWORK_NAME),
-                'subnetwork': 'regions/{}/subnetworks/{}'.format(constants.REGION, constants.SUBNET_NAME),
+                'network': 'projects/{}/global/networks/{}'.format(self.project, global_variables.NETWORK_NAME),
+                'subnetwork': 'regions/{}/subnetworks/{}'.format(global_variables.REGION, global_variables.SUBNET_NAME),
                 'accessConfigs': [
                     {'type': 'ONE_TO_ONE_NAT', 'name': 'External NAT'}
                 ]
@@ -137,12 +133,6 @@ class GoogleCloudCompute(GoogleCloudGeneral):
 
         self.wait_for_zoneOperation(zone, operation['name'])
 
-    def start_instance(self, zone, instance):
-        print("Starting VM instance with name ", instance)
-        operation = self.compute.instances().start(
-            project=self.project, zone=zone, instance=instance).execute()
-        self.wait_for_zoneOperation(zone, operation['name'])
-
     def stop_instance(self, zone, instance):
         print("Stopping VM instance with name ", instance)
         operation = self.compute.instances().stop(
@@ -155,8 +145,9 @@ class GoogleCloudCompute(GoogleCloudGeneral):
         return [instance['name'] for instance in result['items']] if 'items' in result else None
 
     def delete_instance(self, zone, name):
-        print("Deleting VM isntance with name ", name)
-        return self.compute.instances().delete(project=self.project, zone=zone, instance=name).execute()
+        print("Deleting VM instance with name ", name)
+        operation = self.compute.instances().delete(project=self.project, zone=zone, instance=name).execute()
+        self.wait_for_zoneOperation(zone, operation['name'])
 
     def wait_for_operation(self, operation):
         print("Waiting for operation to finish...")
@@ -205,66 +196,9 @@ class GoogleCloudCompute(GoogleCloudGeneral):
         response = self.compute.instances().get(
             project=self.project, zone=zone, instance=instance).execute()
         return response['networkInterfaces'][0]['accessConfigs'][0]['natIP']
-    
+
     def get_service_account_for_vm(self, zone, instance) -> str:
         print("Getting the service account for VM instance", instance)
         response = self.compute.instances().get(
             project=self.project, zone=zone, instance=instance).execute()
         return response['serviceAccounts'][0]['email']
-
-    def update_ip_addresses_on_vm(self, ip_addresses, instance, role):
-        from google.cloud import pubsub_v1
-        import socket
-
-        project_id = constants.SERVER_PROJECT
-
-        topic_id = "web-server"
-
-        publisher = pubsub_v1.PublisherClient()
-        project_path = f"projects/{project_id}"
-        topic_path = publisher.topic_path(project_id, topic_id)
-
-        topic_list = publisher.list_topics(request={"project": project_path})
-        topic_list = list(map(lambda topic: str(topic).split('"')[1], topic_list))
-        if topic_path not in topic_list:
-            print(f"Creating topic {topic_path}")
-            publisher.create_topic(name=topic_path)
-
-        data = " ".join(ip_addresses).encode("utf-8")
-        future = publisher.publish(topic_path, data)
-        print(future.result())
-        print(f"Finished publishing message(s) to {topic_path}")
-
-
-    def run_data_sharing(self, instance, role):
-        cmds = []
-        if str(role) != "3":
-            cmds = [
-                'cd /home/secure-gwas/code',
-                'sudo bin/DataSharingClient {role} ../par/test.par.{role}.txt'.format(
-                    role=role),
-                'echo completed DataSharing',
-            ]
-        else:
-            cmds = [
-                'cd /home/secure-gwas/code',
-                'sudo bin/DataSharingClient {role} ../par/test.par.{role}.txt ../test_data/'.format(
-                    role=role),
-                'echo completed'
-            ]
-
-        self.execute_shell_script_on_instance(instance, cmds)
-
-    def run_gwas_client(self, instance, role):
-        cmds = []
-        if str(role) != "3":
-            cmds = [
-                'cd /home/secure-gwas/code',
-                'sudo bin/GwasClient {role} ../par/test.par.{role}.txt'.format(
-                    role=role),
-                'echo completed GwasClient',
-            ]
-            self.execute_shell_script_on_instance(instance, cmds)
-
-    def getStatusUpdate(self):
-        return "Cheese"
