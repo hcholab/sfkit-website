@@ -30,9 +30,9 @@ def home():
 
         instance = global_variables.INSTANCE_NAME_ROOT + role
 
-        gcloudCompute.validate_networking()
+        gcloudCompute.setup_networking(role)
 
-        vm_external_ip_address = gcloudCompute.setup_instance(global_variables.ZONE, instance)
+        _ = gcloudCompute.setup_instance(global_variables.ZONE, instance, role)
 
         # Give instance publish access to pubsub for status updates
         member = "serviceAccount:" + \
@@ -40,14 +40,14 @@ def home():
                 zone=global_variables.ZONE, instance=instance)
         gcloudPubsub.add_pub_iam_member("roles/pubsub.publisher", member)
 
-        # Create bucket to store the ip addresses; this will be read-only for the VMs
-        bucket = gcloudStorage.validate_bucket(role)
-        blob = bucket.blob("ip_addresses/P" + role)
-        blob.upload_from_string(vm_external_ip_address)
+        # # Create bucket to store the ip addresses; this will be read-only for the VMs
+        # bucket = gcloudStorage.validate_bucket(role)
+        # blob = bucket.blob("ip_addresses/P" + role)
+        # blob.upload_from_string(vm_external_ip_address)
 
-        # Give the instance's service account read-access to this bucket
-        gcloudStorage.add_bucket_iam_member(
-            global_variables.BUCKET_NAME, "roles/storage.objectViewer", member)
+        # # Give the instance's service account read-access to this bucket
+        # gcloudStorage.add_bucket_iam_member(
+        #     global_variables.BUCKET_NAME, "roles/storage.objectViewer", member)
 
         print("I've done what I can.  GWAS should be running now.")
         return redirect(url_for("running", role=role))
@@ -58,11 +58,17 @@ def running(role):
     gcloudPubsub = GoogleCloudPubsub(global_variables.SERVER_PROJECT, role)
     gcloudCompute = GoogleCloudCompute(global_variables.CLIENT_PROJECT)
     gcloudPubsub.listen_to_startup_script()
-    
-    if global_variables.STATUS.split(" ")[0] == "GWAS_completed":
-        gcloudCompute.stop_instance(global_variables.ZONE, global_variables.INSTANCE_NAME_ROOT + role)
+
+    if global_variables.STATUS.split(" ")[0] == "GWAS_completed":          
+        gcloudCompute.stop_instance(
+            global_variables.ZONE, global_variables.INSTANCE_NAME_ROOT + role)
         return "GWAS completed; yay!"
-    
+    elif (global_variables.STATUS.split(" ")[0] == "DataSharing_completed" and role == "3"):
+        gcloudCompute.stop_instance(
+            global_variables.ZONE, global_variables.INSTANCE_NAME_ROOT + role)
+        return "DataSharing completed; yay!"
+
+
     return render_template('running.html', status=global_variables.STATUS)
 
 

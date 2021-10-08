@@ -54,35 +54,34 @@ cd /home
 python3 secure-gwas-pubsub/publish.py done_compiling_gwas
 printf "\n\n done compiling secure gwas code \n\n"
 
-printf "\n\n Update IP addresses in parameter files \n\n"
+# printf "\n\n Update IP addresses in parameter files \n\n"
 role=$(hostname | tail -c 2)
-gsutil cp -r gs://broad-cho-priv1-secure-gwas-data/ .
-while [ "$(ls /home/broad-cho-priv1-secure-gwas-data/ip_addresses/ | wc -l)" != "4" ]; do
-    printf "\n\n Waiting for other VMs to be created \n\n"
-    sleep 60
-    rm -r /home/broad-cho-priv1-secure-gwas-data/ip_addresses/
-    gsutil cp -r gs://broad-cho-priv1-secure-gwas-data/ .
-done
+# gsutil cp -r gs://broad-cho-priv1-secure-gwas-data/ .
+# while [ "$(ls /home/broad-cho-priv1-secure-gwas-data/ip_addresses/ | wc -l)" != "4" ]; do
+#     printf "\n\n Waiting for other VMs to be created \n\n"
+#     sleep 60
+#     rm -r /home/broad-cho-priv1-secure-gwas-data/ip_addresses/
+#     gsutil cp -r gs://broad-cho-priv1-secure-gwas-data/ .
+# done
     
-cd /home/broad-cho-priv1-secure-gwas-data/ip_addresses/
-P0=$(<P0); P1=$(<P1); P2=$(<P2); P3=$(<P3);
-cd /home/secure-gwas/par/
-for i in 0 1 2 3; do
-    temp="P${i}"
-    sed -i "s/^IP_ADDR_P${i}.*$/IP_ADDR_P${i} ${!temp}/g" test.par.${role}.txt
-done
-cd /home 
-python3 secure-gwas-pubsub/publish.py IP_addresses_are_ready
+# cd /home/broad-cho-priv1-secure-gwas-data/ip_addresses/
+# P0=$(<P0); P1=$(<P1); P2=$(<P2); P3=$(<P3);
+# cd /home/secure-gwas/par/
+# for i in 0 1 2 3; do
+#     temp="P${i}"
+#     sed -i "s/^IP_ADDR_P${i}.*$/IP_ADDR_P${i} ${!temp}/g" test.par.${role}.txt
+# done
+# cd /home 
+# python3 secure-gwas-pubsub/publish.py IP_addresses_are_ready
 
 printf "\n\n Waiting for all other VMs to be ready for GWAS \n\n"
 nc -k -l -p 8055 &
 for i in 0 1 2 3; do
-    temp="P${i}"
     false
     while [ $? == 1 ]; do
         printf "Waiting for VM secure-gwas${i} to be done setting up \n"
         sleep 5
-        nc -w 5 -v -z ${!temp} 8055 &>/dev/null
+        nc -w 5 -v -z 10.0.${i}.10 8055 &>/dev/null
     done
 done
 python3 secure-gwas-pubsub/publish.py all_vms_are_ready

@@ -1,9 +1,12 @@
 import os
+from tenacity import retry, stop_after_attempt, wait_fixed
 import time
+import datetime
+from pytz import timezone
+import subprocess
 
 import global_variables
 import googleapiclient.discovery
-from flask import flash
 
 
 class GoogleCloudCompute():
@@ -12,19 +15,71 @@ class GoogleCloudCompute():
         self.project = project
         self.compute = googleapiclient.discovery.build('compute', 'v1')
 
-    def validate_networking(self):
+    def setup_networking(self, role):
         existing_nets = [net['name'] for net in self.compute.networks().list(
             project=self.project).execute()['items']]
 
         if global_variables.NETWORK_NAME not in existing_nets:
             self.create_network(global_variables.NETWORK_NAME)
-            self.create_subnet(global_variables.REGION,
-                               global_variables.NETWORK_NAME)
             self.create_firewalls(global_variables.NETWORK_NAME)
+        else:
+            self.remove_peerings(self.project)
+            self.remove_peerings(global_variables.SERVER_PROJECT)
+            self.remove_old_subnets()
+        self.create_subnet(global_variables.REGION, global_variables.NETWORK_NAME, role)
+
+        # TODO: generalize to more than 2 networks
+        if self.project != global_variables.SERVER_PROJECT:
+            self.setup_vpc_peering(self.project, global_variables.SERVER_PROJECT)
+            self.setup_vpc_peering(global_variables.SERVER_PROJECT, self.project)
+
+    @retry(stop=stop_after_attempt(5), wait=wait_fixed(30))
+    def remove_old_subnets(self):
+        for subnet in self.compute.subnetworks().list(
+                project=self.project, region=global_variables.REGION).execute()['items']:
+            if subnet['name'].split("-")[:2] == ["secure", "gwas"] and self.old(subnet['creationTimestamp'], 3):
+                for instance in self.list_instances(global_variables.ZONE, subnetwork=subnet['selfLink']):
+                    self.delete_instance(global_variables.ZONE, instance)
+
+                print(f"Deleting subnet {subnet['name']}")
+                self.compute.subnetworks().delete(
+                    project=self.project, region=global_variables.REGION, subnetwork=subnet['name']).execute()
+                time.sleep(20)
+
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(10))
+    def remove_peerings(self, project):
+        network_info = self.compute.networks().get(
+            project=project, network=global_variables.NETWORK_NAME).execute()
+        peerings = [peering['name'].replace(
+            'peering-', '') for peering in network_info['peerings']] if 'peerings' in network_info else []
+        for project2 in peerings:
+            print(f"Deleting peering from {project} to {project2}")
+            body = {
+                'name': f"peering-{project2}"
+            }
+            self.compute.networks().removePeering(project=project, network=global_variables.NETWORK_NAME, body=body).execute()
+            time.sleep(2)
+
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(30))
+    def setup_vpc_peering(self, project1, project2):
+        network_info = self.compute.networks().get(
+            project=project1, network=global_variables.NETWORK_NAME).execute()
+        peerings = [peering['name'].replace(
+            'peering-', '') for peering in network_info['peerings']] if 'peerings' in network_info else []
+        if project2 not in peerings:
+            print("Creating peering from", project1, "to", project2)
+            body = {
+                'networkPeering': {
+                    'name': 'peering-{}'.format(project2),
+                    'network': 'https://www.googleapis.com/compute/v1/projects/{}/global/networks/{}'.format(project2, global_variables.NETWORK_NAME),
+                    'exchangeSubnetRoutes': True
+                }
+            }
+            self.compute.networks().addPeering(
+                project=project1, network=global_variables.NETWORK_NAME, body=body).execute()
 
     def create_network(self, network_name):
-        flash("Creating new network for GWAS")
-        print("Creating new network for GWAS")
+        print(f"Creating new network {network_name}")
         req_body = {
             'name': network_name,
             'autoCreateSubnetworks': False,
@@ -34,18 +89,19 @@ class GoogleCloudCompute():
             project=self.project, body=req_body).execute()
         self.wait_for_operation(operation['name'])
 
-    def create_subnet(self, region, network_name):
-        flash("Creating new subnetwork for GWAS")
-        print("Creating new subnetwork for GWAS")
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(30))
+    def create_subnet(self, region, network_name, role):
+        subnet_name = global_variables.SUBNET_NAME + role
+        print(f"Creating new subnetwork {subnet_name}")
         network_url = ''
         for net in self.compute.networks().list(project=self.project).execute()['items']:
             if net['name'] == network_name:
                 network_url = net['selfLink']
 
         req_body = {
-            'name': global_variables.SUBNET_NAME,
+            'name': subnet_name,
             'network': network_url,
-            'ipCidrRange': '10.0.0.0/28'
+            'ipCidrRange': f'10.0.{role}.0/28'
 
         }
         operation = self.compute.subnetworks().insert(
@@ -53,8 +109,7 @@ class GoogleCloudCompute():
         self.wait_for_regionOperation(region, operation['name'])
 
     def create_firewalls(self, network_name):
-        flash("Creating new firewalls for GWAS")
-        print("Creating new firewalls for GWAS")
+        print(f"Creating new firewalls for network {network_name}")
         network_url = ''
         for net in self.compute.networks().list(project=self.project).execute()['items']:
             if net['name'] == network_name:
@@ -69,17 +124,17 @@ class GoogleCloudCompute():
         operation = self.compute.firewalls().insert(
             project=self.project, body=firewall_body).execute()
         self.wait_for_operation(operation['name'])
-        
-    def setup_instance(self, zone, name):
+
+    def setup_instance(self, zone, name, role):
         existing_instances = self.list_instances(global_variables.ZONE)
-        
+
         if existing_instances and name in existing_instances:
             self.delete_instance(zone, name)
-        self.create_instance(zone, name)
-        
+        self.create_instance(zone, name, role)
+
         return self.get_vm_external_ip_address(zone, name)
 
-    def create_instance(self, zone, name):
+    def create_instance(self, zone, name, role):
         print("Creating VM instance with name", name)
 
         image_response = self.compute.images().getFromFamily(
@@ -97,7 +152,8 @@ class GoogleCloudCompute():
             "machineType": machine_type,
             "networkInterfaces": [{
                 'network': 'projects/{}/global/networks/{}'.format(self.project, global_variables.NETWORK_NAME),
-                'subnetwork': 'regions/{}/subnetworks/{}'.format(global_variables.REGION, global_variables.SUBNET_NAME),
+                'subnetwork': 'regions/{}/subnetworks/{}'.format(global_variables.REGION, global_variables.SUBNET_NAME + role),
+                'networkIP': f"10.0.{role}.10",
                 'accessConfigs': [
                     {'type': 'ONE_TO_ONE_NAT', 'name': 'External NAT'}
                 ]
@@ -139,14 +195,15 @@ class GoogleCloudCompute():
             project=self.project, zone=zone, instance=instance).execute()
         self.wait_for_zoneOperation(zone, operation['name'])
 
-    def list_instances(self, zone):
+    def list_instances(self, zone, subnetwork=""):
         result = self.compute.instances().list(
             project=self.project, zone=zone).execute()
-        return [instance['name'] for instance in result['items']] if 'items' in result else None
+        return [instance['name'] for instance in result['items'] if subnetwork in instance['networkInterfaces'][0]['subnetwork']] if 'items' in result else []
 
     def delete_instance(self, zone, name):
         print("Deleting VM instance with name ", name)
-        operation = self.compute.instances().delete(project=self.project, zone=zone, instance=name).execute()
+        operation = self.compute.instances().delete(
+            project=self.project, zone=zone, instance=name).execute()
         self.wait_for_zoneOperation(zone, operation['name'])
 
     def wait_for_operation(self, operation):
@@ -202,3 +259,11 @@ class GoogleCloudCompute():
         response = self.compute.instances().get(
             project=self.project, zone=zone, instance=instance).execute()
         return response['serviceAccounts'][0]['email']
+
+    def old(self, timestamp, minutes=30):
+        benchmark = (datetime.datetime.now(tz=timezone(
+            'us/pacific')) - datetime.timedelta(minutes=minutes)).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "-7:00"
+        if timestamp < benchmark:
+            return True
+        print("Young...")
+        return False
