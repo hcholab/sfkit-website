@@ -37,15 +37,19 @@ class GoogleCloudPubsub():
                 request={"subscription": self.subscription_path})
         print(f"Creating subscription {self.subscription_path}")
         self.subscriber.create_subscription(
-            name=self.subscription_path, topic=self.topic_path)
+            request={
+                "name": self.subscription_path,
+                "topic": self.topic_path,
+                "enable_message_ordering": True,
+            }
+        )
 
     def listen_to_startup_script(self, status):
         def callback(message: pubsub_v1.subscriber.message.Message) -> None:
             print(f"Received {message}.")
             message.ack()
             nonlocal status
-            status = max(status, str(message.data.decode("utf-8")),
-                         key=lambda x: x.split()[-1])
+            status = str(message.data.decode("utf-8")) 
 
         streaming_pull_future = self.subscriber.subscribe(
             self.subscription_path, callback=callback)

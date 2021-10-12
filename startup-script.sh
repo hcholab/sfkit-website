@@ -17,13 +17,9 @@ apt-get --assume-yes install netcat
 apt-get --assume-yes install git
 apt-get --assume-yes install python3-pip
 pip3 install numpy
-pip3 install google-cloud-pubsub
+topic_id=$(hostname)
+gcloud pubsub topics publish ${topic_id} --message="Done installing dependencies" --ordering-key="1" --project="broad-cho-priv1"
 printf "\n\n Done installing dependencies \n\n"
-
-printf "\n\n Setting up pubsub to let web server know the progress \n\n"
-cd /home
-git clone https://github.com/simonjmendelsohn/secure-gwas-pubsub /home/secure-gwas-pubsub
-python3 secure-gwas-pubsub/publish.py done_installing_dependencies
 
 printf "\n\n Begin installing GWAS repo \n\n"
 cd /home
@@ -40,7 +36,7 @@ cd ntl-10.3.0/src
 make all
 make install
 cd /home
-python3 secure-gwas-pubsub/publish.py done_installing_NTL
+gcloud pubsub topics publish ${topic_id} --message="Done installing NTL library" --ordering-key="1" --project="broad-cho-priv1"
 printf "\n\n Done installing NTL library \n\n"
 
 printf "\n\n Begin compiling secure gwas code \n\n"
@@ -51,28 +47,8 @@ sed -i "s|^INCPATHS.*$|INCPATHS = -I/usr/local/include|g" Makefile
 sed -i "s|^LDPATH.*$|LDPATH = -L/usr/local/lib|g" Makefile
 make
 cd /home
-python3 secure-gwas-pubsub/publish.py done_compiling_gwas
+gcloud pubsub topics publish ${topic_id} --message="Done compiling GWAS" --ordering-key="1" --project="broad-cho-priv1"
 printf "\n\n done compiling secure gwas code \n\n"
-
-# printf "\n\n Update IP addresses in parameter files \n\n"
-role=$(hostname | tail -c 2)
-# gsutil cp -r gs://broad-cho-priv1-secure-gwas-data/ .
-# while [ "$(ls /home/broad-cho-priv1-secure-gwas-data/ip_addresses/ | wc -l)" != "4" ]; do
-#     printf "\n\n Waiting for other VMs to be created \n\n"
-#     sleep 60
-#     rm -r /home/broad-cho-priv1-secure-gwas-data/ip_addresses/
-#     gsutil cp -r gs://broad-cho-priv1-secure-gwas-data/ .
-# done
-    
-# cd /home/broad-cho-priv1-secure-gwas-data/ip_addresses/
-# P0=$(<P0); P1=$(<P1); P2=$(<P2); P3=$(<P3);
-# cd /home/secure-gwas/par/
-# for i in 0 1 2 3; do
-#     temp="P${i}"
-#     sed -i "s/^IP_ADDR_P${i}.*$/IP_ADDR_P${i} ${!temp}/g" test.par.${role}.txt
-# done
-# cd /home 
-# python3 secure-gwas-pubsub/publish.py IP_addresses_are_ready
 
 printf "\n\n Waiting for all other VMs to be ready for GWAS \n\n"
 nc -k -l -p 8055 &
@@ -84,28 +60,27 @@ for i in 0 1 2 3; do
         nc -w 5 -v -z 10.0.${i}.10 8055 &>/dev/null
     done
 done
-python3 secure-gwas-pubsub/publish.py all_vms_are_ready
+gcloud pubsub topics publish ${topic_id} --message="All VMs are ready" --ordering-key="1" --project="broad-cho-priv1"
 printf "\n\n All VMs are ready to begin GWAS \n\n"
 
 printf "\n\n Starting DataSharing and GWAS \n\n"
 cd /home/secure-gwas/code
+role=$(hostname | tail -c 2)
 sleep $((30 * ${role}))
 if [[ $role -eq "3" ]]; then
     bin/DataSharingClient ${role} ../par/test.par.${role}.txt ../test_data/
     cd /home
-    python3 secure-gwas-pubsub/publish.py DataSharing_completed
+    gcloud pubsub topics publish ${topic_id} --message="DataSharing Completed!" --ordering-key="1" --project="broad-cho-priv1"
 else
     bin/DataSharingClient ${role} ../par/test.par.${role}.txt
 
-    python3 /home/secure-gwas-pubsub/publish.py DataSharing_completed
+    gcloud pubsub topics publish ${topic_id} --message="DataSharing Completed!" --ordering-key="1" --project="broad-cho-priv1"
 
     printf "\n\n Waiting a couple minutes between DataSharing and GWAS... \n\n"
     sleep $((100 + 30 * ${role}))
     bin/GwasClient ${role} ../par/test.par.${role}.txt
 
     cd /home
-    python3 secure-gwas-pubsub/publish.py GWAS_completed
+    gcloud pubsub topics publish ${topic_id} --message="GWAS Completed!" --ordering-key="1" --project="broad-cho-priv1"
 fi
 printf "\n\n Done with GWAS \n\n"
-
-gsutil ls # TODO: remove once tested

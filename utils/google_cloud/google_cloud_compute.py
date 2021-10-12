@@ -43,7 +43,7 @@ class GoogleCloudCompute():
                 print(f"Deleting subnet {subnet['name']}")
                 self.compute.subnetworks().delete(
                     project=self.project, region=constants.REGION, subnetwork=subnet['name']).execute()
-                time.sleep(20)
+                time.sleep(10)
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(10))
     def remove_peerings(self, project):
@@ -176,12 +176,16 @@ class GoogleCloudCompute():
                 ]
             }],
             'metadata': {
-                'items': [{
-                    # Startup script is automatically executed by the
-                    # instance upon startup.
-                    'key': 'startup-script',
-                    'value': startup_script
-                }]
+                'items': [
+                    {
+                        'key': 'startup-script',
+                        'value': startup_script
+                    },
+                    {
+                        'key': 'enable-oslogin',
+                        'value': True
+                    }
+                ]
             }
         }
         operation = self.compute.instances().insert(
@@ -267,6 +271,8 @@ class GoogleCloudCompute():
             return True
         print("Young...")
         return False
-    
+
     def test_ssh(self, instance):
-        os.system(f"gcloud compute ssh {instance} --project {self.project} --command \'ls\'")
+        os.system(
+            f"gcloud compute ssh {instance} --project {self.project} --command \'touch ssh_succcessful\'")
+        print("I have done the ssh?")

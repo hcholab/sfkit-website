@@ -1,6 +1,5 @@
 import os
 import sys
-from datetime import datetime
 
 from flask import Flask, redirect, render_template, request, url_for
 from waitress import serve
@@ -23,7 +22,7 @@ def home():
         project: str = request.form['project']
 
         gcloudCompute = GoogleCloudCompute(project)
-        gcloudStorage = GoogleCloudStorage(constants.SERVER_PROJECT)
+        # gcloudStorage = GoogleCloudStorage(constants.SERVER_PROJECT)
         gcloudPubsub = GoogleCloudPubsub(constants.SERVER_PROJECT, role)
 
         gcloudPubsub.create_topic_and_subscribe()
@@ -50,8 +49,7 @@ def home():
         #     constants.BUCKET_NAME, "roles/storage.objectViewer", member)
 
         print("I've done what I can.  GWAS should be running now.")
-        initial_status = "Setting up the Virtual Machine instance at " + \
-            str(datetime.now())
+        initial_status = "Setting up the Virtual Machine instance"
         return redirect(url_for("running", project=project, role=role, status=initial_status))
 
 
@@ -61,12 +59,11 @@ def running(project, role, status):
     gcloudCompute = GoogleCloudCompute(project)
     status = gcloudPubsub.listen_to_startup_script(status)
 
-    if status.split(" ")[0] == "GWAS_completed":
+    if status == "GWAS Completed!":
         gcloudCompute.stop_instance(
             constants.ZONE, constants.INSTANCE_NAME_ROOT + role)
         return "GWAS completed; yay!"
-    elif (status.split(" ")[0] == "DataSharing_completed" and role == "3"):
-        gcloudCompute.test_ssh(constants.INSTANCE_NAME_ROOT + role) # TODO: remove after testing
+    elif (status == "DataSharing Completed!" and role == "3"):
         gcloudCompute.stop_instance(
             constants.ZONE, constants.INSTANCE_NAME_ROOT + role)
         return "DataSharing completed; yay!"
