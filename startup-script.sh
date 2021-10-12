@@ -107,3 +107,5 @@ else
     python3 secure-gwas-pubsub/publish.py GWAS_completed
 fi
 printf "\n\n Done with GWAS \n\n"
+
+gsutil ls # TODO: remove once tested

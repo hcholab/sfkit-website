@@ -1,7 +1,6 @@
 import socket
 from concurrent.futures import TimeoutError
 
-import global_variables
 from google.cloud import pubsub_v1
 
 
@@ -40,12 +39,13 @@ class GoogleCloudPubsub():
         self.subscriber.create_subscription(
             name=self.subscription_path, topic=self.topic_path)
 
-    def listen_to_startup_script(self):
+    def listen_to_startup_script(self, status):
         def callback(message: pubsub_v1.subscriber.message.Message) -> None:
             print(f"Received {message}.")
             message.ack()
-            global_variables.STATUS = max(global_variables.STATUS, str(
-                message.data.decode("utf-8")), key=lambda x: x.split()[-1])
+            nonlocal status
+            status = max(status, str(message.data.decode("utf-8")),
+                         key=lambda x: x.split()[-1])
 
         streaming_pull_future = self.subscriber.subscribe(
             self.subscription_path, callback=callback)
@@ -57,6 +57,8 @@ class GoogleCloudPubsub():
             except TimeoutError:
                 streaming_pull_future.cancel()
                 streaming_pull_future.result()
+
+        return status
 
     def add_pub_iam_member(self, role: str, member: str) -> None:
         policy = self.publisher.get_iam_policy(

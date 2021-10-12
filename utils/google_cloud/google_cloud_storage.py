@@ -1,7 +1,7 @@
 
 import time
 
-import global_variables
+import constants
 from google.cloud import storage
 
 
@@ -15,15 +15,15 @@ class GoogleCloudStorage():
         buckets_list = [
             bucket.name for bucket in self.storage_client.list_buckets()]
 
-        if global_variables.BUCKET_NAME not in buckets_list:
-            print(f"Creating bucket {global_variables.BUCKET_NAME}")
-            self.storage_client.create_bucket(global_variables.BUCKET_NAME)
+        if constants.BUCKET_NAME not in buckets_list:
+            print(f"Creating bucket {constants.BUCKET_NAME}")
+            self.storage_client.create_bucket(constants.BUCKET_NAME)
             time.sleep(1)
 
-        self.delete_blob(global_variables.BUCKET_NAME,
+        self.delete_blob(constants.BUCKET_NAME,
                          "ip_addresses/IP_ADDR_P" + role)
 
-        return self.storage_client.bucket(global_variables.BUCKET_NAME)
+        return self.storage_client.bucket(constants.BUCKET_NAME)
 
     def add_bucket_iam_member(self, bucket_name, role, member):
         """Add a new member to an IAM Policy"""

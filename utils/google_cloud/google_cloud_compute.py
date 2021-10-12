@@ -1,12 +1,11 @@
-import os
-from tenacity import retry, stop_after_attempt, wait_fixed
-import time
 import datetime
-from pytz import timezone
-import subprocess
+import os
+import time
 
-import global_variables
+import constants
 import googleapiclient.discovery
+from pytz import timezone
+from tenacity import retry, stop_after_attempt, wait_fixed
 
 
 class GoogleCloudCompute():
@@ -19,37 +18,37 @@ class GoogleCloudCompute():
         existing_nets = [net['name'] for net in self.compute.networks().list(
             project=self.project).execute()['items']]
 
-        if global_variables.NETWORK_NAME not in existing_nets:
-            self.create_network(global_variables.NETWORK_NAME)
-            self.create_firewalls(global_variables.NETWORK_NAME)
+        if constants.NETWORK_NAME not in existing_nets:
+            self.create_network(constants.NETWORK_NAME)
+            self.create_firewalls(constants.NETWORK_NAME)
         else:
             self.remove_peerings(self.project)
-            self.remove_peerings(global_variables.SERVER_PROJECT)
+            self.remove_peerings(constants.SERVER_PROJECT)
             self.remove_old_subnets()
-        self.create_subnet(global_variables.REGION, global_variables.NETWORK_NAME, role)
+        self.create_subnet(constants.REGION, constants.NETWORK_NAME, role)
 
         # TODO: generalize to more than 2 networks
-        if self.project != global_variables.SERVER_PROJECT:
-            self.setup_vpc_peering(self.project, global_variables.SERVER_PROJECT)
-            self.setup_vpc_peering(global_variables.SERVER_PROJECT, self.project)
+        if self.project != constants.SERVER_PROJECT:
+            self.setup_vpc_peering(self.project, constants.SERVER_PROJECT)
+            self.setup_vpc_peering(constants.SERVER_PROJECT, self.project)
 
     @retry(stop=stop_after_attempt(5), wait=wait_fixed(30))
     def remove_old_subnets(self):
         for subnet in self.compute.subnetworks().list(
-                project=self.project, region=global_variables.REGION).execute()['items']:
+                project=self.project, region=constants.REGION).execute()['items']:
             if subnet['name'].split("-")[:2] == ["secure", "gwas"] and self.old(subnet['creationTimestamp'], 3):
-                for instance in self.list_instances(global_variables.ZONE, subnetwork=subnet['selfLink']):
-                    self.delete_instance(global_variables.ZONE, instance)
+                for instance in self.list_instances(constants.ZONE, subnetwork=subnet['selfLink']):
+                    self.delete_instance(constants.ZONE, instance)
 
                 print(f"Deleting subnet {subnet['name']}")
                 self.compute.subnetworks().delete(
-                    project=self.project, region=global_variables.REGION, subnetwork=subnet['name']).execute()
+                    project=self.project, region=constants.REGION, subnetwork=subnet['name']).execute()
                 time.sleep(20)
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(10))
     def remove_peerings(self, project):
         network_info = self.compute.networks().get(
-            project=project, network=global_variables.NETWORK_NAME).execute()
+            project=project, network=constants.NETWORK_NAME).execute()
         peerings = [peering['name'].replace(
             'peering-', '') for peering in network_info['peerings']] if 'peerings' in network_info else []
         for project2 in peerings:
@@ -57,13 +56,14 @@ class GoogleCloudCompute():
             body = {
                 'name': f"peering-{project2}"
             }
-            self.compute.networks().removePeering(project=project, network=global_variables.NETWORK_NAME, body=body).execute()
+            self.compute.networks().removePeering(
+                project=project, network=constants.NETWORK_NAME, body=body).execute()
             time.sleep(2)
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(30))
     def setup_vpc_peering(self, project1, project2):
         network_info = self.compute.networks().get(
-            project=project1, network=global_variables.NETWORK_NAME).execute()
+            project=project1, network=constants.NETWORK_NAME).execute()
         peerings = [peering['name'].replace(
             'peering-', '') for peering in network_info['peerings']] if 'peerings' in network_info else []
         if project2 not in peerings:
@@ -71,12 +71,12 @@ class GoogleCloudCompute():
             body = {
                 'networkPeering': {
                     'name': 'peering-{}'.format(project2),
-                    'network': 'https://www.googleapis.com/compute/v1/projects/{}/global/networks/{}'.format(project2, global_variables.NETWORK_NAME),
+                    'network': 'https://www.googleapis.com/compute/v1/projects/{}/global/networks/{}'.format(project2, constants.NETWORK_NAME),
                     'exchangeSubnetRoutes': True
                 }
             }
             self.compute.networks().addPeering(
-                project=project1, network=global_variables.NETWORK_NAME, body=body).execute()
+                project=project1, network=constants.NETWORK_NAME, body=body).execute()
 
     def create_network(self, network_name):
         print(f"Creating new network {network_name}")
@@ -91,7 +91,7 @@ class GoogleCloudCompute():
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(30))
     def create_subnet(self, region, network_name, role):
-        subnet_name = global_variables.SUBNET_NAME + role
+        subnet_name = constants.SUBNET_NAME + role
         print(f"Creating new subnetwork {subnet_name}")
         network_url = ''
         for net in self.compute.networks().list(project=self.project).execute()['items']:
@@ -126,7 +126,7 @@ class GoogleCloudCompute():
         self.wait_for_operation(operation['name'])
 
     def setup_instance(self, zone, name, role):
-        existing_instances = self.list_instances(global_variables.ZONE)
+        existing_instances = self.list_instances(constants.ZONE)
 
         if existing_instances and name in existing_instances:
             self.delete_instance(zone, name)
@@ -151,8 +151,8 @@ class GoogleCloudCompute():
             "name": name,
             "machineType": machine_type,
             "networkInterfaces": [{
-                'network': 'projects/{}/global/networks/{}'.format(self.project, global_variables.NETWORK_NAME),
-                'subnetwork': 'regions/{}/subnetworks/{}'.format(global_variables.REGION, global_variables.SUBNET_NAME + role),
+                'network': 'projects/{}/global/networks/{}'.format(self.project, constants.NETWORK_NAME),
+                'subnetwork': 'regions/{}/subnetworks/{}'.format(constants.REGION, constants.SUBNET_NAME + role),
                 'networkIP': f"10.0.{role}.10",
                 'accessConfigs': [
                     {'type': 'ONE_TO_ONE_NAT', 'name': 'External NAT'}
@@ -267,3 +267,6 @@ class GoogleCloudCompute():
             return True
         print("Young...")
         return False
+    
+    def test_ssh(self, instance):
+        os.system(f"gcloud compute ssh {instance} --project {self.project} --command \'ls\'")
