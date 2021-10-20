@@ -63,10 +63,11 @@ def login():
         password = request.form["password"]
 
         user = db.collection("users").document(email).get()
+        user_dict = user.to_dict()
 
-        if not user:
+        if not user_dict:
             flash("Incorrect email.")
-        elif not check_password_hash(user.to_dict()["password"], password):
+        elif not check_password_hash(user_dict["password"], password):
             flash("Incorrect password.")
         else:
             session.clear()

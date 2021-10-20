@@ -1,13 +1,5 @@
-from datetime import datetime
-
-from flask import Blueprint, flash, g, redirect, render_template, request, url_for
+from flask import Blueprint, render_template
 from google.cloud import firestore
-from google.protobuf import descriptor
-
-from src import constants
-from src.auth import login_required
-from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
-from src.utils.google_cloud.google_cloud_pubsub import GoogleCloudPubsub
 
 bp = Blueprint("general", __name__)
 db = firestore.Client()

@@ -60,16 +60,17 @@ def update(id):
         if not title:
             flash("Title is required.")
         else:
-            old_doc_ref = db.collection("projects").document(id).get().to_dict()
+            old_doc_ref = db.collection("projects").document(id)
+            old_doc_ref_dict = old_doc_ref.get().to_dict()
             doc_ref = db.collection("projects").document(title)
             doc_ref.set(
                 {
                     "title": title,
                     "description": description,
                     "owner": g.user["id"],
-                    "created": old_doc_ref["created"],
-                    "participants": old_doc_ref["participants"],
-                    "ready": old_doc_ref["ready"],
+                    "created": old_doc_ref_dict["created"],
+                    "participants": old_doc_ref_dict["participants"],
+                    "ready": old_doc_ref_dict["ready"],
                     "status": "not ready",
                 },
                 merge=True,
@@ -77,13 +78,13 @@ def update(id):
             if (
                 id != title
             ):  # in this case, we're creating a new post, so we delete the old one
-                return redirect(url_for("gwas.delete", id=id), code=307)  # 307 for post
+                old_doc_ref.delete()
             return redirect(url_for("gwas.index"))
 
     return render_template("gwas/update.html", project=project)
 
 
-@bp.route("/<string:id>/delete", methods=("POST",))
+@bp.route("/delete/<id>", methods=("POST",))
 @login_required
 def delete(id):
     db.collection("projects").document(id).delete()
