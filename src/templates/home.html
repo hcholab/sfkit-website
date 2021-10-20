@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Homepage{% endblock %}
+
+{% block content %}
+  <section class="py-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-12 col-lg-6 mx-auto">
+          <h2 class="h1 fw-bold mb-5">Secure GWAS</h2>
+          <p class="lead text-muted mb-4">This is a portal for securely running GWAS by distributing work among multiple parties. See the original paper
+            <a href="https://www.nature.com/articles/nbt.4108">here</a>
+            for details on the underlying implementation.</p>
+          <div class="mb-5">
+            <img class="img-fluid" src="static/gwas.jpeg" alt="">
+          </div>
+          <p class="lead text-muted mb-4">Navigate to the "Workflow" page to read more about the portal, and go to the "Projects" page to begin your own project!</p>
+          <p class="lead text-muted mb-4">GWAS is awesome...</p>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

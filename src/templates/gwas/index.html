@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}All Projects{% endblock %}
+
+{% block content %}
+  <section class="py-5">
+    <div class="container">
+      <div class="row mb-5">
+        <div class="col-12 col-lg-8 col-xxl-7 text-center mx-auto">
+          {% if projects | length != 0 %}
+            <h2 class="display-5 fw-bold mt-2 mb-3">All Registered Secure GWAS Projects</h2>
+          {% else %}
+            <h2 class="display-5 fw-bold mt-2 mb-3">There are no registered Secure GWAS Projects:</h2>
+          {% endif %}
+        </div>
+      </div>
+      <div class="row">
+        {% for project in projects %}
+          <div class="col-12 col-md-6 col-lg-4 mb-5">
+            <span>
+              <small class="text-muted">
+                Created by
+                {{ project['owner'] }}
+                on
+                {{ project['created'].strftime('%m-%d-%Y') }}
+              </small>
+            </span>
+            {% if g.user['id'] in project['participants'] %}
+              <a href="{{ url_for('gwas.start', project_title=project['title']) }}">
+                <h2 class="mt-2 fw-bold">{{ project['title'] }}</h2>
+              </a>
+            {% else %}
+              <h2 class="mt-2 fw-bold">{{ project['title'] }}</h2>
+            {% endif %}
+            <p class="lead text-muted">{{ project['description']  }}</p>
+
+            {% if g.user['id'] == project['owner'] %}
+              <a class="btn btn-secondary action" href="{{ url_for('gwas.update', id=project['title']) }}">Edit</a>
+            {% elif g.user['id'] not in project['participants'] %}
+              <form action="{{ url_for('gwas.join_project', id=project['title']) }}" method="post">
+                <input class="btn btn-primary" type="submit" value="Join Project">
+              </form>
+            {% endif %}
+          </div>
+        {% endfor %}
+        <p class="text-center lead text-muted">
+          <a class="btn btn-primary" href="{{ url_for('gwas.create') }}">Create New Project</a>
+        </p>
+      </section>
+    {% endblock %}="project</a>" >

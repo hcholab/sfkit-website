@@ -1,4 +1,4 @@
-SERVER_PROJECT = "broad-cho-priv1"
+SERVER_GCP_PROJECT = "broad-cho-priv1"
 ZONE = "us-central1-a"
 REGION = "us-central1"
 NETWORK_NAME = "secure-gwas"

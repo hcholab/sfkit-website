@@ -1,27 +1,23 @@
-
 import time
 
-import constants
+from src import constants
 from google.cloud import storage
 
 
-class GoogleCloudStorage():
-
+class GoogleCloudStorage:
     def __init__(self, project) -> None:
         self.project = project
         self.storage_client = storage.Client(project=self.project)
 
     def validate_bucket(self, role):
-        buckets_list = [
-            bucket.name for bucket in self.storage_client.list_buckets()]
+        buckets_list = [bucket.name for bucket in self.storage_client.list_buckets()]
 
         if constants.BUCKET_NAME not in buckets_list:
             print(f"Creating bucket {constants.BUCKET_NAME}")
             self.storage_client.create_bucket(constants.BUCKET_NAME)
             time.sleep(1)
 
-        self.delete_blob(constants.BUCKET_NAME,
-                         "ip_addresses/IP_ADDR_P" + role)
+        self.delete_blob(constants.BUCKET_NAME, "ip_addresses/IP_ADDR_P" + role)
 
         return self.storage_client.bucket(constants.BUCKET_NAME)
 

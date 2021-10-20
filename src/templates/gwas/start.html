@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Project Start?{% endblock %}
+
+{% block content %}
+  <section class="py-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-12 col-lg-5 mx-auto">
+          <div class="p-5 bg-light rounded text-center">
+            <span>
+              <small class="text-muted">
+                Created by
+                {{ project['owner'] }}
+                on
+                {{ project['created'].strftime('%m-%d-%Y') }}
+              </small>
+            </span>
+            <h2 class="mt-2 fw-bold">{{ project['title'] }}</h2>
+            <p class="lead text-muted">{{ project['description']  }}</p>
+            <span>
+              Participants:
+              {% for participant in project['participants']%}
+                <small class="text-muted ms-2 me-2">{{participant}}</small>
+              {% endfor %}
+            </span>
+            <br>
+            {% if project["status"] == "not ready" %}
+              <form action="{{ url_for('gwas.start', project_title=project['title']) }}" method="post">
+                <button class="mt-2 btn btn-success" type="submit">Ready to begin GWAS?</button>
+              </form>
+            {% else %}
+              <form action="{{ url_for('gwas.start', project_title=project['title']) }}" method="post">
+                Status:
+                {{ project["status"] }}
+                <br>
+                <button class="mt-2 btn btn-secondary" type="submit">Check for Update?</button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </section>
+  {% endblock %}
