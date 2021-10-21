@@ -2,14 +2,21 @@ import os
 
 from flask import Flask
 from flask_bootstrap import Bootstrap
+from google.cloud import firestore
 
-from . import auth, general, gwas
 
-
-def create_app():
+def create_app(test_config=None):
     app = Flask(__name__)
-    app.secret_key = os.urandom(12).hex()
+    app.config.from_mapping(
+        SECRET_KEY=os.urandom(12).hex(),
+        DATABASE=firestore.Client()
+    )
+    if test_config:
+        app.config.update(test_config)
+
     Bootstrap(app)
+
+    from src import auth, general, gwas
 
     app.register_blueprint(auth.bp)
     app.register_blueprint(gwas.bp)

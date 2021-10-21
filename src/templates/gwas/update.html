@@ -19,7 +19,7 @@
                 <input type="submit" value="Save" class="btn btn-primary me-2 mb-2 mb-sm-0">
               </div>
             </form>
-            <form action="{{ url_for('gwas.delete', id=project['title']) }}" method="post">
+            <form action="{{ url_for('gwas.delete', project_title=project['title']) }}" method="post">
               <input class="mt-2 btn-danger" type="submit" value="Delete" onclick="return confirm('Are you sure?');">
             </form>
           </div>

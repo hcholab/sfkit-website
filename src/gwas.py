@@ -1,9 +1,7 @@
 from datetime import datetime
 
-from flask import Blueprint, flash, g, redirect, render_template, request, url_for
-from google.api_core.gapic_v1 import method
-from google.cloud import firestore
-from google.protobuf import descriptor
+from flask import (Blueprint, current_app, flash, g, redirect, render_template,
+                   request, url_for)
 
 from src import constants
 from src.auth import login_required
@@ -11,11 +9,10 @@ from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
 from src.utils.google_cloud.google_cloud_pubsub import GoogleCloudPubsub
 
 bp = Blueprint("gwas", __name__)
-db = firestore.Client()
-
 
 @bp.route("/index")
 def index():
+    db = current_app.config["DATABASE"]
     projects = db.collection("projects")
     projects = [project.to_dict() for project in projects.stream()]
 
@@ -26,6 +23,8 @@ def index():
 @login_required
 def create():
     if request.method == "POST":
+        db = current_app.config["DATABASE"]
+
         title = request.form["title"]
         description = request.form["description"]
 
@@ -48,10 +47,12 @@ def create():
     return render_template("gwas/create.html")
 
 
-@bp.route("/<string:id>/update", methods=("GET", "POST"))
+@bp.route("/update/<project_title>", methods=("GET", "POST"))
 @login_required
-def update(id):
-    project = db.collection("projects").document(id).get().to_dict()
+def update(project_title):
+    db = current_app.config["DATABASE"]
+
+    project = db.collection("projects").document(project_title).get().to_dict()
 
     if request.method == "POST":
         title = request.form["title"]
@@ -60,7 +61,7 @@ def update(id):
         if not title:
             flash("Title is required.")
         else:
-            old_doc_ref = db.collection("projects").document(id)
+            old_doc_ref = db.collection("projects").document(project_title)
             old_doc_ref_dict = old_doc_ref.get().to_dict()
             doc_ref = db.collection("projects").document(title)
             doc_ref.set(
@@ -76,7 +77,7 @@ def update(id):
                 merge=True,
             )
             if (
-                id != title
+                project_title != title
             ):  # in this case, we're creating a new post, so we delete the old one
                 old_doc_ref.delete()
             return redirect(url_for("gwas.index"))
@@ -84,17 +85,19 @@ def update(id):
     return render_template("gwas/update.html", project=project)
 
 
-@bp.route("/delete/<id>", methods=("POST",))
+@bp.route("/delete/<project_title>", methods=("POST",))
 @login_required
-def delete(id):
-    db.collection("projects").document(id).delete()
+def delete(project_title):
+    db = current_app.config["DATABASE"]
+    db.collection("projects").document(project_title).delete()
     return redirect(url_for("gwas.index"))
 
 
-@bp.route("/<string:id>/join", methods=("POST",))
+@bp.route("/join/<project_name>", methods=("POST",))
 @login_required
-def join_project(id):
-    doc_ref = db.collection("projects").document(id)
+def join_project(project_name):
+    db = current_app.config["DATABASE"]
+    doc_ref = db.collection("projects").document(project_name)
     doc_ref.set(
         {
             "participants": doc_ref.get().to_dict()["participants"] + [g.user["id"]],
@@ -108,6 +111,7 @@ def join_project(id):
 @bp.route("/start/<project_title>", methods=("GET", "POST"))
 @login_required
 def start(project_title):
+    db = current_app.config["DATABASE"]
     project_doc_dict = db.collection("projects").document(project_title).get().to_dict()
 
     if request.method == "GET":

@@ -8,13 +8,11 @@ from flask import (
     request,
     session,
     url_for,
+    current_app
 )
 from werkzeug.security import check_password_hash, generate_password_hash
-from google.cloud import firestore
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
-db = firestore.Client()
-
 
 def login_required(view):
     @functools.wraps(view)
@@ -30,18 +28,20 @@ def login_required(view):
 @bp.route("/register", methods=("GET", "POST"))
 def register():
     if request.method == "POST":
+        db = current_app.config["DATABASE"]
+
         email = request.form["email"]
         password = request.form["password"]
         password_check = request.form["password_check"]
 
         if not email:
-            flash("Email is required")
+            flash("Email is required.")
         elif not password:
             flash("Password is required.")
         elif password_check != password:
-            flash("Passwords don't match.  Please double-check and try again.")
+            flash("Passwords do not match. Please double-check and try again.")
         elif db.collection("users").document(email).get().exists:
-            flash("Email already taken")
+            flash("Email already taken.")
         else:
             doc_ref = db.collection("users").document(email)
             doc_ref.set(
@@ -59,6 +59,8 @@ def register():
 @bp.route("/login", methods=("GET", "POST"))
 def login():
     if request.method == "POST":
+        db = current_app.config["DATABASE"]
+
         email = request.form["email"]
         password = request.form["password"]
 
@@ -77,9 +79,11 @@ def login():
     return render_template("auth/login.html")
 
 
-@login_required
 @bp.route("/<id>/user", methods=("GET", "POST"))
+@login_required
 def user(id):
+    db = current_app.config["DATABASE"]
+
     user = db.collection("users").document(id).get().to_dict()
     if request.method == "POST":
         doc_ref = db.collection("users").document(id)
@@ -90,6 +94,8 @@ def user(id):
 
 @bp.before_app_request
 def load_logged_in_user():
+    db = current_app.config["DATABASE"]
+
     user_id = session.get("user_id")
 
     if user_id is None:

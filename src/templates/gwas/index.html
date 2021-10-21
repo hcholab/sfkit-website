@@ -5,16 +5,19 @@
 {% block content %}
   <section class="py-5">
     <div class="container">
-      <div class="row mb-5">
+      <div class="row mb-4">
         <div class="col-12 col-lg-8 col-xxl-7 text-center mx-auto">
           {% if projects | length != 0 %}
-            <h2 class="display-5 fw-bold mt-2 mb-3">All Registered Secure GWAS Projects</h2>
+            <h2 class="display-5 fw-bold mt-2 mb-0">All Registered Secure GWAS Projects</h2>
           {% else %}
-            <h2 class="display-5 fw-bold mt-2 mb-3">There are no registered Secure GWAS Projects:</h2>
+            <h2 class="display-5 fw-bold mt-2 mb-0">There are no registered Secure GWAS Projects:</h2>
           {% endif %}
         </div>
       </div>
-      <div class="row">
+      <p class="text-center lead text-muted mb-4">
+        <a class="btn btn-primary" href="{{ url_for('gwas.create') }}">Create New Project</a>
+      </p>
+      <div class="row p-5 bg-light rounded text-center">
         {% for project in projects %}
           <div class="col-12 col-md-6 col-lg-4 mb-5">
             <span>
@@ -43,8 +46,5 @@
             {% endif %}
           </div>
         {% endfor %}
-        <p class="text-center lead text-muted">
-          <a class="btn btn-primary" href="{{ url_for('gwas.create') }}">Create New Project</a>
-        </p>
       </section>
     {% endblock %}="project</a>" >
