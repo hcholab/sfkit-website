@@ -1,14 +1,18 @@
-import os
-import tempfile
-
 import pytest
 from src import create_app
 from mockfirestore import MockFirestore
+import os
 
 
 @pytest.fixture
 def app():
-    return create_app({"TESTING": True, "DATABASE": MockFirestore()})
+    return create_app(
+        {
+            "SECRET_KEY": os.urandom(12).hex(),
+            "TESTING": True,
+            "DATABASE": MockFirestore(),
+        }
+    )
 
 
 @pytest.fixture
