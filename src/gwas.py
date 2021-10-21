@@ -1,7 +1,15 @@
 from datetime import datetime
 
-from flask import (Blueprint, current_app, flash, g, redirect, render_template,
-                   request, url_for)
+from flask import (
+    Blueprint,
+    current_app,
+    flash,
+    g,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 
 from src import constants
 from src.auth import login_required
@@ -9,6 +17,7 @@ from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
 from src.utils.google_cloud.google_cloud_pubsub import GoogleCloudPubsub
 
 bp = Blueprint("gwas", __name__)
+
 
 @bp.route("/index")
 def index():

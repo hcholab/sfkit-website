@@ -8,8 +8,7 @@ from google.cloud import firestore
 def create_app(test_config=None):
     app = Flask(__name__)
     app.config.from_mapping(
-        SECRET_KEY=os.urandom(12).hex(),
-        DATABASE=firestore.Client()
+        SECRET_KEY=os.urandom(12).hex(), DATABASE=firestore.Client()
     )
     if test_config:
         app.config.update(test_config)
