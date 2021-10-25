@@ -38,9 +38,9 @@
             <p class="lead text-muted">{{ project['description']  }}</p>
 
             {% if g.user['id'] == project['owner'] %}
-              <a class="btn btn-secondary action" href="{{ url_for('gwas.update', id=project['title']) }}">Edit</a>
+              <a class="btn btn-secondary action" href="{{ url_for('gwas.update', project_title=project['title']) }}">Edit</a>
             {% elif g.user['id'] not in project['participants'] %}
-              <form action="{{ url_for('gwas.join_project', id=project['title']) }}" method="post">
+              <form action="{{ url_for('gwas.join_project', project_name=project['title']) }}" method="post">
                 <input class="btn btn-primary" type="submit" value="Join Project">
               </form>
             {% endif %}

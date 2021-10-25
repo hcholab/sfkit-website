@@ -1,6 +1,8 @@
 import functools
+
 from flask import (
     Blueprint,
+    current_app,
     flash,
     g,
     redirect,
@@ -8,8 +10,10 @@ from flask import (
     request,
     session,
     url_for,
-    current_app,
 )
+from google.auth import jwt
+from google.auth.transport import requests
+from google.oauth2 import id_token
 from werkzeug.security import check_password_hash, generate_password_hash
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
@@ -70,6 +74,10 @@ def login():
 
         if not user_dict:
             flash("Incorrect email.")
+        elif "password" not in user_dict:
+            flash(
+                "Password did not check out.  This is probably because this is a google account and you should log in with google instead."
+            )
         elif not check_password_hash(user_dict["password"], password):
             flash("Incorrect password.")
         else:
@@ -78,6 +86,35 @@ def login():
             return redirect(url_for("gwas.index"))
 
     return render_template("auth/login.html")
+
+
+@bp.route("/callback/", methods=("POST",))
+def callback():
+    db = current_app.config["DATABASE"]
+    token = jwt.decode(request.form["credential"], verify=False)
+    print(token)
+    # try:
+    #     id_token.verify_oauth2_token(
+    #         token,
+    #         request.Requests(),
+    #         "419003787216-rcif34r976a9qm3818qgeqed7c582od6.apps.googleusercontent.com",
+    #     )
+    # except:
+    #     flash("Invalid Google account.")
+    #     return redirect(url_for("auth.login"))
+
+    session.clear()
+    session["user_id"] = token["email"]
+
+    if not db.collection("users").document(session["user_id"]).get().exists:
+        db.collection("users").document(session["user_id"]).set(
+            {
+                "email": session["user_id"],
+                "gcp_project": "",
+            }
+        )
+
+    return redirect(url_for("gwas.index"))
 
 
 @bp.route("/<id>/user", methods=("GET", "POST"))
