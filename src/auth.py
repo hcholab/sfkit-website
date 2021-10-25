@@ -16,6 +16,8 @@ from google.auth.transport import requests
 from google.oauth2 import id_token
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
+
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 
@@ -56,6 +58,8 @@ def register():
                     "gcp_project": "",
                 }
             )
+            gcloudIAM = GoogleCloudIAM()
+            gcloudIAM.give_cloud_build_view_permissions(email)
             return redirect(url_for("auth.login"))
 
     return render_template("auth/register.html")
@@ -107,6 +111,8 @@ def callback():
     session["user_id"] = token["email"]
 
     if not db.collection("users").document(session["user_id"]).get().exists:
+        gcloudIAM = GoogleCloudIAM()
+        gcloudIAM.give_cloud_build_view_permissions(session["user_id"])
         db.collection("users").document(session["user_id"]).set(
             {
                 "email": session["user_id"],
