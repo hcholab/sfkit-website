@@ -2,12 +2,10 @@ import pytest
 from flask import g, session
 
 
-def test_register(client, app):
+def test_register(client, app, auth):
     assert client.get("/auth/register").status_code == 200
-    response = client.post(
-        "/auth/register",
-        data={"email": "a@a.a", "password": "a", "password_check": "a"},
-    )
+
+    response = auth.register()
     assert response.headers["Location"] == "http://localhost/auth/login"
 
     with app.app_context():
@@ -24,26 +22,16 @@ def test_register(client, app):
         ("a@a.a", "a", "a", b"Email already taken."),
     ),
 )
-def test_register_validate_input(client, email, password, password_check, message):
-    client.post(
-        "/auth/register",
-        data={"email": "a@a.a", "password": "a", "password_check": "a"},
-    )
-    response = client.post(
-        "/auth/register",
-        data={"email": email, "password": password, "password_check": password_check},
-    )
-    print(response.data)
+def test_register_validate_input(auth, email, password, password_check, message):
+    auth.register()
+    response = auth.register(email, password, password_check)
     assert message in response.data
 
 
-def test_login(client):
-    client.post(
-        "/auth/register",
-        data={"email": "a@a.a", "password": "a", "password_check": "a"},
-    )
+def test_login(client, auth):
+    auth.register()
     assert client.get("/auth/login").status_code == 200
-    response = client.post("/auth/login", data={"email": "a@a.a", "password": "a"})
+    response = auth.login()
     assert response.headers["Location"] == "http://localhost/index"
 
     with client:
@@ -59,37 +47,28 @@ def test_login(client):
         ("a@a.a", "b", b"Incorrect password."),
     ),
 )
-def test_login_validate_input(client, email, password, message):
-    client.post(
-        "/auth/register",
-        data={"email": "a@a.a", "password": "a", "password_check": "a"},
-    )
+def test_login_validate_input(client, auth, email, password, message):
+    auth.register()
     response = client.post("/auth/login", data={"email": email, "password": password})
     assert message in response.data
 
 
-def test_logout(client):
-    client.post(
-        "/auth/register",
-        data={"email": "a@a.a", "password": "a", "password_check": "a"},
-    )
-    client.post("/auth/login", data={"email": "a@a.a", "password": "a"})
+def test_logout(client, auth):
+    auth.register()
+    auth.login()
     with client:
-        client.get("/auth/logout")
+        auth.logout()
         assert "user_id" not in session
 
 
-def test_user(client):
+def test_user(client, auth):
     response = client.post(
         "auth/a%40a.a/user", data={"id": "a%40a.a", "gcp_project": "broad-cho-priv1"}
     )
     assert response.headers["Location"] == "http://localhost/auth/login"
 
-    client.post(
-        "/auth/register",
-        data={"email": "a@a.a", "password": "a", "password_check": "a"},
-    )
-    client.post("/auth/login", data={"email": "a@a.a", "password": "a"})
+    auth.register()
+    auth.login()
     assert client.get("auth/a%40a.a/user", data={"id": "a@a.a"}).status_code == 200
     response = client.post(
         "auth/a%40a.a/user", data={"id": "a@a.a", "gcp_project": "broad-cho-priv1"}

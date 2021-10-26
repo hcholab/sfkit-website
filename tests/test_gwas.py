@@ -20,12 +20,9 @@ def test_login_required(client, path):
     assert response.headers["Location"] == "http://localhost/auth/login"
 
 
-def test_create(client):
-    client.post(
-        "/auth/register",
-        data={"email": "a@a.a", "password": "a", "password_check": "a"},
-    )
-    client.post("/auth/login", data={"email": "a@a.a", "password": "a"})
+def test_create(client, auth):
+    auth.register()
+    auth.login()
     assert client.get("create").status_code == 200
     response = client.post(
         "create", data={"title": "test title", "description": "test description"}
@@ -33,12 +30,9 @@ def test_create(client):
     assert response.headers["Location"] == "http://localhost/index"
 
 
-def test_update(client):
-    client.post(
-        "/auth/register",
-        data={"email": "a@a.a", "password": "a", "password_check": "a"},
-    )
-    client.post("/auth/login", data={"email": "a@a.a", "password": "a"})
+def test_update(client, auth):
+    auth.register()
+    auth.login()
     client.post(
         "create", data={"title": "testtitle", "description": "test description"}
     )
@@ -50,12 +44,9 @@ def test_update(client):
     assert response.headers["Location"] == "http://localhost/index"
 
 
-def test_delete(client):
-    client.post(
-        "/auth/register",
-        data={"email": "a@a.a", "password": "a", "password_check": "a"},
-    )
-    client.post("/auth/login", data={"email": "a@a.a", "password": "a"})
+def test_delete(client, auth):
+    auth.register()
+    auth.login()
     client.post(
         "create", data={"title": "testtitle", "description": "test description"}
     )
@@ -63,12 +54,9 @@ def test_delete(client):
     assert response.headers["Location"] == "http://localhost/index"
 
 
-def test_join_project(client):
-    client.post(
-        "/auth/register",
-        data={"email": "a@a.a", "password": "a", "password_check": "a"},
-    )
-    client.post("/auth/login", data={"email": "a@a.a", "password": "a"})
+def test_join_project(client, auth):
+    auth.register()
+    auth.login()
     client.post(
         "create", data={"title": "testtitle", "description": "test description"}
     )
