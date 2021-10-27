@@ -40,6 +40,16 @@ def create():
         if not title:
             flash("Title is required.")
         else:
+            # validate that title is unique
+            projects = db.collection("projects").stream()
+            for project in projects:
+                if (
+                    project.to_dict()["title"].replace(" ", "").lower()
+                    == title.replace(" ", "").lower()
+                ):
+                    flash("Title already exists.")
+                    return render_template("gwas/create.html")
+
             doc_ref = db.collection("projects").document(title)
             doc_ref.set(
                 {
@@ -69,6 +79,17 @@ def update(project_title):
         if not title:
             flash("Title is required.")
         else:
+            if title.replace(" ", "").lower() != project_title.replace(" ", "").lower():
+                # validate that title is unique
+                projects = db.collection("projects").stream()
+                for project in projects:
+                    if (
+                        project.to_dict()["title"].replace(" ", "").lower()
+                        == title.replace(" ", "").lower()
+                    ):
+                        flash("Title already exists.")
+                        return render_template("gwas/update.html", project=project)
+
             old_doc_ref = db.collection("projects").document(project_title)
             old_doc_ref_dict = old_doc_ref.get().to_dict()
             doc_ref = db.collection("projects").document(title)

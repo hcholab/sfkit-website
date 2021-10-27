@@ -18,6 +18,11 @@ def test_create(client, auth):
     )
     assert response.headers["Location"] == "http://localhost/index"
 
+    response = client.post(
+        "create", data={"title": "test title", "description": "test description"}
+    )
+    assert "Location" not in response.headers
+
 
 def test_create_no_title(client, auth):
     auth.register()
@@ -39,12 +44,21 @@ def test_update(client, auth, title, description):
     client.post(
         "create", data={"title": "testtitle", "description": "test description"}
     )
+    client.post(
+        "create", data={"title": "anothertitle", "description": "test description"}
+    )
     assert client.get("update/testtitle").status_code == 200
     response = client.post(
         "update/testtitle",
         data={"title": title, "description": description},
     )
     assert response.headers["Location"] == "http://localhost/index"
+
+    response = client.post(
+        "update/anothertitle",
+        data={"title": title, "description": description},
+    )
+    assert "Location" not in response.headers
 
 
 def test_update_no_title(client, auth):
