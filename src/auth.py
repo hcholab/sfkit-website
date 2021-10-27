@@ -92,11 +92,11 @@ def login():
     return render_template("auth/login.html")
 
 
-@bp.route("/callback/", methods=("POST",))
+@bp.route("/callback", methods=("POST",))
 def callback():
+    print(request.form["credential"])
     db = current_app.config["DATABASE"]
     token = jwt.decode(request.form["credential"], verify=False)
-    print(token)
     # try:
     #     id_token.verify_oauth2_token(
     #         token,
@@ -123,7 +123,7 @@ def callback():
     return redirect(url_for("gwas.index"))
 
 
-@bp.route("/<id>/user", methods=("GET", "POST"))
+@bp.route("/user/<id>", methods=("GET", "POST"))
 @login_required
 def user(id):
     db = current_app.config["DATABASE"]

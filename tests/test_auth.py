@@ -2,6 +2,15 @@ import pytest
 from flask import g, session
 
 
+@pytest.mark.parametrize(
+    "path",
+    ("/create", "/update/1", "/delete/1", "/join/1", "/start/1/1", "auth/user/1"),
+)
+def test_login_required(client, path):
+    response = client.post(path)
+    assert response.headers["Location"] == "http://localhost/auth/login"
+
+
 def test_register(client, app, auth):
     assert client.get("/auth/register").status_code == 200
 
@@ -53,24 +62,37 @@ def test_login_validate_input(client, auth, email, password, message):
     assert message in response.data
 
 
+def test_login_after_google_register(client, auth):
+    auth.callback()
+    response = client.post("/auth/login", data={"email": "a@a.a", "password": "a"})
+    assert b"Password did not check out" in response.data
+
+
+def test_callback(app, auth):
+    auth.callback()
+    with app.app_context():
+        db = app.config["DATABASE"]
+        assert db.collection("users").document("a@a.a").get().exists
+
+
+def test_callback_already_registered(auth):
+    auth.register()
+    auth.callback()
+
+
+def test_user(client, auth):
+    auth.register()
+    auth.login()
+    assert client.get("auth/user/a%40a.a", data={"id": "a@a.a"}).status_code == 200
+    response = client.post(
+        "auth/user/a%40a.a", data={"id": "a@a.a", "gcp_project": "broad-cho-priv1"}
+    )
+    assert response.headers["Location"] == "http://localhost/index"
+
+
 def test_logout(client, auth):
     auth.register()
     auth.login()
     with client:
         auth.logout()
         assert "user_id" not in session
-
-
-def test_user(client, auth):
-    response = client.post(
-        "auth/a%40a.a/user", data={"id": "a%40a.a", "gcp_project": "broad-cho-priv1"}
-    )
-    assert response.headers["Location"] == "http://localhost/auth/login"
-
-    auth.register()
-    auth.login()
-    assert client.get("auth/a%40a.a/user", data={"id": "a@a.a"}).status_code == 200
-    response = client.post(
-        "auth/a%40a.a/user", data={"id": "a@a.a", "gcp_project": "broad-cho-priv1"}
-    )
-    assert response.headers["Location"] == "http://localhost/index"

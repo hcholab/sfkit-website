@@ -3,7 +3,7 @@ import os
 import time
 
 from src import constants
-import googleapiclient.discovery
+import googleapiclient.discovery as googleapi
 from pytz import timezone
 from tenacity import retry, stop_after_attempt, wait_fixed
 
@@ -11,7 +11,7 @@ from tenacity import retry, stop_after_attempt, wait_fixed
 class GoogleCloudCompute:
     def __init__(self, project) -> None:
         self.project = project
-        self.compute = googleapiclient.discovery.build("compute", "v1")
+        self.compute = googleapi.build("compute", "v1")
 
     def setup_networking(self, role):
         existing_nets = [
@@ -356,9 +356,3 @@ class GoogleCloudCompute:
             return True
         print("Young...")
         return False
-
-    def test_ssh(self, instance):
-        os.system(
-            f"gcloud compute ssh {instance} --project {self.project} --command 'touch ssh_succcessful'"
-        )
-        print("I have done the ssh?")

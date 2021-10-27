@@ -48,8 +48,7 @@ def create():
                     "owner": g.user["id"],
                     "created": datetime.now(),
                     "participants": [g.user["id"]],
-                    "ready": [0],
-                    "status": "not ready",
+                    "status": ["not ready"],
                 }
             )
             return redirect(url_for("gwas.index"))
@@ -80,8 +79,7 @@ def update(project_title):
                     "owner": g.user["id"],
                     "created": old_doc_ref_dict["created"],
                     "participants": old_doc_ref_dict["participants"],
-                    "ready": old_doc_ref_dict["ready"],
-                    "status": "not ready",
+                    "status": ["not ready"],
                 },
                 merge=True,
             )
@@ -110,50 +108,54 @@ def join_project(project_name):
     doc_ref.set(
         {
             "participants": doc_ref.get().to_dict()["participants"] + [g.user["id"]],
-            "ready": doc_ref.get().to_dict()["ready"] + [0],
+            "status": doc_ref.get().to_dict()["status"] + ["not ready"],
         },
         merge=True,
     )
     return redirect(url_for("gwas.index"))
 
 
-@bp.route("/start/<project_title>", methods=("GET", "POST"))
+@bp.route("/start/<project_title>/<role>", methods=("GET", "POST"))
 @login_required
-def start(project_title):
+def start(project_title, role):
     db = current_app.config["DATABASE"]
     project_doc_dict = db.collection("projects").document(project_title).get().to_dict()
+    id = g.user["id"]
+    role = str(project_doc_dict["participants"].index(id))
 
     if request.method == "GET":
-        return render_template("gwas/start.html", project=project_doc_dict)
-    elif request.method == "POST":
-        id = g.user["id"]
-        role = str(project_doc_dict["participants"].index(id))
-        gcp_project = db.collection("users").document(id).get().to_dict()["gcp_project"]
-
-        status = project_doc_dict["status"]
-        if status == "not ready":
-            updated_ready = project_doc_dict["ready"]
-            updated_ready[int(role)] = 1
-            db.collection("projects").document(project_title).set(
-                {"status": "waiting for others", "ready": updated_ready}, merge=True
-            )
-        elif 0 in project_doc_dict["ready"]:
-            pass
-        elif status == "waiting for others":
-            db.collection("projects").document(project_title).set(
-                {"status": "setting up the vm instances"}, merge=True
-            )
-
-            run_gwas(role, gcp_project)
-        else:
-            db.collection("projects").document(project_title).set(
-                {"status": get_status(role, gcp_project, status)}, merge=True
-            )
-
-        project_doc_dict = (
-            db.collection("projects").document(project_title).get().to_dict()
+        return render_template(
+            "gwas/start.html", project=project_doc_dict, role=int(role)
         )
-        return render_template("gwas/start.html", project=project_doc_dict)
+    # request.method == "POST":
+    gcp_project = db.collection("users").document(id).get().to_dict()["gcp_project"]
+    statuses = project_doc_dict["status"]
+
+    if statuses[int(role)] == "not ready":
+        statuses[int(role)] = "ready"
+        db.collection("projects").document(project_title).set(
+            {"status": statuses},
+            merge=True,
+        )
+    if "not ready" in statuses:
+        pass
+    elif statuses[int(role)] == "ready":
+        statuses[int(role)] = "setting up your vm instance"
+        db.collection("projects").document(project_title).set(
+            {"status": statuses},
+            merge=True,
+        )
+
+        run_gwas(role, gcp_project)
+    else:
+        statuses[int(role)] = get_status(role, gcp_project, statuses[int(role)])
+        db.collection("projects").document(project_title).set(
+            {"status": statuses},
+            merge=True,
+        )
+
+    project_doc_dict = db.collection("projects").document(project_title).get().to_dict()
+    return render_template("gwas/start.html", project=project_doc_dict, role=int(role))
 
 
 def get_status(role, gcp_project, status):

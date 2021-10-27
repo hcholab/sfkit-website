@@ -5,15 +5,12 @@ from flask_bootstrap import Bootstrap
 from google.cloud import firestore
 
 
-def create_app(test_config=None):
+def create_app():
     app = Flask(__name__)
 
-    if test_config:
-        app.config.update(test_config)
-    else:
-        app.config.from_mapping(
-            SECRET_KEY=os.urandom(12).hex(), DATABASE=firestore.Client()
-        )
+    app.config.from_mapping(
+        SECRET_KEY=os.urandom(12).hex(), DATABASE=firestore.Client()
+    )
 
     Bootstrap(app)
 

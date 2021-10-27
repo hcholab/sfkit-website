@@ -25,14 +25,16 @@
               {% endfor %}
             </span>
             <br>
-            {% if project["status"] == "not ready" %}
-              <form action="{{ url_for('gwas.start', project_title=project['title']) }}" method="post">
+            {% if project["status"][role] == "not ready" %}
+              <form action="{{ url_for('gwas.start', project_title=project['title'], role=role) }}" method="post">
                 <button class="mt-2 btn btn-success" type="submit">Ready to begin GWAS?</button>
               </form>
+            {% elif "not ready" in project["status"] %}
+              <div>Waiting for others to be ready...</div>
             {% else %}
-              <form action="{{ url_for('gwas.start', project_title=project['title']) }}" method="post">
+              <form action="{{ url_for('gwas.start', project_title=project['title'], role=role) }}" method="post">
                 Status:
-                {{ project["status"] }}
+                {{ project["status"][role] }}
                 <br>
                 <button class="mt-2 btn btn-secondary" type="submit">Check for Update?</button>
               </form>

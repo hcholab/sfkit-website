@@ -29,7 +29,7 @@
               </small>
             </span>
             {% if g.user['id'] in project['participants'] %}
-              <a href="{{ url_for('gwas.start', project_title=project['title']) }}">
+              <a href="{{ url_for('gwas.start', project_title=project['title'], role=100) }}">
                 <h2 class="mt-2 fw-bold">{{ project['title'] }}</h2>
               </a>
             {% else %}
