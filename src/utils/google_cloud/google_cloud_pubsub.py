@@ -1,16 +1,17 @@
 import socket
-from concurrent.futures import TimeoutError
 
 from google.cloud import pubsub_v1
 
 
 class GoogleCloudPubsub:
-    def __init__(self, project, role) -> None:
+    def __init__(self, project, role, project_title) -> None:
         self.project = project
         self.publisher = pubsub_v1.PublisherClient()
         self.subscriber = pubsub_v1.SubscriberClient()
 
-        self.topic_id = "secure-gwas" + role
+        self.topic_id = (
+            project_title.replace(" ", "").lower() + "-" + "secure-gwas" + role
+        )
         self.subscription_id = socket.gethostname() + "-subscribing-to-" + self.topic_id
         self.project_path = f"projects/{self.project}"
         self.topic_path = self.publisher.topic_path(self.project, self.topic_id)
@@ -61,7 +62,7 @@ class GoogleCloudPubsub:
             try:
                 streaming_pull_future.result(timeout=5)  # seconds
             except Exception as ex:
-                if str(type(ex)) != "<class 'TimeoutError'>":
+                if "TimeoutError" not in str(type(ex)):
                     raise ex
 
                 streaming_pull_future.cancel()

@@ -146,9 +146,11 @@ def start(project_title, role):
             merge=True,
         )
 
-        run_gwas(role, gcp_project)
+        run_gwas(role, gcp_project, project_title)
     else:
-        statuses[int(role)] = get_status(role, gcp_project, statuses[int(role)])
+        statuses[int(role)] = get_status(
+            role, gcp_project, statuses[int(role)], project_title
+        )
         db.collection("projects").document(project_title).set(
             {"status": statuses},
             merge=True,
@@ -158,8 +160,8 @@ def start(project_title, role):
     return render_template("gwas/start.html", project=project_doc_dict, role=int(role))
 
 
-def get_status(role, gcp_project, status):
-    gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role)
+def get_status(role, gcp_project, status, project_title):
+    gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, project_title)
     gcloudCompute = GoogleCloudCompute(gcp_project)
     status = gcloudPubsub.listen_to_startup_script(status)
 
@@ -170,14 +172,19 @@ def get_status(role, gcp_project, status):
     return status
 
 
-def run_gwas(role, gcp_project):
+def run_gwas(role, gcp_project, project_title):
     gcloudCompute = GoogleCloudCompute(gcp_project)
     # gcloudStorage = GoogleCloudStorage(constants.SERVER_PROJECT)
-    gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role)
+    gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, project_title)
 
     gcloudPubsub.create_topic_and_subscribe()
 
-    instance = constants.INSTANCE_NAME_ROOT + role
+    instance = (
+        project_title.replace(" ", "").lower()
+        + "-"
+        + constants.INSTANCE_NAME_ROOT
+        + role
+    )
 
     gcloudCompute.setup_networking(role)
 

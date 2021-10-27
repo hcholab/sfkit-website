@@ -16,19 +16,19 @@ def setup_mocking(mocker):
 @pytest.mark.parametrize(("project"), (("broad-cho-priv1"), ("bad")))
 def test_create_topic_and_subscribe(mocker, project):
     setup_mocking(mocker)
-    google_cloud_pubsub = GoogleCloudPubsub(project, "0")
+    google_cloud_pubsub = GoogleCloudPubsub(project, "0", "project title")
     google_cloud_pubsub.create_topic_and_subscribe()
 
 
 def test_listen_to_startup_script(mocker):
     setup_mocking(mocker)
-    google_cloud_pubsub = GoogleCloudPubsub("broad-cho-priv1", "0")
+    google_cloud_pubsub = GoogleCloudPubsub("broad-cho-priv1", "0", "project title")
     google_cloud_pubsub.listen_to_startup_script("status")
 
 
 def test_listen_to_startup_script_with_error(mocker):
     setup_mocking(mocker)
-    google_cloud_pubsub = GoogleCloudPubsub("bad", "0")
+    google_cloud_pubsub = GoogleCloudPubsub("bad", "0", "project title")
 
     with pytest.raises(Exception):
         google_cloud_pubsub.listen_to_startup_script("status")
@@ -36,7 +36,7 @@ def test_listen_to_startup_script_with_error(mocker):
 
 def test_add_pub_iam_member(mocker):
     setup_mocking(mocker)
-    google_cloud_pubsub = GoogleCloudPubsub("broad-cho-priv1", "0")
+    google_cloud_pubsub = GoogleCloudPubsub("broad-cho-priv1", "0", "project title")
     google_cloud_pubsub.add_pub_iam_member("role", "member")
 
 

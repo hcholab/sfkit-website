@@ -111,10 +111,13 @@ def test_get_status(mocker):
     mocker.patch("src.gwas.GoogleCloudPubsub", MockGoogleCloudPubsub)
     mocker.patch("src.gwas.GoogleCloudCompute", MockGoogleCloudCompute)
 
-    assert get_status("role", "gcp_project", "test") == "test"
-    assert get_status("role", "gcp_project", "GWAS Completed!") == "GWAS Completed!"
+    assert get_status("role", "gcp_project", "test", "project title") == "test"
     assert (
-        get_status("3", "gcp_project", "DataSharing Completed!")
+        get_status("role", "gcp_project", "GWAS Completed!", "project title")
+        == "GWAS Completed!"
+    )
+    assert (
+        get_status("3", "gcp_project", "DataSharing Completed!", "project title")
         == "DataSharing Completed!"
     )
 
@@ -123,14 +126,14 @@ def test_run_gwas(mocker):
     mocker.patch("src.gwas.GoogleCloudPubsub", MockGoogleCloudPubsub)
     mocker.patch("src.gwas.GoogleCloudCompute", MockGoogleCloudCompute)
 
-    run_gwas("role", "gcp_project")
+    run_gwas("role", "gcp_project", "project title")
 
 
-def mock_get_status(role, gcp_project, status):
+def mock_get_status(role, gcp_project, status, project_title):
     return status
 
 
-def mock_run_gwas(role, gcp_project):
+def mock_run_gwas(role, gcp_project, project_title):
     return True
 
 
@@ -154,7 +157,7 @@ class MockGoogleCloudCompute:
 
 # class to mock GoogleCloudPubsub
 class MockGoogleCloudPubsub:
-    def __init__(self, project, role):
+    def __init__(self, project, role, project_title):
         pass
 
     def create_topic_and_subscribe(self):
