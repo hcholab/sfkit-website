@@ -11,7 +11,7 @@ def test_setup_networking(mocker):
         MockMakeMockCompute,
     )
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
-    for _ in range(10):
+    for _ in range(20):
         try:
             google_cloud_compute.setup_networking("0")
         except Exception as e:
@@ -27,7 +27,7 @@ def test_setup_networking_different_project(mocker):
         MockMakeMockCompute,
     )
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv2")
-    for _ in range(10):
+    for _ in range(20):
         try:
             google_cloud_compute.setup_networking("0")
         except Exception as e:

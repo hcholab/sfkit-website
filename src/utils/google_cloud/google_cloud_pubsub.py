@@ -46,7 +46,7 @@ class GoogleCloudPubsub:
         )
 
     def listen_to_startup_script(self, status):
-        def callback(message: pubsub_v1.subscriber.message.Message) -> None:
+        def callback(message) -> None:
             print(f"Received {message}.")
             message.ack()
             nonlocal status
@@ -60,7 +60,10 @@ class GoogleCloudPubsub:
         with self.subscriber:
             try:
                 streaming_pull_future.result(timeout=5)  # seconds
-            except TimeoutError:
+            except Exception as ex:
+                if str(type(ex)) != "<class 'TimeoutError'>":
+                    raise ex
+
                 streaming_pull_future.cancel()
                 streaming_pull_future.result()
 
