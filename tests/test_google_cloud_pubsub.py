@@ -1,9 +1,8 @@
-from src.utils.google_cloud.google_cloud_pubsub import GoogleCloudPubsub
 import pytest
+from src.utils.google_cloud.google_cloud_pubsub import GoogleCloudPubsub
 
 
-@pytest.mark.parametrize(("project"), (("broad-cho-priv1"), ("bad")))
-def test_create_topic_and_subscribe(mocker, project):
+def setup_mocking(mocker):
     mocker.patch(
         "src.utils.google_cloud.google_cloud_pubsub.pubsub_v1.PublisherClient",
         MockPublisherClient,
@@ -12,32 +11,23 @@ def test_create_topic_and_subscribe(mocker, project):
         "src.utils.google_cloud.google_cloud_pubsub.pubsub_v1.SubscriberClient",
         MockSubscriberClient,
     )
+
+
+@pytest.mark.parametrize(("project"), (("broad-cho-priv1"), ("bad")))
+def test_create_topic_and_subscribe(mocker, project):
+    setup_mocking(mocker)
     google_cloud_pubsub = GoogleCloudPubsub(project, "0")
     google_cloud_pubsub.create_topic_and_subscribe()
 
 
 def test_listen_to_startup_script(mocker):
-    mocker.patch(
-        "src.utils.google_cloud.google_cloud_pubsub.pubsub_v1.PublisherClient",
-        MockPublisherClient,
-    )
-    mocker.patch(
-        "src.utils.google_cloud.google_cloud_pubsub.pubsub_v1.SubscriberClient",
-        MockSubscriberClient,
-    )
+    setup_mocking(mocker)
     google_cloud_pubsub = GoogleCloudPubsub("broad-cho-priv1", "0")
     google_cloud_pubsub.listen_to_startup_script("status")
 
 
 def test_listen_to_startup_script_with_error(mocker):
-    mocker.patch(
-        "src.utils.google_cloud.google_cloud_pubsub.pubsub_v1.PublisherClient",
-        MockPublisherClient,
-    )
-    mocker.patch(
-        "src.utils.google_cloud.google_cloud_pubsub.pubsub_v1.SubscriberClient",
-        MockSubscriberClient,
-    )
+    setup_mocking(mocker)
     google_cloud_pubsub = GoogleCloudPubsub("bad", "0")
 
     with pytest.raises(Exception):
@@ -45,18 +35,12 @@ def test_listen_to_startup_script_with_error(mocker):
 
 
 def test_add_pub_iam_member(mocker):
-    mocker.patch(
-        "src.utils.google_cloud.google_cloud_pubsub.pubsub_v1.PublisherClient",
-        MockPublisherClient,
-    )
+    setup_mocking(mocker)
     google_cloud_pubsub = GoogleCloudPubsub("broad-cho-priv1", "0")
     google_cloud_pubsub.add_pub_iam_member("role", "member")
 
 
 class MockPublisherClient:
-    def __init__(self):
-        pass
-
     def topic_path(self, project, topic):
         return project
 
@@ -74,9 +58,6 @@ class MockPublisherClient:
 
 
 class MockSubscriberClient:
-    def __init__(self):
-        pass
-
     def __enter__(self):
         return self
 
@@ -121,9 +102,6 @@ class MockPolicy:
 
 
 class MockBinding:
-    def __init__(self):
-        pass
-
     def add(self, role, members):
         pass
 

@@ -1,10 +1,10 @@
 from src import constants
-import googleapiclient.discovery
+import googleapiclient.discovery as googleapi
 
 
 class GoogleCloudIAM:
     def __init__(self) -> None:
-        self.service = googleapiclient.discovery.build("cloudresourcemanager", "v1")
+        self.service = googleapi.build("cloudresourcemanager", "v1")
         self.project = constants.SERVER_GCP_PROJECT
 
     def get_policy(self, version=1):
@@ -22,10 +22,13 @@ class GoogleCloudIAM:
     def modify_policy_add_member(self, policy, role, member):
         """Adds a new member to a role binding."""
 
-        if role in [b["role"] for b in policy["bindings"]]:
-            binding = next(b for b in policy["bindings"] if b["role"] == role)
-            binding["members"].append(member)
-        else:
+        no_role = True
+        for binding in policy["bindings"]:
+            if binding["role"] == role:
+                no_role = False
+                binding["members"].append(member)
+                break
+        if no_role:
             binding = {"role": role, "members": [member]}
             policy["bindings"].append(binding)
         return policy

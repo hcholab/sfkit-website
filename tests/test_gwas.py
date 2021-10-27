@@ -1,5 +1,5 @@
 import pytest
-from src.gwas import run_gwas, get_status
+from src.gwas import get_status, run_gwas
 
 
 def test_index(client):

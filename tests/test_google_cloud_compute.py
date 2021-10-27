@@ -1,96 +1,129 @@
+import pytest
 from src import constants
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
-import random
-import pytest
 
 
-def test_setup_networking(mocker):
+def setup_mocking(mocker):
     mocker.patch("time.sleep", lambda x: None)
     mocker.patch(
         "src.utils.google_cloud.google_cloud_compute.googleapi",
         MockMakeMockCompute,
     )
+
+
+@pytest.mark.parametrize(
+    ("networkName1", "networkName2", "status", "creationTimestamp", "project", "error"),
+    (
+        (
+            constants.NETWORK_NAME,
+            constants.NETWORK_NAME,
+            "RUNNING",
+            "newTimestamp",
+            "broad-cho-priv1",
+            None,
+        ),
+        (
+            constants.NETWORK_NAME,
+            constants.NETWORK_NAME,
+            "RUNNING",
+            "2020-04-01T00:00:00Z",
+            "broad-cho-priv1",
+            None,
+        ),
+        (
+            constants.NETWORK_NAME,
+            constants.NETWORK_NAME,
+            "RUNNING",
+            "newTimestamp",
+            "broad-cho-priv1",
+            "fake error",
+        ),
+        ("1", "1", "RUNNING", "2020-04-01T00:00:00Z", "broad-cho-priv2", None),
+        ("1", "1", "RUNNING", "2020-04-01T00:00:00Z", "broad-cho-priv2", "fake error"),
+    ),
+)
+def test_setup_networking(
+    mocker, networkName1, networkName2, status, creationTimestamp, project, error
+):
+    setup_mocking(mocker)
+    MockExecutable.networkName1 = networkName1
+    MockExecutable.networkName2 = networkName2
+    MockExecutable.status = status
+    MockExecutable.creationTimestamp = creationTimestamp
+    MockExecutable.project = project
+    MockExecutable.error = error
+
+    MockOperations.trial = 0
+    google_cloud_compute = GoogleCloudCompute(project)
+
+    try:
+        google_cloud_compute.setup_networking("0")
+    except Exception as e:
+        if str(e) != "fake error" and "RetryError" not in str(e):
+            raise
+
+
+@pytest.mark.parametrize(
+    ("networkName1", "networkName2", "status", "creationTimestamp", "project", "error"),
+    (
+        (
+            constants.NETWORK_NAME,
+            constants.NETWORK_NAME,
+            "RUNNING",
+            "newTimestamp",
+            "broad-cho-priv1",
+            None,
+        ),
+        ("1", "1", "RUNNING", "2020-04-01T00:00:00Z", "broad-cho-priv2", None),
+        ("1", "1", "RUNNING", "2020-04-01T00:00:00Z", "broad-cho-priv2", "fake error"),
+    ),
+)
+def test_setup_instance(
+    mocker, networkName1, networkName2, status, creationTimestamp, project, error
+):
+    setup_mocking(mocker)
+    MockExecutable.networkName1 = networkName1
+    MockExecutable.networkName2 = networkName2
+    MockExecutable.status = status
+    MockExecutable.creationTimestamp = creationTimestamp
+    MockExecutable.project = project
+    MockExecutable.error = error
+
+    MockOperations.trial = 0
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
-    for _ in range(20):
-        try:
-            google_cloud_compute.setup_networking("0")
-        except Exception as e:
-            if str(e) != "fake error" and "RetryError" not in str(e):
-                raise
 
-
-# again but with different project
-def test_setup_networking_different_project(mocker):
-    mocker.patch("time.sleep", lambda x: None)
-    mocker.patch(
-        "src.utils.google_cloud.google_cloud_compute.googleapi",
-        MockMakeMockCompute,
-    )
-    google_cloud_compute = GoogleCloudCompute("broad-cho-priv2")
-    for _ in range(20):
-        try:
-            google_cloud_compute.setup_networking("0")
-        except Exception as e:
-            if str(e) != "fake error" and "RetryError" not in str(e):
-                raise
-
-
-def test_setup_instance(mocker):
-    mocker.patch("time.sleep", lambda x: None)
-    mocker.patch(
-        "src.utils.google_cloud.google_cloud_compute.googleapi",
-        MockMakeMockCompute,
-    )
-    google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
-
-    for _ in range(10):
-        try:
-            google_cloud_compute.setup_instance(
-                zone="zone", name=constants.NETWORK_NAME, role="role"
-            )
-        except Exception as e:
-            if str(e) != "fake error" and "RetryError" not in str(e):
-                raise
+    try:
+        google_cloud_compute.setup_instance(
+            zone="zone", name=constants.NETWORK_NAME, role="role"
+        )
+    except Exception as e:
+        if str(e) != "fake error" and "RetryError" not in str(e):
+            raise
 
 
 def test_stop_instance(mocker):
-    mocker.patch("time.sleep", lambda x: None)
-    mocker.patch(
-        "src.utils.google_cloud.google_cloud_compute.googleapi",
-        MockMakeMockCompute,
-    )
+    setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
 
-    for _ in range(10):
-        try:
-            google_cloud_compute.stop_instance(zone="zone", instance="name")
-        except Exception as e:
-            if str(e) != "fake error" and "RetryError" not in str(e):
-                raise
+    try:
+        google_cloud_compute.stop_instance(zone="zone", instance="name")
+    except Exception as e:
+        if str(e) != "fake error" and "RetryError" not in str(e):
+            raise
 
 
 def test_get_service_account_for_vm(mocker):
-    mocker.patch("time.sleep", lambda x: None)
-    mocker.patch(
-        "src.utils.google_cloud.google_cloud_compute.googleapi",
-        MockMakeMockCompute,
-    )
+    setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
     google_cloud_compute.get_service_account_for_vm(zone="zone", instance="name")
 
 
 class MockMakeMockCompute:
-    def __init__(self):
-        pass
-
     def build(api, version):
         return MockCompute()
 
 
 class MockCompute:
-    def __init__(self):
-        pass
-
     def networks(self):
         return MockInsertable()
 
@@ -117,17 +150,14 @@ class MockCompute:
 
 
 class MockOperations:
-    def __init__(self):
-        pass
-
     def get(self, project, operation, region=None, zone=None):
+        MockOperations.trial += 1
+        if MockOperations.trial > 1:
+            MockExecutable.status = "DONE"
         return MockExecutable()
 
 
 class MockInsertable:
-    def __init__(self):
-        pass
-
     def list(self, project=None, region=None, zone=None):
         return MockExecutable()
 
@@ -156,37 +186,30 @@ class MockInsertable:
 
 
 class MockExecutable:
-    def __init__(self):
-        pass
-
     def execute(self):
-        networkName1 = "1" if random.random() < 0.5 else constants.NETWORK_NAME
-        networkName2 = "1" if random.random() < 0.5 else constants.NETWORK_NAME
-        status = "RUNNING" if random.random() < 0.5 else "DONE"
-        creationTimestamp = "z" if random.random() < 0.5 else "2020-04-01T00:00:00Z"
-        project = random.choice(["broad-cho-priv1", "broad-cho-priv2"])
         res = {
             "items": [
                 {
-                    "name": networkName1,
-                    "creationTimestamp": creationTimestamp,
+                    "name": MockExecutable.networkName1,
+                    "creationTimestamp": MockExecutable.creationTimestamp,
                     "selfLink": "hi",
                     "networkInterfaces": [{"subnetwork": "hi"}],
                 },
                 {
-                    "name": networkName2,
-                    "creationTimestamp": creationTimestamp,
+                    "name": MockExecutable.networkName2,
+                    "creationTimestamp": MockExecutable.creationTimestamp,
                     "selfLink": "hi",
                     "networkInterfaces": [{"subnetwork": "hi"}],
                 },
             ],
-            "status": status,
+            "status": MockExecutable.status,
             "name": "operation",
             "selfLink": "selfLink",
             "networkInterfaces": [{"accessConfigs": [{"natIP": "hi"}]}],
-            "peerings": [{"name": f"peering-{project}"}],
+            "peerings": [{"name": f"peering-{MockExecutable.project}"}],
             "serviceAccounts": [{"email": "hi"}],
         }
-        if random.random() < 0.5:
+        if MockExecutable.error:
             res["error"] = "fake error"
+        MockExecutable.networkName1 = constants.NETWORK_NAME
         return res

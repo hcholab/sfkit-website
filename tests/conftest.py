@@ -15,9 +15,6 @@ def client(app):
 
 
 class MockGoogleCloudIAM:
-    def __init__(self):
-        pass
-
     def give_cloud_build_view_permissions(self, email):
         pass
 
