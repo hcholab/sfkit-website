@@ -21,6 +21,16 @@ def test_give_cloud_build_view_permissions(mocker, role):
     google_cloud_iam.give_cloud_build_view_permissions("user")
 
 
+def test_test_permissions(mocker):
+    mocker.patch(
+        "src.utils.google_cloud.google_cloud_iam.googleapi",
+        MockMakeMockIam,
+    )
+
+    google_cloud_iam = GoogleCloudIAM()
+    assert google_cloud_iam.test_permissions("project") == False
+
+
 class MockMakeMockIam:
     def build(api, version):
         return MockIam()
@@ -38,7 +48,10 @@ class MockProjects:
     def setIamPolicy(self, resource, body):
         return MockExecutable()
 
+    def testIamPermissions(self, resource, body):
+        return MockExecutable()
+
 
 class MockExecutable:
     def execute(self):
-        pass
+        return {"pemrissions": []}

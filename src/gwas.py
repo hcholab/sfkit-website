@@ -14,6 +14,7 @@ from flask import (
 from src import constants
 from src.auth import login_required
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
+from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 from src.utils.google_cloud.google_cloud_pubsub import GoogleCloudPubsub
 
 bp = Blueprint("gwas", __name__)
@@ -153,11 +154,15 @@ def start(project_title, role):
     statuses = project_doc_dict["status"]
 
     if statuses[int(role)] == "not ready":
-        statuses[int(role)] = "ready"
-        db.collection("projects").document(project_title).set(
-            {"status": statuses},
-            merge=True,
-        )
+        gcloudIAM = GoogleCloudIAM()
+        if gcloudIAM.test_permissions(gcp_project):
+            statuses[int(role)] = "ready"
+            db.collection("projects").document(project_title).set(
+                {"status": statuses},
+                merge=True,
+            )
+        else:
+            flash("Please give the service appropriate permissions first.")
     if "not ready" in statuses:
         pass
     elif statuses[int(role)] == "ready":

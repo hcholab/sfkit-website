@@ -55,3 +55,45 @@ class GoogleCloudIAM:
             policy, "roles/logging.viewer", f"user:{user}"
         )
         self.set_policy(policy)
+
+    def test_permissions(self, project_id) -> bool:
+        """Tests IAM permissions of the caller"""
+        print("Testing IAM permissions for project: {}".format(project_id))
+
+        desired_permissions = [
+            "compute.disks.create",
+            "compute.firewallPolicies.create",
+            "compute.firewallPolicies.get",
+            "compute.instances.create",
+            "compute.instances.delete",
+            "compute.instances.get",
+            "compute.instances.list",
+            "compute.instances.setMetadata",
+            "compute.instances.setServiceAccount",
+            "compute.instances.stop",
+            "compute.networks.access",
+            "compute.networks.addPeering",
+            "compute.networks.create",
+            "compute.networks.get",
+            "compute.networks.list",
+            "compute.networks.removePeering",
+            "compute.networks.updatePolicy",
+            "compute.subnetworks.create",
+            "compute.subnetworks.delete",
+            "compute.subnetworks.list",
+            "compute.subnetworks.use",
+            "compute.subnetworks.useExternalIp",
+            "iam.serviceAccounts.actAs",
+        ]
+
+        permissions = {"permissions": desired_permissions}
+
+        returnedPermissions = (
+            self.service.projects()
+            .testIamPermissions(resource=project_id, body=permissions)
+            .execute()
+        )
+
+        print("Returned permissions: {}".format(returnedPermissions.get("permissions")))
+
+        return returnedPermissions.get("permissions") == desired_permissions

@@ -92,7 +92,7 @@ def test_join_project(client, auth):
     assert response.headers["Location"] == "http://localhost/index"
 
 
-def test_start(app, client, auth, mocker):
+def test_start(client, auth, mocker):
     auth.register()
     auth.login()
     client.post(
@@ -111,7 +111,11 @@ def test_start(app, client, auth, mocker):
     )
     client.post("join/testtitle")
 
+    mocker.patch("src.gwas.GoogleCloudIAM", MockGoogleCloudIAM)
     client.post("start/testtitle/1")
+    MockGoogleCloudIAM.return_value = True
+    client.post("start/testtitle/1")
+
     auth.logout()
     auth.login()
 
@@ -182,3 +186,11 @@ class MockGoogleCloudPubsub:
 
     def listen_to_startup_script(self, status):
         return status
+
+
+# class to mock GoogleCloudIAM
+class MockGoogleCloudIAM:
+    return_value = False
+
+    def test_permissions(self, project_id):
+        return MockGoogleCloudIAM.return_value
