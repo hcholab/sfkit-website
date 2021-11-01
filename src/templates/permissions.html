@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}How to Give Permissions{% endblock %}
+
+{% block content %}
+  <section class="py-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-10 mx-auto">
+          <h2 class="h1 fw-bold mb-5 text-center">How to Give Permissions</h2>
+          <p class="lead mb-4">
+            To run Secure GWAS on this portal, you need to give this service some permissions in your GCP account. To be more specific, we need permissions to set up the appropriate networking and create the virtual machines.
+          </p>
+          <p class="lead mb-4">
+            The easiest way to do this is by going to the GCP console and running a command in the Cloud Shell. The command will create a new role with the appropriate permissions, and then it will attach the service account for this website to the role.
+          </p>
+          <p class="lead text-muted mb-4">Log into
+            <a href="https://console.cloud.google.com">https://console.cloud.google.com</a>. Then click the icon in the top right to "Activate Cloud Shell". Once the Terminal is ready, please copy and run the following:
+          </p>
+          <div class="p-2 bg-light rounded">
+            <button id="copy-button" data-bs-toggle="tooltip" data-bs-trigger='manual' style="position:relative;float:right" type="button" class="btn btn-outline-secondary btn-sm">
+              Copy
+            </button>
+            <code id="gcloud-command" class="language-bash" data-lang="bash" style="font-size: 60%">
+              <div>gcloud iam roles create secureGwasRole --project=$(gcloud config get-value project) \</div>
+              <div>--title="Secure GWAS Role" --permissions=compute.disks.create,compute.firewallPolicies.create,\</div>
+              <div>compute.firewallPolicies.get,compute.instances.create,compute.instances.delete,compute.instances.get,\</div>
+              <div>compute.instances.list,compute.instances.setMetadata,compute.instances.setServiceAccount,\</div>
+              <div>compute.instances.stop,compute.networks.access,compute.networks.addPeering,compute.networks.create,\</div>
+              <div>compute.networks.get,compute.networks.list,compute.networks.removePeering,compute.networks.updatePolicy,\</div>
+              <div>compute.subnetworks.create,compute.subnetworks.delete,compute.subnetworks.list,compute.subnetworks.use,\</div>
+              <div>compute.subnetworks.useExternalIp,iam.serviceAccounts.actAs && \</div>
+              <div>gcloud projects add-iam-policy-binding $(gcloud config get-value project) \</div>
+              <div>--member=serviceAccount:419003787216-compute@developer.gserviceaccount.com \</div>
+              <div>--role=projects/$(gcloud config get-value project)/roles/secureGwasRole</div>
+            </code>
+          </div>
+          <br>
+          <p class="lead mb-4">That's it!</p>
+          <p class="lead text-muted mb-4" style="font-size: 80%">If you have any questions or concerns, please don't hesitate to reach out.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+
+{% block javascript %}
+  <script>
+    $(document).ready(function () {
+      // Get the Tooltip
+      new bootstrap.Tooltip($('#copy-button'));
+      let btn_tooltip = $('#copy-button');
+
+      // Change Tooltip Text on mouse enter
+      btn_tooltip.mouseenter(function () {
+        btn_tooltip
+          .attr('title', 'Copy to Clipboard')
+          .tooltip('dispose');
+        btn_tooltip.tooltip('show');
+      });
+
+      // remove tooltip when user moves mouse away
+      btn_tooltip.mouseleave(function () {
+        btn_tooltip
+          .tooltip('dispose')
+          .tooltip('hide');
+      });
+
+      // Update Tooltip and Copy Text on click
+      btn_tooltip.click(function () {
+        let copyText = $('#gcloud-command')
+          .text()
+          .replace(/^\s+/gm, ''); // Remove leading whitespace
+        navigator
+          .clipboard
+          .writeText(copyText)
+          .then(function () {
+            btn_tooltip // Update tooltip text
+              .attr('title', 'Copied!')
+              .tooltip('dispose');
+            btn_tooltip.tooltip('show');
+          }, function () {
+            console.log('Failure to copy. Check permissions for clipboard')
+          });
+      });
+    });
+  </script>
+{% endblock %}

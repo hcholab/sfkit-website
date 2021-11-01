@@ -12,3 +12,8 @@ def home():
 @bp.route("/workflow")
 def workflow():
     return render_template("workflow.html")
+
+
+@bp.route("/permissions")
+def permissions():
+    return render_template("permissions.html")

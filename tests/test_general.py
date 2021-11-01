@@ -12,3 +12,10 @@ def test_workflow_page(client):
     response = client.get("/workflow")
     assert response.status_code == 200
     assert b"Workflow" in response.data
+
+
+# test permissions page
+def test_permissions_page(client):
+    response = client.get("/permissions")
+    assert response.status_code == 200
+    assert b"Permissions" in response.data
