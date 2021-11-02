@@ -26,6 +26,13 @@ cd /home
 git clone https://github.com/simonjmendelsohn/secure-gwas /home/secure-gwas
 printf "\n\n Done installing GWAS repo \n\n"
 
+printf "\n\n Download data from storage bucket"
+gsutil cp gs://secure-gwas-data/geno.txt /home/secure-gwas/test_data/geno.txt
+gsutil cp gs://secure-gwas-data/pheno.txt /home/secure-gwas/test_data/pheno.txt
+gsutil cp gs://secure-gwas-data/cov.txt /home/secure-gwas/test_data/cov.txt
+gsutil cp gs://secure-gwas-data/pos.txt /home/secure-gwas/test_data/pos.txt
+printf "\n\n Done downloading data from storage bucket \n\n"
+
 printf "\n\n Begin installing NTL library \n\n"
 curl https://libntl.org/ntl-10.3.0.tar.gz --output ntl-10.3.0.tar.gz
 tar -zxvf ntl-10.3.0.tar.gz
