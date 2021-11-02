@@ -27,20 +27,48 @@
             <br>
             {% if project["status"][role] == "not ready" %}
               <form action="{{ url_for('gwas.start', project_title=project['title'], role=role) }}" method="post">
-                <button class="mt-2 btn btn-success" type="submit">Ready to begin GWAS?</button>
+                <button class="mt-2 btn btn-success" type="submit" onclick="loading();">
+                  <div id="loading" style="display:none">
+                    <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+                    Loading...
+                  </div>
+                  <div id="normal-content">
+                    Ready to begin GWAS?
+                  </div>
+                </button>
               </form>
             {% elif "not ready" in project["status"] %}
-              <div>Waiting for others to be ready...</div>
+              <div>
+                Waiting for others to be ready...
+              </div>
             {% else %}
               <form action="{{ url_for('gwas.start', project_title=project['title'], role=role) }}" method="post">
                 Status:
                 {{ project["status"][role] }}
                 <br>
-                <button class="mt-2 btn btn-secondary" type="submit">Check for Update?</button>
+                <button class="mt-2 btn btn-secondary" type="submit" onclick="loading();">
+                  <div id="loading" style="display:none">
+                    <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+                    Loading...
+                  </div>
+                  <div id="normal-content">
+                    Check for update?
+                  </div>
+                </button>
               </form>
             {% endif %}
           </div>
         </div>
       </div>
-    </section>
-  {% endblock %}
+    </div>
+  </section>
+{% endblock %}
+
+{% block javascript %}
+  <script type="text/javascript">
+    function loading() {
+      $("#loading").show();
+      $("#normal-content").hide();
+    }
+  </script>
+{% endblock %}

@@ -149,8 +149,10 @@ def start(project_title, role):
         return render_template(
             "gwas/start.html", project=project_doc_dict, role=int(role)
         )
-    # request.method == "POST":
-    gcp_project = db.collection("users").document(id).get().to_dict()["gcp_project"]
+    gcp_project = db.collection("users").document(id).get().to_dict().get("gcp_project")
+    if not gcp_project:
+        flash("Please set your GCP project first.")
+        return redirect(url_for("auth.user", id=id))
     statuses = project_doc_dict["status"]
 
     if statuses[int(role)] == "not ready":
@@ -163,6 +165,7 @@ def start(project_title, role):
             )
         else:
             flash("Please give the service appropriate permissions first.")
+            return redirect(url_for("general.permissions"))
     if "not ready" in statuses:
         pass
     elif statuses[int(role)] == "ready":
@@ -194,7 +197,13 @@ def get_status(role, gcp_project, status, project_title):
     if status == "GWAS Completed!" or (
         status == "DataSharing Completed!" and role == "3"
     ):
-        gcloudCompute.stop_instance(constants.ZONE, constants.INSTANCE_NAME_ROOT + role)
+        instance = (
+            project_title.replace(" ", "").lower()
+            + "-"
+            + constants.INSTANCE_NAME_ROOT
+            + role
+        )
+        gcloudCompute.stop_instance(constants.ZONE, instance)
     return status
 
 

@@ -106,11 +106,12 @@ def test_start(client, auth, mocker):
     auth.logout()
     auth.register(email="b@b.b", password="b", password_check="b")
     auth.login(email="b@b.b", password="b")
+    client.post("join/testtitle")
+
+    client.post("start/testtitle/1")
     client.post(
         "auth/user/b%40b.b", data={"id": "b@b.b", "gcp_project": "broad-cho-priv1"}
     )
-    client.post("join/testtitle")
-
     mocker.patch("src.gwas.GoogleCloudIAM", MockGoogleCloudIAM)
     client.post("start/testtitle/1")
     MockGoogleCloudIAM.return_value = True
