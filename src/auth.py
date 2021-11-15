@@ -77,10 +77,12 @@ def login():
         user_dict = user.to_dict()
 
         if not user_dict:
-            flash("Incorrect email.")
+            flash(
+                "Email not found.  Please double-check your email or register if you're not already registered."
+            )
         elif "password" not in user_dict:
             flash(
-                "Password did not check out.  This is probably because this is a google account and you should log in with google instead."
+                "Password did not check out.  If this is a Google email, you might want to log in with google instead."
             )
         elif not check_password_hash(user_dict["password"], password):
             flash("Incorrect password.")

@@ -52,7 +52,7 @@ def test_login(client, auth):
 @pytest.mark.parametrize(
     ("email", "password", "message"),
     (
-        ("a", "b", b"Incorrect email."),
+        ("a", "b", b"Email not found"),
         ("a@a.a", "b", b"Incorrect password."),
     ),
 )
