@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Sanity check that the startup-script is working
-touch /home/test.txt
+# Only run the startup-script on creation (otherwise, it will run every time the VM is restarted)
+if [[ -f /home/startup_was_launched ]]; then exit 0; fi
+touch /home/startup_was_launched
 
 # Many of the commands need root privileges for the VM
 sudo -s
@@ -12,6 +13,7 @@ apt-get --assume-yes install build-essential
 apt-get --assume-yes install clang-3.9
 apt-get --assume-yes install libgmp3-dev
 apt-get --assume-yes install libssl-dev
+apt-get --assume-yes install libsodium-dev
 apt-get --assume-yes install libomp-dev
 apt-get --assume-yes install netcat
 apt-get --assume-yes install git
@@ -26,11 +28,15 @@ cd /home
 git clone https://github.com/simonjmendelsohn/secure-gwas /home/secure-gwas
 printf "\n\n Done installing GWAS repo \n\n"
 
+role=$(hostname | tail -c 2)
+
 printf "\n\n Download data from storage bucket"
-gsutil cp gs://secure-gwas-data/geno.txt /home/secure-gwas/test_data/geno.txt
-gsutil cp gs://secure-gwas-data/pheno.txt /home/secure-gwas/test_data/pheno.txt
-gsutil cp gs://secure-gwas-data/cov.txt /home/secure-gwas/test_data/cov.txt
-gsutil cp gs://secure-gwas-data/pos.txt /home/secure-gwas/test_data/pos.txt
+mkdir -p /home/secure-gwas/test_data
+gsutil cp gs://secure-gwas-data${role}/g.bin /home/secure-gwas/test_data/g.bin
+gsutil cp gs://secure-gwas-data${role}/m.bin /home/secure-gwas/test_data/m.bin
+gsutil cp gs://secure-gwas-data${role}/p.bin /home/secure-gwas/test_data/p.bin
+gsutil cp gs://secure-gwas-data${role}/other_shared_key.bin /home/secure-gwas/test_data/other_shared_key.bin
+gsutil cp gs://secure-gwas-data${role}/pos.txt /home/secure-gwas/test_data/pos.txt
 printf "\n\n Done downloading data from storage bucket \n\n"
 
 printf "\n\n Begin installing NTL library \n\n"
@@ -59,7 +65,7 @@ printf "\n\n done compiling secure gwas code \n\n"
 
 printf "\n\n Waiting for all other VMs to be ready for GWAS \n\n"
 nc -k -l -p 8055 &
-for i in 0 1 2 3; do
+for i in 0 1 2; do
     false
     while [ $? == 1 ]; do
         printf "Waiting for VM secure-gwas${i} to be done setting up \n"
@@ -72,22 +78,17 @@ printf "\n\n All VMs are ready to begin GWAS \n\n"
 
 printf "\n\n Starting DataSharing and GWAS \n\n"
 cd /home/secure-gwas/code
-role=$(hostname | tail -c 2)
 sleep $((30 * ${role}))
-if [[ $role -eq "3" ]]; then
-    bin/DataSharingClient ${role} ../par/test.par.${role}.txt ../test_data/
-    cd /home
-    gcloud pubsub topics publish ${topic_id} --message="DataSharing Completed!" --ordering-key="1" --project="broad-cho-priv1"
-else
+if [[ $role -eq "0" ]]; then
     bin/DataSharingClient ${role} ../par/test.par.${role}.txt
-
-    gcloud pubsub topics publish ${topic_id} --message="DataSharing Completed!" --ordering-key="1" --project="broad-cho-priv1"
-
-    printf "\n\n Waiting a couple minutes between DataSharing and GWAS... \n\n"
-    sleep $((100 + 30 * ${role}))
-    bin/GwasClient ${role} ../par/test.par.${role}.txt
-
-    cd /home
-    gcloud pubsub topics publish ${topic_id} --message="GWAS Completed!" --ordering-key="1" --project="broad-cho-priv1"
+else
+    bin/DataSharingClient ${role} ../par/test.par.${role}.txt ../test_data/
 fi
+gcloud pubsub topics publish ${topic_id} --message="DataSharing Completed!" --ordering-key="1" --project="broad-cho-priv1"
+
+printf "\n\n Waiting a couple minutes between DataSharing and GWAS... \n\n"
+sleep $((100 + 30 * ${role}))
+bin/GwasClient ${role} ../par/test.par.${role}.txt
+gcloud pubsub topics publish ${topic_id} --message="GWAS Completed!" --ordering-key="1" --project="broad-cho-priv1"
+
 printf "\n\n Done with GWAS \n\n"

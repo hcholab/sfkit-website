@@ -56,6 +56,7 @@ def register():
                     "email": email,
                     "password": generate_password_hash(password),
                     "gcp_project": "",
+                    "public_key": "",
                 }
             )
             gcloudIAM = GoogleCloudIAM()
@@ -119,6 +120,7 @@ def callback():
             {
                 "email": session["user_id"],
                 "gcp_project": "",
+                "public_key": "",
             }
         )
 
@@ -133,7 +135,13 @@ def user(id):
     user = db.collection("users").document(id).get().to_dict()
     if request.method == "POST":
         doc_ref = db.collection("users").document(id)
-        doc_ref.set({"gcp_project": request.form["gcp_project"]}, merge=True)
+        doc_ref.set(
+            {
+                "gcp_project": request.form["gcp_project"],
+                "public_key": request.form["public_key"],
+            },
+            merge=True,
+        )
         return redirect(url_for("gwas.index"))
     return render_template("auth/user.html", user=user)
 

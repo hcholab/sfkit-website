@@ -96,34 +96,44 @@ def test_start(client, auth, mocker):
     auth.register()
     auth.login()
     client.post(
-        "auth/user/a%40a.a", data={"id": "a@a.a", "gcp_project": "broad-cho-priv1"}
+        "auth/user/a%40a.a",
+        data={
+            "id": "a@a.a",
+            "gcp_project": "broad-cho-priv1",
+            "public_key": "public_key",
+        },
     )
     client.post(
         "create", data={"title": "testtitle", "description": "test description"}
     )
-    assert client.get("start/testtitle/100").status_code == 200
+    assert client.get("start/testtitle").status_code == 200
 
     auth.logout()
     auth.register(email="b@b.b", password="b", password_check="b")
     auth.login(email="b@b.b", password="b")
     client.post("join/testtitle")
 
-    client.post("start/testtitle/1")
+    client.post("start/testtitle")
     client.post(
-        "auth/user/b%40b.b", data={"id": "b@b.b", "gcp_project": "broad-cho-priv1"}
+        "auth/user/b%40b.b",
+        data={
+            "id": "b@b.b",
+            "gcp_project": "broad-cho-priv1",
+            "public_key": "public_key",
+        },
     )
     mocker.patch("src.gwas.GoogleCloudIAM", MockGoogleCloudIAM)
-    client.post("start/testtitle/1")
+    client.post("start/testtitle")
     MockGoogleCloudIAM.return_value = True
-    client.post("start/testtitle/1")
+    client.post("start/testtitle")
 
     auth.logout()
     auth.login()
 
     mocker.patch("src.gwas.run_gwas", mock_run_gwas)
-    client.post("start/testtitle/0")
+    client.post("start/testtitle")
     mocker.patch("src.gwas.get_status", mock_get_status)
-    client.post("start/testtitle/0")
+    client.post("start/testtitle")
 
 
 def test_get_status(mocker):
@@ -132,12 +142,12 @@ def test_get_status(mocker):
 
     assert get_status("role", "gcp_project", "test", "project title") == "test"
     assert (
-        get_status("role", "gcp_project", "GWAS Completed!", "project title")
+        get_status("role", "gcp_project", "finished", "project title")
         == "GWAS Completed!"
     )
     assert (
-        get_status("3", "gcp_project", "DataSharing Completed!", "project title")
-        == "DataSharing Completed!"
+        get_status("role", "gcp_project", "GWAS Completed!", "project title")
+        == "GWAS Completed!"
     )
 
 
@@ -182,11 +192,14 @@ class MockGoogleCloudPubsub:
     def create_topic_and_subscribe(self):
         pass
 
+    def delete_topic(self):
+        pass
+
     def add_pub_iam_member(self, role, member):
         pass
 
     def listen_to_startup_script(self, status):
-        return status
+        return "GWAS Completed!" if status == "finished" else status
 
 
 # class to mock GoogleCloudIAM

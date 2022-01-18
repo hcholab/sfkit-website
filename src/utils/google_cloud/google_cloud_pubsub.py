@@ -46,6 +46,10 @@ class GoogleCloudPubsub:
             }
         )
 
+    def delete_topic(self) -> None:
+        self.publisher.delete_topic(request={"topic": self.topic_path})
+        print(f"Topic deleted: {self.topic_path}")
+
     def listen_to_startup_script(self, status):
         def callback(message) -> None:
             print(f"Received {message}.")

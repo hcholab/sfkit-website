@@ -137,17 +137,24 @@ def join_project(project_name):
     return redirect(url_for("gwas.index"))
 
 
-@bp.route("/start/<project_title>/<role>", methods=("GET", "POST"))
+@bp.route("/start/<project_title>", methods=("GET", "POST"))
 @login_required
-def start(project_title, role):
+def start(project_title):
     db = current_app.config["DATABASE"]
     project_doc_dict = db.collection("projects").document(project_title).get().to_dict()
+    public_keys = [
+        db.collection("users").document(user).get().to_dict()["public_key"]
+        for user in project_doc_dict["participants"]
+    ]
     id = g.user["id"]
-    role = str(project_doc_dict["participants"].index(id))
+    role: int = project_doc_dict["participants"].index(id)
 
     if request.method == "GET":
         return render_template(
-            "gwas/start.html", project=project_doc_dict, role=int(role)
+            "gwas/start.html",
+            project=project_doc_dict,
+            public_keys=public_keys,
+            role=role,
         )
     gcp_project = db.collection("users").document(id).get().to_dict().get("gcp_project")
     if not gcp_project:
@@ -155,10 +162,10 @@ def start(project_title, role):
         return redirect(url_for("auth.user", id=id))
     statuses = project_doc_dict["status"]
 
-    if statuses[int(role)] == "not ready":
+    if statuses[role] == "not ready":
         gcloudIAM = GoogleCloudIAM()
         if gcloudIAM.test_permissions(gcp_project):
-            statuses[int(role)] = "ready"
+            statuses[role] = "ready"
             db.collection("projects").document(project_title).set(
                 {"status": statuses},
                 merge=True,
@@ -166,19 +173,19 @@ def start(project_title, role):
         else:
             flash("Please give the service appropriate permissions first.")
             return redirect(url_for("general.permissions"))
+
     if "not ready" in statuses:
         pass
-    elif statuses[int(role)] == "ready":
-        statuses[int(role)] = "setting up your vm instance"
+    elif statuses[role] == "ready":
+        statuses[role] = "setting up your vm instance"
         db.collection("projects").document(project_title).set(
             {"status": statuses},
             merge=True,
         )
-
-        run_gwas(role, gcp_project, project_title)
+        run_gwas(str(role), gcp_project, project_title)
     else:
-        statuses[int(role)] = get_status(
-            role, gcp_project, statuses[int(role)], project_title
+        statuses[role] = get_status(
+            str(role), gcp_project, statuses[role], project_title
         )
         db.collection("projects").document(project_title).set(
             {"status": statuses},
@@ -186,17 +193,20 @@ def start(project_title, role):
         )
 
     project_doc_dict = db.collection("projects").document(project_title).get().to_dict()
-    return render_template("gwas/start.html", project=project_doc_dict, role=int(role))
+    return render_template(
+        "gwas/start.html", project=project_doc_dict, public_keys=public_keys, role=role
+    )
 
 
-def get_status(role, gcp_project, status, project_title):
+def get_status(role: str, gcp_project, status, project_title):
+    if status == "GWAS Completed!":
+        return status
+
     gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, project_title)
     gcloudCompute = GoogleCloudCompute(gcp_project)
     status = gcloudPubsub.listen_to_startup_script(status)
 
-    if status == "GWAS Completed!" or (
-        status == "DataSharing Completed!" and role == "3"
-    ):
+    if status == "GWAS Completed!":
         instance = (
             project_title.replace(" ", "").lower()
             + "-"
@@ -204,6 +214,7 @@ def get_status(role, gcp_project, status, project_title):
             + role
         )
         gcloudCompute.stop_instance(constants.ZONE, instance)
+        gcloudPubsub.delete_topic()
     return status
 
 

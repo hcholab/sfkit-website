@@ -20,6 +20,12 @@ def test_create_topic_and_subscribe(mocker, project):
     google_cloud_pubsub.create_topic_and_subscribe()
 
 
+def test_delete_topic(mocker):
+    setup_mocking(mocker)
+    google_cloud_pubsub = GoogleCloudPubsub("broad-cho-priv1", "0", "project title")
+    google_cloud_pubsub.delete_topic()
+
+
 def test_listen_to_startup_script(mocker):
     setup_mocking(mocker)
     google_cloud_pubsub = GoogleCloudPubsub("broad-cho-priv1", "0", "project title")
@@ -48,6 +54,9 @@ class MockPublisherClient:
         return ['blah"broad-cho-priv1']
 
     def create_topic(self, name):
+        pass
+
+    def delete_topic(self, request):
         pass
 
     def get_iam_policy(self, request):

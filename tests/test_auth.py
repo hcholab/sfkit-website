@@ -4,7 +4,7 @@ from flask import g, session
 
 @pytest.mark.parametrize(
     "path",
-    ("/create", "/update/1", "/delete/1", "/join/1", "/start/1/1", "auth/user/1"),
+    ("/create", "/update/1", "/delete/1", "/join/1", "/start/1", "auth/user/1"),
 )
 def test_login_required(client, path):
     response = client.post(path)
@@ -85,7 +85,12 @@ def test_user(client, auth):
     auth.login()
     assert client.get("auth/user/a%40a.a", data={"id": "a@a.a"}).status_code == 200
     response = client.post(
-        "auth/user/a%40a.a", data={"id": "a@a.a", "gcp_project": "broad-cho-priv1"}
+        "auth/user/a%40a.a",
+        data={
+            "id": "a@a.a",
+            "gcp_project": "broad-cho-priv1",
+            "public_key": "test_key",
+        },
     )
     assert response.headers["Location"] == "http://localhost/index"
 

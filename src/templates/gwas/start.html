@@ -18,15 +18,23 @@
             </span>
             <h2 class="mt-2 fw-bold">{{ project['title'] }}</h2>
             <p class="lead text-muted">{{ project['description']  }}</p>
-            <span>
+            <div>
               Participants:
-              {% for participant in project['participants']%}
-                <small class="text-muted ms-2 me-2">{{participant}}</small>
+              {% for i in range(3)%}
+                <br>
+                <small class="text-muted ms-2 me-2">
+                  {{project['participants'][i]}}
+                  {% if i != 0 and public_keys[i]%}
+                    : Public Key =
+                    {{public_keys[i]}}
+                  {% endif %}
+                </small>
               {% endfor %}
-            </span>
+            </div>
             <br>
             {% if project["status"][role] == "not ready" %}
-              <form action="{{ url_for('gwas.start', project_title=project['title'], role=role) }}" method="post">
+              Before proceeding, please make sure that you have uploaded your data (pos.txt and the encrypted files (g.bin, m.bin, p.bin)) to your google-cloud bucket.
+              <form action="{{ url_for('gwas.start', project_title=project['title']) }}" method="post">
                 <button class="mt-2 btn btn-success" type="submit" onclick="loading();">
                   <div id="loading" style="display:none">
                     <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
@@ -37,14 +45,14 @@
                   </div>
                 </button>
               </form>
-            {% elif "not ready" in project["status"] %}
-              <div>
-                Waiting for others to be ready...
-              </div>
             {% else %}
-              <form action="{{ url_for('gwas.start', project_title=project['title'], role=role) }}" method="post">
+              <form action="{{ url_for('gwas.start', project_title=project['title']) }}" method="post">
                 Status:
-                {{ project["status"][role] }}
+                {% if "not ready" in project["status"] %}
+                  Waiting for others to be ready...
+                {% else %}
+                  {{ project["status"][role] }}
+                {% endif %}
                 <br>
                 <button class="mt-2 btn btn-secondary" type="submit" onclick="loading();">
                   <div id="loading" style="display:none">
