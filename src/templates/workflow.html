@@ -3,55 +3,127 @@
 {% block title %}Workflow{% endblock %}
 
 {% block content %}
-  <section class="position-relative py-5">
+  <section class="py-5">
     <div class="container">
-      <div class="row mb-5 pb-3">
-        <div class="col-12 col-lg-8 mx-auto text-center">
-          <h2 class="display-4 fw-bold mt-2 mb-3">Secure GWAS Workflow</h2>
-          <p class="lead text-muted">These are the steps you'll need to follow to securely run GWAS on our portal</p>
-        </div>
-      </div>
       <div class="row">
-        <div class="col-12 col-md-6 col-lg-4 mb-5">
-          <div class="position-relative p-5 text-center bg-light rounded">
-            <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">1</span>
-            <h4 class="fw-bold mb-3">Prepare Data</h4>
-            <p class="lead text-muted">Save the GWAS data in standard VCF format in a google cloud bucket for the project where you will want the computation to take place.</p>
-          </div>
-        </div>
-        <div class="col-12 col-md-6 col-lg-4 mb-5">
-          <div class="position-relative p-5 text-center bg-light rounded">
-            <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">2</span>
-            <h4 class="fw-bold mb-3">Create or Join Project</h4>
-            <p class="lead text-muted">Go to the "Projects" page and either create or join a Secure GWAS project with the parameters and parties that you want.</p>
-          </div>
-        </div>
-        <div class="col-12 col-md-6 col-lg-4 mb-5">
-          <div class="position-relative p-5 text-center bg-light rounded">
-            <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">3</span>
-            <h4 class="fw-bold mb-3">All Parties Join Project</h4>
-            <p class="lead text-muted">Coordinate with all parties to join the project and confirm that your configuration works for everyone.</p>
-          </div>
-        </div>
-        <div class="col-12 col-md-6 col-lg-4 mb-5">
-          <div class="position-relative p-5 text-center bg-light rounded">
-            <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">4</span>
-            <h4 class="fw-bold mb-3">Begin Workflow</h4>
-            <p class="lead text-muted">Go to the project page and click the "ready" button to indicate that you're ready to begin the workflow.</p>
-          </div>
-        </div>
-        <div class="col-12 col-md-6 col-lg-4 mb-5 mb-md-0">
-          <div class="position-relative p-5 text-center bg-light rounded">
-            <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">5</span>
-            <h4 class="fw-bold mb-3">Wait for Readiness</h4>
-            <p class="lead text-muted">Once everyone has indicated readiness, the workflow will automatically begin. You can watch the progress in the portal.</p>
-          </div>
-        </div>
-        <div class="col-12 col-md-6 col-lg-4">
-          <div class="position-relative p-5 text-center bg-light rounded">
-            <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">6</span>
-            <h4 class="fw-bold mb-3">Enjoy the Results</h4>
-            <p class="lead text-muted">Download the results and analyze them to your heart's content!</p>
+        <div class="col-12 col-lg-9 mx-auto">
+          <h1 class="h1 fw-bold mb-5 text-center">Workflow Instructions</h2>
+          <p class="text-muted">This page details the instructions for how to use this portal to securely run GWAS:</p>
+          <div class="accordion" id="workflow">
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="panelsStayOpen-headingOne">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="false" aria-controls="panelsStayOpen-collapseOne">
+                  1. Join Project
+                </button>
+              </h2>
+              <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingOne">
+                <div class="accordion-body">
+                  <div>
+                    Go to the
+                    <a class="text-decoration-none" href="{{ url_for('gwas.index') }}">Projects</a>
+                    page and either create a new project or join an existing project.
+                  </div>
+                  <br>
+                  <div class="text-muted">
+                    Note: You will need to provide the name of a google-cloud project where you will be uploading your encrypted data. When the protocol eventually begins, the portal will create a VM (virtual machine) in this GCP (google-cloud platform) project to run your share of the GWAS.
+                  </div>
+                  <br>
+                  <div class="text-muted">
+                    Note: If you are creating a new project, you will also need to upload study paramters. If you are joining a project, you should confirm that the configured study parameters are what you want.
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="panelsStayOpen-headingTwo">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="false" aria-controls="panelsStayOpen-collapseTwo">
+                  2. Generate Keys
+                </button>
+              </h2>
+              <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingTwo">
+                <div class="accordion-body">
+                  <div>
+                    1. On your computer, clone the
+                    <a class="text-decoration-none" href="https://github.com/simonjmendelsohn/secure-gwas-keys-and-encryption">Secure GWAS Cryptographic Keys and Encryption</a>
+                    repository (with
+                    <code>git clone https://github.com/broadinstitute/secure-gwas-keys-and-encryption.git</code>).
+                  </div>
+                  <br>
+                  <div>
+                    2. Install the dependencies for the repo with
+                    <code>pip install -r requirements.txt</code>.
+                  </div>
+                  <br>
+                  <div>
+                    3. run
+                    <code>python3 generate_personal_keys.py</code>
+                    to generate your personal keys. Keep the private key somewhere safe, and upload the public key to your project on this website.
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="panelsStayOpen-headingThree">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="false" aria-controls="panelsStayOpen-collapseThree">
+                  3. Encrypt Data
+                </button>
+              </h2>
+              <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingThree">
+                <div class="accordion-body">
+                  <div>1. Copy down the other study participant's public key from the project page.
+                    <strong>Note: you cannot proceed without this key.</strong>
+                  </div>
+                  <br>
+                  <div>2. Go back into the Secure GWAS Cryptographic Keys and Encryption repository on your local computer (you should have used it to generate keys in the previous step), and replace the contents of the "input_data" directory with your actual raw data.</div>
+                  <br>
+                  <div>3. Run
+                    <code>python3 encrypt_data.py</code>
+                    to encrypt your data.
+                  </div>
+                  <br>
+                  <div>4. Upload the encrypted data to a google cloud storage bucket in your GCP project. If you are unfamiliar with Google Cloud Storage, see the google documentation
+                    <a class="text-decoration-none" href="https://cloud.google.com/storage/docs/quickstart-console">here</a>. The default settings should be fine.</div>
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="panelsStayOpen-headingFour">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseFour" aria-expanded="false" aria-controls="panelsStayOpen-collapseFour">
+                  4. Give Permissions
+                </button>
+              </h2>
+              <div id="panelsStayOpen-collapseFour" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingFour">
+                <div class="accordion-body">
+                  Go to the
+                  <a class="text-decoration-none" href="{{ url_for('general.permissions') }}">Permissions</a>
+                  page and follow the instructions there to give this website the correct permissions to your GCP project.
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="panelsStayOpen-headingFive">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseFive" aria-expanded="false" aria-controls="panelsStayOpen-collapseFive">
+                  5. Begin Workflow
+                </button>
+              </h2>
+              <div id="panelsStayOpen-collapseFive" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingFive">
+                <div class="accordion-body">
+                  Go to your project, and click on the "Ready to begin GWAS?" button. Once you all participants have done so, the protocol will begin.
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="panelsStayOpen-headingSix">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseSix" aria-expanded="false" aria-controls="panelsStayOpen-collapseSix">
+                  6. Enjoy the Results
+                </button>
+              </h2>
+              <div id="panelsStayOpen-collapseSix" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingSix">
+                <div class="accordion-body">
+                  Once the protocol is complete, the project page will indicate this with a "GWAS Completed!" status. You can then download the results to share and analyze at your leisure.
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

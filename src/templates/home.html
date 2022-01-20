@@ -6,16 +6,71 @@
   <section class="py-5">
     <div class="container">
       <div class="row">
-        <div class="col-12 col-lg-6 mx-auto">
-          <h2 class="h1 fw-bold mb-5">Secure GWAS</h2>
-          <p class="lead text-muted mb-4">This is a portal for securely running GWAS by distributing work among multiple parties. See the original paper
-            <a href="https://www.nature.com/articles/nbt.4108">here</a>
-            for details on the underlying implementation.</p>
+        <div class="col-12 col-lg-9 mx-auto">
+          <h2 class="h1 fw-bold mb-5 text-center">Secure GWAS</h2>
+          <p class="lead text-muted mb-4">
+            This is a portal for securely running GWAS by distributing work among multiple parties. See the original paper
+            <a class="text-decoration-none" href="https://www.nature.com/articles/nbt.4108">here</a>
+            for details on the underlying implementation.
+          </p>
           <div class="mb-5">
             <img class="img-fluid" src="static/gwas.jpeg" alt="">
           </div>
-          <p class="lead text-muted mb-4">Navigate to the "Workflow" page to read more about the portal, and go to the "Projects" page to begin your own project!</p>
-          <p class="lead text-muted mb-4">GWAS is awesome...</p>
+          <hr>
+          <h2 class="h2 fw-bold mt-9 mb-5 text-center">General Workflow</h2>
+          <div class="row">
+            <div class="col-12 col-md-6 col-lg-4 mb-5">
+              <div class="position-relative p-5 text-center bg-light rounded">
+                <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">1</span>
+                <h4 class="fw-bold mb-3">Join Project</h4>
+                <p class="lead text-muted">
+                  Create or join a Secure GWAS project with the parameters that you want.
+                </p>
+              </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4 mb-5">
+              <div class="position-relative p-5 text-center bg-light rounded">
+                <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">2</span>
+                <h4 class="fw-bold mb-3">Generate Keys</h4>
+                <p class="lead text-muted">
+                  Generate public and private cryptographic keys for use in the protocol.
+                </p>
+              </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4 mb-5">
+              <div class="position-relative p-5 text-center bg-light rounded">
+                <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">3</span>
+                <h4 class="fw-bold mb-3">Encrypt Data</h4>
+                <p class="lead text-muted">Encrypt your data using the shared cryptographic keys and upload the encrypted data to google cloud.</p>
+              </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4 mb-5">
+              <div class="position-relative p-5 text-center bg-light rounded">
+                <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">4</span>
+                <h4 class="fw-bold mb-3">Give Permissions</h4>
+                <p class="lead text-muted">Give this portal the relevant permissions to help you run the GWAS protocol.</p>
+              </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4 mb-5 mb-md-0">
+              <div class="position-relative p-5 text-center bg-light rounded">
+                <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">5</span>
+                <h4 class="fw-bold mb-3">Begin Workflow</h4>
+                <p class="lead text-muted">Once everyone is ready, start the GWAS protocol.</p>
+              </div>
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+              <div class="position-relative p-5 text-center bg-light rounded">
+                <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">6</span>
+                <h4 class="fw-bold mb-3">Enjoy the Results</h4>
+                <p class="lead text-muted">Download the results and analyze them to your heart's content!</p>
+              </div>
+            </div>
+          </div>
+          <p class="lead text-muted mt-0 mb-4">
+            For detailed instructions, go to the
+            <a class="text-decoration-none" href="{{ url_for('general.workflow') }}">Workflow</a>
+            page.
+          </p>
         </div>
       </div>
     </div>

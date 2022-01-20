@@ -8,7 +8,7 @@
       <div class="row mb-4">
         <div class="col-12 col-lg-8 col-xxl-7 text-center mx-auto">
           {% if projects | length != 0 %}
-            <h2 class="display-5 fw-bold mt-2 mb-0">All Registered Secure GWAS Projects</h2>
+            <h2 class="display-5 fw-bold mt-2 mb-0">Registered Secure GWAS Projects</h2>
           {% else %}
             <h2 class="display-5 fw-bold mt-2 mb-0">There are no registered Secure GWAS Projects:</h2>
           {% endif %}
@@ -29,7 +29,7 @@
               </small>
             </span>
             {% if g.user['id'] in project['participants'] %}
-              <a href="{{ url_for('gwas.start', project_title=project['title']) }}">
+              <a class="text-decoration-none" href="{{ url_for('gwas.start', project_title=project['title']) }}">
                 <h2 class="mt-2 fw-bold">{{ project['title'] }}</h2>
               </a>
             {% else %}

@@ -40,7 +40,7 @@
           </ul>
           <div>
             {% if g.user %}
-              <a href="{{ url_for('auth.user', id=g.user['id']) }}" class="me-1">{{ g.user['email'] }}</a>
+              <a href="{{ url_for('auth.user', id=g.user['id']) }}" class="me-1 text-decoration-none">{{ g.user['email'] }}</a>
               <a class="btn btn-outline-secondary me-2" href="{{ url_for('auth.logout') }}">Log Out</a>
             {% else %}
               <a class="btn btn-outline-secondary me-2" href="{{ url_for('auth.login') }}">Log In</a>
@@ -64,9 +64,9 @@
       <section class="d-flex justify-content-center justify-content-lg-between p-4 border-bottom">
         <span>
           Questions? Email
-          <a href="mailto:smendels@broadinstitute.org">smendels@broadinstitute.org</a>
+          <a class="text-decoration-none" href="mailto:smendels@broadinstitute.org">smendels@broadinstitute.org</a>
         </span>
-        <a href="https://github.com/simonjmendelsohn/secure-gwas-website" class="me-4 text-reset">
+        <a href="https://github.com/simonjmendelsohn/secure-gwas-website" class="me-4 text-reset text-decoration-none">
           Source Code
         </a>
       </section>

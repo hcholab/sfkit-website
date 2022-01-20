@@ -9,13 +9,13 @@
         <div class="col-lg-10 mx-auto">
           <h2 class="h1 fw-bold mb-5 text-center">How to Give Permissions</h2>
           <p class="lead mb-4">
-            To run Secure GWAS on this portal, you need to give this service some permissions in your GCP account. To be more specific, we need permissions to set up the appropriate networking and create the virtual machines.
+            To run Secure GWAS on this portal, you need to give this service some permissions in your GCP project. To be more specific, we need permissions to set up the appropriate networking and create the virtual machines.
           </p>
           <p class="lead mb-4">
             The easiest way to do this is by going to the GCP console and running a command in the Cloud Shell. The command will create a new role with the appropriate permissions, and then it will attach the service account for this website to the role.
           </p>
           <p class="lead text-muted mb-4">Log into
-            <a href="https://console.cloud.google.com">https://console.cloud.google.com</a>. Then click the icon in the top right to "Activate Cloud Shell". Once the Terminal is ready, please copy and run the following:
+            <a class="text-decoration-none" href="https://console.cloud.google.com">https://console.cloud.google.com</a>. Then click the icon in the top right to "Activate Cloud Shell". Once the Terminal is ready, please copy and run the following:
           </p>
           <div class="p-2 bg-light rounded">
             <button id="copy-button" data-bs-toggle="tooltip" data-bs-trigger='manual' style="position:relative;float:right" type="button" class="btn btn-outline-secondary btn-sm">
@@ -36,8 +36,7 @@
             </code>
           </div>
           <br>
-          <p class="lead mb-4">That's it!</p>
-          <p class="lead text-muted mb-4" style="font-size: 80%">If you have any questions or concerns, please don't hesitate to reach out.</p>
+          <p class="lead mb-4">The console will ask for confirmation: type Y (for yes) and you're done. That's it!</p>
         </div>
       </div>
     </div>
