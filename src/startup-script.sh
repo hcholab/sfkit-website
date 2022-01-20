@@ -7,21 +7,28 @@ touch /home/startup_was_launched
 # Many of the commands need root privileges for the VM
 sudo -s
 
-printf "\n\n Begin installing dependencies \n\n"
-apt-get --assume-yes update
-apt-get --assume-yes install build-essential
-apt-get --assume-yes install clang-3.9
-apt-get --assume-yes install libgmp3-dev
-apt-get --assume-yes install libssl-dev
-apt-get --assume-yes install libsodium-dev
-apt-get --assume-yes install libomp-dev
-apt-get --assume-yes install netcat
-apt-get --assume-yes install git
-apt-get --assume-yes install python3-pip
-pip3 install numpy
 topic_id=$(hostname)
-gcloud pubsub topics publish ${topic_id} --message="Done installing dependencies" --ordering-key="1" --project="broad-cho-priv1"
-printf "\n\n Done installing dependencies \n\n"
+
+printf "\n\n Begin installing dependencies \n\n"
+apt-get --assume-yes update &&
+    apt-get --assume-yes install build-essential &&
+    apt-get --assume-yes install clang-3.9 &&
+    apt-get --assume-yes install libgmp3-dev &&
+    apt-get --assume-yes install libssl-dev &&
+    apt-get --assume-yes install libsodium-dev &&
+    apt-get --assume-yes install libomp-dev &&
+    apt-get --assume-yes install netcat &&
+    apt-get --assume-yes install git &&
+    apt-get --assume-yes install python3-pip &&
+    pip3 install numpy
+if [[ $? -ne 0 ]]; then
+    gcloud pubsub topics publish ${topic_id} --message="Failed to install dependencies" --ordering-key="1" --project="broad-cho-priv1"
+    printf "\n\n Failed to install dependencies \n\n"
+    exit 1
+else
+    gcloud pubsub topics publish ${topic_id} --message="Done installing dependencies" --ordering-key="1" --project="broad-cho-priv1"
+    printf "\n\n Done installing dependencies \n\n"
+fi
 
 printf "\n\n Begin installing GWAS repo \n\n"
 cd /home
@@ -32,12 +39,19 @@ role=$(hostname | tail -c 2)
 
 printf "\n\n Download data from storage bucket"
 mkdir -p /home/secure-gwas/test_data
-gsutil cp gs://secure-gwas-data${role}/g.bin /home/secure-gwas/test_data/g.bin
-gsutil cp gs://secure-gwas-data${role}/m.bin /home/secure-gwas/test_data/m.bin
-gsutil cp gs://secure-gwas-data${role}/p.bin /home/secure-gwas/test_data/p.bin
-gsutil cp gs://secure-gwas-data${role}/other_shared_key.bin /home/secure-gwas/test_data/other_shared_key.bin
-gsutil cp gs://secure-gwas-data${role}/pos.txt /home/secure-gwas/test_data/pos.txt
-printf "\n\n Done downloading data from storage bucket \n\n"
+gsutil cp gs://secure-gwas-data${role}/g.bin /home/secure-gwas/test_data/g.bin &&
+    gsutil cp gs://secure-gwas-data${role}/m.bin /home/secure-gwas/test_data/m.bin &&
+    gsutil cp gs://secure-gwas-data${role}/p.bin /home/secure-gwas/test_data/p.bin &&
+    gsutil cp gs://secure-gwas-data${role}/other_shared_key.bin /home/secure-gwas/test_data/other_shared_key.bin &&
+    gsutil cp gs://secure-gwas-data${role}/pos.txt /home/secure-gwas/test_data/pos.txt
+if [[ $? -ne 0 ]]; then
+    gcloud pubsub topics publish ${topic_id} --message="Failed to download data from storage bucket" --ordering-key="1" --project="broad-cho-priv1"
+    printf "\n\n Failed to download data from storage bucket \n\n"
+    exit 1
+else
+    gcloud pubsub topics publish ${topic_id} --message="Done downloading data from storage bucket" --ordering-key="1" --project="broad-cho-priv1"
+    printf "\n\n Done downloading data from storage bucket \n\n"
+fi
 
 printf "\n\n Begin installing NTL library \n\n"
 curl https://libntl.org/ntl-10.3.0.tar.gz --output ntl-10.3.0.tar.gz
@@ -59,15 +73,21 @@ sed -i "s|^CPP.*$|CPP = ${COMP}|g" Makefile
 sed -i "s|^INCPATHS.*$|INCPATHS = -I/usr/local/include|g" Makefile
 sed -i "s|^LDPATH.*$|LDPATH = -L/usr/local/lib|g" Makefile
 make
-cd /home
-gcloud pubsub topics publish ${topic_id} --message="Done compiling GWAS" --ordering-key="1" --project="broad-cho-priv1"
-printf "\n\n done compiling secure gwas code \n\n"
+if [[ $? -ne 0 ]]; then
+    gcloud pubsub topics publish ${topic_id} --message="Failed to compile secure gwas code" --ordering-key="1" --project="broad-cho-priv1"
+    printf "\n\n Failed to compile secure gwas code \n\n"
+    exit 1
+else
+    cd /home
+    gcloud pubsub topics publish ${topic_id} --message="Done compiling secure gwas code" --ordering-key="1" --project="broad-cho-priv1"
+    printf "\n\n Done compiling secure gwas code \n\n"
+fi
 
 printf "\n\n Waiting for all other VMs to be ready for GWAS \n\n"
 nc -k -l -p 8055 &
 for i in 0 1 2; do
     false
-    while [ $? == 1 ]; do
+    while [[ $? -ne 0 ]]; do
         printf "Waiting for VM secure-gwas${i} to be done setting up \n"
         sleep 5
         nc -w 5 -v -z 10.0.${i}.10 8055 &>/dev/null
@@ -84,11 +104,23 @@ if [[ $role -eq "0" ]]; then
 else
     bin/DataSharingClient ${role} ../par/test.par.${role}.txt ../test_data/
 fi
-gcloud pubsub topics publish ${topic_id} --message="DataSharing Completed!" --ordering-key="1" --project="broad-cho-priv1"
+if [[ $? -ne 0 ]]; then
+    gcloud pubsub topics publish ${topic_id} --message="Failed to run DataSharingClient" --ordering-key="1" --project="broad-cho-priv1"
+    printf "\n\n Failed to run DataSharingClient \n\n"
+    exit 1
+else
+    gcloud pubsub topics publish ${topic_id} --message="Done with DataSharingClient; about to start GWASClient" --ordering-key="1" --project="broad-cho-priv1"
+    printf "\n\n Done with DataSharingClient; about to start GWASClient \n\n"
+fi
 
 printf "\n\n Waiting a couple minutes between DataSharing and GWAS... \n\n"
 sleep $((100 + 30 * ${role}))
 bin/GwasClient ${role} ../par/test.par.${role}.txt
-gcloud pubsub topics publish ${topic_id} --message="GWAS Completed!" --ordering-key="1" --project="broad-cho-priv1"
-
-printf "\n\n Done with GWAS \n\n"
+if [[ $? -ne 0 ]]; then
+    gcloud pubsub topics publish ${topic_id} --message="Failed to run GWASClient" --ordering-key="1" --project="broad-cho-priv1"
+    printf "\n\n Failed to run GWASClient \n\n"
+    exit 1
+else
+    gcloud pubsub topics publish ${topic_id} --message="GWAS Completed!" --ordering-key="1" --project="broad-cho-priv1"
+    printf "\n\n GWAS Completed! \n\n"
+fi
