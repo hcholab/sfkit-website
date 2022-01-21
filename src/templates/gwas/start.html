@@ -33,7 +33,6 @@
             </div>
             <br>
             {% if project["status"][role] == "not ready" %}
-              Before proceeding, please make sure that you have uploaded your data (pos.txt and the encrypted files (g.bin, m.bin, p.bin)) to your google-cloud bucket.
               <form action="{{ url_for('gwas.start', project_title=project['title']) }}" method="post">
                 <button class="mt-2 btn btn-success" type="submit" onclick="loading();">
                   <div id="loading" style="display:none">
