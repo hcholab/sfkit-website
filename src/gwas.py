@@ -16,6 +16,7 @@ from src.auth import login_required
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 from src.utils.google_cloud.google_cloud_pubsub import GoogleCloudPubsub
+from src.utils.google_cloud.google_cloud_storage import GoogleCloudStorage
 
 bp = Blueprint("gwas", __name__)
 
@@ -60,6 +61,7 @@ def create():
                     "created": datetime.now(),
                     "participants": [g.user["id"]],
                     "status": ["not ready"],
+                    "parameters": constants.DEFAULT_PARAMETERS,
                 }
             )
             return redirect(url_for("gwas.index"))
@@ -102,6 +104,7 @@ def update(project_title):
                     "created": old_doc_ref_dict["created"],
                     "participants": old_doc_ref_dict["participants"],
                     "status": ["not ready"],
+                    "parameters": old_doc_ref["parameters"],
                 },
                 merge=True,
             )
@@ -198,6 +201,28 @@ def start(project_title):
     )
 
 
+@bp.route("/parameters/<project_title>", methods=("GET", "POST"))
+@login_required
+def parameters(project_title):
+    db = current_app.config["DATABASE"]
+    doc_ref = db.collection("projects").document(project_title)
+    parameters = doc_ref.get().to_dict().get("parameters")
+    if request.method == "GET":
+        return render_template(
+            "gwas/parameters.html", project_title=project_title, parameters=parameters
+        )
+    else:  # POST
+        doc_ref.set(
+            {
+                "parameters": {
+                    "NUM_INDS": request.form["NUM_INDS"],
+                },
+            },
+            merge=True,
+        )
+        return redirect(url_for("gwas.start", project_title=project_title))
+
+
 def get_status(role: str, gcp_project, status, project_title):
     if status == "GWAS Completed!":
         return status
@@ -220,20 +245,20 @@ def get_status(role: str, gcp_project, status, project_title):
 
 def run_gwas(role, gcp_project, project_title):
     gcloudCompute = GoogleCloudCompute(gcp_project)
-    # gcloudStorage = GoogleCloudStorage(constants.SERVER_PROJECT)
+    gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
     gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, project_title)
 
-    gcloudPubsub.create_topic_and_subscribe()
+    # copy parameters to parameter files
+    gcloudStorage.copy_parameters_to_bucket(project_title)
 
+    gcloudPubsub.create_topic_and_subscribe()
     instance = (
         project_title.replace(" ", "").lower()
         + "-"
         + constants.INSTANCE_NAME_ROOT
         + role
     )
-
     gcloudCompute.setup_networking(role)
-
     gcloudCompute.setup_instance(constants.ZONE, instance, role)
 
     # Give instance publish access to pubsub for status updates
@@ -241,6 +266,10 @@ def run_gwas(role, gcp_project, project_title):
         zone=constants.ZONE, instance=instance
     )
     gcloudPubsub.add_pub_iam_member("roles/pubsub.publisher", member)
+    # give instance read access to storage buckets for parameter files
+    gcloudStorage.add_bucket_iam_member(
+        constants.BUCKET_NAME, "roles/storage.objectViewer", member
+    )
 
     # # Create bucket to store the ip addresses; this will be read-only for the VMs
     # bucket = gcloudStorage.validate_bucket(role)

@@ -1,7 +1,9 @@
+import fileinput
 import time
 
-from src import constants
+from flask import current_app
 from google.cloud import storage
+from src import constants
 
 
 class GoogleCloudStorage:
@@ -28,13 +30,9 @@ class GoogleCloudStorage:
         # member = "IAM identity, e.g., user: name@example.com"
 
         bucket = self.storage_client.bucket(bucket_name)
-
         policy = bucket.get_iam_policy(requested_policy_version=3)
-
         policy.bindings.append({"role": role, "members": {member}})
-
         bucket.set_iam_policy(policy)
-
         print("Added {} with role {} to {}.".format(member, role, bucket_name))
 
     def delete_blob(self, bucket_name, blob_name):
@@ -48,3 +46,27 @@ class GoogleCloudStorage:
             print("Blob {} deleted.".format(blob_name))
         else:
             print(f"Blob {blob_name} didn't exist")
+
+    def copy_parameters_to_bucket(self, project_title):
+        bucket = self.storage_client.bucket(constants.BUCKET_NAME)
+        for file in constants.PARAMETER_FILES:
+            blob = bucket.blob(file)
+            blob.download_to_filename(file)
+            self.update_parameters(file, project_title)
+            blob.upload_from_filename(file)
+            print(f"Updated parameters in {file}")
+
+    def update_parameters(self, file, project_title):
+        db = current_app.config["DATABASE"]
+        parameters = (
+            db.collection("projects")
+            .document(project_title)
+            .get()
+            .to_dict()["parameters"]
+        )
+
+        for line in fileinput.input(file, inplace=True):
+            key = line.split(" ")[0]
+            if key in parameters:
+                line = key + " " + str(parameters[key]["value"]) + "\n"
+            print(line, end="")

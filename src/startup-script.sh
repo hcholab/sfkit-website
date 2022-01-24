@@ -43,7 +43,8 @@ gsutil cp gs://secure-gwas-data${role}/g.bin /home/secure-gwas/test_data/g.bin &
     gsutil cp gs://secure-gwas-data${role}/m.bin /home/secure-gwas/test_data/m.bin &&
     gsutil cp gs://secure-gwas-data${role}/p.bin /home/secure-gwas/test_data/p.bin &&
     gsutil cp gs://secure-gwas-data${role}/other_shared_key.bin /home/secure-gwas/test_data/other_shared_key.bin &&
-    gsutil cp gs://secure-gwas-data${role}/pos.txt /home/secure-gwas/test_data/pos.txt
+    gsutil cp gs://secure-gwas-data${role}/pos.txt /home/secure-gwas/test_data/pos.txt &&
+    gsutil cp gs://secure-gwas-data/test.par.${role}.txt /home/secure-gwas/par/test.par.${role}.txt
 if [[ $? -ne 0 && "$role" != "0\n" ]]; then
     gcloud pubsub topics publish ${topic_id} --message="Failed to download data from storage bucket" --ordering-key="1" --project="broad-cho-priv1"
     printf "\n\n Failed to download data from storage bucket \n\n"

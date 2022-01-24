@@ -20,7 +20,7 @@
             <p class="lead text-muted">{{ project['description']  }}</p>
             <div>
               Participants:
-              {% for i in range(3)%}
+              {% for i in range(3) %}
                 <br>
                 <small class="text-muted ms-2 me-2">
                   {{project['participants'][i]}}
@@ -32,6 +32,9 @@
               {% endfor %}
             </div>
             <br>
+            <div class="edit-parameters">
+              <a href="{{ url_for('gwas.parameters', project_title=project['title']) }}" class="btn btn-secondary">Edit Parameters</a>
+            </div>
             {% if project["status"][role] == "not ready" %}
               <form action="{{ url_for('gwas.start', project_title=project['title']) }}" method="post">
                 <button class="mt-2 btn btn-success" type="submit" onclick="loading();">
