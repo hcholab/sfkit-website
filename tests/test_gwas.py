@@ -151,7 +151,6 @@ def test_parameters(client, auth, mocker):
     assert client.get("parameters/testtitle").status_code == 200
 
     response = client.post("parameters/testtitle", data={"save": "save"})
-    print(response.headers)
     assert response.headers["Location"] == "http://localhost/start/testtitle"
 
     response = client.post(

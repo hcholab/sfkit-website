@@ -29,9 +29,14 @@
         <div class="col-12 col-lg-8 mx-auto text-center" id="pos">
           <div class="p-5 bg-light rounded text-center">
             <h2 class="display-8 mt-0 mb-2">pos.txt file</h2>
-            <p class="lead mb-4">
+            <p class="mb-4">
               The pos.txt file contains the genomic positions of SNPs to be tested, and is considered public (shared here for all parties).
             </p>
+            {% if pos_file_uploaded %}
+              <p class="lead">
+                The pos.txt file has already been uploaded! You can replace it by uploading a new one.
+              </p>
+            {% endif %}
             <form method="post" enctype="multipart/form-data">
               <input type="file" name="file">
               <input type="submit" name="upload" value="Upload">

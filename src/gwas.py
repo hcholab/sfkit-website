@@ -215,14 +215,18 @@ def start(project_title):
 @bp.route("/parameters/<project_title>", methods=("GET", "POST"))
 @login_required
 def parameters(project_title):
+    google_cloud_storage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
+
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("projects").document(project_title)
     parameters = doc_ref.get().to_dict().get("parameters")
+    pos_file_uploaded = google_cloud_storage.check_file_exists("pos.txt")
     if request.method == "GET":
         return render_template(
             "gwas/parameters.html",
             project_title=project_title,
             parameters=parameters,
+            pos_file_uploaded=pos_file_uploaded,
         )
     elif "save" in request.form:
         for p in parameters["index"]:
@@ -231,7 +235,7 @@ def parameters(project_title):
         return redirect(url_for("gwas.start", project_title=project_title))
     elif "upload" in request.form:
         file = request.files["file"]
-        if file and file.filename == "":
+        if file.filename == "":
             flash("Please select a file to upload.")
             return redirect(url_for("gwas.parameters", project_title=project_title))
         elif file and file.filename == "pos.txt":
