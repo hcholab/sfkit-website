@@ -20,8 +20,21 @@
               {% endfor %}
               <div class="d-flex flex-wrap justify-content-center">
                 <a href="{{ url_for('gwas.start', project_title=project_title) }}" class="btn btn-outline-secondary me-2 mb-2 mb-sm-0">Cancel</a>
-                <input type="submit" value="Save" class="btn btn-primary me-2 mb-2 mb-sm-0">
+                <input type="submit" name="save" value="Save" class="btn btn-primary me-2 mb-2 mb-sm-0">
               </div>
+            </form>
+          </div>
+        </div>
+        <div class=""><br></div>
+        <div class="col-12 col-lg-8 mx-auto text-center" id="pos">
+          <div class="p-5 bg-light rounded text-center">
+            <h2 class="display-8 mt-0 mb-2">pos.txt file</h2>
+            <p class="lead mb-4">
+              The pos.txt file contains the genomic positions of SNPs to be tested, and is considered public (shared here for all parties).
+            </p>
+            <form method="post" enctype="multipart/form-data">
+              <input type="file" name="file">
+              <input type="submit" name="upload" value="Upload">
             </form>
           </div>
         </div>
@@ -39,4 +52,18 @@
       return new bootstrap.Tooltip(tooltipTriggerEl)
     })
   </script>
+
+  {% if request
+    .args
+    .get('section') %}
+    <script>
+      $(function () {
+        $("html, body").animate({
+          scrollTop: $("#{{ request.args.get('section') }}")
+            .offset()
+            .top
+        }, 500);
+      });
+    </script>
+  {% endif %}
 {% endblock %}

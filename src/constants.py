@@ -5,6 +5,7 @@ NETWORK_NAME = "secure-gwas"
 SUBNET_NAME = "secure-gwas-subnet"
 INSTANCE_NAME_ROOT = "secure-gwas"
 BUCKET_NAME = "secure-gwas-data"
+TEMP_FOLDER = "src/temp"
 PARAMETER_FILES = ["test.par.0.txt", "test.par.1.txt", "test.par.2.txt"]
 
 DEFAULT_PARAMETERS = {

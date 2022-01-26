@@ -1,3 +1,5 @@
+import io
+
 import pytest
 from src.gwas import get_status, run_gwas
 
@@ -122,6 +124,9 @@ def test_start(client, auth, mocker):
             "public_key": "public_key",
         },
     )
+    mocker.patch("src.gwas.GoogleCloudStorage", MockGoogleCloudStorage)
+    client.post("start/testtitle")
+    MockGoogleCloudStorage.return_value = True
     mocker.patch("src.gwas.GoogleCloudIAM", MockGoogleCloudIAM)
     client.post("start/testtitle")
     MockGoogleCloudIAM.return_value = True
@@ -134,6 +139,46 @@ def test_start(client, auth, mocker):
     client.post("start/testtitle")
     mocker.patch("src.gwas.get_status", mock_get_status)
     client.post("start/testtitle")
+
+
+def test_parameters(client, auth, mocker):
+    mocker.patch("src.gwas.GoogleCloudStorage", MockGoogleCloudStorage)
+    auth.register()
+    auth.login()
+    client.post(
+        "create", data={"title": "testtitle", "description": "test description"}
+    )
+    assert client.get("parameters/testtitle").status_code == 200
+
+    response = client.post("parameters/testtitle", data={"save": "save"})
+    print(response.headers)
+    assert response.headers["Location"] == "http://localhost/start/testtitle"
+
+    response = client.post(
+        "parameters/testtitle",
+        data={"upload": "upload", "file": (io.BytesIO(b"abcdef"), "")},
+        content_type="multipart/form-data",
+    )
+    assert response.headers["Location"] == "http://localhost/parameters/testtitle"
+
+    response = client.post(
+        "parameters/testtitle",
+        data={"upload": "upload", "file": (io.BytesIO(b"abcdef"), "pos.txt")},
+        content_type="multipart/form-data",
+    )
+    assert response.headers["Location"] == "http://localhost/start/testtitle"
+
+    response = client.post(
+        "parameters/testtitle",
+        data={"upload": "upload", "file": (io.BytesIO(b"abcdef"), "bad_file")},
+        content_type="multipart/form-data",
+    )
+    assert response.headers["Location"] == "http://localhost/parameters/testtitle"
+
+    with pytest.raises(SystemExit) as e:
+        client.post("parameters/testtitle")
+    assert e.type == SystemExit
+    assert e.value.code == 1
 
 
 def test_get_status(mocker):
@@ -154,6 +199,7 @@ def test_get_status(mocker):
 def test_run_gwas(mocker):
     mocker.patch("src.gwas.GoogleCloudPubsub", MockGoogleCloudPubsub)
     mocker.patch("src.gwas.GoogleCloudCompute", MockGoogleCloudCompute)
+    mocker.patch("src.gwas.GoogleCloudStorage", MockGoogleCloudStorage)
 
     run_gwas("role", "gcp_project", "project title")
 
@@ -184,6 +230,25 @@ class MockGoogleCloudCompute:
         pass
 
 
+class MockGoogleCloudStorage:
+    return_value = False
+
+    def __init__(self, project):
+        pass
+
+    def copy_parameters_to_bucket(self, project_title):
+        pass
+
+    def upload_to_bucket(self, file, filename):
+        pass
+
+    def add_bucket_iam_member(self, bucket_name, role, member):
+        pass
+
+    def check_file_exists(self, filename):
+        return MockGoogleCloudStorage.return_value
+
+
 # class to mock GoogleCloudPubsub
 class MockGoogleCloudPubsub:
     def __init__(self, project, role, project_title):
@@ -208,3 +273,8 @@ class MockGoogleCloudIAM:
 
     def test_permissions(self, project_id):
         return MockGoogleCloudIAM.return_value
+
+
+class MockFile:
+    def __init__(self, filename):
+        self.filename = filename

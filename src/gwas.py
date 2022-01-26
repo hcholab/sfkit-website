@@ -104,7 +104,7 @@ def update(project_title):
                     "created": old_doc_ref_dict["created"],
                     "participants": old_doc_ref_dict["participants"],
                     "status": ["not ready"],
-                    "parameters": old_doc_ref["parameters"],
+                    "parameters": old_doc_ref_dict["parameters"],
                 },
                 merge=True,
             )
@@ -163,8 +163,19 @@ def start(project_title):
     if not gcp_project:
         flash("Please set your GCP project first.")
         return redirect(url_for("auth.user", id=id))
-    statuses = project_doc_dict["status"]
 
+    # check if pos.txt is in the google cloud bucket
+    gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
+    if not gcloudStorage.check_file_exists("pos.txt"):
+        flash("A pos.txt file is required to begin the workflow.")
+        flash(
+            "Please either upload a pos.txt file yourself or have one of the entities you are running this project with do so for you."
+        )
+        return redirect(
+            url_for("gwas.parameters", project_title=project_title, section="pos")
+        )
+
+    statuses = project_doc_dict["status"]
     if statuses[role] == "not ready":
         gcloudIAM = GoogleCloudIAM()
         if gcloudIAM.test_permissions(gcp_project):
@@ -209,18 +220,30 @@ def parameters(project_title):
     parameters = doc_ref.get().to_dict().get("parameters")
     if request.method == "GET":
         return render_template(
-            "gwas/parameters.html", project_title=project_title, parameters=parameters
+            "gwas/parameters.html",
+            project_title=project_title,
+            parameters=parameters,
         )
-    else:  # POST
-        doc_ref.set(
-            {
-                "parameters": {
-                    "NUM_INDS": request.form["NUM_INDS"],
-                },
-            },
-            merge=True,
-        )
+    elif "save" in request.form:
+        for p in parameters["index"]:
+            parameters[p]["value"] = request.form.get(p)
+        doc_ref.set({"parameters": parameters}, merge=True)
         return redirect(url_for("gwas.start", project_title=project_title))
+    elif "upload" in request.form:
+        file = request.files["file"]
+        if file and file.filename == "":
+            flash("Please select a file to upload.")
+            return redirect(url_for("gwas.parameters", project_title=project_title))
+        elif file and file.filename == "pos.txt":
+            gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
+            gcloudStorage.upload_to_bucket(file, file.filename)
+            return redirect(url_for("gwas.start", project_title=project_title))
+        else:
+            flash("Please upload a valid pos.txt file.")
+            return redirect(url_for("gwas.parameters", project_title=project_title))
+    else:
+        print("Unknown request")
+        exit(1)
 
 
 def get_status(role: str, gcp_project, status, project_title):
