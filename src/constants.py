@@ -9,44 +9,84 @@ TEMP_FOLDER = "src/temp"
 PARAMETER_FILES = ["test.par.0.txt", "test.par.1.txt", "test.par.2.txt"]
 
 DEFAULT_PARAMETERS = {
-    "NUM_INDS": {"description": "number of individuals in the dataset", "value": 1000},
-    "NUM_SNPS": {"description": "The number of SNPs in the dataset", "value": 1000},
+    "NUM_INDS": {
+        "name": "Number of Individuals",
+        "description": "number of individuals in the dataset",
+        "value": 1000,
+    },
+    "NUM_SNPS": {
+        "name": "Number of SNPs",
+        "description": "number of SNPs in the dataset",
+        "value": 1000,
+    },
     "NUM_COVS": {
+        "name": "Number of Covariates",
         "description": "number of covariate features in the dataset",
         "value": 10,
     },
     "ITER_PER_EVAL": {
+        "name": "Iterations per Evaluation",
         "description": "number of QR iterations per eigenvalue when performing eigendecomposition",
         "value": 5,
     },
     "NUM_DIM_TO_REMOVE": {
-        "description": "number of PCs (Principal Components) to correct for",
+        "name": "Number of Dimensions to Remove",
+        "description": "number of principal components to correct for (in the PCA)",
         "value": 5,
     },
     "NUM_OVERSAMPLE": {
-        "description": "oversampling parameter for rand PCA",
+        "name": "Oversampling Parameter for PCA",
+        "description": "oversampling parameter for randomized principal component analysis: how many extra components should be extracted to improve the accuracy",
         "value": 5,
     },
     "NUM_POWER_ITER": {
+        "name": "Number of Power Iterations",
         "description": "number of power iterations for rand PCA",
         "value": 10,
     },
     "SKIP_QC": {
+        "name": "Skip Quality Control",
         "description": "skip quality control and use all individuals/SNPs",
         "value": 0,
     },
-    "IMISS_UB": {"description": "individual missing rate upper bound", "value": 0.05},
-    "HET_LB": {"description": "individual heterozygosity lower bound", "value": 0.2},
-    "HET_UB": {"description": "individual heterozygosity upper bound", "value": 0.5},
-    "GMISS_UB": {"description": "genotype missing rate upper bound", "value": 0.1},
-    "MAF_LB": {"description": "minor allele frequency lower bound", "value": 0},
-    "MAF_UB": {"description": "minor allele frequency upper bound", "value": 1},
+    "IMISS_UB": {
+        "name": "Individual Missing Rate UB",
+        "description": "individual missing rate upper bound",
+        "value": 0.05,
+    },
+    "HET_LB": {
+        "name": "Heterozygosity LB",
+        "description": "individual heterozygosity lower bound",
+        "value": 0.2,
+    },
+    "HET_UB": {
+        "name": "Heterozygosity UB",
+        "description": "individual heterozygosity upper bound",
+        "value": 0.5,
+    },
+    "GMISS_UB": {
+        "name": "Genotype Missing Rate UB",
+        "description": "genotype missing rate upper bound",
+        "value": 0.1,
+    },
+    "MAF_LB": {
+        "name": "Minor Allele Frequency LB",
+        "description": "minor allele frequency lower bound",
+        "value": 0,
+    },
+    "MAF_UB": {
+        "name": "Minor Allele Frequency UB",
+        "description": "minor allele frequency upper bound",
+        "value": 1,
+    },
     "HWE_UB": {
+        "name": "Hardy Weinberg Equilibrium UB",
         "description": "hardy weinberg equilibrium test statistic upper bound",
         "value": 100000,
     },
     "LD_DIST_THRES": {
-        "description": "genomic distance threshold for selecting SNPs for PCA",
+        "name": "LD Distance Threshold",
+        "description": "genomic distance threshold for selecting SNPs for principal component analysis",
         "value": 1,
     },
     "index": [

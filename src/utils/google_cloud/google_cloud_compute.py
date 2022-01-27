@@ -208,7 +208,11 @@ class GoogleCloudCompute:
                     ),
                     "networkIP": f"10.0.{role}.10",
                     "accessConfigs": [
-                        {"type": "ONE_TO_ONE_NAT", "name": "External NAT"}
+                        {
+                            "type": "ONE_TO_ONE_NAT",
+                            "name": "External NAT",
+                        }  # This is necessary to give the VM access to the internet, which it needs to do things like download the git repos.
+                        # See (https://cloud.google.com/compute/docs/reference/rest/v1/instances) for more information.  If it helps, the external IP address is ephemeral.
                     ],
                 }
             ],
