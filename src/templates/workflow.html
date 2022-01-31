@@ -24,10 +24,7 @@
                     page and either create a new project or join an existing project.
                   </p>
                   <p class="text-muted">
-                    Note: You will need to provide the name of a google-cloud project where you will be uploading your encrypted data. When the protocol eventually begins, the portal will create a VM (virtual machine) in this GCP (google-cloud platform) project to run your share of the GWAS.
-                  </p>
-                  <p class="text-muted">
-                    Note: If you are creating a new project, you will also need to upload study paramters. If you are joining a project, you should confirm that the configured study parameters are what you want.
+                    Note: If you are creating a new project, you will also need to set study paramters. If you are joining a project, you should confirm that the configured study parameters are what you want.
                   </p>
                   <p class="text-end mb-0 mt-0">
                     <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target=".collapse-1-2">
@@ -58,7 +55,17 @@
                   <p>
                     3. run
                     <code>python3 generate_personal_keys.py</code>
-                    to generate your personal keys. Keep the private key somewhere safe, and upload the public key to your project on this website.
+                    to generate your personal keys. Keep the private key somewhere safe, and upload the public key to your project's "Personal Parameters".
+                  </p>
+                  <p class="text-muted px-5">
+                    What is this script doing?
+                    <br><br>
+                    <code>python3 generate_personal_keys.py</code>
+                    generates a public key and a private key that are used for Public Key Encryption. It uses the PyNaCl library, which is a python binding for the popular trusted
+                    <a href="https://doc.libsodium.org/" class="text-decoration-none">Sodium cryptography library.</a>
+                    <br>See the
+                    <a href="https://pynacl.readthedocs.io/en/latest/public/" class="text-decoration-none">PyNaCl documentation</a>
+                    for more information.
                   </p>
                   <p class="text-end mb-0 mt-0">
                     <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target=".collapse-2-3">
@@ -88,9 +95,26 @@
                     <code>python3 encrypt_data.py</code>
                     to encrypt your data.
                   </p>
+                  <p class="text-muted px-5">
+                    What is this script doing?
+                    <br><br>
+                    <code>python3 encrypt_data.py</code>
+                    does three things.
+                    <br>1. It uses your public key and the other participant's private key to generate two shared keys. These are keys accessible ONLY to you and the other participant, as they require one participant's private key and the other participant's public key to generate them. One shared key will be used to encrypt your data, and the other shared key will be used to encrypt the other participant's data.
+                    <br>2. It uses one of the shared keys to make a cryptographically secure random number generator (rng). This rng generates random bytes that are subtracted from your data in order to encrypt your data.
+                    <br>3. It converts the newly encrypted data into a special matrix format for convenience in running the GWAS.
+                    <br>See the
+                    <a href="https://pynacl.readthedocs.io/en/latest/secret/" class="text-decoration-none">PyNaCl documentation</a>
+                    for more information.
+                  </p>
                   <p>
-                    4. Upload the encrypted data to a google cloud storage bucket in your GCP project. If you are unfamiliar with Google Cloud Storage, see the google documentation
-                    <a class="text-decoration-none" href="https://cloud.google.com/storage/docs/quickstart-console">here</a>. The default settings should be fine.
+                    4. Upload the encrypted data to a google cloud storage bucket in your GCP (Google Cloud Platform) project. If you are unfamiliar with Google Cloud Storage, see the google documentation
+                    <a class="text-decoration-none" href="https://cloud.google.com/storage/docs/quickstart-console">here</a>. You should also update the "Personal Parameters" on your project's page with the name of your GCP project and the name of the storage bucket with your data.
+                  </p>
+                  <p class="text-muted px-5">
+                    Note: You should have a unique GCP project for use with this portal. If you already have a GCP account, you should create a new project if you haven't already. If you are new to GCP, go to
+                    <a href="https://console.cloud.google.com/" class="text-decoration-none">console.cloud.google.com</a>
+                    and create an account.
                   </p>
                   <p class="text-end mb-0 mt-0">
                     <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target=".collapse-3-4">
@@ -130,7 +154,9 @@
               <div class="accordion-collapse collapse collapse-5 collapse-4-5 collapse-5-6">
                 <div class="accordion-body">
                   <p>
-                    Go to your project, and click on the "Ready to begin GWAS?" button. Once you all participants have done so, the protocol will begin.
+                    Go to your project, and confirm that all the "Project Parameters" and "Personal Parameters" are as desired.
+                    <br>When you are ready, click on the "Ready to begin GWAS?" button.
+                    <br>Once all participants have done so, the protocol will begin.
                   </p>
                   <p class="text-end mb-0 mt-0">
                     <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target=".collapse-5-6">
@@ -146,10 +172,16 @@
                   6. Enjoy the Results
                 </button>
               </h2>
-              <div class="accordion-collapse collapse collapse-6 collapse-5-6">
+              <div class="accordion-collapse collapse collapse-6 collapse-5-6 collapse-6-7">
                 <div class="accordion-body">
                   <p>
-                    Once the protocol is complete, the project page will indicate this with a "GWAS Completed!" status. You can then download the results to share and analyze at your leisure.
+                    Once the protocol is complete, the project page will indicate this with a "GWAS Completed!" status.
+                    <br>You can then download the results to share and analyze at your leisure.
+                  </p>
+                  <p class="text-end mb-0 mt-0">
+                    <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target=".collapse-6-7">
+                      Done
+                    </button>
                   </p>
                 </div>
               </div>

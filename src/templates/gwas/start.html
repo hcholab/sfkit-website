@@ -31,7 +31,13 @@
                 </small>
               {% endfor %}
             </div>
-            <br>
+            <p>
+              Not sure what to do next? Go to the
+              <a href="{{url_for('general.workflow')}}" class="text-decoration-none">Workflow</a>
+              page for the full instructions.
+              <br>
+
+            </p>
             <div class="edit-parameters">
               <a href="{{ url_for('gwas.parameters', project_title=project['title']) }}" class="btn btn-secondary">Edit Project Parameters</a>
               <a href="{{ url_for('gwas.personal_parameters', project_title=project['title']) }}" class="btn btn-secondary">Edit Personal Parameters</a>
