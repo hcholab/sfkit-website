@@ -97,18 +97,16 @@ def test_join_project(client, auth):
 def test_start(client, auth, mocker):
     auth.register()
     auth.login()
-    client.post(
-        "auth/user/a%40a.a",
-        data={
-            "id": "a@a.a",
-            "gcp_project": "broad-cho-priv1",
-            "public_key": "public_key",
-        },
-    )
+
     client.post(
         "create", data={"title": "testtitle", "description": "test description"}
     )
     assert client.get("start/testtitle").status_code == 200
+
+    client.post(
+        "personal_parameters/testtitle",
+        data={"GCP_PROJECT": "gcp_project"},
+    )
 
     auth.logout()
     auth.register(email="b@b.b", password="b", password_check="b")
@@ -116,14 +114,12 @@ def test_start(client, auth, mocker):
     client.post("join/testtitle")
 
     client.post("start/testtitle")
+
     client.post(
-        "auth/user/b%40b.b",
-        data={
-            "id": "b@b.b",
-            "gcp_project": "broad-cho-priv1",
-            "public_key": "public_key",
-        },
+        "personal_parameters/testtitle",
+        data={"GCP_PROJECT": "gcp_project"},
     )
+
     mocker.patch("src.gwas.GoogleCloudStorage", MockGoogleCloudStorage)
     client.post("start/testtitle")
     MockGoogleCloudStorage.return_value = True
@@ -178,6 +174,15 @@ def test_parameters(client, auth, mocker):
         client.post("parameters/testtitle")
     assert e.type == SystemExit
     assert e.value.code == 1
+
+
+def test_personal_parameters(client, auth):
+    auth.register()
+    auth.login()
+    client.post(
+        "create", data={"title": "testtitle", "description": "test description"}
+    )
+    assert client.get("personal_parameters/testtitle").status_code == 200
 
 
 def test_get_status(mocker):
@@ -235,7 +240,7 @@ class MockGoogleCloudStorage:
     def __init__(self, project):
         pass
 
-    def copy_parameters_to_bucket(self, project_title):
+    def copy_parameters_to_bucket(self, project_title, role):
         pass
 
     def upload_to_bucket(self, file, filename):

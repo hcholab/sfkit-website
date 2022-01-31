@@ -18,3 +18,4 @@ build/
 *~
 .DS_Store
 run.py
+src/temp/test*  

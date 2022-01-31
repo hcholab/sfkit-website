@@ -40,7 +40,8 @@
           </ul>
           <div>
             {% if g.user %}
-              <a href="{{ url_for('auth.user', id=g.user['id']) }}" class="me-1 text-decoration-none">{{ g.user['email'] }}</a>
+              {{g.user['id']}}
+              {# <a href="{{ url_for('auth.user', id=g.user['id']) }}" class="me-1 text-decoration-none">{{ g.user['email'] }}</a> #}
               <a class="btn btn-outline-secondary me-2" href="{{ url_for('auth.logout') }}">Log Out</a>
             {% else %}
               <a class="btn btn-outline-secondary me-2" href="{{ url_for('auth.login') }}">Log In</a>

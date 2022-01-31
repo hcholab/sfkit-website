@@ -9,11 +9,6 @@ TEMP_FOLDER = "src/temp"
 PARAMETER_FILES = ["test.par.0.txt", "test.par.1.txt", "test.par.2.txt"]
 
 DEFAULT_PARAMETERS = {
-    "NUM_INDS": {
-        "name": "Number of Individuals",
-        "description": "number of individuals in the dataset",
-        "value": 1000,
-    },
     "NUM_SNPS": {
         "name": "Number of SNPs",
         "description": "number of SNPs in the dataset",
@@ -90,7 +85,6 @@ DEFAULT_PARAMETERS = {
         "value": 1,
     },
     "index": [
-        "NUM_INDS",
         "NUM_SNPS",
         "NUM_COVS",
         "ITER_PER_EVAL",
@@ -107,4 +101,33 @@ DEFAULT_PARAMETERS = {
         "HWE_UB",
         "LD_DIST_THRES",
     ],
+}
+
+DEFAULT_PERSONAL_PARAMETERS = {
+    "PUBLIC_KEY": {
+        "name": "Public Key",
+        "description": "public cryptographic key for encrypting the data",
+        "value": "",
+    },
+    "GCP_PROJECT": {
+        "name": "GCP Project",
+        "description": "the name of the GCP project you're using (the one where you put your encrypted data and the VM instance will run)",
+        "value": "",
+    },
+    "BUCKET_NAME": {
+        "name": "Storage Bucket Name",
+        "description": "the name of the storage bucket where you put your encrypted data",
+        "value": "",
+    },
+    "NUM_INDS": {
+        "name": "Number of Individuals",
+        "description": "number of individuals in the dataset",
+        "value": 1000,
+    },
+    "NUM_THREADS": {
+        "name": "Number of Threads",
+        "description": "number of threads to use when running the GWAS",
+        "value": 20,
+    },
+    "index": ["PUBLIC_KEY", "GCP_PROJECT", "BUCKET_NAME", "NUM_INDS", "NUM_THREADS"],
 }

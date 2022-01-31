@@ -62,6 +62,9 @@ def create():
                     "participants": [g.user["id"]],
                     "status": ["not ready"],
                     "parameters": constants.DEFAULT_PARAMETERS,
+                    "personal_parameters": {
+                        g.user["id"]: constants.DEFAULT_PERSONAL_PARAMETERS
+                    },
                 }
             )
             return redirect(url_for("gwas.index"))
@@ -130,10 +133,14 @@ def delete(project_title):
 def join_project(project_name):
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("projects").document(project_name)
+    doc_ref_dict = doc_ref.get().to_dict()
+
     doc_ref.set(
         {
-            "participants": doc_ref.get().to_dict()["participants"] + [g.user["id"]],
-            "status": doc_ref.get().to_dict()["status"] + ["not ready"],
+            "participants": doc_ref_dict["participants"] + [g.user["id"]],
+            "status": doc_ref_dict["status"] + ["not ready"],
+            "personal_parameters": doc_ref_dict["personal_parameters"]
+            | {g.user["id"]: constants.DEFAULT_PERSONAL_PARAMETERS},
         },
         merge=True,
     )
@@ -146,7 +153,7 @@ def start(project_title):
     db = current_app.config["DATABASE"]
     project_doc_dict = db.collection("projects").document(project_title).get().to_dict()
     public_keys = [
-        db.collection("users").document(user).get().to_dict()["public_key"]
+        project_doc_dict["personal_parameters"][user]["PUBLIC_KEY"]["value"]
         for user in project_doc_dict["participants"]
     ]
     id = g.user["id"]
@@ -159,10 +166,12 @@ def start(project_title):
             public_keys=public_keys,
             role=role,
         )
-    gcp_project = db.collection("users").document(id).get().to_dict().get("gcp_project")
-    if not gcp_project:
+    gcp_project = project_doc_dict["personal_parameters"][id]["GCP_PROJECT"]["value"]
+    if gcp_project == "" or gcp_project is None:
         flash("Please set your GCP project first.")
-        return redirect(url_for("auth.user", id=id))
+        return redirect(
+            url_for("gwas.personal_parameters", project_title=project_title)
+        )
 
     # check if pos.txt is in the google cloud bucket
     gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
@@ -250,6 +259,25 @@ def parameters(project_title):
         exit(1)
 
 
+@bp.route("/personal_parameters/<project_title>", methods=("GET", "POST"))
+def personal_parameters(project_title):
+    db = current_app.config["DATABASE"]
+    doc_ref = db.collection("projects").document(project_title)
+    parameters = doc_ref.get().to_dict().get("personal_parameters")
+
+    if request.method == "GET":
+        return render_template(
+            "gwas/personal_parameters.html",
+            project_title=project_title,
+            parameters=parameters[g.user["id"]],
+        )
+
+    for p in parameters[g.user["id"]]["index"]:
+        parameters[g.user["id"]][p]["value"] = request.form.get(p)
+    doc_ref.set({"personal_parameters": parameters}, merge=True)
+    return redirect(url_for("gwas.start", project_title=project_title))
+
+
 def get_status(role: str, gcp_project, status, project_title):
     if status == "GWAS Completed!":
         return status
@@ -276,7 +304,7 @@ def run_gwas(role, gcp_project, project_title):
     gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, project_title)
 
     # copy parameters to parameter files
-    gcloudStorage.copy_parameters_to_bucket(project_title)
+    gcloudStorage.copy_parameters_to_bucket(project_title, role)
 
     gcloudPubsub.create_topic_and_subscribe()
     instance = (
