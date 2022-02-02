@@ -108,6 +108,7 @@ def update(project_title):
                     "participants": old_doc_ref_dict["participants"],
                     "status": ["not ready"],
                     "parameters": old_doc_ref_dict["parameters"],
+                    "personal_parameters": old_doc_ref_dict["personal_parameters"],
                 },
                 merge=True,
             )
@@ -205,7 +206,12 @@ def start(project_title):
             {"status": statuses},
             merge=True,
         )
-        run_gwas(str(role), gcp_project, project_title)
+        run_gwas(
+            str(role),
+            gcp_project,
+            project_title,
+            size=project_doc_dict["personal_parameters"][id]["VM_SIZE"]["value"],
+        )
     else:
         statuses[role] = get_status(
             str(role), gcp_project, statuses[role], project_title
@@ -298,7 +304,7 @@ def get_status(role: str, gcp_project, status, project_title):
     return status
 
 
-def run_gwas(role, gcp_project, project_title):
+def run_gwas(role, gcp_project, project_title, size):
     gcloudCompute = GoogleCloudCompute(gcp_project)
     gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
     gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, project_title)
@@ -314,7 +320,7 @@ def run_gwas(role, gcp_project, project_title):
         + role
     )
     gcloudCompute.setup_networking(role)
-    gcloudCompute.setup_instance(constants.ZONE, instance, role)
+    gcloudCompute.setup_instance(constants.ZONE, instance, role, size)
 
     # Give instance publish access to pubsub for status updates
     member = "serviceAccount:" + gcloudCompute.get_service_account_for_vm(

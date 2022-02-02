@@ -94,7 +94,7 @@ def test_setup_instance(
 
     try:
         google_cloud_compute.setup_instance(
-            zone="zone", name=constants.NETWORK_NAME, role="role"
+            zone="zone", name=constants.NETWORK_NAME, role="role", size=4
         )
     except Exception as e:
         if str(e) != "fake error" and "RetryError" not in str(e):

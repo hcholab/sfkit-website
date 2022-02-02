@@ -106,28 +106,43 @@ DEFAULT_PARAMETERS = {
 DEFAULT_PERSONAL_PARAMETERS = {
     "PUBLIC_KEY": {
         "name": "Public Key",
-        "description": "public cryptographic key for encrypting the data",
+        "description": "Your public cryptographic key that you and the other participant will use to encrypt each of your data (combined with your respective private keys, of course).",
         "value": "",
     },
     "GCP_PROJECT": {
         "name": "GCP Project",
-        "description": "the name of the GCP project you're using (the one where you put your encrypted data and the VM instance will run)",
+        "description": "The name of the GCP project you're using (the one where you put your encrypted data and the VM instance will run).  \
+        If you don't have a dedicated GCP project for this workflow, you will need to make one.",
         "value": "",
     },
     "BUCKET_NAME": {
         "name": "Storage Bucket Name",
-        "description": "the name of the storage bucket where you put your encrypted data",
+        "description": "The name of the storage bucket where you put your encrypted data.  \
+            (this can be anything you want, but it should be unique for this workflow)",
         "value": "",
     },
     "NUM_INDS": {
         "name": "Number of Individuals",
-        "description": "number of individuals in the dataset",
+        "description": "The number of individuals in your dataset.",
         "value": 1000,
     },
     "NUM_THREADS": {
         "name": "Number of Threads",
-        "description": "number of threads to use when running the GWAS",
+        "description": "The number of threads to use when running the GWAS",
         "value": 20,
     },
-    "index": ["PUBLIC_KEY", "GCP_PROJECT", "BUCKET_NAME", "NUM_INDS", "NUM_THREADS"],
+    "VM_SIZE": {
+        "name": "Virtual Machine Size",
+        "description": "The number of CPUs to allocate to the VM instance that will be running the GWAS protocol in your GCP account.  \
+        The number of GB of memory will automatically be set to 4x this number.",
+        "value": "4",
+    },
+    "index": [
+        "PUBLIC_KEY",
+        "GCP_PROJECT",
+        "BUCKET_NAME",
+        "NUM_INDS",
+        "NUM_THREADS",
+        "VM_SIZE",
+    ],
 }

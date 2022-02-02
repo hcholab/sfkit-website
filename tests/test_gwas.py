@@ -205,14 +205,14 @@ def test_run_gwas(mocker):
     mocker.patch("src.gwas.GoogleCloudCompute", MockGoogleCloudCompute)
     mocker.patch("src.gwas.GoogleCloudStorage", MockGoogleCloudStorage)
 
-    run_gwas("role", "gcp_project", "project title")
+    run_gwas("role", "gcp_project", "project title", size=4)
 
 
 def mock_get_status(role, gcp_project, status, project_title):
     return status
 
 
-def mock_run_gwas(role, gcp_project, project_title):
+def mock_run_gwas(role, gcp_project, project_title, size):
     return True
 
 
@@ -224,7 +224,7 @@ class MockGoogleCloudCompute:
     def setup_networking(self, role):
         pass
 
-    def setup_instance(self, zone, instance, role):
+    def setup_instance(self, zone, instance, role, size):
         pass
 
     def get_service_account_for_vm(self, zone, instance):

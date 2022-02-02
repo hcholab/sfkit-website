@@ -2,9 +2,10 @@ import datetime
 import os
 import time
 
-from src import constants
 import googleapiclient.discovery as googleapi
+from flask import current_app
 from pytz import timezone
+from src import constants
 from tenacity import retry, stop_after_attempt, wait_fixed
 
 
@@ -170,27 +171,27 @@ class GoogleCloudCompute:
         )
         self.wait_for_operation(operation["name"])
 
-    def setup_instance(self, zone, name, role):
+    def setup_instance(self, zone, name, role, size):
         existing_instances = self.list_instances(constants.ZONE)
 
         if existing_instances and name in existing_instances:
             self.delete_instance(zone, name)
-        self.create_instance(zone, name, role)
+        self.create_instance(zone, name, role, size)
 
         return self.get_vm_external_ip_address(zone, name)
 
-    def create_instance(self, zone, name, role):
+    def create_instance(self, zone, name, role, size):
         print("Creating VM instance with name", name)
 
         image_response = (
             self.compute.images()
-            .getFromFamily(project="debian-cloud", family="debian-11")
+            .getFromFamily(project="ubuntu-os-cloud", family="ubuntu-2110")
             .execute()
         )
         source_disk_image = image_response["selfLink"]
 
         # Configure the machine
-        machine_type = "zones/%s/machineTypes/c2-standard-4" % zone
+        machine_type = f"zones/{zone}/machineTypes/n2d-standard-{size}"
         startup_script = open(
             os.path.join(os.path.dirname(__file__), "../../startup-script.sh"), "r"
         ).read()
@@ -198,6 +199,12 @@ class GoogleCloudCompute:
         instance_body = {
             "name": name,
             "machineType": machine_type,
+            "confidentialInstanceConfig": {
+                "enableConfidentialCompute": True,
+            },
+            "scheduling": {
+                "onHostMaintenance": "TERMINATE",
+            },
             "networkInterfaces": [
                 {
                     "network": "projects/{}/global/networks/{}".format(
