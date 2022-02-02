@@ -43,6 +43,9 @@ class GoogleCloudPubsub:
                 "name": self.subscription_path,
                 "topic": self.topic_path,
                 "enable_message_ordering": True,
+                "push_config": {
+                    "push_endpoint": "https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/",
+                },
             }
         )
 
