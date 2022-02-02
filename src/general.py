@@ -1,5 +1,5 @@
 import base64
-from flask import Blueprint, render_template, request
+from flask import Blueprint, current_app, render_template, request
 
 bp = Blueprint("general", __name__)
 
@@ -35,10 +35,28 @@ def index():
 
     pubsub_message = envelope["message"]
 
-    name = "World"
+    messsage = []
     if isinstance(pubsub_message, dict) and "data" in pubsub_message:
-        name = base64.b64decode(pubsub_message["data"]).decode("utf-8").strip()
+        message = (
+            base64.b64decode(pubsub_message["data"]).decode("utf-8").strip().split("-")
+        )
 
-    print(f"Hello {name}!")
+    if len(message) > 1:
+        (project_title, role, status) = (
+            message[0],
+            message[-2][-1],
+            message[-1],
+        )
+        if role.isdigit():
+            # update status in firestore
+            db = current_app.config["DATABASE"]
+            doc_ref = db.collection("projects").document(project_title)
+
+            statuses = doc_ref.get().to_dict()["status"]
+            statuses[int(role)] = status
+
+            doc_ref.set({"status": statuses}, merge=True)
+    else:
+        print(f"error: {message}")
 
     return ("", 204)
