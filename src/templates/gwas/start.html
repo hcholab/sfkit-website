@@ -60,6 +60,7 @@
                 {% if "not ready" in project["status"] %}
                   Waiting for others to be ready...
                 {% else %}
+                  <meta id="project_title" data-value="{{ project['title'] }}">
                   {{ project["status"][role] }}
                 {% endif %}
                 <br>
@@ -87,5 +88,21 @@
       $("#loading").show();
       $("#normal-content").hide();
     }
+  </script>
+
+  <script type="module">
+    $(document).ready(function () {
+      var project_title = $('#project_title').data();
+    });
+
+    import {initializeApp} from "https://www.gstatic.com/firebasejs/9.4.0/firebase-app.js";
+    import {getFirestore, doc, onSnapshot} from "https://www.gstatic.com/firebasejs/9.4.0/firebase-firestore.js";
+
+    const firebaseApp = initializeApp({projectId: 'broad-cho-priv1'});
+    const db = getFirestore();
+
+    const unsub = onSnapshot(doc(db, "projects", "c"), (doc) => {
+      console.log("Current data: ", doc.data());
+    });
   </script>
 {% endblock %}
