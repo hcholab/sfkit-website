@@ -98,7 +98,9 @@ def test_logout(client, auth):
 
 
 def setup_mocking(mocker):
-    mocker.patch("src.auth.pyrebase.initialize_app", return_value=MockPb())
+    mocker.patch(
+        "src.auth.sign_in_with_email_and_password", mock_sign_in_with_email_and_password
+    )
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     mocker.patch("src.auth.GoogleCloudIAM", MockGoogleCloudIAM)
     mocker.patch("src.auth.id_token.verify_oauth2_token", mock_verify_token)
@@ -110,16 +112,10 @@ def mock_verify_token(token, blah, blah2):
     pass
 
 
-class MockPb:
-    def auth(self):
-        return MockPbAuth()
-
-
-class MockPbAuth:
-    def sign_in_with_email_and_password(self, email, password):
-        if email == "bad":
-            raise Exception(password)
-        return {"idToken": email}
+def mock_sign_in_with_email_and_password(email, password):
+    if email == "bad":
+        raise Exception(password)
+    return {"idToken": email}
 
 
 class MockGoogleCloudIAM:

@@ -5,12 +5,13 @@ import secrets
 import string
 
 import flask
-import pyrebase
 from firebase_admin import auth as firebase_auth
 from flask import Blueprint, flash, g, redirect, render_template, request, url_for
 from google.auth import jwt
-from google.auth.transport import requests
+from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
+from requests import post
+from requests.exceptions import HTTPError
 
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 
@@ -94,7 +95,7 @@ def callback():
     try:
         id_token.verify_oauth2_token(
             request.form["credential"],
-            requests.Request(),
+            google_requests.Request(),
             "419003787216-rcif34r976a9qm3818qgeqed7c582od6.apps.googleusercontent.com",
         )
     except Exception as e:
@@ -128,11 +129,9 @@ def logout():
 
 
 def update_session_cookie_and_return_to_index(email, password):
-    pb = pyrebase.initialize_app(json.load(open("fbconfig.json")))
-
     expires_in = datetime.timedelta(days=1)
 
-    user = pb.auth().sign_in_with_email_and_password(email, password)
+    user = sign_in_with_email_and_password(email, password)
     session_cookie = firebase_auth.create_session_cookie(
         user["idToken"], expires_in=expires_in
     )
@@ -146,3 +145,22 @@ def update_session_cookie_and_return_to_index(email, password):
     )
 
     return response
+
+
+def sign_in_with_email_and_password(email, password):
+    api_key = "AIzaSyAJ5Ql7iZ4QMi640Xryx0YbBzwhGdGxKdE"
+    request_ref = "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key={0}".format(
+        api_key
+    )
+    headers = {"content-type": "application/json; charset=UTF-8"}
+    data = json.dumps({"email": email, "password": password, "returnSecureToken": True})
+    request_object = post(request_ref, headers=headers, data=data)
+    raise_detailed_error(request_object)
+    return request_object.json()
+
+
+def raise_detailed_error(request_object):
+    try:
+        request_object.raise_for_status()
+    except HTTPError as e:
+        raise HTTPError(e, request_object.text)
