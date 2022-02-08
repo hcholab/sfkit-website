@@ -6,7 +6,7 @@ import string
 
 import flask
 import pyrebase
-from firebase_admin import auth
+from firebase_admin import auth as firebase_auth
 from flask import Blueprint, flash, g, redirect, render_template, request, url_for
 from google.auth import jwt
 from google.auth.transport import requests
@@ -21,7 +21,9 @@ bp = Blueprint("auth", __name__, url_prefix="/auth")
 def load_logged_in_user():
     try:
         session_cookie = flask.request.cookies.get("session")
-        user_dict = auth.verify_session_cookie(session_cookie, check_revoked=True)
+        user_dict = firebase_auth.verify_session_cookie(
+            session_cookie, check_revoked=True
+        )
         g.user = {"id": user_dict["email"]}
     except Exception as e:
         if "session cookie provided: None" not in str(e):
@@ -51,7 +53,7 @@ def register():
             flash("Passwords do not match. Please double-check and try again.")
         else:
             try:
-                auth.create_user(email=email, password=password)
+                firebase_auth.create_user(email=email, password=password)
                 gcloudIAM = GoogleCloudIAM()
                 gcloudIAM.give_cloud_build_view_permissions(email)
 
@@ -104,10 +106,14 @@ def callback():
     rand_str = "".join(secrets.choice(string.ascii_lowercase) for _ in range(16))
 
     try:
-        auth.get_user_by_email(token["email"])
-        auth.update_user(uid=token["email"], email=token["email"], password=rand_str)
-    except auth.UserNotFoundError:
-        auth.create_user(uid=token["email"], email=token["email"], password=rand_str)
+        firebase_auth.get_user_by_email(token["email"])
+        firebase_auth.update_user(
+            uid=token["email"], email=token["email"], password=rand_str
+        )
+    except firebase_auth.UserNotFoundError:
+        firebase_auth.create_user(
+            uid=token["email"], email=token["email"], password=rand_str
+        )
         gcloudIAM = GoogleCloudIAM()
         gcloudIAM.give_cloud_build_view_permissions(token["email"])
 
@@ -125,8 +131,11 @@ def update_session_cookie_and_return_to_index(email, password):
     pb = pyrebase.initialize_app(json.load(open("fbconfig.json")))
 
     expires_in = datetime.timedelta(days=1)
+
     user = pb.auth().sign_in_with_email_and_password(email, password)
-    session_cookie = auth.create_session_cookie(user["idToken"], expires_in=expires_in)
+    session_cookie = firebase_auth.create_session_cookie(
+        user["idToken"], expires_in=expires_in
+    )
     response = redirect(url_for("gwas.index"))
     response.set_cookie(
         "session",

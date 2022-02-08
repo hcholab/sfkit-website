@@ -1,7 +1,6 @@
 import pytest
 from mockfirestore import MockFirestore
 from src import create_app
-from firebase_admin import auth
 
 
 @pytest.fixture

@@ -14,7 +14,7 @@ def test_index(client):
 
 
 def test_create(client, auth, mocker):
-    mocker.patch("src.auth.auth", MockFirebaseAdminAuth)
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     auth.register()
     assert client.get("create").status_code == 200
     response = client.post(
@@ -29,7 +29,7 @@ def test_create(client, auth, mocker):
 
 
 def test_create_no_title(client, auth, mocker):
-    mocker.patch("src.auth.auth", MockFirebaseAdminAuth)
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     auth.register()
     response = client.post("create", data={"title": "", "description": ""})
     assert "Location" not in response.headers
@@ -43,7 +43,7 @@ def test_create_no_title(client, auth, mocker):
     ),
 )
 def test_update(client, auth, title, description, mocker):
-    mocker.patch("src.auth.auth", MockFirebaseAdminAuth)
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     auth.register()
     client.post(
         "create", data={"title": "testtitle", "description": "test description"}
@@ -66,7 +66,7 @@ def test_update(client, auth, title, description, mocker):
 
 
 def test_update_no_title(client, auth, mocker):
-    mocker.patch("src.auth.auth", MockFirebaseAdminAuth)
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     auth.register()
     client.post(
         "create", data={"title": "testtitle", "description": "test description"}
@@ -76,7 +76,7 @@ def test_update_no_title(client, auth, mocker):
 
 
 def test_delete(client, auth, mocker):
-    mocker.patch("src.auth.auth", MockFirebaseAdminAuth)
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     auth.register()
     client.post(
         "create", data={"title": "testtitle", "description": "test description"}
@@ -86,7 +86,7 @@ def test_delete(client, auth, mocker):
 
 
 def test_join_project(client, auth, mocker):
-    mocker.patch("src.auth.auth", MockFirebaseAdminAuth)
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     auth.register()
 
     client.post(
@@ -97,7 +97,7 @@ def test_join_project(client, auth, mocker):
 
 
 def test_start(client, auth, mocker):
-    mocker.patch("src.auth.auth", MockFirebaseAdminAuth)
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
 
     auth.register()
     client.post(
@@ -145,7 +145,7 @@ def test_start(client, auth, mocker):
 
 
 def test_parameters(client, auth, mocker):
-    mocker.patch("src.auth.auth", MockFirebaseAdminAuth)
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     mocker.patch("src.gwas.GoogleCloudStorage", MockGoogleCloudStorage)
     auth.register()
     client.post(
@@ -184,7 +184,7 @@ def test_parameters(client, auth, mocker):
 
 
 def test_personal_parameters(client, auth, mocker):
-    mocker.patch("src.auth.auth", MockFirebaseAdminAuth)
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     auth.register()
     client.post(
         "create", data={"title": "testtitle", "description": "test description"}

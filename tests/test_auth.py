@@ -99,7 +99,7 @@ def test_logout(client, auth):
 
 def setup_mocking(mocker):
     mocker.patch("src.auth.pyrebase.initialize_app", return_value=MockPb())
-    mocker.patch("src.auth.auth", MockFirebaseAdminAuth)
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     mocker.patch("src.auth.GoogleCloudIAM", MockGoogleCloudIAM)
     mocker.patch("src.auth.id_token.verify_oauth2_token", mock_verify_token)
 

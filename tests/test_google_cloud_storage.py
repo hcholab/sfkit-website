@@ -12,7 +12,7 @@ def test_add_bucket_iam_member(mocker):
 
 
 def test_copy_parameters_to_bucket(app, client, auth, mocker):
-    mocker.patch("src.auth.auth", MockFirebaseAdminAuth)
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     mocker.patch(
         "src.utils.google_cloud.google_cloud_storage.storage", MockMakeMockStorage
     )
