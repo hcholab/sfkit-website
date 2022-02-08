@@ -3,6 +3,8 @@ import io
 import pytest
 from src.gwas import get_status, run_gwas
 
+from conftest import MockFirebaseAdminAuth
+
 
 def test_index(client):
     response = client.get("/index")
@@ -11,9 +13,9 @@ def test_index(client):
     assert b"Secure GWAS" in response.data
 
 
-def test_create(client, auth):
+def test_create(client, auth, mocker):
+    mocker.patch("src.auth.auth", MockFirebaseAdminAuth)
     auth.register()
-    auth.login()
     assert client.get("create").status_code == 200
     response = client.post(
         "create", data={"title": "test title", "description": "test description"}
@@ -26,9 +28,9 @@ def test_create(client, auth):
     assert "Location" not in response.headers
 
 
-def test_create_no_title(client, auth):
+def test_create_no_title(client, auth, mocker):
+    mocker.patch("src.auth.auth", MockFirebaseAdminAuth)
     auth.register()
-    auth.login()
     response = client.post("create", data={"title": "", "description": ""})
     assert "Location" not in response.headers
 
@@ -40,9 +42,9 @@ def test_create_no_title(client, auth):
         ("testtitle2", "test description"),
     ),
 )
-def test_update(client, auth, title, description):
+def test_update(client, auth, title, description, mocker):
+    mocker.patch("src.auth.auth", MockFirebaseAdminAuth)
     auth.register()
-    auth.login()
     client.post(
         "create", data={"title": "testtitle", "description": "test description"}
     )
@@ -63,9 +65,9 @@ def test_update(client, auth, title, description):
     assert "Location" not in response.headers
 
 
-def test_update_no_title(client, auth):
+def test_update_no_title(client, auth, mocker):
+    mocker.patch("src.auth.auth", MockFirebaseAdminAuth)
     auth.register()
-    auth.login()
     client.post(
         "create", data={"title": "testtitle", "description": "test description"}
     )
@@ -73,9 +75,9 @@ def test_update_no_title(client, auth):
     assert "Location" not in response.headers
 
 
-def test_delete(client, auth):
+def test_delete(client, auth, mocker):
+    mocker.patch("src.auth.auth", MockFirebaseAdminAuth)
     auth.register()
-    auth.login()
     client.post(
         "create", data={"title": "testtitle", "description": "test description"}
     )
@@ -83,9 +85,9 @@ def test_delete(client, auth):
     assert response.headers["Location"] == "http://localhost/index"
 
 
-def test_join_project(client, auth):
+def test_join_project(client, auth, mocker):
+    mocker.patch("src.auth.auth", MockFirebaseAdminAuth)
     auth.register()
-    auth.login()
 
     client.post(
         "create", data={"title": "testtitle", "description": "test description"}
@@ -95,14 +97,15 @@ def test_join_project(client, auth):
 
 
 def test_start(client, auth, mocker):
-    auth.register()
-    auth.login()
+    mocker.patch("src.auth.auth", MockFirebaseAdminAuth)
 
+    auth.register()
     client.post(
         "create", data={"title": "testtitle", "description": "test description"}
     )
     assert client.get("start/testtitle").status_code == 200
 
+    auth.login()
     client.post(
         "personal_parameters/testtitle",
         data={"GCP_PROJECT": "gcp_project"},
@@ -110,22 +113,26 @@ def test_start(client, auth, mocker):
 
     auth.logout()
     auth.register(email="b@b.b", password="b", password_check="b")
-    auth.login(email="b@b.b", password="b")
     client.post("join/testtitle")
 
+    auth.login(email="b@b.b", password="b")
     client.post("start/testtitle")
 
+    auth.login(email="b@b.b", password="b")
     client.post(
         "personal_parameters/testtitle",
         data={"GCP_PROJECT": "gcp_project"},
     )
 
     mocker.patch("src.gwas.GoogleCloudStorage", MockGoogleCloudStorage)
+    auth.login(email="b@b.b", password="b")
     client.post("start/testtitle")
     MockGoogleCloudStorage.return_value = True
     mocker.patch("src.gwas.GoogleCloudIAM", MockGoogleCloudIAM)
+    auth.login(email="b@b.b", password="b")
     client.post("start/testtitle")
     MockGoogleCloudIAM.return_value = True
+    auth.login(email="b@b.b", password="b")
     client.post("start/testtitle")
 
     auth.logout()
@@ -138,9 +145,9 @@ def test_start(client, auth, mocker):
 
 
 def test_parameters(client, auth, mocker):
+    mocker.patch("src.auth.auth", MockFirebaseAdminAuth)
     mocker.patch("src.gwas.GoogleCloudStorage", MockGoogleCloudStorage)
     auth.register()
-    auth.login()
     client.post(
         "create", data={"title": "testtitle", "description": "test description"}
     )
@@ -176,9 +183,9 @@ def test_parameters(client, auth, mocker):
     assert e.value.code == 1
 
 
-def test_personal_parameters(client, auth):
+def test_personal_parameters(client, auth, mocker):
+    mocker.patch("src.auth.auth", MockFirebaseAdminAuth)
     auth.register()
-    auth.login()
     client.post(
         "create", data={"title": "testtitle", "description": "test description"}
     )

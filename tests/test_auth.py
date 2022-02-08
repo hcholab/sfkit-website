@@ -1,5 +1,6 @@
 import pytest
-from flask import g, session
+
+from conftest import MockFirebaseAdminAuth
 
 
 @pytest.mark.parametrize(
@@ -8,96 +9,119 @@ from flask import g, session
 )
 def test_login_required(client, path):
     response = client.post(path)
-    assert response.headers["Location"] == "http://localhost/auth/login"
+    assert response.headers.get("Location") == "http://localhost/auth/login"
 
 
-def test_register(client, app, auth):
-    assert client.get("/auth/register").status_code == 200
+def test_register(client, mocker):
+    setup_mocking(mocker)
 
-    response = auth.register()
-    assert response.headers["Location"] == "http://localhost/auth/login"
+    response = client.get("/auth/register")
+    assert response.status_code == 200
 
-    with app.app_context():
-        db = app.config["DATABASE"]
-        assert db.collection("users").document("a@a.a").get().exists
+    response = client.post(
+        "/auth/register",
+        data={"email": "a@a.a", "password": "a", "password_check": "a"},
+    )
+    assert response.headers.get("Location") == "http://localhost/index"
+    assert "a@a.a" in response.headers["Set-Cookie"]
 
 
 @pytest.mark.parametrize(
     ("email", "password", "password_check", "message"),
     (
-        ("", "", "", b"Email is required."),
-        ("a@a.a", "", "", b"Password is required."),
+        ("", "", "", b"Error creating user."),
         ("a@a.a", "a", "b", b"Passwords do not match."),
-        ("a@a.a", "a", "a", b"Email already taken."),
+        ("duplicate", "a", "a", b"This email is already registered."),
     ),
 )
-def test_register_validate_input(auth, email, password, password_check, message):
-    auth.register()
-    response = auth.register(email, password, password_check)
+def test_register_validate_input(
+    client, mocker, email, password, password_check, message
+):
+    setup_mocking(mocker)
+
+    response = client.post(
+        "/auth/register",
+        data={"email": email, "password": password, "password_check": password_check},
+    )
     assert message in response.data
 
 
-def test_login(client, auth):
-    auth.register()
-    assert client.get("/auth/login").status_code == 200
-    response = auth.login()
-    assert response.headers["Location"] == "http://localhost/index"
+def test_login(client, mocker):
+    setup_mocking(mocker)
 
-    with client:
-        client.get("/")
-        assert session["user_id"] == "a@a.a"
-        assert g.user["email"] == "a@a.a"
+    assert client.get("/auth/login").status_code == 200
+
+    response = client.post("/auth/login", data={"email": "a@a.a", "password": "a"})
+    assert response.headers["Location"] == "http://localhost/index"
 
 
 @pytest.mark.parametrize(
     ("email", "password", "message"),
     (
-        ("a", "b", b"Email not found"),
-        ("a@a.a", "b", b"Incorrect password."),
+        ("bad", "INVALID_PASSWORD", b"Invalid password"),
+        ("bad", "USER_NOT_FOUND", b"No user found with that email."),
+        ("bad", "BAD", b"Error logging in."),
     ),
 )
-def test_login_validate_input(client, auth, email, password, message):
-    auth.register()
+def test_login_validate_input(client, mocker, email, password, message):
+    setup_mocking(mocker)
     response = client.post("/auth/login", data={"email": email, "password": password})
     assert message in response.data
 
 
-def test_login_after_google_register(client, auth):
-    auth.callback()
-    response = client.post("/auth/login", data={"email": "a@a.a", "password": "a"})
-    assert b"Password did not check out" in response.data
+def test_callback(client, app, auth, mocker):
+    setup_mocking(mocker)
 
+    client.post(
+        "/auth/callback",
+        data={"credential": "bad"},
+    )
 
-def test_callback(app, auth):
-    auth.callback()
-    with app.app_context():
-        db = app.config["DATABASE"]
-        assert db.collection("users").document("a@a.a").get().exists
+    client.post(
+        "/auth/callback",
+        data={
+            "credential": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFAYS5hIiwiaWF0IjoxNTE2MjM5MDIyfQ.H8ImFl3EFlNM_nlS07cKOqZJsTjdXbYRuV8KWubADjo"
+        },
+    )
 
-
-def test_callback_already_registered(auth):
-    auth.register()
-    auth.callback()
-
-
-# def test_user(client, auth):
-#     auth.register()
-#     auth.login()
-#     assert client.get("auth/user/a%40a.a", data={"id": "a@a.a"}).status_code == 200
-#     response = client.post(
-#         "auth/user/a%40a.a",
-#         data={
-#             "id": "a@a.a",
-#             "gcp_project": "broad-cho-priv1",
-#             "public_key": "test_key",
-#         },
-#     )
-#     assert response.headers["Location"] == "http://localhost/index"
+    client.post(
+        "/auth/callback",
+        data={
+            "credential": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImJhZCIsImlhdCI6MTUxNjIzOTAyMn0.XY1kpbvla-z1h6kzkCciSIMGU_MCDTxZwaZzStOPkfE"
+        },
+    )
 
 
 def test_logout(client, auth):
-    auth.register()
-    auth.login()
-    with client:
-        auth.logout()
-        assert "user_id" not in session
+    client.get("/auth/logout")
+    # TODO: check nothing in cookie
+
+
+def setup_mocking(mocker):
+    mocker.patch("src.auth.pyrebase.initialize_app", return_value=MockPb())
+    mocker.patch("src.auth.auth", MockFirebaseAdminAuth)
+    mocker.patch("src.auth.GoogleCloudIAM", MockGoogleCloudIAM)
+    mocker.patch("src.auth.id_token.verify_oauth2_token", mock_verify_token)
+
+
+def mock_verify_token(token, blah, blah2):
+    if token == "bad":
+        raise ValueError("Invalid token")
+    pass
+
+
+class MockPb:
+    def auth(self):
+        return MockPbAuth()
+
+
+class MockPbAuth:
+    def sign_in_with_email_and_password(self, email, password):
+        if email == "bad":
+            raise Exception(password)
+        return {"idToken": email}
+
+
+class MockGoogleCloudIAM:
+    def give_cloud_build_view_permissions(self, email):
+        pass

@@ -1,5 +1,6 @@
 from src.utils.google_cloud.google_cloud_storage import GoogleCloudStorage
 from src import constants
+from conftest import MockFirebaseAdminAuth
 
 
 def test_add_bucket_iam_member(mocker):
@@ -11,6 +12,7 @@ def test_add_bucket_iam_member(mocker):
 
 
 def test_copy_parameters_to_bucket(app, client, auth, mocker):
+    mocker.patch("src.auth.auth", MockFirebaseAdminAuth)
     mocker.patch(
         "src.utils.google_cloud.google_cloud_storage.storage", MockMakeMockStorage
     )
@@ -18,7 +20,6 @@ def test_copy_parameters_to_bucket(app, client, auth, mocker):
     google_cloud_storage = GoogleCloudStorage("project")
 
     auth.register()
-    auth.login()
     response = client.post(
         "create",
         data={

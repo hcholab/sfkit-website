@@ -18,4 +18,6 @@ build/
 *~
 .DS_Store
 run.py
-src/temp/test*  
+src/temp/test*
+node_modules/*
+serviceAccountKey.json

@@ -1,24 +1,32 @@
+import datetime
 import functools
+import json
+import secrets
+import string
 
-from flask import (
-    Blueprint,
-    current_app,
-    flash,
-    g,
-    redirect,
-    render_template,
-    request,
-    session,
-    url_for,
-)
+import flask
+import pyrebase
+from firebase_admin import auth
+from flask import Blueprint, flash, g, redirect, render_template, request, url_for
 from google.auth import jwt
 from google.auth.transport import requests
 from google.oauth2 import id_token
-from werkzeug.security import check_password_hash, generate_password_hash
 
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
+
+
+@bp.before_app_request
+def load_logged_in_user():
+    try:
+        session_cookie = flask.request.cookies.get("session")
+        user_dict = auth.verify_session_cookie(session_cookie, check_revoked=True)
+        g.user = {"id": user_dict["email"]}
+    except Exception as e:
+        if "session cookie provided: None" not in str(e):
+            print(f'Error logging in user: "{e}"')
+        g.user = None
 
 
 def login_required(view):
@@ -35,127 +43,97 @@ def login_required(view):
 @bp.route("/register", methods=("GET", "POST"))
 def register():
     if request.method == "POST":
-        db = current_app.config["DATABASE"]
-
         email = request.form["email"]
         password = request.form["password"]
         password_check = request.form["password_check"]
 
-        if not email:
-            flash("Email is required.")
-        elif not password:
-            flash("Password is required.")
-        elif password_check != password:
+        if password_check != password:
             flash("Passwords do not match. Please double-check and try again.")
-        elif db.collection("users").document(email).get().exists:
-            flash("Email already taken.")
         else:
-            doc_ref = db.collection("users").document(email)
-            doc_ref.set(
-                {
-                    "email": email,
-                    "password": generate_password_hash(password),
-                }
-            )
-            gcloudIAM = GoogleCloudIAM()
-            gcloudIAM.give_cloud_build_view_permissions(email)
-            return redirect(url_for("auth.login"))
+            try:
+                auth.create_user(email=email, password=password)
+                gcloudIAM = GoogleCloudIAM()
+                gcloudIAM.give_cloud_build_view_permissions(email)
 
+                return update_session_cookie_and_return_to_index(email, password)
+            except Exception as e:
+                if ("EMAIL_EXISTS") in str(e):
+                    flash(
+                        "This email is already registered.  Please either Log In or use a different email."
+                    )
+                else:
+                    print(f'Error creating user: "{e}"')
+                    flash("Error creating user.")
     return render_template("auth/register.html")
 
 
 @bp.route("/login", methods=("GET", "POST"))
 def login():
     if request.method == "POST":
-        db = current_app.config["DATABASE"]
-
         email = request.form["email"]
         password = request.form["password"]
 
-        user = db.collection("users").document(email).get()
-        user_dict = user.to_dict()
-
-        if not user_dict:
-            flash(
-                "Email not found.  Please double-check your email or register if you're not already registered."
-            )
-        elif "password" not in user_dict:
-            flash(
-                "Password did not check out.  If this is a Google email, you might want to log in with google instead."
-            )
-        elif not check_password_hash(user_dict["password"], password):
-            flash("Incorrect password.")
-        else:
-            session.clear()
-            session["user_id"] = user.id
-            return redirect(url_for("gwas.index"))
+        try:
+            return update_session_cookie_and_return_to_index(email, password)
+        except Exception as e:
+            if ("INVALID_PASSWORD") in str(e):
+                flash("Invalid password. Please try again.")
+            elif ("USER_NOT_FOUND") in str(e):
+                flash("No user found with that email. Please try again.")
+            else:
+                print(f'Error logging-in user: "{e}"')
+                flash("Error logging in. Please try again.")
 
     return render_template("auth/login.html")
 
 
 @bp.route("/callback", methods=("POST",))
 def callback():
-    print(request.form["credential"])
-    db = current_app.config["DATABASE"]
-    token = jwt.decode(request.form["credential"], verify=False)
-    # try:
-    #     id_token.verify_oauth2_token(
-    #         token,
-    #         request.Requests(),
-    #         "419003787216-rcif34r976a9qm3818qgeqed7c582od6.apps.googleusercontent.com",
-    #     )
-    # except:
-    #     flash("Invalid Google account.")
-    #     return redirect(url_for("auth.login"))
-
-    session.clear()
-    session["user_id"] = token["email"]
-
-    if not db.collection("users").document(session["user_id"]).get().exists:
-        gcloudIAM = GoogleCloudIAM()
-        gcloudIAM.give_cloud_build_view_permissions(session["user_id"])
-        db.collection("users").document(session["user_id"]).set(
-            {
-                "email": session["user_id"],
-            }
+    try:
+        id_token.verify_oauth2_token(
+            request.form["credential"],
+            requests.Request(),
+            "419003787216-rcif34r976a9qm3818qgeqed7c582od6.apps.googleusercontent.com",
         )
+    except Exception as e:
+        print(f'Error with jwt token validation: "{e}"')
+        flash("Invalid Google account.")
+        return redirect(url_for("gwas.index"))
 
-    return redirect(url_for("gwas.index"))
+    token = jwt.decode(request.form["credential"], verify=False)
+    rand_str = "".join(secrets.choice(string.ascii_lowercase) for _ in range(16))
 
+    try:
+        auth.get_user_by_email(token["email"])
+        auth.update_user(uid=token["email"], email=token["email"], password=rand_str)
+    except auth.UserNotFoundError:
+        auth.create_user(uid=token["email"], email=token["email"], password=rand_str)
+        gcloudIAM = GoogleCloudIAM()
+        gcloudIAM.give_cloud_build_view_permissions(token["email"])
 
-# @bp.route("/user/<id>", methods=("GET", "POST"))
-# @login_required
-# def user(id):
-#     db = current_app.config["DATABASE"]
-
-#     user = db.collection("users").document(id).get().to_dict()
-#     if request.method == "POST":
-#         doc_ref = db.collection("users").document(id)
-#         doc_ref.set(
-#             {
-#                 "gcp_project": request.form["gcp_project"],
-#                 "public_key": request.form["public_key"],
-#             },
-#             merge=True,
-#         )
-#         return redirect(url_for("gwas.index"))
-#     return render_template("auth/user.html", user=user)
-
-
-@bp.before_app_request
-def load_logged_in_user():
-    db = current_app.config["DATABASE"]
-
-    user_id = session.get("user_id")
-
-    if user_id is None:
-        g.user = None
-    else:
-        g.user = db.collection("users").document(user_id).get().to_dict()
-        g.user["id"] = user_id
+    return update_session_cookie_and_return_to_index(token["email"], rand_str)
 
 
 @bp.route("/logout")
 def logout():
-    session.clear()
-    return redirect(url_for("auth.login"))
+    response = redirect(url_for("auth.login"))
+    response.set_cookie("session", expires=0)
+    return response
+
+
+def update_session_cookie_and_return_to_index(email, password):
+    pb = pyrebase.initialize_app(json.load(open("fbconfig.json")))
+
+    expires_in = datetime.timedelta(days=1)
+    user = pb.auth().sign_in_with_email_and_password(email, password)
+    session_cookie = auth.create_session_cookie(user["idToken"], expires_in=expires_in)
+    response = redirect(url_for("gwas.index"))
+    response.set_cookie(
+        "session",
+        session_cookie,
+        expires=datetime.datetime.now() + expires_in,
+        httponly=True,
+        secure=True,
+    )
+
+    return response

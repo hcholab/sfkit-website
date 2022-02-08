@@ -1,5 +1,6 @@
 import os
 
+import firebase_admin
 from flask import Flask
 from flask_bootstrap import Bootstrap
 from google.cloud import firestore
@@ -7,6 +8,7 @@ from google.cloud import firestore
 
 def create_app():
     app = Flask(__name__)
+    firebase_admin.initialize_app()
 
     app.config.from_mapping(
         SECRET_KEY=os.urandom(12).hex(), DATABASE=firestore.Client()
