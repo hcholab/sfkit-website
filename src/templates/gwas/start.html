@@ -58,11 +58,12 @@
               </form>
             {% else %}
               <form action="{{ url_for('gwas.start', project_title=project['title']) }}" method="post">
+                <br>
                 Status:
                 {% if "not ready" in project["status"] %}
                   Waiting for others to be ready...
                 {% else %}
-                  {{ project["status"][role] }}
+                  <div class="status"></div>
                 {% endif %}
                 <br>
                 <button class="mt-2 btn btn-secondary" type="submit" onclick="loading();">
@@ -92,19 +93,36 @@
   </script>
 
   <script type="module">
-    import {initializeApp} from "https://www.gstatic.com/firebasejs/9.4.0/firebase-app.js";
-    import {getFirestore, doc, onSnapshot} from "https://www.gstatic.com/firebasejs/9.4.0/firebase-firestore.js";
-    import {getAuth} from "firebase/auth";
-
-    const firebaseApp = initializeApp({projectId: 'broad-cho-priv1'});
-    const db = getFirestore();
+    import {initializeApp} from "https://www.gstatic.com/firebasejs/9.6.6/firebase-app.js";
+    import {getFirestore, doc, onSnapshot} from "https://www.gstatic.com/firebasejs/9.6.6/firebase-firestore.js";
+    import {getAuth, signInWithCustomToken} from "https://www.gstatic.com/firebasejs/9.6.6/firebase-auth.js"
 
     $(document).ready(function () {
-      var project_title = $('#project-title-data').data()['value'];
+      const firebaseConfig = {
+        apiKey: "AIzaSyAJ5Ql7iZ4QMi640Xryx0YbBzwhGdGxKdE",
+        authDomain: "broad-cho-priv1.firebaseapp.com",
+        projectId: "broad-cho-priv1",
+        storageBucket: "broad-cho-priv1.appspot.com",
+        messagingSenderId: "419003787216",
+        appId: "1:419003787216:web:1128a872a2eb31c00cfbd5",
+        measurementId: "G-FV14RX2JXN",
+        databaseURL: "",
+        serviceAccount: "serviceAccountKey.json"
+      };
 
-      // console.log(getAuth(firebaseApp));
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      const custom_token = "{{g.custom_token}}";
+      const auth = getAuth(app);
+      signInWithCustomToken(auth, custom_token);
+
+      var project_title = $('#project-title-data').data()['value'];
       const unsub = onSnapshot(doc(db, "projects", project_title), (doc) => {
         console.log("Current data: ", doc.data());
+        console.log(doc.data()["status"]);
+        console.log(doc.data()["status"][0]);
+        $("div.status").html(doc.data()["status"][0]);
       });
     });
   </script>

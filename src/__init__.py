@@ -8,7 +8,10 @@ from google.cloud import firestore
 
 def create_app():
     app = Flask(__name__)
-    firebase_admin.initialize_app()
+
+    firebase_admin.initialize_app(
+        # firebase_admin.credentials.Certificate("serviceAccountKey.json")
+    )
 
     app.config.from_mapping(
         SECRET_KEY=os.urandom(12).hex(), DATABASE=firestore.Client()

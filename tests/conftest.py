@@ -51,7 +51,7 @@ class MockFirebaseAdminAuth:
 
     def verify_session_cookie(session_cookie, check_revoked=True):
         if session_cookie:
-            return {"email": session_cookie}
+            return {"email": session_cookie, "uid": "uid".encode("utf-8")}
         raise Exception("session cookie provided: None")
 
     def get_user_by_email(email):
@@ -61,3 +61,6 @@ class MockFirebaseAdminAuth:
 
     def update_user(uid, email, password):
         pass
+
+    def create_custom_token(uid):
+        return uid

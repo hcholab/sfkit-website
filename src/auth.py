@@ -25,6 +25,10 @@ def load_logged_in_user():
         user_dict = firebase_auth.verify_session_cookie(
             session_cookie, check_revoked=True
         )
+
+        g.custom_token = firebase_auth.create_custom_token(user_dict["uid"]).decode(
+            "utf-8"
+        )
         g.user = {"id": user_dict["email"]}
     except Exception as e:
         if "session cookie provided: None" not in str(e):
@@ -148,7 +152,9 @@ def update_session_cookie_and_return_to_index(email, password):
 
 
 def sign_in_with_email_and_password(email, password):
-    api_key = "AIzaSyAJ5Ql7iZ4QMi640Xryx0YbBzwhGdGxKdE"
+    with open("fbconfig.json") as f:
+        config = json.load(f)
+    api_key = config["apiKey"]
     request_ref = "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key={0}".format(
         api_key
     )
