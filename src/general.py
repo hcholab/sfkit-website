@@ -51,11 +51,12 @@ def index():
             # update status in firestore
             db = current_app.config["DATABASE"]
             doc_ref = db.collection("projects").document(project_title)
+            doc_ref_dict = statuses = doc_ref.get().to_dict()
 
-            statuses = doc_ref.get().to_dict()["status"]
-            statuses[int(role)] = status
-
-            doc_ref.set({"status": statuses}, merge=True)
+            if doc_ref_dict:
+                statuses = doc_ref_dict.get("status")
+                statuses[int(role)] = status
+                doc_ref.set({"status": statuses}, merge=True)
     else:
         print(f"error: {message}")
 

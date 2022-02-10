@@ -11,10 +11,12 @@ def create_app():
 
     # if serviceAccountKey.json file exists, use it to initialize the app
     if os.path.exists("serviceAccountKey.json"):
+        print("Using serviceAccountKey.json for the firebase_admin")
         firebase_admin.initialize_app(
             firebase_admin.credentials.Certificate("serviceAccountKey.json")
         )
     else:
+        print("Using default service account for the firebase_admin")
         firebase_admin.initialize_app()
 
     app.config.from_mapping(

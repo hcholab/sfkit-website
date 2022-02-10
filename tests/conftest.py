@@ -6,7 +6,7 @@ from src import create_app
 @pytest.fixture
 def app(mocker):
     mocker.patch("src.firestore.Client", MockFirestore)
-    mocker.patch("src.firebase_admin.initialize_app", lambda: None)
+    mocker.patch("src.firebase_admin.initialize_app", return_value=None)
     return create_app()
 
 
