@@ -9,9 +9,13 @@ from google.cloud import firestore
 def create_app():
     app = Flask(__name__)
 
-    firebase_admin.initialize_app(
-        # firebase_admin.credentials.Certificate("serviceAccountKey.json")
-    )
+    # if serviceAccountKey.json file exists, use it to initialize the app
+    if os.path.exists("serviceAccountKey.json"):
+        firebase_admin.initialize_app(
+            firebase_admin.credentials.Certificate("serviceAccountKey.json")
+        )
+    else:
+        firebase_admin.initialize_app()
 
     app.config.from_mapping(
         SECRET_KEY=os.urandom(12).hex(), DATABASE=firestore.Client()
