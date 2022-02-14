@@ -36,10 +36,12 @@ def index():
     pubsub_message = envelope["message"]
 
     messsage = []
+    publishTime = ""
     if isinstance(pubsub_message, dict) and "data" in pubsub_message:
         message = (
             base64.b64decode(pubsub_message["data"]).decode("utf-8").strip().split("-")
         )
+        publishTime = pubsub_message.get("publishTime")
 
     if len(message) > 1:
         (project_title, role, status) = (
@@ -47,15 +49,18 @@ def index():
             message[-2][-1],
             message[-1],
         )
+        print(f"Message is {message}")
         if role.isdigit():
             # update status in firestore
             db = current_app.config["DATABASE"]
-            doc_ref = db.collection("projects").document(project_title)
+            doc_ref = db.collection("projects").document(
+                project_title.replace(" ", "").lower()
+            )
             doc_ref_dict = statuses = doc_ref.get().to_dict()
 
             if doc_ref_dict:
                 statuses = doc_ref_dict.get("status")
-                statuses[int(role)] = status
+                statuses[role].append(f"{status} - {publishTime}")
                 doc_ref.set({"status": statuses}, merge=True)
     else:
         print(f"error: {message}")

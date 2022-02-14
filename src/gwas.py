@@ -52,7 +52,7 @@ def create():
                     flash("Title already exists.")
                     return render_template("gwas/create.html")
 
-            doc_ref = db.collection("projects").document(title)
+            doc_ref = db.collection("projects").document(title.replace(" ", "").lower())
             doc_ref.set(
                 {
                     "title": title,
@@ -60,7 +60,7 @@ def create():
                     "owner": g.user["id"],
                     "created": datetime.now(),
                     "participants": [g.user["id"]],
-                    "status": ["not ready"],
+                    "status": {"0": ["not ready"]},
                     "parameters": constants.DEFAULT_PARAMETERS,
                     "personal_parameters": {
                         g.user["id"]: constants.DEFAULT_PERSONAL_PARAMETERS
@@ -76,7 +76,12 @@ def create():
 def update(project_title):
     db = current_app.config["DATABASE"]
 
-    project = db.collection("projects").document(project_title).get().to_dict()
+    project = (
+        db.collection("projects")
+        .document(project_title.replace(" ", "").lower())
+        .get()
+        .to_dict()
+    )
 
     if request.method == "POST":
         title = request.form["title"]
@@ -96,9 +101,11 @@ def update(project_title):
                         flash("Title already exists.")
                         return render_template("gwas/update.html", project=project)
 
-            old_doc_ref = db.collection("projects").document(project_title)
+            old_doc_ref = db.collection("projects").document(
+                project_title.replace(" ", "").lower()
+            )
             old_doc_ref_dict = old_doc_ref.get().to_dict()
-            doc_ref = db.collection("projects").document(title)
+            doc_ref = db.collection("projects").document(title.replace(" ", "").lower())
             doc_ref.set(
                 {
                     "title": title,
@@ -106,7 +113,7 @@ def update(project_title):
                     "owner": g.user["id"],
                     "created": old_doc_ref_dict["created"],
                     "participants": old_doc_ref_dict["participants"],
-                    "status": ["not ready"],
+                    "status": {"0": ["not ready"]},
                     "parameters": old_doc_ref_dict["parameters"],
                     "personal_parameters": old_doc_ref_dict["personal_parameters"],
                 },
@@ -125,7 +132,7 @@ def update(project_title):
 @login_required
 def delete(project_title):
     db = current_app.config["DATABASE"]
-    db.collection("projects").document(project_title).delete()
+    db.collection("projects").document(project_title.replace(" ", "").lower()).delete()
     return redirect(url_for("gwas.index"))
 
 
@@ -133,13 +140,14 @@ def delete(project_title):
 @login_required
 def join_project(project_name):
     db = current_app.config["DATABASE"]
-    doc_ref = db.collection("projects").document(project_name)
+    doc_ref = db.collection("projects").document(project_name.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
+    doc_ref_dict["status"][str(len(doc_ref_dict))] = ["not ready"]
 
     doc_ref.set(
         {
             "participants": doc_ref_dict["participants"] + [g.user["id"]],
-            "status": doc_ref_dict["status"] + ["not ready"],
+            "status": doc_ref_dict["status"],
             "personal_parameters": doc_ref_dict["personal_parameters"]
             | {g.user["id"]: constants.DEFAULT_PERSONAL_PARAMETERS},
         },
@@ -186,10 +194,10 @@ def start(project_title):
         )
 
     statuses = project_doc_dict["status"]
-    if statuses[role] == "not ready":
+    if statuses[str(role)] == ["not ready"]:
         gcloudIAM = GoogleCloudIAM()
         if gcloudIAM.test_permissions(gcp_project):
-            statuses[role] = "ready"
+            statuses[str(role)] = ["ready"]
             db.collection("projects").document(project_title).set(
                 {"status": statuses},
                 merge=True,
@@ -198,10 +206,10 @@ def start(project_title):
             flash("Please give the service appropriate permissions first.")
             return redirect(url_for("general.permissions"))
 
-    if "not ready" in statuses:
+    if any("not ready" in status for status in statuses.values()):
         pass
-    elif statuses[role] == "ready":
-        statuses[role] = "setting up your vm instance"
+    elif statuses[str(role)] == ["ready"]:
+        statuses[str(role)] = ["setting up your vm instance"]
         db.collection("projects").document(project_title).set(
             {"status": statuses},
             merge=True,

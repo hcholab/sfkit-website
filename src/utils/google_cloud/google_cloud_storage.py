@@ -60,7 +60,12 @@ class GoogleCloudStorage:
 
     def update_parameters(self, file, project_title, role):
         db = current_app.config["DATABASE"]
-        doc_dict = db.collection("projects").document(project_title).get().to_dict()
+        doc_dict = (
+            db.collection("projects")
+            .document(project_title.replace(" ", "").lower())
+            .get()
+            .to_dict()
+        )
         parameters = doc_dict["parameters"]
 
         if role == file.split(".")[-2]:

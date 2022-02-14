@@ -4,6 +4,7 @@
 
 {% block content %}
   <meta id="project-title-data" data-value="{{ project['title'] }}">
+  <meta id="role-data" data-value="{{ project['status'][role] }}">
 
   <section class="py-5">
     <div class="container">
@@ -44,7 +45,7 @@
               <a href="{{ url_for('gwas.parameters', project_title=project['title']) }}" class="btn btn-secondary">Edit Project Parameters</a>
               <a href="{{ url_for('gwas.personal_parameters', project_title=project['title']) }}" class="btn btn-secondary">Edit Personal Parameters</a>
             </div>
-            {% if project["status"][role] == "not ready" %}
+            {% if project["status"][role | string] == ["not ready"] %}
               <form action="{{ url_for('gwas.start', project_title=project['title']) }}" method="post">
                 <button class="mt-2 btn btn-success" type="submit" onclick="loading();">
                   <div id="loading" style="display:none">
@@ -63,7 +64,7 @@
                 {% if "not ready" in project["status"] %}
                   Waiting for others to be ready...
                 {% else %}
-                  <div class="status"></div>
+                  <div class="status text-start"></div>
                 {% endif %}
                 <br>
                 <button class="mt-2 btn btn-secondary" type="submit" onclick="loading();">
@@ -118,11 +119,12 @@
       signInWithCustomToken(auth, custom_token);
 
       var project_title = $('#project-title-data').data()['value'];
+      var role = Number($('#role-data').data()['value']);
       const unsub = onSnapshot(doc(db, "projects", project_title), (doc) => {
         console.log("Current data: ", doc.data());
         console.log(doc.data()["status"]);
-        console.log(doc.data()["status"][0]);
-        $("div.status").html(doc.data()["status"][0]);
+        console.log(doc.data()["status"][role]);
+        $("div.status").html(doc.data()["status"][role].reduce((acc, curr) => acc + "<br>" + curr));
       });
     });
   </script>
