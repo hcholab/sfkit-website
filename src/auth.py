@@ -6,34 +6,48 @@ import string
 
 import flask
 from firebase_admin import auth as firebase_auth
-from flask import Blueprint, flash, g, redirect, render_template, request, url_for
+from flask import Blueprint, g, redirect, render_template, request, url_for
 from google.auth import jwt
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from requests import post
 from requests.exceptions import HTTPError
 
+from src.utils.helper_functions import flash
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 
+@bp.after_app_request
+def remove_old_flash_messages(response):
+    if flask.request.cookies.get("flash"):
+        response.set_cookie("flash", "")
+    return response
+
+
 @bp.before_app_request
 def load_logged_in_user():
+    print("load_logged_in_user")
+
+    g.flash = flask.request.cookies.get("flash")
     try:
         session_cookie = flask.request.cookies.get("session")
         user_dict = firebase_auth.verify_session_cookie(
             session_cookie, check_revoked=True
-        )
-
-        g.custom_token = firebase_auth.create_custom_token(user_dict["uid"]).decode(
-            "utf-8"
         )
         g.user = {"id": user_dict["email"]}
     except Exception as e:
         if "session cookie provided: None" not in str(e):
             print(f'Error logging in user: "{e}"')
         g.user = None
+    else:
+        try:
+            g.custom_token = firebase_auth.create_custom_token(user_dict["uid"]).decode(
+                "utf-8"
+            )
+        except Exception as e:
+            print(f"Error creating custom token: {e}")
 
 
 def login_required(view):
@@ -55,7 +69,10 @@ def register():
         password_check = request.form["password_check"]
 
         if password_check != password:
-            flash("Passwords do not match. Please double-check and try again.")
+            r = redirect(url_for("auth.register"))
+            print("Passwords do not match.")
+            flash(r, "Passwords do not match.  Please double-check and try again.")
+            return r
         else:
             try:
                 firebase_auth.create_user(email=email, password=password)
@@ -64,13 +81,15 @@ def register():
 
                 return update_session_cookie_and_return_to_index(email, password)
             except Exception as e:
+                r = redirect(url_for("auth.register"))
                 if ("EMAIL_EXISTS") in str(e):
-                    flash(
-                        "This email is already registered.  Please either Log In or use a different email."
-                    )
+                    message = "This email is already registered.  Please either Log In or use a different email."
+                    print(message)
+                    flash(r, message)
                 else:
                     print(f'Error creating user: "{e}"')
-                    flash("Error creating user.")
+                    flash(r, "Error creating user.")
+                return r
     return render_template("auth/register.html")
 
 
@@ -83,13 +102,17 @@ def login():
         try:
             return update_session_cookie_and_return_to_index(email, password)
         except Exception as e:
+            r = redirect(url_for("auth.login"))
             if ("INVALID_PASSWORD") in str(e):
-                flash("Invalid password. Please try again.")
+                print("Invalid password.")
+                flash(r, "Invalid password. Please try again.")
             elif ("USER_NOT_FOUND") in str(e):
-                flash("No user found with that email. Please try again.")
+                print("No user found with that email.")
+                flash(r, "No user found with that email. Please try again.")
             else:
-                print(f'Error logging-in user: "{e}"')
-                flash("Error logging in. Please try again.")
+                print(f'Error logging in. user: "{e}"')
+                flash(r, "Error logging in. Please try again.")
+            return r
 
     return render_template("auth/login.html")
 
@@ -104,8 +127,9 @@ def callback():
         )
     except Exception as e:
         print(f'Error with jwt token validation: "{e}"')
-        flash("Invalid Google account.")
-        return redirect(url_for("gwas.index"))
+        r = redirect(url_for("gwas.index"))
+        flash(r, "Invalid Google account.")
+        return r
 
     token = jwt.decode(request.form["credential"], verify=False)
     rand_str = "".join(secrets.choice(string.ascii_lowercase) for _ in range(16))

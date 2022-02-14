@@ -52,12 +52,12 @@
       </div>
     </nav>
 
-    {% for message in get_flashed_messages() %}
+    {% if g.flash %}
       <div class="flash alert alert-warning alert-dismissible fade show" role="alert">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        {{ g.flash }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
       </div>
-    {% endfor %}
+    {% endif %}
 
     {% block content %}{% endblock %}
 

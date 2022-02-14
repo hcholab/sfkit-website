@@ -25,14 +25,7 @@ def test_create(client, auth, mocker):
     response = client.post(
         "create", data={"title": "test title", "description": "test description"}
     )
-    assert "Location" not in response.headers
-
-
-def test_create_no_title(client, auth, mocker):
-    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
-    auth.register()
-    response = client.post("create", data={"title": "", "description": ""})
-    assert "Location" not in response.headers
+    assert response.headers["Location"] == "http://localhost/create"
 
 
 @pytest.mark.parametrize(
@@ -62,17 +55,7 @@ def test_update(client, auth, title, description, mocker):
         "update/anothertitle",
         data={"title": title, "description": description},
     )
-    assert "Location" not in response.headers
-
-
-def test_update_no_title(client, auth, mocker):
-    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
-    auth.register()
-    client.post(
-        "create", data={"title": "testtitle", "description": "test description"}
-    )
-    response = client.post("update/testtitle", data={"title": "", "description": ""})
-    assert "Location" not in response.headers
+    assert "http://localhost/update" in response.headers["Location"]
 
 
 def test_delete(client, auth, mocker):

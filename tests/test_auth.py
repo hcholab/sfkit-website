@@ -29,21 +29,21 @@ def test_register(client, mocker):
 @pytest.mark.parametrize(
     ("email", "password", "password_check", "message"),
     (
-        ("", "", "", b"Error creating user."),
-        ("a@a.a", "a", "b", b"Passwords do not match."),
-        ("duplicate", "a", "a", b"This email is already registered."),
+        ("a@a.a", "a", "b", "Passwords do not match."),
+        ("duplicate", "a", "a", "This email is already registered."),
     ),
 )
 def test_register_validate_input(
-    client, mocker, email, password, password_check, message
+    capfd, client, mocker, email, password, password_check, message
 ):
     setup_mocking(mocker)
 
-    response = client.post(
+    client.post(
         "/auth/register",
         data={"email": email, "password": password, "password_check": password_check},
     )
-    assert message in response.data
+
+    assert message in capfd.readouterr()[0]
 
 
 def test_login(client, mocker):
@@ -58,15 +58,16 @@ def test_login(client, mocker):
 @pytest.mark.parametrize(
     ("email", "password", "message"),
     (
-        ("bad", "INVALID_PASSWORD", b"Invalid password"),
-        ("bad", "USER_NOT_FOUND", b"No user found with that email."),
-        ("bad", "BAD", b"Error logging in."),
+        ("bad", "INVALID_PASSWORD", "Invalid password"),
+        ("bad", "USER_NOT_FOUND", "No user found with that email."),
+        ("bad", "BAD", "Error logging in."),
     ),
 )
-def test_login_validate_input(client, mocker, email, password, message):
+def test_login_validate_input(capfd, client, mocker, email, password, message):
     setup_mocking(mocker)
-    response = client.post("/auth/login", data={"email": email, "password": password})
-    assert message in response.data
+    client.post("/auth/login", data={"email": email, "password": password})
+
+    assert message in capfd.readouterr()[0]
 
 
 def test_callback(client, app, auth, mocker):

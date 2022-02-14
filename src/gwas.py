@@ -3,8 +3,8 @@ from datetime import datetime
 from flask import (
     Blueprint,
     current_app,
-    flash,
     g,
+    make_response,
     redirect,
     render_template,
     request,
@@ -17,6 +17,7 @@ from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 from src.utils.google_cloud.google_cloud_pubsub import GoogleCloudPubsub
 from src.utils.google_cloud.google_cloud_storage import GoogleCloudStorage
+from src.utils.helper_functions import flash
 
 bp = Blueprint("gwas", __name__)
 
@@ -39,35 +40,33 @@ def create():
         title = request.form["title"]
         description = request.form["description"]
 
-        if not title:
-            flash("Title is required.")
-        else:
-            # validate that title is unique
-            projects = db.collection("projects").stream()
-            for project in projects:
-                if (
-                    project.to_dict()["title"].replace(" ", "").lower()
-                    == title.replace(" ", "").lower()
-                ):
-                    flash("Title already exists.")
-                    return render_template("gwas/create.html")
+        # validate that title is unique
+        projects = db.collection("projects").stream()
+        for project in projects:
+            if (
+                project.to_dict()["title"].replace(" ", "").lower()
+                == title.replace(" ", "").lower()
+            ):
+                r = redirect(url_for("gwas.create"))
+                flash(r, "Title already exists.")
+                return r
 
-            doc_ref = db.collection("projects").document(title.replace(" ", "").lower())
-            doc_ref.set(
-                {
-                    "title": title,
-                    "description": description,
-                    "owner": g.user["id"],
-                    "created": datetime.now(),
-                    "participants": [g.user["id"]],
-                    "status": {"0": ["not ready"]},
-                    "parameters": constants.DEFAULT_PARAMETERS,
-                    "personal_parameters": {
-                        g.user["id"]: constants.DEFAULT_PERSONAL_PARAMETERS
-                    },
-                }
-            )
-            return redirect(url_for("gwas.index"))
+        doc_ref = db.collection("projects").document(title.replace(" ", "").lower())
+        doc_ref.set(
+            {
+                "title": title,
+                "description": description,
+                "owner": g.user["id"],
+                "created": datetime.now(),
+                "participants": [g.user["id"]],
+                "status": {"0": ["not ready"]},
+                "parameters": constants.DEFAULT_PARAMETERS,
+                "personal_parameters": {
+                    g.user["id"]: constants.DEFAULT_PERSONAL_PARAMETERS
+                },
+            }
+        )
+        return redirect(url_for("gwas.index"))
     return render_template("gwas/create.html")
 
 
@@ -87,43 +86,41 @@ def update(project_title):
         title = request.form["title"]
         description = request.form["description"]
 
-        if not title:
-            flash("Title is required.")
-        else:
-            if title.replace(" ", "").lower() != project_title.replace(" ", "").lower():
-                # validate that title is unique
-                projects = db.collection("projects").stream()
-                for project in projects:
-                    if (
-                        project.to_dict()["title"].replace(" ", "").lower()
-                        == title.replace(" ", "").lower()
-                    ):
-                        flash("Title already exists.")
-                        return render_template("gwas/update.html", project=project)
+        if title.replace(" ", "").lower() != project_title.replace(" ", "").lower():
+            # validate that title is unique
+            projects = db.collection("projects").stream()
+            for project in projects:
+                if (
+                    project.to_dict()["title"].replace(" ", "").lower()
+                    == title.replace(" ", "").lower()
+                ):
+                    r = redirect(url_for("gwas.update", project_title=project))
+                    flash(r, "Title already exists.")
+                    return r
 
-            old_doc_ref = db.collection("projects").document(
-                project_title.replace(" ", "").lower()
-            )
-            old_doc_ref_dict = old_doc_ref.get().to_dict()
-            doc_ref = db.collection("projects").document(title.replace(" ", "").lower())
-            doc_ref.set(
-                {
-                    "title": title,
-                    "description": description,
-                    "owner": g.user["id"],
-                    "created": old_doc_ref_dict["created"],
-                    "participants": old_doc_ref_dict["participants"],
-                    "status": {"0": ["not ready"]},
-                    "parameters": old_doc_ref_dict["parameters"],
-                    "personal_parameters": old_doc_ref_dict["personal_parameters"],
-                },
-                merge=True,
-            )
-            if (
-                project_title != title
-            ):  # in this case, we're creating a new post, so we delete the old one
-                old_doc_ref.delete()
-            return redirect(url_for("gwas.index"))
+        old_doc_ref = db.collection("projects").document(
+            project_title.replace(" ", "").lower()
+        )
+        old_doc_ref_dict = old_doc_ref.get().to_dict()
+        doc_ref = db.collection("projects").document(title.replace(" ", "").lower())
+        doc_ref.set(
+            {
+                "title": title,
+                "description": description,
+                "owner": g.user["id"],
+                "created": old_doc_ref_dict["created"],
+                "participants": old_doc_ref_dict["participants"],
+                "status": {"0": ["not ready"]},
+                "parameters": old_doc_ref_dict["parameters"],
+                "personal_parameters": old_doc_ref_dict["personal_parameters"],
+            },
+            merge=True,
+        )
+        if (
+            project_title != title
+        ):  # in this case, we're creating a new post, so we delete the old one
+            old_doc_ref.delete()
+        return redirect(url_for("gwas.index"))
 
     return render_template("gwas/update.html", project=project)
 
@@ -160,7 +157,12 @@ def join_project(project_name):
 @login_required
 def start(project_title):
     db = current_app.config["DATABASE"]
-    project_doc_dict = db.collection("projects").document(project_title).get().to_dict()
+    project_doc_dict = (
+        db.collection("projects")
+        .document(project_title.replace(" ", "").lower())
+        .get()
+        .to_dict()
+    )
     public_keys = [
         project_doc_dict["personal_parameters"][user]["PUBLIC_KEY"]["value"]
         for user in project_doc_dict["participants"]
@@ -177,40 +179,42 @@ def start(project_title):
         )
     gcp_project = project_doc_dict["personal_parameters"][id]["GCP_PROJECT"]["value"]
     if gcp_project == "" or gcp_project is None:
-        flash("Please set your GCP project first.")
-        return redirect(
-            url_for("gwas.personal_parameters", project_title=project_title)
-        )
+        r = redirect(url_for("gwas.personal_parameters", project_title=project_title))
+        flash(r, "Please set your GCP project.")
+        r.set_cookie("flash", "Please set your GCP project first.")
+        return r
 
     # check if pos.txt is in the google cloud bucket
     gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
     if not gcloudStorage.check_file_exists("pos.txt"):
-        flash("A pos.txt file is required to begin the workflow.")
-        flash(
-            "Please either upload a pos.txt file yourself or have one of the entities you are running this project with do so for you."
-        )
-        return redirect(
+        message = "Please upload a pos.txt file or have one of the entities you are runnning this project with do so for you."
+        r = redirect(
             url_for("gwas.parameters", project_title=project_title, section="pos")
         )
+        flash(r, message)
+        return r
 
     statuses = project_doc_dict["status"]
     if statuses[str(role)] == ["not ready"]:
         gcloudIAM = GoogleCloudIAM()
         if gcloudIAM.test_permissions(gcp_project):
             statuses[str(role)] = ["ready"]
-            db.collection("projects").document(project_title).set(
+            db.collection("projects").document(
+                project_title.replace(" ", "").lower()
+            ).set(
                 {"status": statuses},
                 merge=True,
             )
         else:
-            flash("Please give the service appropriate permissions first.")
-            return redirect(url_for("general.permissions"))
+            r = redirect(url_for("general.permissions"))
+            flash(r, "Please give the service appropriate permissions first.")
+            return r
 
     if any("not ready" in status for status in statuses.values()):
         pass
     elif statuses[str(role)] == ["ready"]:
         statuses[str(role)] = ["setting up your vm instance"]
-        db.collection("projects").document(project_title).set(
+        db.collection("projects").document(project_title.replace(" ", "").lower()).set(
             {"status": statuses},
             merge=True,
         )
@@ -224,12 +228,17 @@ def start(project_title):
         statuses[role] = get_status(
             str(role), gcp_project, statuses[role], project_title
         )
-        db.collection("projects").document(project_title).set(
+        db.collection("projects").document(project_title.replace(" ", "").lower()).set(
             {"status": statuses},
             merge=True,
         )
 
-    project_doc_dict = db.collection("projects").document(project_title).get().to_dict()
+    project_doc_dict = (
+        db.collection("projects")
+        .document(project_title.replace(" ", "").lower())
+        .get()
+        .to_dict()
+    )
     return render_template(
         "gwas/start.html", project=project_doc_dict, public_keys=public_keys, role=role
     )
@@ -241,7 +250,7 @@ def parameters(project_title):
     google_cloud_storage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
 
     db = current_app.config["DATABASE"]
-    doc_ref = db.collection("projects").document(project_title)
+    doc_ref = db.collection("projects").document(project_title.replace(" ", "").lower())
     parameters = doc_ref.get().to_dict().get("parameters")
     pos_file_uploaded = google_cloud_storage.check_file_exists("pos.txt")
     if request.method == "GET":
@@ -259,15 +268,17 @@ def parameters(project_title):
     elif "upload" in request.form:
         file = request.files["file"]
         if file.filename == "":
-            flash("Please select a file to upload.")
-            return redirect(url_for("gwas.parameters", project_title=project_title))
+            r = redirect(url_for("gwas.parameters", project_title=project_title))
+            flash(r, "Please select a file to upload.")
+            return r
         elif file and file.filename == "pos.txt":
             gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
             gcloudStorage.upload_to_bucket(file, file.filename)
             return redirect(url_for("gwas.start", project_title=project_title))
         else:
-            flash("Please upload a valid pos.txt file.")
-            return redirect(url_for("gwas.parameters", project_title=project_title))
+            r = redirect(url_for("gwas.parameters", project_title=project_title))
+            flash(r, "Please upload a valid pos.txt file.")
+            return r
     else:
         print("Unknown request")
         exit(1)
@@ -276,7 +287,7 @@ def parameters(project_title):
 @bp.route("/personal_parameters/<project_title>", methods=("GET", "POST"))
 def personal_parameters(project_title):
     db = current_app.config["DATABASE"]
-    doc_ref = db.collection("projects").document(project_title)
+    doc_ref = db.collection("projects").document(project_title.replace(" ", "").lower())
     parameters = doc_ref.get().to_dict().get("personal_parameters")
 
     if request.method == "GET":
