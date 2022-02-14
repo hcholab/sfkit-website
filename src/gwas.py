@@ -4,7 +4,6 @@ from flask import (
     Blueprint,
     current_app,
     g,
-    make_response,
     redirect,
     render_template,
     request,
@@ -64,6 +63,7 @@ def create():
                 "personal_parameters": {
                     g.user["id"]: constants.DEFAULT_PERSONAL_PARAMETERS
                 },
+                "requested_participants": [],
             }
         )
         return redirect(url_for("gwas.index"))
@@ -113,6 +113,7 @@ def update(project_title):
                 "status": {"0": ["not ready"]},
                 "parameters": old_doc_ref_dict["parameters"],
                 "personal_parameters": old_doc_ref_dict["personal_parameters"],
+                "requested_participants": [],
             },
             merge=True,
         )
@@ -129,28 +130,57 @@ def update(project_title):
 @login_required
 def delete(project_title):
     db = current_app.config["DATABASE"]
-    db.collection("projects").document(project_title.replace(" ", "").lower()).delete()
+    doc_ref = db.collection("projects").document(project_title.replace(" ", "").lower())
+    doc_ref_dict = doc_ref.get().to_dict()
+
+    google_cloud_compute = GoogleCloudCompute("")
+    for participant in doc_ref_dict["personal_parameters"].values():
+        print(participant)
+        if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
+            print(gcp_project)
+            google_cloud_compute.project = gcp_project
+            for instance in google_cloud_compute.list_instances():
+                if constants.INSTANCE_NAME_ROOT in instance:
+                    google_cloud_compute.delete_instance(instance)
+
+    doc_ref.delete()
     return redirect(url_for("gwas.index"))
 
 
 @bp.route("/join/<project_name>", methods=("POST",))
 @login_required
-def join_project(project_name):
+def request_join_project(project_name):
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("projects").document(project_name.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
-    doc_ref_dict["status"][str(len(doc_ref_dict))] = ["not ready"]
-
     doc_ref.set(
         {
-            "participants": doc_ref_dict["participants"] + [g.user["id"]],
-            "status": doc_ref_dict["status"],
-            "personal_parameters": doc_ref_dict["personal_parameters"]
-            | {g.user["id"]: constants.DEFAULT_PERSONAL_PARAMETERS},
+            "requested_participants": doc_ref_dict["requested_participants"]
+            + [g.user["id"]]
         },
         merge=True,
     )
+
     return redirect(url_for("gwas.index"))
+
+
+@bp.route("/approve_join_project/<project_name>/<user_id>", methods=("GET",))
+def approve_join_project(project_name, user_id):
+    db = current_app.config["DATABASE"]
+    doc_ref = db.collection("projects").document(project_name.replace(" ", "").lower())
+    doc_ref_dict = doc_ref.get().to_dict()
+    doc_ref.set(
+        {
+            "participants": doc_ref_dict["participants"] + [user_id],
+            "requested_participants": doc_ref_dict["requested_participants"].remove(
+                user_id
+            ),
+            "personal_parameters": doc_ref_dict["personal_parameters"]
+            | {user_id: constants.DEFAULT_PERSONAL_PARAMETERS},
+        },
+        merge=True,
+    )
+    return redirect(url_for("gwas.start", project_title=project_name))
 
 
 @bp.route("/start/<project_title>", methods=("GET", "POST"))

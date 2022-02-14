@@ -34,6 +34,18 @@
                 </small>
               {% endfor %}
             </div>
+            {% if project['requested_participants'] %}
+              <div>
+                Requested Participants:
+                {% for participant in project['requested_participants'] %}
+                  <br>
+                  <small class="text-muted ms-2 me-2">
+                    {{ participant }}
+                    <a href="{{ url_for('gwas.approve_join_project', project_name=project['title'], user_id=participant) }}" type="button" class="btn btn-sm btn-info">Approve Request</a>
+                  </small>
+                {% endfor %}
+              </div>
+            {% endif %}
             <p>
               Not sure what to do next? Go to the
               <a href="{{url_for('general.workflow')}}" class="text-decoration-none">Workflow</a>

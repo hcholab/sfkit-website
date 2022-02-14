@@ -49,7 +49,7 @@ class GoogleCloudCompute:
                 for instance in self.list_instances(
                     constants.ZONE, subnetwork=subnet["selfLink"]
                 ):
-                    self.delete_instance(constants.ZONE, instance)
+                    self.delete_instance(instance)
 
                 print(f"Deleting subnet {subnet['name']}")
                 self.compute.subnetworks().delete(
@@ -175,7 +175,7 @@ class GoogleCloudCompute:
         existing_instances = self.list_instances(constants.ZONE)
 
         if existing_instances and name in existing_instances:
-            self.delete_instance(zone, name)
+            self.delete_instance(name, zone)
         self.create_instance(zone, name, role, size)
 
         return self.get_vm_external_ip_address(zone, name)
@@ -266,7 +266,7 @@ class GoogleCloudCompute:
         )
         self.wait_for_zoneOperation(zone, operation["name"])
 
-    def list_instances(self, zone, subnetwork=""):
+    def list_instances(self, zone=constants.ZONE, subnetwork=""):
         result = (
             self.compute.instances().list(project=self.project, zone=zone).execute()
         )
@@ -280,7 +280,7 @@ class GoogleCloudCompute:
             else []
         )
 
-    def delete_instance(self, zone, name):
+    def delete_instance(self, name, zone=constants.ZONE):
         print("Deleting VM instance with name ", name)
         operation = (
             self.compute.instances()

@@ -39,10 +39,12 @@
 
             {% if g.user['id'] == project['owner'] %}
               <a class="btn btn-secondary action" href="{{ url_for('gwas.update', project_title=project['title']) }}">Edit</a>
-            {% elif g.user['id'] not in project['participants'] %}
-              <form action="{{ url_for('gwas.join_project', project_name=project['title']) }}" method="post">
-                <input class="btn btn-primary" type="submit" value="Join Project">
+            {% elif g.user['id'] not in project['participants'] and g.user['id'] not in project['requested_participants'] %}
+              <form action="{{ url_for('gwas.request_join_project', project_name=project['title']) }}" method="post">
+                <input class="btn btn-primary" type="submit" value="Request to Join Project">
               </form>
+            {% elif project['requested_participants'] and g.user['id'] in project['requested_participants'] %}
+              <button type="button" class="btn btn-secondary" disabled="true">Pending Approval from Project Owner</button>
             {% endif %}
           </div>
         {% endfor %}

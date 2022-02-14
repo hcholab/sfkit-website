@@ -60,6 +60,7 @@ def test_update(client, auth, title, description, mocker):
 
 def test_delete(client, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+    mocker.patch("src.gwas.GoogleCloudCompute", MockGoogleCloudCompute)
     auth.register()
     client.post(
         "create", data={"title": "testtitle", "description": "test description"}
