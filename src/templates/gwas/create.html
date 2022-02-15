@@ -12,7 +12,7 @@
           <div class="p-5 bg-light rounded text-center">
             <h2 class="display-5 fw-bold mt-2 mb-3">Let's create a new GWAS project:</h2>
             <form method="post">
-              <input class="form-control mb-2" name="title" id="title" value="{{ request.form['title'] }}" required="required" placeholder="An Awesome Project Title">
+              <input class="form-control mb-2" name="title" id="title" value="{{ request.form['title'] }}" maxlength="50" required="required" placeholder="An Awesome Project Title">
               <textarea class="form-control mb-2" name="description" id="description" required="required" placeholder="An awesome description for an awesome project.">{{ request.form['description'] }}</textarea>
               <div class="d-flex flex-wrap justify-content-center">
                 <a href="{{ url_for('gwas.index') }}" class="btn btn-outline-secondary me-2 mb-2 mb-sm-0">Cancel</a>

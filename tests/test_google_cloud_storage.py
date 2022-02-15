@@ -23,17 +23,16 @@ def test_copy_parameters_to_bucket(app, client, auth, mocker):
     response = client.post(
         "create",
         data={
-            "title": "project_title",
+            "title": "project title",
             "description": "test description",
-            "parameters": constants.DEFAULT_PARAMETERS,
         },
     )
     assert response.headers["Location"] == "http://localhost/index"
 
     with app.app_context():
-        google_cloud_storage.copy_parameters_to_bucket("project_title", role="0")
+        google_cloud_storage.copy_parameters_to_bucket("project title", role="0")
         MockFileInput.return_garbage = True
-        google_cloud_storage.copy_parameters_to_bucket("project_title", role="0")
+        google_cloud_storage.copy_parameters_to_bucket("project title", role="0")
 
 
 def test_upload_to_bucket(mocker):

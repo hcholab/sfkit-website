@@ -1,4 +1,5 @@
 from datetime import datetime
+import re
 
 from flask import (
     Blueprint,
@@ -38,6 +39,12 @@ def create():
 
         title = request.form["title"]
         description = request.form["description"]
+
+        if not re.match(r"^[a-zA-Z][ a-zA-Z0-9-]*$", title):
+            r = redirect(url_for("gwas.create"))
+            message = "Title can include only letters, numbers, spaces, and dashes, and must start with a letter."
+            flash(r, message)
+            return r
 
         # validate that title is unique
         projects = db.collection("projects").stream()
