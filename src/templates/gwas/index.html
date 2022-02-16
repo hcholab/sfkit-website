@@ -5,8 +5,8 @@
 {% block content %}
   <section class="py-5">
     <div class="container">
-      <div class="row mb-4">
-        <div class="col-12 col-lg-8 col-xxl-7 text-center mx-auto">
+      <div class="row justify-content-center mb-4">
+        <div class="col-md-auto text-center">
           {% if projects | length != 0 %}
             <h2 class="display-5 fw-bold mt-2 mb-0">Registered Secure GWAS Projects</h2>
           {% else %}
@@ -14,39 +14,77 @@
           {% endif %}
         </div>
       </div>
-      <p class="text-center lead text-muted mb-4">
-        <a class="btn btn-primary" href="{{ url_for('gwas.create') }}">Create New Project</a>
+      <p class="row justify-content-center text-center lead text-muted mb-4">
+        <a class="col-md-auto btn btn-primary" href="{{ url_for('gwas.create') }}">Create New Project</a>
       </p>
       <div class="row p-5 bg-light rounded text-center">
-        {% for project in projects %}
-          <div class="col-12 col-md-6 col-lg-4 mb-5">
-            <span>
-              <small class="text-muted">
-                Created by
-                {{ project['owner'] }}
-                on
-                {{ project['created'].strftime('%m-%d-%Y') }}
-              </small>
-            </span>
-            {% if g.user['id'] in project['participants'] %}
-              <a class="text-decoration-none" href="{{ url_for('gwas.start', project_title=project['title']) }}">
-                <h2 class="mt-2 fw-bold">{{ project['title'] }}</h2>
-              </a>
-            {% else %}
-              <h2 class="mt-2 fw-bold">{{ project['title'] }}</h2>
-            {% endif %}
-            <p class="lead text-muted">{{ project['description']  }}</p>
-
-            {% if g.user['id'] == project['owner'] %}
-              <a class="btn btn-secondary action" href="{{ url_for('gwas.update', project_title=project['title']) }}">Edit</a>
-            {% elif g.user['id'] not in project['participants'] and g.user['id'] not in project['requested_participants'] %}
-              <form action="{{ url_for('gwas.request_join_project', project_name=project['title']) }}" method="post">
-                <input class="btn btn-primary" type="submit" value="Request to Join Project">
-              </form>
-            {% elif project['requested_participants'] and g.user['id'] in project['requested_participants'] %}
-              <button type="button" class="btn btn-secondary" disabled="true">Pending Approval from Project Owner</button>
-            {% endif %}
+        <ul class="col-12 nav nav-tabs mb-3" role="tablist">
+          <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#mine" type="button">My Projects</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#others" type="button">Other Projects</button>
+          </li>
+        </ul>
+        <div class="row tab-content">
+          <div class="container tab-pane fade show active" id="mine">
+            <div class="row">
+              {% for project in projects %}
+                {% if g.user['id'] in project['participants'] %}
+                  <div class="col-4 mb-5">
+                    <small class="text-muted">
+                      Created by
+                      {{ project['owner'] }}
+                      on
+                      {{ project['created'].strftime('%m-%d-%Y') }}
+                    </small>
+                    {% if g.user['id'] in project['participants'] %}
+                      <a class="text-decoration-none" href="{{ url_for('gwas.start', project_title=project['title']) }}">
+                        <h2 class="mt-2 fw-bold">{{ project['title'] }}</h2>
+                      </a>
+                    {% else %}
+                      <h2 class="mt-2 fw-bold">{{ project['title'] }}</h2>
+                    {% endif %}
+                    <p class="lead text-muted">{{ project['description']  }}</p>
+                    {% if g.user['id'] == project['owner'] %}
+                      <a class="btn btn-secondary action" href="{{ url_for('gwas.update', project_title=project['title']) }}">Edit</a>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              {% endfor %}
+            </div>
           </div>
-        {% endfor %}
-      </section>
-    {% endblock %}="project</a>" >
+          <div class="container tab-pane fade" id="others">
+            <div class="row">
+              {% for project in projects %}
+                {% if g.user['id'] not in project['participants'] %}
+                  <div class="col-4 mb-5">
+                    <small class="text-muted">
+                      Created by
+                      {{ project['owner'] }}
+                      on
+                      {{ project['created'].strftime('%m-%d-%Y') }}
+                    </small>
+                    {% if g.user['id'] in project['participants'] %}
+                      <a class="text-decoration-none" href="{{ url_for('gwas.start', project_title=project['title']) }}">
+                        <h2 class="mt-2 fw-bold">{{ project['title'] }}</h2>
+                      </a>
+                    {% else %}
+                      <h2 class="mt-2 fw-bold">{{ project['title'] }}</h2>
+                    {% endif %}
+                    <p class="lead text-muted">{{ project['description']  }}</p>
+                    {% if g.user['id'] not in project['participants'] and g.user['id'] not in project['requested_participants'] %}
+                      <a href="{{ url_for('gwas.request_join_project', project_name=project['title']) }}" class="btn btn-primary">Request to Join Project</a>
+                    {% elif project['requested_participants'] and g.user['id'] in project['requested_participants'] %}
+                      <button type="button" class="btn btn-secondary" disabled="true">Pending Approval from Project Owner</button>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

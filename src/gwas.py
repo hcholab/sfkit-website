@@ -154,7 +154,7 @@ def delete(project_title):
     return redirect(url_for("gwas.index"))
 
 
-@bp.route("/join/<project_name>", methods=("POST",))
+@bp.route("/join/<project_name>", methods=("GET", "POST"))
 @login_required
 def request_join_project(project_name):
     db = current_app.config["DATABASE"]
@@ -171,7 +171,7 @@ def request_join_project(project_name):
     return redirect(url_for("gwas.index"))
 
 
-@bp.route("/approve_join_project/<project_name>/<user_id>", methods=("GET",))
+@bp.route("/approve_join_project/<project_name>/<user_id>", methods=("GET", "POST"))
 def approve_join_project(project_name, user_id):
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("projects").document(project_name.replace(" ", "").lower())
