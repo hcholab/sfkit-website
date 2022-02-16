@@ -1,7 +1,7 @@
 import io
 
 import pytest
-from src.gwas import get_status, run_gwas
+from src.gwas import run_gwas
 
 from conftest import MockFirebaseAdminAuth
 
@@ -124,7 +124,7 @@ def test_start(client, auth, mocker):
 
     mocker.patch("src.gwas.run_gwas", mock_run_gwas)
     client.post("start/testtitle")
-    mocker.patch("src.gwas.get_status", mock_get_status)
+    # mocker.patch("src.gwas.get_status", mock_get_status)
     client.post("start/testtitle")
 
 
@@ -176,19 +176,19 @@ def test_personal_parameters(client, auth, mocker):
     assert client.get("personal_parameters/testtitle").status_code == 200
 
 
-def test_get_status(mocker):
-    mocker.patch("src.gwas.GoogleCloudPubsub", MockGoogleCloudPubsub)
-    mocker.patch("src.gwas.GoogleCloudCompute", MockGoogleCloudCompute)
+# def test_get_status(mocker):
+#     mocker.patch("src.gwas.GoogleCloudPubsub", MockGoogleCloudPubsub)
+#     mocker.patch("src.gwas.GoogleCloudCompute", MockGoogleCloudCompute)
 
-    assert get_status("role", "gcp_project", "test", "project title") == "test"
-    assert (
-        get_status("role", "gcp_project", "finished", "project title")
-        == "GWAS Completed!"
-    )
-    assert (
-        get_status("role", "gcp_project", "GWAS Completed!", "project title")
-        == "GWAS Completed!"
-    )
+#     assert get_status("role", "gcp_project", "test", "project title") == "test"
+#     assert (
+#         get_status("role", "gcp_project", "finished", "project title")
+#         == "GWAS Completed!"
+#     )
+#     assert (
+#         get_status("role", "gcp_project", "GWAS Completed!", "project title")
+#         == "GWAS Completed!"
+#     )
 
 
 def test_run_gwas(mocker):

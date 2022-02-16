@@ -171,16 +171,18 @@ class GoogleCloudCompute:
         )
         self.wait_for_operation(operation["name"])
 
-    def setup_instance(self, zone, name, role, size):
+    def setup_instance(self, zone, name, role, size=4, validate=False, metadata=None):
         existing_instances = self.list_instances(constants.ZONE)
 
         if existing_instances and name in existing_instances:
             self.delete_instance(name, zone)
-        self.create_instance(zone, name, role, size)
+        self.create_instance(
+            zone, name, role, size, validate=validate, metadata=metadata
+        )
 
         return self.get_vm_external_ip_address(zone, name)
 
-    def create_instance(self, zone, name, role, size):
+    def create_instance(self, zone, name, role, size, validate=False, metadata=None):
         print("Creating VM instance with name", name)
 
         image_response = (
@@ -192,9 +194,27 @@ class GoogleCloudCompute:
 
         # Configure the machine
         machine_type = f"zones/{zone}/machineTypes/n2d-standard-{size}"
-        startup_script = open(
-            os.path.join(os.path.dirname(__file__), "../../startup-script.sh"), "r"
-        ).read()
+        if validate:
+            startup_script = open(
+                os.path.join(
+                    os.path.dirname(__file__), "../../startup-script-validate.sh"
+                ),
+                "r",
+            ).read()
+        else:
+            startup_script = open(
+                os.path.join(os.path.dirname(__file__), "../../startup-script.sh"), "r"
+            ).read()
+
+        metadata_config = {
+            "items": [
+                {"key": "startup-script", "value": startup_script},
+                {"key": "enable-oslogin", "value": True},
+            ]
+        }
+        if metadata:
+            metadata_config["items"].append(metadata)
+            print("Metadata:", metadata_config)
 
         instance_body = {
             "name": name,
@@ -242,12 +262,7 @@ class GoogleCloudCompute:
                     ],
                 }
             ],
-            "metadata": {
-                "items": [
-                    {"key": "startup-script", "value": startup_script},
-                    {"key": "enable-oslogin", "value": True},
-                ]
-            },
+            "metadata": metadata_config,
         }
         operation = (
             self.compute.instances()

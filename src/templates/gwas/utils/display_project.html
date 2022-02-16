@@ -1,0 +1,23 @@
+<div class="col-4 mb-5">
+  <small class="text-muted">
+    Created by
+    {{ project['owner'] }}
+    on
+    {{ project['created'].strftime('%m-%d-%Y') }}
+  </small>
+  {% if g.user['id'] in project['participants'] %}
+    <a class="text-decoration-none" href="{{ url_for('gwas.start', project_title=project['title']) }}">
+      <h2 class="mt-2 fw-bold">{{ project['title'] }}</h2>
+    </a>
+  {% else %}
+    <h2 class="mt-2 fw-bold">{{ project['title'] }}</h2>
+  {% endif %}
+  <p class="lead text-muted">{{ project['description'] }}</p>
+  {% if g.user['id'] == project['owner'] %}
+    <a class="btn btn-secondary action" href="{{ url_for('gwas.update', project_title=project['title']) }}">Edit</a>
+  {% elif g.user['id'] not in project['participants'] and g.user['id'] not in project['requested_participants'] %}
+    <a href="{{ url_for('gwas.request_join_project', project_name=project['title']) }}" class="btn btn-primary">Request to Join Project</a>
+  {% elif project['requested_participants'] and g.user['id'] in project['requested_participants'] %}
+    <button type="button" class="btn btn-secondary" disabled="true">Pending Approval from Project Owner</button>
+  {% endif %}
+</div>

@@ -7,82 +7,84 @@ INSTANCE_NAME_ROOT = "secure-gwas"
 BUCKET_NAME = "secure-gwas-data"
 TEMP_FOLDER = "src/temp"
 PARAMETER_FILES = ["test.par.0.txt", "test.par.1.txt", "test.par.2.txt"]
+BASE_P = "1461501637330902918203684832716283019655932542929"
+DATA_VALIDATION_CONSTANT = 2 * len(BASE_P)
 
 DEFAULT_PARAMETERS = {
     "NUM_SNPS": {
         "name": "Number of SNPs",
         "description": "number of SNPs in the dataset",
-        "value": 1000,
+        "value": "1000",
     },
     "NUM_COVS": {
         "name": "Number of Covariates",
         "description": "number of covariate features in the dataset",
-        "value": 10,
+        "value": "10",
     },
     "ITER_PER_EVAL": {
         "name": "Iterations per Evaluation",
         "description": "number of QR iterations per eigenvalue when performing eigendecomposition",
-        "value": 5,
+        "value": "5",
     },
     "NUM_DIM_TO_REMOVE": {
         "name": "Number of Dimensions to Remove",
         "description": "number of principal components to correct for (in the PCA)",
-        "value": 5,
+        "value": "5",
     },
     "NUM_OVERSAMPLE": {
         "name": "Oversampling Parameter for PCA",
         "description": "oversampling parameter for randomized principal component analysis: how many extra components should be extracted to improve the accuracy",
-        "value": 5,
+        "value": "5",
     },
     "NUM_POWER_ITER": {
         "name": "Number of Power Iterations",
         "description": "number of power iterations for rand PCA",
-        "value": 10,
+        "value": "10",
     },
     "SKIP_QC": {
         "name": "Skip Quality Control",
         "description": "skip quality control and use all individuals/SNPs",
-        "value": 0,
+        "value": "0",
     },
     "IMISS_UB": {
         "name": "Individual Missing Rate UB",
         "description": "individual missing rate upper bound",
-        "value": 0.05,
+        "value": "0.05",
     },
     "HET_LB": {
         "name": "Heterozygosity LB",
         "description": "individual heterozygosity lower bound",
-        "value": 0.2,
+        "value": "0.2",
     },
     "HET_UB": {
         "name": "Heterozygosity UB",
         "description": "individual heterozygosity upper bound",
-        "value": 0.5,
+        "value": "0.5",
     },
     "GMISS_UB": {
         "name": "Genotype Missing Rate UB",
         "description": "genotype missing rate upper bound",
-        "value": 0.1,
+        "value": "0.1",
     },
     "MAF_LB": {
         "name": "Minor Allele Frequency LB",
         "description": "minor allele frequency lower bound",
-        "value": 0,
+        "value": "0",
     },
     "MAF_UB": {
         "name": "Minor Allele Frequency UB",
         "description": "minor allele frequency upper bound",
-        "value": 1,
+        "value": "1",
     },
     "HWE_UB": {
         "name": "Hardy Weinberg Equilibrium UB",
         "description": "hardy weinberg equilibrium test statistic upper bound",
-        "value": 100000,
+        "value": "100000",
     },
     "LD_DIST_THRES": {
         "name": "LD Distance Threshold",
         "description": "genomic distance threshold for selecting SNPs for principal component analysis",
-        "value": 1,
+        "value": "1",
     },
     "index": [
         "NUM_SNPS",
@@ -124,12 +126,12 @@ DEFAULT_PERSONAL_PARAMETERS = {
     "NUM_INDS": {
         "name": "Number of Individuals",
         "description": "The number of individuals in your dataset.",
-        "value": 1000,
+        "value": "1000",
     },
     "NUM_THREADS": {
         "name": "Number of Threads",
         "description": "The number of threads to use when running the GWAS",
-        "value": 20,
+        "value": "20",
     },
     "VM_SIZE": {
         "name": "Virtual Machine Size",

@@ -1,68 +1,75 @@
 import base64
+from typing import Tuple
 from flask import Blueprint, current_app, render_template, request
+
+from src.utils.helper_functions import validate
 
 bp = Blueprint("general", __name__)
 
 
 @bp.route("/", methods=["GET"])
 @bp.route("/home", methods=["GET"])
-def home():
+def home() -> str:
     return render_template("home.html")
 
 
 @bp.route("/workflow")
-def workflow():
+def workflow() -> str:
     return render_template("workflow.html")
 
 
 @bp.route("/permissions")
-def permissions():
+def permissions() -> str:
     return render_template("permissions.html")
 
 
 @bp.route("/", methods=["POST"])
-def index():
+def index() -> Tuple[str, int]:
     envelope = request.get_json()
     if not envelope:
-        msg = "no Pub/Sub message received"
-        print(f"error: {msg}")
-        return (f"Bad Request: {msg}", 400)
+        return fail()
 
     if not isinstance(envelope, dict) or "message" not in envelope:
-        msg = "invalid Pub/Sub message format"
-        print(f"error: {msg}")
-        return (f"Bad Request: {msg}", 400)
+        return fail()
 
-    pubsub_message = envelope["message"]
+    pubsub_message = envelope.get("message")
+    print(f"Pub/Sub message received: {pubsub_message}")
 
-    messsage = []
-    publishTime = ""
-    if isinstance(pubsub_message, dict) and "data" in pubsub_message:
-        message = (
-            base64.b64decode(pubsub_message["data"]).decode("utf-8").strip().split("-")
+    if not isinstance(pubsub_message, dict) or "data" not in pubsub_message:
+        return fail()
+
+    publishTime = pubsub_message.get("publishTime")
+    message = base64.b64decode(pubsub_message["data"])
+    msg_lst = message.decode("utf-8").strip().split("-")
+    print(f"Pub/Sub message received: {msg_lst}")
+
+    try:
+        project_title: str = msg_lst[0]
+        role: str = msg_lst[-2][-1]
+        content: str = msg_lst[-1]
+
+        db = current_app.config["DATABASE"]
+        doc_ref = db.collection("projects").document(
+            project_title.replace(" ", "").lower()
         )
-        publishTime = pubsub_message.get("publishTime")
+        doc_ref_dict = doc_ref.get().to_dict()
+        statuses = doc_ref_dict.get("status")
 
-    if len(message) > 1:
-        (project_title, role, status) = (
-            message[0],
-            message[-2][-1],
-            message[-1],
-        )
-        print(f"Message is {message}")
-        if role.isdigit():
-            # update status in firestore
-            db = current_app.config["DATABASE"]
-            doc_ref = db.collection("projects").document(
-                project_title.replace(" ", "").lower()
-            )
-            doc_ref_dict = statuses = doc_ref.get().to_dict()
+        if content.isnumeric():
+            if validate(int(content), doc_ref_dict, int(role)):
+                statuses[role] = ["not ready"]
+            else:
+                statuses[role] = ["invalid data"]
+        else:
+            statuses.get(role).append(f"{content} - {publishTime}")
+        doc_ref.set({"status": statuses}, merge=True)
+    except Exception as e:
+        print(f"error: {e}")
+    finally:
+        return ("", 204)
 
-            if doc_ref_dict:
-                statuses = doc_ref_dict.get("status")
-                statuses[role].append(f"{status} - {publishTime}")
-                doc_ref.set({"status": statuses}, merge=True)
-    else:
-        print(f"error: {message}")
 
-    return ("", 204)
+def fail() -> Tuple[str, int]:
+    msg = "Invalid Pub/Sub message received"
+    print(f"error: {msg}")
+    return (f"Bad Request: {msg}", 400)

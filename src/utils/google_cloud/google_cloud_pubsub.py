@@ -19,7 +19,10 @@ class GoogleCloudPubsub:
             self.project, self.subscription_id
         )
 
-    def create_topic_and_subscribe(self) -> None:
+    def create_topic_and_subscribe(self, topic_name=None) -> None:
+        if topic_name:
+            self.topic_path = self.publisher.topic_path(self.project, topic_name)
+
         topic_list = self.publisher.list_topics(request={"project": self.project_path})
         topic_list = list(map(lambda topic: str(topic).split('"')[1], topic_list))
         if self.topic_path not in topic_list:

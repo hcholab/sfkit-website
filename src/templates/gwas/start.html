@@ -51,13 +51,18 @@
               <a href="{{url_for('general.workflow')}}" class="text-decoration-none">Workflow</a>
               page for the full instructions.
               <br>
-
             </p>
             <div class="edit-parameters">
               <a href="{{ url_for('gwas.parameters', project_title=project['title']) }}" class="btn btn-secondary">Edit Project Parameters</a>
               <a href="{{ url_for('gwas.personal_parameters', project_title=project['title']) }}" class="btn btn-secondary">Edit Personal Parameters</a>
             </div>
-            {% if project["status"][role | string] == ["not ready"] %}
+            {% if project["status"][role | string] == [""] %}
+              <a href="{{ url_for('gwas.validate_bucket', project_title=project['title']) }}" class="mt-2 btn btn-secondary">Validate Bucket</a>
+            {% elif project["status"][role | string] == ["validating"] %}
+              <div class="mt-2">
+                Validating Bucket...
+              </div>
+            {% elif project["status"][role | string] == ["not ready"] %}
               <form action="{{ url_for('gwas.start', project_title=project['title']) }}" method="post">
                 <button class="mt-2 btn btn-success" type="submit" onclick="loading();">
                   <div id="loading" style="display:none">
@@ -73,7 +78,7 @@
               <form action="{{ url_for('gwas.start', project_title=project['title']) }}" method="post">
                 <br>
                 Status:
-                {% if "not ready" in project["status"] %}
+                {% if ((["not ready"] in project["status"].values())or([""] in project["status"].values())or(["invalid data"] in project["status"].values())or(["validating"] in project["status"].values())) %}
                   Waiting for others to be ready...
                 {% else %}
                   <div class="status text-start"></div>

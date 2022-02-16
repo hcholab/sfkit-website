@@ -17,7 +17,7 @@ from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 from src.utils.google_cloud.google_cloud_pubsub import GoogleCloudPubsub
 from src.utils.google_cloud.google_cloud_storage import GoogleCloudStorage
-from src.utils.helper_functions import flash
+from src.utils.helper_functions import create_instance_name, flash
 
 bp = Blueprint("gwas", __name__)
 
@@ -34,47 +34,47 @@ def index():
 @bp.route("/create", methods=("GET", "POST"))
 @login_required
 def create():
-    if request.method == "POST":
-        db = current_app.config["DATABASE"]
+    if request.method != "POST":
+        return render_template("gwas/create.html")
+    db = current_app.config["DATABASE"]
 
-        title = request.form["title"]
-        description = request.form["description"]
+    title = request.form["title"]
+    description = request.form["description"]
 
-        if not re.match(r"^[a-zA-Z][ a-zA-Z0-9-]*$", title):
+    if not re.match(r"^[a-zA-Z][ a-zA-Z0-9-]*$", title):
+        r = redirect(url_for("gwas.create"))
+        message = "Title can include only letters, numbers, spaces, and dashes, and must start with a letter."
+        flash(r, message)
+        return r
+
+    # validate that title is unique
+    projects = db.collection("projects").stream()
+    for project in projects:
+        if (
+            project.to_dict()["title"].replace(" ", "").lower()
+            == title.replace(" ", "").lower()
+        ):
             r = redirect(url_for("gwas.create"))
-            message = "Title can include only letters, numbers, spaces, and dashes, and must start with a letter."
-            flash(r, message)
+            flash(r, "Title already exists.")
             return r
 
-        # validate that title is unique
-        projects = db.collection("projects").stream()
-        for project in projects:
-            if (
-                project.to_dict()["title"].replace(" ", "").lower()
-                == title.replace(" ", "").lower()
-            ):
-                r = redirect(url_for("gwas.create"))
-                flash(r, "Title already exists.")
-                return r
-
-        doc_ref = db.collection("projects").document(title.replace(" ", "").lower())
-        doc_ref.set(
-            {
-                "title": title,
-                "description": description,
-                "owner": g.user["id"],
-                "created": datetime.now(),
-                "participants": [g.user["id"]],
-                "status": {"0": ["not ready"]},
-                "parameters": constants.DEFAULT_PARAMETERS,
-                "personal_parameters": {
-                    g.user["id"]: constants.DEFAULT_PERSONAL_PARAMETERS
-                },
-                "requested_participants": [],
-            }
-        )
-        return redirect(url_for("gwas.index"))
-    return render_template("gwas/create.html")
+    doc_ref = db.collection("projects").document(title.replace(" ", "").lower())
+    doc_ref.set(
+        {
+            "title": title,
+            "description": description,
+            "owner": g.user["id"],
+            "created": datetime.now(),
+            "participants": [g.user["id"]],
+            "status": {"0": [""]},
+            "parameters": constants.DEFAULT_PARAMETERS,
+            "personal_parameters": {
+                g.user["id"]: constants.DEFAULT_PERSONAL_PARAMETERS
+            },
+            "requested_participants": [],
+        }
+    )
+    return redirect(url_for("gwas.index"))
 
 
 @bp.route("/update/<project_title>", methods=("GET", "POST"))
@@ -117,7 +117,7 @@ def update(project_title):
                 "owner": g.user["id"],
                 "created": old_doc_ref_dict["created"],
                 "participants": old_doc_ref_dict["participants"],
-                "status": {"0": ["not ready"]},
+                "status": {"0": [""]},
                 "parameters": old_doc_ref_dict["parameters"],
                 "personal_parameters": old_doc_ref_dict["personal_parameters"],
                 "requested_participants": [],
@@ -176,6 +176,7 @@ def approve_join_project(project_name, user_id):
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("projects").document(project_name.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
+    doc_ref_dict["status"][str(len(doc_ref_dict["status"]))] = [""]
     doc_ref.set(
         {
             "participants": doc_ref_dict["participants"] + [user_id],
@@ -184,10 +185,56 @@ def approve_join_project(project_name, user_id):
             ),
             "personal_parameters": doc_ref_dict["personal_parameters"]
             | {user_id: constants.DEFAULT_PERSONAL_PARAMETERS},
+            "status": doc_ref_dict["status"],
         },
         merge=True,
     )
     return redirect(url_for("gwas.start", project_title=project_name))
+
+
+@bp.route("/validate_bucket/<project_title>", methods=("GET", "POST"))
+@login_required
+def validate_bucket(project_title):
+    db = current_app.config["DATABASE"]
+    doc_ref = db.collection("projects").document(project_title.replace(" ", "").lower())
+    project_doc_dict = doc_ref.get().to_dict()
+    role: str = str(project_doc_dict["participants"].index(g.user["id"]))
+    gcp_project = project_doc_dict["personal_parameters"][g.user["id"]]["GCP_PROJECT"][
+        "value"
+    ]
+    bucket_name = project_doc_dict["personal_parameters"][g.user["id"]]["BUCKET_NAME"][
+        "value"
+    ]
+    if not gcp_project or gcp_project == "" or not bucket_name or bucket_name == "":
+        r = redirect(url_for("gwas.personal_parameters", project_title=project_title))
+        flash(r, "Please set your GCP project and storage bucket location.")
+        return r
+
+    statuses = project_doc_dict["status"]
+    statuses[role] = ["validating"]
+    doc_ref.set({"status": statuses}, merge=True)
+
+    gcloudCompute = GoogleCloudCompute(gcp_project)
+    gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, project_title)
+
+    gcloudPubsub.create_topic_and_subscribe()
+    instance = create_instance_name(project_title, role)
+    gcloudCompute.setup_networking(role)
+    gcloudCompute.setup_instance(
+        constants.ZONE,
+        instance,
+        role,
+        validate=True,
+        metadata={"key": "bucketname", "value": bucket_name},
+    )
+
+    # Give instance publish access to pubsub for status updates
+    member = "serviceAccount:" + gcloudCompute.get_service_account_for_vm(
+        zone=constants.ZONE, instance=instance
+    )
+    gcloudPubsub.add_pub_iam_member("roles/pubsub.publisher", member)
+
+    return redirect(url_for("gwas.start", project_title=project_title))
 
 
 @bp.route("/start/<project_title>", methods=("GET", "POST"))
@@ -214,12 +261,8 @@ def start(project_title):
             public_keys=public_keys,
             role=role,
         )
+
     gcp_project = project_doc_dict["personal_parameters"][id]["GCP_PROJECT"]["value"]
-    if gcp_project == "" or gcp_project is None:
-        r = redirect(url_for("gwas.personal_parameters", project_title=project_title))
-        flash(r, "Please set your GCP project.")
-        r.set_cookie("flash", "Please set your GCP project first.")
-        return r
 
     # check if pos.txt is in the google cloud bucket
     gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
@@ -261,14 +304,14 @@ def start(project_title):
             project_title,
             size=project_doc_dict["personal_parameters"][id]["VM_SIZE"]["value"],
         )
-    else:
-        statuses[role] = get_status(
-            str(role), gcp_project, statuses[role], project_title
-        )
-        db.collection("projects").document(project_title.replace(" ", "").lower()).set(
-            {"status": statuses},
-            merge=True,
-        )
+    # else:
+    #     statuses[role] = get_status(
+    #         str(role), gcp_project, statuses[role], project_title
+    #     )
+    #     db.collection("projects").document(project_title.replace(" ", "").lower()).set(
+    #         {"status": statuses},
+    #         merge=True,
+    #     )
 
     project_doc_dict = (
         db.collection("projects")
@@ -340,24 +383,24 @@ def personal_parameters(project_title):
     return redirect(url_for("gwas.start", project_title=project_title))
 
 
-def get_status(role: str, gcp_project, status, project_title):
-    if status == "GWAS Completed!":
-        return status
+# def get_status(role: str, gcp_project, status, project_title):
+#     if status == "GWAS Completed!":
+#         return status
 
-    gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, project_title)
-    gcloudCompute = GoogleCloudCompute(gcp_project)
-    status = gcloudPubsub.listen_to_startup_script(status)
+#     gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, project_title)
+#     gcloudCompute = GoogleCloudCompute(gcp_project)
+#     status = gcloudPubsub.listen_to_startup_script(status)
 
-    if status == "GWAS Completed!":
-        instance = (
-            project_title.replace(" ", "").lower()
-            + "-"
-            + constants.INSTANCE_NAME_ROOT
-            + role
-        )
-        gcloudCompute.stop_instance(constants.ZONE, instance)
-        gcloudPubsub.delete_topic()
-    return status
+#     if status == "GWAS Completed!":
+#         instance = (
+#             project_title.replace(" ", "").lower()
+#             + "-"
+#             + constants.INSTANCE_NAME_ROOT
+#             + role
+#         )
+#         gcloudCompute.stop_instance(constants.ZONE, instance)
+#         gcloudPubsub.delete_topic()
+#     return status
 
 
 def run_gwas(role, gcp_project, project_title, size):
@@ -368,14 +411,7 @@ def run_gwas(role, gcp_project, project_title, size):
     # copy parameters to parameter files
     gcloudStorage.copy_parameters_to_bucket(project_title, role)
 
-    gcloudPubsub.create_topic_and_subscribe()
-    instance = (
-        project_title.replace(" ", "").lower()
-        + "-"
-        + constants.INSTANCE_NAME_ROOT
-        + role
-    )
-    gcloudCompute.setup_networking(role)
+    instance = create_instance_name(project_title, role)
     gcloudCompute.setup_instance(constants.ZONE, instance, role, size)
 
     # Give instance publish access to pubsub for status updates
