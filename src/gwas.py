@@ -71,7 +71,7 @@ def create():
             "personal_parameters": {
                 g.user["id"]: constants.DEFAULT_PERSONAL_PARAMETERS
             },
-            "requested_participants": [],
+            "requested_participants": [""],
         }
     )
     return redirect(url_for("gwas.index"))
@@ -120,7 +120,7 @@ def update(project_title):
                 "status": {"0": [""]},
                 "parameters": old_doc_ref_dict["parameters"],
                 "personal_parameters": old_doc_ref_dict["personal_parameters"],
-                "requested_participants": [],
+                "requested_participants": [""],
             },
             merge=True,
         )
@@ -177,12 +177,11 @@ def approve_join_project(project_name, user_id):
     doc_ref = db.collection("projects").document(project_name.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
     doc_ref_dict["status"][str(len(doc_ref_dict["status"]))] = [""]
+    doc_ref_dict["requested_participants"].remove(user_id)
     doc_ref.set(
         {
             "participants": doc_ref_dict["participants"] + [user_id],
-            "requested_participants": doc_ref_dict["requested_participants"].remove(
-                user_id
-            ),
+            "requested_participants": doc_ref_dict["requested_participants"],
             "personal_parameters": doc_ref_dict["personal_parameters"]
             | {user_id: constants.DEFAULT_PERSONAL_PARAMETERS},
             "status": doc_ref_dict["status"],
