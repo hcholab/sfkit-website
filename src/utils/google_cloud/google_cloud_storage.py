@@ -75,9 +75,9 @@ class GoogleCloudStorage:
             )
 
         for line in fileinput.input(file, inplace=True):
-            key = line.split(" ")[0]
+            key = str(line).split(" ")[0]
             if key in parameters:
-                line = key + " " + str(parameters[key]["value"]) + "\n"
+                line = f"{key} " + str(parameters[key]["value"]) + "\n"
             print(line, end="")
 
     def upload_to_bucket(self, file, filename):

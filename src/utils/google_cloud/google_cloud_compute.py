@@ -159,11 +159,12 @@ class GoogleCloudCompute:
                 network_url = net["selfLink"]
 
         firewall_body = {
-            "name": network_name + "-vm-ingress",
+            "name": f"{network_name}-vm-ingress",
             "network": network_url,
             "sourceRanges": ["0.0.0.0/0"],
             "allowed": [{"ports": ["8000-8999", "22"], "IPProtocol": "tcp"}],
         }
+
         operation = (
             self.compute.firewalls()
             .insert(project=self.project, body=firewall_body)

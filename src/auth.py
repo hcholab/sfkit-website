@@ -190,4 +190,4 @@ def raise_detailed_error(request_object):
     try:
         request_object.raise_for_status()
     except HTTPError as e:
-        raise HTTPError(e, request_object.text)
+        raise HTTPError(e, request_object.text) from e

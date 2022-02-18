@@ -135,7 +135,10 @@
       const auth = getAuth(app);
       signInWithCustomToken(auth, custom_token);
 
-      var project_title = $('#project-title-data').data()['value'];
+      var project_title = $('#project-title-data')
+        .data()['value']
+        .toLowerCase()
+        .replace(/\s/g, '');
       var role = Number($('#role-data').data()['value']);
       const unsub = onSnapshot(doc(db, "projects", project_title), (doc) => {
         console.log("Current data: ", doc.data());
