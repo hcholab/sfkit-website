@@ -13,10 +13,25 @@
             <h2 class="display-5 fw-bold mt-2 mb-3">Let's create a new GWAS project:</h2>
             <form method="post">
               <input class="form-control mb-2" name="title" id="title" value="{{ request.form['title'] }}" maxlength="50" required="required" placeholder="An Awesome Project Title">
-              <textarea class="form-control mb-2" name="description" id="description" required="required" placeholder="An awesome description for an awesome project.">{{ request.form['description'] }}</textarea>
+              <textarea class="form-control mb-2" name="description" id="description" required="required" placeholder="An awesome description for an awesome project.">
+                {{ request.form['description'] }}
+              </textarea>
+              <p class="text-start mt-4 fw-bold">What role will you play in the study?</p>
+              <div class="form-check text-start">
+                <input class="form-check-input" type="radio" name="role" id="studyParticipant" value="studyParticipant" checked="checked">
+                <label class="form-check-label" for="studyParticipant">
+                  Study Participant (Default: should be selected if you have data to contribute)
+                </label>
+              </div>
+              <div class="form-check text-start">
+                <input class="form-check-input" type="radio" name="role" id="computeParty" value="computeParty">
+                <label class="form-check-label" for="computeParty">
+                  Compute Party
+                </label>
+              </div>
               <div class="d-flex flex-wrap justify-content-center">
                 <a href="{{ url_for('gwas.index') }}" class="btn btn-outline-secondary me-2 mb-2 mb-sm-0">Cancel</a>
-                <input type="submit" value="Save" class="btn btn-primary me-2 mb-2 mb-sm-0">
+                <input type="submit" value="Confirm" class="btn btn-primary me-2 mb-2 mb-sm-0">
               </div>
             </form>
           </div>

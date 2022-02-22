@@ -22,13 +22,32 @@ from src.utils.helper_functions import create_instance_name, flash
 bp = Blueprint("gwas", __name__)
 
 
-@bp.route("/index")
+@bp.route("/index", methods=["GET", "POST"])
 def index():
     db = current_app.config["DATABASE"]
     projects = db.collection("projects")
-    projects = [project.to_dict() for project in projects.stream()]
+    projects_list = [project.to_dict() for project in projects.stream()]
 
-    return render_template("gwas/index.html", projects=projects)
+    if request.method == "POST":
+        if "project_title" in request.form:
+            print("project_title:", request.form["project_title"])
+        else:
+            print("project_title not in request.form")
+            print("request.form:", request.form)
+            exit(0)
+
+        doc_ref = projects.document(
+            request.form["project_title"].replace(" ", "").lower()
+        )
+        doc_ref_dict = doc_ref.get().to_dict()
+        doc_ref_dict["requested_participants"][g.user["id"]] = request.form.get("role")
+        doc_ref.set(
+            {"requested_participants": doc_ref_dict["requested_participants"]},
+            merge=True,
+        )
+        return redirect(url_for("gwas.index"))
+
+    return render_template("gwas/index.html", projects=projects_list)
 
 
 @bp.route("/create", methods=("GET", "POST"))
@@ -40,6 +59,7 @@ def create():
 
     title = request.form["title"]
     description = request.form["description"]
+    role = request.form["role"]
 
     if not re.match(r"^[a-zA-Z][ a-zA-Z0-9-]*$", title):
         r = redirect(url_for("gwas.create"))
@@ -58,6 +78,10 @@ def create():
             flash(r, "Title already exists.")
             return r
 
+    participants = (
+        ["", g.user["id"], ""] if role == "studyParticipant" else [g.user["id"], "", ""]
+    )
+
     doc_ref = db.collection("projects").document(title.replace(" ", "").lower())
     doc_ref.set(
         {
@@ -65,13 +89,13 @@ def create():
             "description": description,
             "owner": g.user["id"],
             "created": datetime.now(),
-            "participants": [g.user["id"]],
+            "participants": participants,
             "status": {"0": [""]},
             "parameters": constants.DEFAULT_PARAMETERS,
             "personal_parameters": {
                 g.user["id"]: constants.DEFAULT_PERSONAL_PARAMETERS
             },
-            "requested_participants": [],
+            "requested_participants": {},
         }
     )
     return redirect(url_for("gwas.index"))
@@ -120,7 +144,7 @@ def update(project_title):
                 "status": {"0": [""]},
                 "parameters": old_doc_ref_dict["parameters"],
                 "personal_parameters": old_doc_ref_dict["personal_parameters"],
-                "requested_participants": [],
+                "requested_participants": old_doc_ref_dict["requested_participants"],
             },
             merge=True,
         )
@@ -154,21 +178,21 @@ def delete(project_title):
     return redirect(url_for("gwas.index"))
 
 
-@bp.route("/join/<project_name>", methods=("GET", "POST"))
-@login_required
-def request_join_project(project_name):
-    db = current_app.config["DATABASE"]
-    doc_ref = db.collection("projects").document(project_name.replace(" ", "").lower())
-    doc_ref_dict = doc_ref.get().to_dict()
-    doc_ref.set(
-        {
-            "requested_participants": doc_ref_dict["requested_participants"]
-            + [g.user["id"]]
-        },
-        merge=True,
-    )
+# @bp.route("/join/<project_name>", methods=("GET", "POST"))
+# @login_required
+# def request_join_project(project_name):
+#     db = current_app.config["DATABASE"]
+#     doc_ref = db.collection("projects").document(project_name.replace(" ", "").lower())
+#     doc_ref_dict = doc_ref.get().to_dict()
+#     doc_ref.set(
+#         {
+#             "requested_participants": doc_ref_dict["requested_participants"]
+#             + [g.user["id"]]
+#         },
+#         merge=True,
+#     )
 
-    return redirect(url_for("gwas.index"))
+#     return redirect(url_for("gwas.index"))
 
 
 @bp.route("/approve_join_project/<project_name>/<user_id>", methods=("GET", "POST"))
@@ -177,10 +201,23 @@ def approve_join_project(project_name, user_id):
     doc_ref = db.collection("projects").document(project_name.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
     doc_ref_dict["status"][str(len(doc_ref_dict["status"]))] = [""]
-    doc_ref_dict["requested_participants"].remove(user_id)
+    role = doc_ref_dict["requested_participants"].pop(user_id)
+
+    participants = doc_ref_dict["participants"]
+    if role == "studyParticipant" and participants[1] == "":
+        participants[1] = user_id
+    elif role == "studyParticipant" and participants[2] == "":
+        participants[2] = user_id
+    elif role == "computeParty" and participants[0] == "":
+        participants[0] = user_id
+    else:
+        r = redirect(url_for("gwas.start", project_title=project_name))
+        flash(r, "Project is full.")
+        return r
+
     doc_ref.set(
         {
-            "participants": doc_ref_dict["participants"] + [user_id],
+            "participants": participants,
             "requested_participants": doc_ref_dict["requested_participants"],
             "personal_parameters": doc_ref_dict["personal_parameters"]
             | {user_id: constants.DEFAULT_PERSONAL_PARAMETERS},
@@ -245,6 +282,7 @@ def start(project_title):
     public_keys = [
         project_doc_dict["personal_parameters"][user]["PUBLIC_KEY"]["value"]
         for user in project_doc_dict["participants"]
+        if user != ""
     ]
     id = g.user["id"]
     role: int = project_doc_dict["participants"].index(id)

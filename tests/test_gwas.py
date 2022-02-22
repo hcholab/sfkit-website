@@ -6,6 +6,12 @@ from src.gwas import run_gwas
 
 from conftest import MockFirebaseAdminAuth
 
+test_create_data = {
+    "title": "testtitle",
+    "description": "test description",
+    "role": "computeParty",
+}
+
 
 def test_index(client):
     response = client.get("/index")
@@ -18,14 +24,10 @@ def test_create(client, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     auth.register()
     assert client.get("create").status_code == 200
-    response = client.post(
-        "create", data={"title": "test title", "description": "test description"}
-    )
+    response = client.post("create", data=test_create_data)
     assert response.headers["Location"] == "http://localhost/index"
 
-    response = client.post(
-        "create", data={"title": "test title", "description": "test description"}
-    )
+    response = client.post("create", data=test_create_data)
     assert response.headers["Location"] == "http://localhost/create"
 
 
@@ -39,11 +41,14 @@ def test_create(client, auth, mocker):
 def test_update(client, auth, title, description, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     auth.register()
+    client.post("create", data=test_create_data)
     client.post(
-        "create", data={"title": "testtitle", "description": "test description"}
-    )
-    client.post(
-        "create", data={"title": "anothertitle", "description": "test description"}
+        "create",
+        data={
+            "title": "anothertitle",
+            "description": "test description",
+            "role": "computeParty",
+        },
     )
     assert client.get("update/testtitle").status_code == 200
     response = client.post(
@@ -63,31 +68,25 @@ def test_delete(client, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     mocker.patch("src.gwas.GoogleCloudCompute", MockGoogleCloudCompute)
     auth.register()
-    client.post(
-        "create", data={"title": "testtitle", "description": "test description"}
-    )
+    client.post("create", data=test_create_data)
     response = client.post("delete/testtitle")
     assert response.headers["Location"] == "http://localhost/index"
 
 
-def test_join_project(client, auth, mocker):
-    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
-    auth.register()
+# def test_join_project(client, auth, mocker):
+#     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+#     auth.register()
 
-    client.post(
-        "create", data={"title": "testtitle", "description": "test description"}
-    )
-    response = client.post("join/testtitle")
-    assert response.headers["Location"] == "http://localhost/index"
+#     client.post("create", data=test_create_data)
+#     response = client.post("join/testtitle")
+#     assert response.headers["Location"] == "http://localhost/index"
 
 
 def test_start(client, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
 
     auth.register()
-    client.post(
-        "create", data={"title": "testtitle", "description": "test description"}
-    )
+    client.post("create", data=test_create_data)
     assert client.get("start/testtitle").status_code == 200
 
     auth.login()
@@ -133,9 +132,7 @@ def test_parameters(client, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     mocker.patch("src.gwas.GoogleCloudStorage", MockGoogleCloudStorage)
     auth.register()
-    client.post(
-        "create", data={"title": "testtitle", "description": "test description"}
-    )
+    client.post("create", data=test_create_data)
     assert client.get("parameters/testtitle").status_code == 200
 
     response = client.post("parameters/testtitle", data={"save": "save"})
@@ -171,9 +168,7 @@ def test_parameters(client, auth, mocker):
 def test_personal_parameters(client, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     auth.register()
-    client.post(
-        "create", data={"title": "testtitle", "description": "test description"}
-    )
+    client.post("create", data=test_create_data)
     assert client.get("personal_parameters/testtitle").status_code == 200
 
 

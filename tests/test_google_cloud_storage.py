@@ -25,6 +25,7 @@ def test_copy_parameters_to_bucket(app, client, auth, mocker):
         data={
             "title": "project title",
             "description": "test description",
+            "role": "computeParticipant",
         },
     )
     assert response.headers["Location"] == "http://localhost/index"

@@ -16,7 +16,38 @@
   {% if g.user['id'] == project['owner'] %}
     <a class="btn btn-secondary action" href="{{ url_for('gwas.update', project_title=project['title']) }}">Edit</a>
   {% elif g.user['id'] not in project['participants'] and g.user['id'] not in project['requested_participants'] %}
-    <a href="{{ url_for('gwas.request_join_project', project_name=project['title']) }}" class="btn btn-primary">Request to Join Project</a>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#chooseRole">
+      Request to Join Project
+    </button>
+    <div class="modal fade" id="chooseRole" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="chooseWorkflowLabel">Request to Join Project</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form method="post">
+              <p class="text-start fw-bold">What role will you play in the study?</p>
+              <div class="form-check text-start">
+                <input class="form-check-input" type="radio" name="role" id="studyParticipant" value="studyParticipant" checked="checked">
+                <label class="form-check-label" for="studyParticipant">
+                  Study Participant (select if you have data to contribute)
+                </label>
+              </div>
+              <div class="form-check text-start">
+                <input class="form-check-input" type="radio" name="role" id="computeParty" value="computeParty">
+                <label class="form-check-label" for="computeParty">
+                  Compute Party
+                </label>
+              </div>
+              <input type="hidden" id="project_title" name="project_title" value="{{ project['title'] }}">
+              <input type="submit" value="Submit Request" class="btn btn-primary">
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
   {% elif project['requested_participants'] and g.user['id'] in project['requested_participants'] %}
     <button type="button" class="btn btn-secondary" disabled="true">Pending Approval from Project Owner</button>
   {% endif %}

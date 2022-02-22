@@ -22,21 +22,32 @@
             </span>
             <h2 class="mt-2 fw-bold">{{ project['title'] }}</h2>
             <p class="lead text-muted">{{ project['description']  }}</p>
-            <div>
-              Participants:
-              {% for i in range(3) %}
-                <br>
-                <small class="text-muted ms-2 me-2">
-                  {{project['participants'][i]}}
-                  {% if i != 0 and public_keys[i]%}
-                    : Public Key =
-                    {{public_keys[i]}}
+            <div class="mb-3">
+              <div>
+                <p class="fw-bold mb-0">Compute Party:</p>
+                {{project['participants'][0]}}
+              </div>
+              <div>
+                <p class="fw-bold mb-0">Study Participants:</p>
+                {% for i in range(1, 3) %}
+                  {% if project['participants'][i] != "" %}
+                    Role
+                    {{i}}:
+                    {{project['participants'][i]}}
+                    <small class="text-muted">
+                      {% if public_keys[i]%}
+                        <br>
+                        Public Key =
+                        {{public_keys[i]}}
+                        <br>
+                      {% endif %}
+                    </small>
                   {% endif %}
-                </small>
-              {% endfor %}
+                {% endfor %}
+              </div>
             </div>
             {% if project['requested_participants'] %}
-              <div>
+              <div class="mb-3">
                 Requested Participants:
                 {% for participant in project['requested_participants'] %}
                   <br>
