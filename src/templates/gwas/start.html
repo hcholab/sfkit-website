@@ -4,7 +4,7 @@
 
 {% block content %}
   <meta id="project-title-data" data-value="{{ project['title'] }}">
-  <meta id="role-data" data-value="{{ project['status'][role] }}">
+  <meta id="role-data" data-value="{{ role }}">
   <meta id="num-cpus-data" data-value="{{ request.form['NUM_CPUS'] or parameters['NUM_CPUS']['value'] }}">
 
   <section class="py-5">
