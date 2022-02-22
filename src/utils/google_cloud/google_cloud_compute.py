@@ -172,18 +172,42 @@ class GoogleCloudCompute:
         )
         self.wait_for_operation(operation["name"])
 
-    def setup_instance(self, zone, name, role, size=4, validate=False, metadata=None):
+    def setup_instance(
+        self,
+        zone,
+        name,
+        role,
+        num_cpus=4,
+        validate=False,
+        metadata=None,
+        boot_disk_size=10,
+    ):
         existing_instances = self.list_instances(constants.ZONE)
 
         if existing_instances and name in existing_instances:
             self.delete_instance(name, zone)
         self.create_instance(
-            zone, name, role, size, validate=validate, metadata=metadata
+            zone,
+            name,
+            role,
+            num_cpus,
+            validate=validate,
+            metadata=metadata,
+            boot_disk_size=boot_disk_size,
         )
 
         return self.get_vm_external_ip_address(zone, name)
 
-    def create_instance(self, zone, name, role, size, validate=False, metadata=None):
+    def create_instance(
+        self,
+        zone,
+        name,
+        role,
+        num_cpus,
+        validate=False,
+        metadata=None,
+        boot_disk_size=10,
+    ):
         print("Creating VM instance with name", name)
 
         image_response = (
@@ -194,7 +218,7 @@ class GoogleCloudCompute:
         source_disk_image = image_response["selfLink"]
 
         # Configure the machine
-        machine_type = f"zones/{zone}/machineTypes/n2d-standard-{size}"
+        machine_type = f"zones/{zone}/machineTypes/n2d-standard-{num_cpus}"
         if validate:
             startup_script = open(
                 os.path.join(
@@ -249,6 +273,7 @@ class GoogleCloudCompute:
                     "boot": True,
                     "autoDelete": True,
                     "initializeParams": {"sourceImage": source_disk_image},
+                    "diskSizeGb": boot_disk_size,
                 }
             ],
             # Allow the instance to access cloud storage and logging.

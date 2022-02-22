@@ -133,11 +133,21 @@ DEFAULT_PERSONAL_PARAMETERS = {
         "description": "The number of threads to use when running the GWAS",
         "value": "20",
     },
-    "VM_SIZE": {
-        "name": "Virtual Machine Size",
+    "NUM_CPUS": {
+        "name": "Number of CPUs",
         "description": "The number of CPUs to allocate to the VM instance that will be running the GWAS protocol in your GCP account.  \
         The number of GB of memory will automatically be set to 4x this number.",
         "value": "4",
+    },
+    "ZONE": {
+        "name": "Zone",
+        "description": "The zone where you want to run your VM instance.",
+        "value": "us-central1-a",
+    },
+    "BOOT_DISK_SIZE": {
+        "name": "Boot Disk Size",
+        "description": "The size of the boot disk for your VM instance. Must be at least 10GB.",
+        "value": "10",
     },
     "index": [
         "PUBLIC_KEY",
@@ -145,6 +155,8 @@ DEFAULT_PERSONAL_PARAMETERS = {
         "BUCKET_NAME",
         "NUM_INDS",
         "NUM_THREADS",
-        "VM_SIZE",
+        "NUM_CPUS",
+        "ZONE",
+        "BOOT_DISK_SIZE",
     ],
 }

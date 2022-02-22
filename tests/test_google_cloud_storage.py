@@ -52,6 +52,7 @@ def test_check_file_exists(mocker):
 
 
 class MockMakeMockStorage:
+    @staticmethod
     def Client(project):
         return MockStorage()
 
@@ -95,6 +96,7 @@ class MockPolicy:
 class MockFileInput:
     return_garbage = False
 
+    @staticmethod
     def input(fine, inplace):
         return (
             ["asdf"]

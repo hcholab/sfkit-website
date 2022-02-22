@@ -39,28 +39,32 @@ class AuthActions:
 class MockFirebaseAdminAuth:
     UserNotFoundError = Exception
 
+    @staticmethod
     def create_user(email, password, uid=None):
         if not email:
             raise Exception()
         elif email == "duplicate":
             raise Exception("EMAIL_EXISTS")
-        pass
 
+    @staticmethod
     def create_session_cookie(user_token, expires_in=None):
         return user_token
 
+    @staticmethod
     def verify_session_cookie(session_cookie, check_revoked=True):
         if session_cookie:
             return {"email": session_cookie, "uid": "uid".encode("utf-8")}
         raise Exception("session cookie provided: None")
 
+    @staticmethod
     def get_user_by_email(email):
         if email == "bad":
             raise auth.UserNotFoundError("bad email")
-        pass
 
+    @staticmethod
     def update_user(uid, email, password):
         pass
 
+    @staticmethod
     def create_custom_token(uid):
         return uid

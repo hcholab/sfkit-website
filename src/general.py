@@ -23,6 +23,7 @@ def permissions() -> str:
     return render_template("permissions.html")
 
 
+# for the pubsub
 @bp.route("/", methods=["POST"])
 def index() -> Tuple[str, int]:
     envelope = request.get_json()

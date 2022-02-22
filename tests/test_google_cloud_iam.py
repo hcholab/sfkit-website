@@ -9,7 +9,7 @@ def test_give_cloud_build_view_permissions(mocker, role):
         MockMakeMockIam,
     )
     mocker.patch(
-        __name__ + ".MockExecutable.execute",
+        f"{__name__}.MockExecutable.execute",
         return_value={
             "bindings": [
                 {"role": role, "members": ["0"]},
@@ -32,6 +32,7 @@ def test_test_permissions(mocker):
 
 
 class MockMakeMockIam:
+    @staticmethod
     def build(api, version):
         return MockIam()
 

@@ -1,6 +1,7 @@
 import io
 
 import pytest
+from src import constants
 from src.gwas import run_gwas
 
 from conftest import MockFirebaseAdminAuth
@@ -196,7 +197,12 @@ def test_run_gwas(mocker):
     mocker.patch("src.gwas.GoogleCloudCompute", MockGoogleCloudCompute)
     mocker.patch("src.gwas.GoogleCloudStorage", MockGoogleCloudStorage)
 
-    run_gwas("role", "gcp_project", "project title", size=4)
+    run_gwas(
+        "role",
+        "gcp_project",
+        "project title",
+        vm_parameters=constants.DEFAULT_PERSONAL_PARAMETERS,
+    )
 
 
 def mock_get_status(role, gcp_project, status, project_title):
@@ -215,7 +221,7 @@ class MockGoogleCloudCompute:
     def setup_networking(self, role):
         pass
 
-    def setup_instance(self, zone, instance, role, size):
+    def setup_instance(self, zone, instance, role, size, boot_disk_size=None):
         pass
 
     def get_service_account_for_vm(self, zone, instance):

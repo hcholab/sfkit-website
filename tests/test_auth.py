@@ -110,7 +110,6 @@ def setup_mocking(mocker):
 def mock_verify_token(token, blah, blah2):
     if token == "bad":
         raise ValueError("Invalid token")
-    pass
 
 
 def mock_sign_in_with_email_and_password(email, password):

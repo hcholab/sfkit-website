@@ -240,12 +240,8 @@ def validate_bucket(project_title):
 @login_required
 def start(project_title):
     db = current_app.config["DATABASE"]
-    project_doc_dict = (
-        db.collection("projects")
-        .document(project_title.replace(" ", "").lower())
-        .get()
-        .to_dict()
-    )
+    doc_ref = db.collection("projects").document(project_title.replace(" ", "").lower())
+    project_doc_dict = doc_ref.get().to_dict()
     public_keys = [
         project_doc_dict["personal_parameters"][user]["PUBLIC_KEY"]["value"]
         for user in project_doc_dict["participants"]
@@ -259,6 +255,7 @@ def start(project_title):
             project=project_doc_dict,
             public_keys=public_keys,
             role=role,
+            parameters=project_doc_dict["personal_parameters"][id],
         )
 
     gcp_project = project_doc_dict["personal_parameters"][id]["GCP_PROJECT"]["value"]
@@ -293,15 +290,25 @@ def start(project_title):
         pass
     elif statuses[str(role)] == ["ready"]:
         statuses[str(role)] = ["setting up your vm instance"]
-        db.collection("projects").document(project_title.replace(" ", "").lower()).set(
-            {"status": statuses},
+        personal_parameters = project_doc_dict["personal_parameters"]
+        personal_parameters[id]["NUM_CPUS"]["value"] = request.form["NUM_CPUS"]
+        personal_parameters[id]["NUM_THREADS"]["value"] = request.form["NUM_CPUS"]
+        personal_parameters[id]["BOOT_DISK_SIZE"]["value"] = request.form[
+            "BOOT_DISK_SIZE"
+        ]
+        doc_ref.set(
+            {
+                "status": statuses,
+                "personal_parameters": personal_parameters,
+            },
             merge=True,
         )
+        project_doc_dict = doc_ref.get().to_dict()
         run_gwas(
             str(role),
             gcp_project,
             project_title,
-            size=project_doc_dict["personal_parameters"][id]["VM_SIZE"]["value"],
+            vm_parameters=project_doc_dict["personal_parameters"][id],
         )
     # else:
     #     statuses[role] = get_status(
@@ -377,7 +384,8 @@ def personal_parameters(project_title):
         )
 
     for p in parameters[g.user["id"]]["index"]:
-        parameters[g.user["id"]][p]["value"] = request.form.get(p)
+        if p in request.form:
+            parameters[g.user["id"]][p]["value"] = request.form.get(p)
     doc_ref.set({"personal_parameters": parameters}, merge=True)
     return redirect(url_for("gwas.start", project_title=project_title))
 
@@ -402,7 +410,7 @@ def personal_parameters(project_title):
 #     return status
 
 
-def run_gwas(role, gcp_project, project_title, size):
+def run_gwas(role, gcp_project, project_title, vm_parameters=None):
     gcloudCompute = GoogleCloudCompute(gcp_project)
     gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
     gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, project_title)
@@ -411,7 +419,13 @@ def run_gwas(role, gcp_project, project_title, size):
     gcloudStorage.copy_parameters_to_bucket(project_title, role)
 
     instance = create_instance_name(project_title, role)
-    gcloudCompute.setup_instance(constants.ZONE, instance, role, size)
+    gcloudCompute.setup_instance(
+        constants.ZONE,
+        instance,
+        role,
+        vm_parameters["NUM_CPUS"]["value"],
+        boot_disk_size=vm_parameters["BOOT_DISK_SIZE"]["value"],
+    )
 
     # Give instance publish access to pubsub for status updates
     member = "serviceAccount:" + gcloudCompute.get_service_account_for_vm(

@@ -94,7 +94,7 @@ def test_setup_instance(
 
     try:
         google_cloud_compute.setup_instance(
-            zone="zone", name=constants.NETWORK_NAME, role="role", size=4
+            zone="zone", name=constants.NETWORK_NAME, role="role", num_cpus=4
         )
     except Exception as e:
         if str(e) != "fake error" and "RetryError" not in str(e):
@@ -119,6 +119,7 @@ def test_get_service_account_for_vm(mocker):
 
 
 class MockMakeMockCompute:
+    @staticmethod
     def build(api, version):
         return MockCompute()
 
@@ -150,6 +151,8 @@ class MockCompute:
 
 
 class MockOperations:
+    trial: int
+
     def get(self, project, operation, region=None, zone=None):
         MockOperations.trial += 1
         if MockOperations.trial > 1:
@@ -186,6 +189,13 @@ class MockInsertable:
 
 
 class MockExecutable:
+    status: str
+    networkName1: str
+    networkName2: str
+    project: str
+    error: str
+    creationTimestamp: str
+
     def execute(self):
         res = {
             "items": [
