@@ -65,8 +65,8 @@
               <br>
             </p>
             <div class="edit-parameters">
-              <a href="{{ url_for('gwas.parameters', project_title=project['title']) }}" class="btn btn-secondary">Edit Project Parameters</a>
-              <a href="{{ url_for('gwas.personal_parameters', project_title=project['title']) }}" class="btn btn-secondary">Edit Personal Parameters</a>
+              <a href="{{ url_for('gwas.parameters', project_title=project['title']) }}" class="btn btn-secondary">Edit Shared Project Parameters</a>
+              <a href="{{ url_for('gwas.personal_parameters', project_title=project['title']) }}" class="btn btn-secondary">Edit User-Specific Parameters</a>
             </div>
             {% if project["status"][role | string] == [""] %}
               <a href="{{ url_for('gwas.validate_bucket', project_title=project['title']) }}" class="mt-2 btn btn-secondary">Validate Bucket</a>
