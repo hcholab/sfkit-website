@@ -216,7 +216,9 @@ class MockGoogleCloudCompute:
     def setup_networking(self, role):
         pass
 
-    def setup_instance(self, zone, instance, role, size, boot_disk_size=None):
+    def setup_instance(
+        self, zone, instance, role, size, metadata=None, boot_disk_size=None
+    ):
         pass
 
     def get_service_account_for_vm(self, zone, instance):

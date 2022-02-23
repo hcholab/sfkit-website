@@ -3,7 +3,6 @@ import os
 import time
 
 import googleapiclient.discovery as googleapi
-from flask import current_app
 from pytz import timezone
 from src import constants
 from tenacity import retry, stop_after_attempt, wait_fixed

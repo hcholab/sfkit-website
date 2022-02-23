@@ -12,4 +12,4 @@ bucket=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attri
 message=$(gsutil du -s gs://${bucket} | awk '{print $1}')
 
 gcloud pubsub topics publish ${topic_id} --message="${topic_id}-${message}" --ordering-key="1" --project="broad-cho-priv1"
-printf "\n\n Done installing dependencies \n\n"
+printf "\n\n Done getting dataset size \n\n"

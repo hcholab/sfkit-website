@@ -462,6 +462,7 @@ def run_gwas(role, gcp_project, project_title, vm_parameters=None):
         instance,
         role,
         vm_parameters["NUM_CPUS"]["value"],
+        metadata={"key": "bucketname", "value": vm_parameters["BUCKET_NAME"]["value"]},
         boot_disk_size=vm_parameters["BOOT_DISK_SIZE"]["value"],
     )
 
