@@ -31,37 +31,37 @@ def test_create(client, auth, mocker):
     assert response.headers["Location"] == "http://localhost/create"
 
 
-@pytest.mark.parametrize(
-    ("title", "description"),
-    (
-        ("testtitle", "test description"),
-        ("testtitle2", "test description"),
-    ),
-)
-def test_update(client, auth, title, description, mocker):
-    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
-    auth.register()
-    client.post("create", data=test_create_data)
-    client.post(
-        "create",
-        data={
-            "title": "anothertitle",
-            "description": "test description",
-            "role": "computeParty",
-        },
-    )
-    assert client.get("update/testtitle").status_code == 200
-    response = client.post(
-        "update/testtitle",
-        data={"title": title, "description": description},
-    )
-    assert response.headers["Location"] == "http://localhost/index"
+# @pytest.mark.parametrize(
+#     ("title", "description"),
+#     (
+#         ("testtitle", "test description"),
+#         ("testtitle2", "test description"),
+#     ),
+# )
+# def test_update(client, auth, title, description, mocker):
+#     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+#     auth.register()
+#     client.post("create", data=test_create_data)
+#     client.post(
+#         "create",
+#         data={
+#             "title": "anothertitle",
+#             "description": "test description",
+#             "role": "computeParty",
+#         },
+#     )
+#     assert client.get("update/testtitle").status_code == 200
+#     response = client.post(
+#         "update/testtitle",
+#         data={"title": title, "description": description},
+#     )
+#     assert response.headers["Location"] == "http://localhost/index"
 
-    response = client.post(
-        "update/anothertitle",
-        data={"title": title, "description": description},
-    )
-    assert "http://localhost/update" in response.headers["Location"]
+#     response = client.post(
+#         "update/anothertitle",
+#         data={"title": title, "description": description},
+#     )
+#     assert "http://localhost/update" in response.headers["Location"]
 
 
 def test_delete(client, auth, mocker):

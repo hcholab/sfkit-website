@@ -39,9 +39,9 @@
                         <br>
                         Public Key =
                         {{public_keys[i]}}
-                        <br>
                       {% endif %}
                     </small>
+                    <br>
                   {% endif %}
                 {% endfor %}
               </div>
@@ -73,6 +73,8 @@
             {% elif project["status"][role | string] == ["validating"] %}
               <div class="mt-2">
                 Validating Bucket...
+                <br>
+                <a href="{{ url_for('gwas.start', project_title=project['title']) }}" class="btn btn-secondary">Check for update?</a>
               </div>
             {% elif project["status"][role | string] == ["not ready"] %}
               <button type="button" class="mt-2 btn btn-success" data-bs-toggle="modal" data-bs-target="#chooseWorkflow">

@@ -5,7 +5,9 @@ import time
 import googleapiclient.discovery as googleapi
 from pytz import timezone
 from src import constants
-from tenacity import retry, stop_after_attempt, wait_fixed
+from tenacity import retry
+from tenacity.stop import stop_after_attempt
+from tenacity.wait import wait_fixed
 
 
 class GoogleCloudCompute:
@@ -13,7 +15,7 @@ class GoogleCloudCompute:
         self.project = project
         self.compute = googleapi.build("compute", "v1")
 
-    def setup_networking(self, role):
+    def setup_networking(self, role: str) -> None:
         existing_nets = [
             net["name"]
             for net in self.compute.networks()
@@ -126,7 +128,7 @@ class GoogleCloudCompute:
         self.wait_for_operation(operation["name"])
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(30))
-    def create_subnet(self, region, network_name, role):
+    def create_subnet(self, region: str, network_name: str, role: str) -> None:
         subnet_name = constants.SUBNET_NAME + role
         print(f"Creating new subnetwork {subnet_name}")
         network_url = ""
@@ -148,7 +150,7 @@ class GoogleCloudCompute:
         )
         self.wait_for_regionOperation(region, operation["name"])
 
-    def create_firewalls(self, network_name):
+    def create_firewalls(self, network_name: str):
         print(f"Creating new firewalls for network {network_name}")
         network_url = ""
         for net in (

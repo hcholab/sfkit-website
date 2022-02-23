@@ -101,60 +101,60 @@ def create():
     return redirect(url_for("gwas.index"))
 
 
-@bp.route("/update/<project_title>", methods=("GET", "POST"))
-@login_required
-def update(project_title):
-    db = current_app.config["DATABASE"]
+# @bp.route("/update/<project_title>", methods=("GET", "POST"))
+# @login_required
+# def update(project_title):
+#     db = current_app.config["DATABASE"]
 
-    project = (
-        db.collection("projects")
-        .document(project_title.replace(" ", "").lower())
-        .get()
-        .to_dict()
-    )
+#     project = (
+#         db.collection("projects")
+#         .document(project_title.replace(" ", "").lower())
+#         .get()
+#         .to_dict()
+#     )
 
-    if request.method == "POST":
-        title = request.form["title"]
-        description = request.form["description"]
+#     if request.method == "POST":
+#         title = request.form["title"]
+#         description = request.form["description"]
 
-        if title.replace(" ", "").lower() != project_title.replace(" ", "").lower():
-            # validate that title is unique
-            projects = db.collection("projects").stream()
-            for project in projects:
-                if (
-                    project.to_dict()["title"].replace(" ", "").lower()
-                    == title.replace(" ", "").lower()
-                ):
-                    r = redirect(url_for("gwas.update", project_title=project))
-                    flash(r, "Title already exists.")
-                    return r
+#         if title.replace(" ", "").lower() != project_title.replace(" ", "").lower():
+#             # validate that title is unique
+#             projects = db.collection("projects").stream()
+#             for project in projects:
+#                 if (
+#                     project.to_dict()["title"].replace(" ", "").lower()
+#                     == title.replace(" ", "").lower()
+#                 ):
+#                     r = redirect(url_for("gwas.update", project_title=project))
+#                     flash(r, "Title already exists.")
+#                     return r
 
-        old_doc_ref = db.collection("projects").document(
-            project_title.replace(" ", "").lower()
-        )
-        old_doc_ref_dict = old_doc_ref.get().to_dict()
-        doc_ref = db.collection("projects").document(title.replace(" ", "").lower())
-        doc_ref.set(
-            {
-                "title": title,
-                "description": description,
-                "owner": g.user["id"],
-                "created": old_doc_ref_dict["created"],
-                "participants": old_doc_ref_dict["participants"],
-                "status": {"0": [""]},
-                "parameters": old_doc_ref_dict["parameters"],
-                "personal_parameters": old_doc_ref_dict["personal_parameters"],
-                "requested_participants": old_doc_ref_dict["requested_participants"],
-            },
-            merge=True,
-        )
-        if (
-            project_title != title
-        ):  # in this case, we're creating a new post, so we delete the old one
-            old_doc_ref.delete()
-        return redirect(url_for("gwas.index"))
+#         old_doc_ref = db.collection("projects").document(
+#             project_title.replace(" ", "").lower()
+#         )
+#         old_doc_ref_dict = old_doc_ref.get().to_dict()
+#         doc_ref = db.collection("projects").document(title.replace(" ", "").lower())
+#         doc_ref.set(
+#             {
+#                 "title": title,
+#                 "description": description,
+#                 "owner": g.user["id"],
+#                 "created": old_doc_ref_dict["created"],
+#                 "participants": old_doc_ref_dict["participants"],
+#                 "status": {"0": [""]},
+#                 "parameters": old_doc_ref_dict["parameters"],
+#                 "personal_parameters": old_doc_ref_dict["personal_parameters"],
+#                 "requested_participants": old_doc_ref_dict["requested_participants"],
+#             },
+#             merge=True,
+#         )
+#         if (
+#             project_title != title
+#         ):  # in this case, we're creating a new post, so we delete the old one
+#             old_doc_ref.delete()
+#         return redirect(url_for("gwas.index"))
 
-    return render_template("gwas/update.html", project=project)
+#     return render_template("gwas/update.html", project=project)
 
 
 @bp.route("/delete/<project_title>", methods=("POST",))
@@ -202,6 +202,7 @@ def approve_join_project(project_name, user_id):
     doc_ref_dict = doc_ref.get().to_dict()
     doc_ref_dict["status"][str(len(doc_ref_dict["status"]))] = [""]
     role = doc_ref_dict["requested_participants"].pop(user_id)
+    print(f"Requested participants after pop: {doc_ref_dict['requested_participants']}")
 
     participants = doc_ref_dict["participants"]
     if role == "studyParticipant" and participants[1] == "":
@@ -218,13 +219,15 @@ def approve_join_project(project_name, user_id):
     doc_ref.set(
         {
             "participants": participants,
-            "requested_participants": doc_ref_dict["requested_participants"],
             "personal_parameters": doc_ref_dict["personal_parameters"]
             | {user_id: constants.DEFAULT_PERSONAL_PARAMETERS},
             "status": doc_ref_dict["status"],
         },
         merge=True,
     )
+    # I need to do this separately since I am deleting from a dict
+    doc_ref.update({"requested_participants": doc_ref_dict["requested_participants"]})
+
     return redirect(url_for("gwas.start", project_title=project_name))
 
 
@@ -313,12 +316,20 @@ def start(project_title):
         gcloudIAM = GoogleCloudIAM()
         if gcloudIAM.test_permissions(gcp_project):
             statuses[str(role)] = ["ready"]
-            db.collection("projects").document(
-                project_title.replace(" ", "").lower()
-            ).set(
-                {"status": statuses},
+            personal_parameters = project_doc_dict["personal_parameters"]
+            personal_parameters[id]["NUM_CPUS"]["value"] = request.form["NUM_CPUS"]
+            personal_parameters[id]["NUM_THREADS"]["value"] = request.form["NUM_CPUS"]
+            personal_parameters[id]["BOOT_DISK_SIZE"]["value"] = request.form[
+                "BOOT_DISK_SIZE"
+            ]
+            doc_ref.set(
+                {
+                    "status": statuses,
+                    "personal_parameters": personal_parameters,
+                },
                 merge=True,
             )
+
         else:
             r = redirect(url_for("general.permissions"))
             flash(r, "Please give the service appropriate permissions first.")
@@ -328,16 +339,10 @@ def start(project_title):
         pass
     elif statuses[str(role)] == ["ready"]:
         statuses[str(role)] = ["setting up your vm instance"]
-        personal_parameters = project_doc_dict["personal_parameters"]
-        personal_parameters[id]["NUM_CPUS"]["value"] = request.form["NUM_CPUS"]
-        personal_parameters[id]["NUM_THREADS"]["value"] = request.form["NUM_CPUS"]
-        personal_parameters[id]["BOOT_DISK_SIZE"]["value"] = request.form[
-            "BOOT_DISK_SIZE"
-        ]
+
         doc_ref.set(
             {
                 "status": statuses,
-                "personal_parameters": personal_parameters,
             },
             merge=True,
         )

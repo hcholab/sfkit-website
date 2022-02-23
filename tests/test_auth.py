@@ -5,7 +5,7 @@ from conftest import MockFirebaseAdminAuth
 
 @pytest.mark.parametrize(
     "path",
-    ("/create", "/update/1", "/delete/1", "/start/1"),  # , "auth/user/1"),
+    ("/create", "/delete/1", "/start/1"),  # , "auth/user/1"),
 )
 def test_login_required(client, path):
     response = client.post(path)
