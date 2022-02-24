@@ -27,7 +27,7 @@ def test_permissions_page(client):
 def test_index_from_pubsub(client, app):
     with app.app_context():
         db = app.config["DATABASE"]
-        doc_ref = db.collection("projects").document("blah")
+        doc_ref = db.collection("studies").document("blah")
         doc_ref.set({"status": ["", "", "", "", "", ""]})
 
     client.post("/")

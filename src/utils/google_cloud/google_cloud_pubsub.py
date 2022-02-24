@@ -4,13 +4,13 @@ from google.cloud import pubsub_v1
 
 
 class GoogleCloudPubsub:
-    def __init__(self, project, role, project_title) -> None:
+    def __init__(self, project, role, study_title) -> None:
         self.project = project
         self.publisher = pubsub_v1.PublisherClient()
         self.subscriber = pubsub_v1.SubscriberClient()
 
         self.topic_id = (
-            project_title.replace(" ", "").lower() + "-" + "secure-gwas" + role
+            study_title.replace(" ", "").lower() + "-" + "secure-gwas" + role
         )
         self.subscription_id = socket.gethostname() + "-subscribing-to-" + self.topic_id
         self.project_path = f"projects/{self.project}"

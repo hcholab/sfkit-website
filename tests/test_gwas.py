@@ -195,16 +195,16 @@ def test_run_gwas(mocker):
     run_gwas(
         "role",
         "gcp_project",
-        "project title",
+        "study title",
         vm_parameters=constants.DEFAULT_PERSONAL_PARAMETERS,
     )
 
 
-def mock_get_status(role, gcp_project, status, project_title):
+def mock_get_status(role, gcp_project, status, study_title):
     return status
 
 
-def mock_run_gwas(role, gcp_project, project_title, size):
+def mock_run_gwas(role, gcp_project, study_title, size):
     return True
 
 
@@ -234,7 +234,7 @@ class MockGoogleCloudStorage:
     def __init__(self, project):
         pass
 
-    def copy_parameters_to_bucket(self, project_title, role):
+    def copy_parameters_to_bucket(self, study_title, role):
         pass
 
     def upload_to_bucket(self, file, filename):
@@ -249,7 +249,7 @@ class MockGoogleCloudStorage:
 
 # class to mock GoogleCloudPubsub
 class MockGoogleCloudPubsub:
-    def __init__(self, project, role, project_title):
+    def __init__(self, project, role, study_title):
         pass
 
     def create_topic_and_subscribe(self):

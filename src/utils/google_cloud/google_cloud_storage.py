@@ -47,22 +47,22 @@ class GoogleCloudStorage:
     #     else:
     #         print(f"Blob {blob_name} didn't exist")
 
-    def copy_parameters_to_bucket(self, project_title, role):
+    def copy_parameters_to_bucket(self, study_title, role):
         bucket = self.storage_client.bucket(constants.BUCKET_NAME)
         for filename in constants.PARAMETER_FILES:
             blob = bucket.blob(filename)
             blob.download_to_filename(os.path.join(constants.TEMP_FOLDER, filename))
             self.update_parameters(
-                os.path.join(constants.TEMP_FOLDER, filename), project_title, role
+                os.path.join(constants.TEMP_FOLDER, filename), study_title, role
             )
             blob.upload_from_filename(os.path.join(constants.TEMP_FOLDER, filename))
             print(f"Updated parameters in {filename}")
 
-    def update_parameters(self, file, project_title, role):
+    def update_parameters(self, file, study_title, role):
         db = current_app.config["DATABASE"]
         doc_dict = (
-            db.collection("projects")
-            .document(project_title.replace(" ", "").lower())
+            db.collection("studies")
+            .document(study_title.replace(" ", "").lower())
             .get()
             .to_dict()
         )

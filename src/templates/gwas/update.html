@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block title %}
-  Edit "{{ project['title'] }}"
+  Edit "{{ study['title'] }}"
 {% endblock %}
 
 {% block content %}
@@ -10,16 +10,16 @@
       <div class="row">
         <div class="col-12 col-lg-8 mx-auto text-center">
           <div class="p-5 bg-light rounded text-center">
-            <h2 class="display-5 fw-bold mt-2 mb-3">Edit the GWAS project...</h2>
+            <h2 class="display-5 fw-bold mt-2 mb-3">Edit the GWAS study...</h2>
             <form method="post">
-              <input class="form-control mb-2" name="title" id="title" value="{{ request.form['title'] or project['title'] }}" maxlength="50" required="required" placeholder="An Awesome Project Title">
-              <textarea class="form-control mb-2" name="description" id="description" required="required" placeholder="An awesome description for an awesome project.">{{ request.form['description'] or project['description'] }}</textarea>
+              <input class="form-control mb-2" name="title" id="title" value="{{ request.form['title'] or study['title'] }}" maxlength="50" required="required" placeholder="An Awesome Study Title">
+              <textarea class="form-control mb-2" name="description" id="description" required="required" placeholder="An awesome description for an awesome study.">{{ request.form['description'] or study['description'] }}</textarea>
               <div class="d-flex flex-wrap justify-content-center">
                 <a href="{{ url_for('gwas.index') }}" class="btn btn-outline-secondary me-2 mb-2 mb-sm-0">Cancel</a>
                 <input type="submit" value="Save" class="btn btn-primary me-2 mb-2 mb-sm-0">
               </div>
             </form>
-            <form action="{{ url_for('gwas.delete', project_title=project['title']) }}" method="post">
+            <form action="{{ url_for('gwas.delete', study_title=study['title']) }}" method="post">
               <input class="mt-2 btn-danger" type="submit" value="Delete" onclick="return confirm('Are you sure?');">
             </form>
           </div>

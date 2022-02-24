@@ -13,18 +13,18 @@
             <div class="accordion-item">
               <h2 class="accordion-header">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target=".collapse-1">
-                  1. Join Project
+                  1. Join Study
                 </button>
               </h2>
               <div class="accordion-collapse collapse collapse-1 collapse-1-2">
                 <div class="accordion-body">
                   <p>
                     Go to the
-                    <a class="text-decoration-none" href="{{ url_for('gwas.index') }}">Projects</a>
-                    page and either create a new project or join an existing project.
+                    <a class="text-decoration-none" href="{{ url_for('gwas.index') }}">Studies</a>
+                    page and either create a new study or join an existing study.
                   </p>
                   <p class="text-muted">
-                    Note: If you are creating a new project, you will also need to set study paramters. If you are joining a project, you should confirm that the configured study parameters are what you want.
+                    Note: If you are creating a new study, you will also need to set study paramters. If you are joining a study, you should confirm that the configured study parameters are what you want.
                   </p>
                   <p class="text-end mb-0 mt-0">
                     <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target=".collapse-1-2">
@@ -55,7 +55,7 @@
                   <p>
                     3. run
                     <code>python3 generate_personal_keys.py</code>
-                    to generate your personal keys. Keep the private key somewhere safe, and upload the public key to your project's "Personal Parameters".
+                    to generate your personal keys. Keep the private key somewhere safe, and upload the public key to your study's "User-Specific Parameters".
                   </p>
                   <p class="text-muted px-5">
                     What is this script doing?
@@ -84,7 +84,7 @@
               <div class="accordion-collapse collapse collapse-3 collapse-2-3 collapse-3-4">
                 <div class="accordion-body">
                   <p>
-                    1. Copy down the other study participant's public key from the project page.
+                    1. Copy down the other study participant's public key from the study page.
                     <strong>Note: you cannot proceed without this key.</strong>
                   </p>
                   <p>
@@ -154,7 +154,7 @@
               <div class="accordion-collapse collapse collapse-5 collapse-4-5 collapse-5-6">
                 <div class="accordion-body">
                   <p>
-                    Go to your project, and confirm that all the "Project Parameters" and "Personal Parameters" are as desired.
+                    Go to your study, and confirm that all the "Shared Study Parameters" and "User-Specific Parameters" are as desired.
                     <br>When you are ready, click on the "Ready to begin GWAS?" button.
                     <br>Once all participants have done so, the protocol will begin.
                   </p>
@@ -175,7 +175,7 @@
               <div class="accordion-collapse collapse collapse-6 collapse-5-6 collapse-6-7">
                 <div class="accordion-body">
                   <p>
-                    Once the protocol is complete, the project page will indicate this with a "GWAS Completed!" status.
+                    Once the protocol is complete, the study page will indicate this with a "GWAS Completed!" status.
                     <br>You can then download the results (from your storage bucket in your GCP project) to share and analyze at your leisure.
                   </p>
                   <p class="text-end mb-0 mt-0">

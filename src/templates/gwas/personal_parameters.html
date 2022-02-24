@@ -7,7 +7,7 @@
 {% block content %}
   <section class="container row">
     <div class="col-12 col-lg-8 mx-auto text-center p-3 rounded">
-      <h2 class="h2 display-8 mt-0 mb-5">User-Specific Parameters for project "{{ project_title }}"</h2>
+      <h2 class="h2 display-8 mt-0 mb-5">User-Specific Parameters for study "{{ study_title }}"</h2>
       <form method="post">
 
         <div class="row mb-3 p-3 bg-light">
@@ -60,7 +60,7 @@
         </div>
 
         <div class="d-flex flex-wrap justify-content-center">
-          <a href="{{ url_for('gwas.start', project_title=project_title) }}" class="btn btn-outline-secondary me-2 mb-2 mb-sm-0">Cancel</a>
+          <a href="{{ url_for('gwas.start', study_title=study_title) }}" class="btn btn-outline-secondary me-2 mb-2 mb-sm-0">Cancel</a>
           <input type="submit" name="save" value="Save" class="btn btn-primary me-2 mb-2 mb-sm-0">
         </div>
       </form>

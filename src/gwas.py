@@ -25,20 +25,16 @@ bp = Blueprint("gwas", __name__)
 @bp.route("/index", methods=["GET", "POST"])
 def index():
     db = current_app.config["DATABASE"]
-    projects = db.collection("projects")
-    projects_list = [project.to_dict() for project in projects.stream()]
+    studies = db.collection("studies")
+    studies_list = [study.to_dict() for study in studies.stream()]
 
-    if request.method == "POST":
-        if "project_title" in request.form:
-            print("project_title:", request.form["project_title"])
-        else:
-            print("project_title not in request.form")
-            print("request.form:", request.form)
-            exit(0)
+    if request.method == "POST":  # user wants to join a study
+        if "study_title" not in request.form:
+            r = redirect(url_for("gwas.index"))
+            flash(r, "Error processing your request.")
+            return r
 
-        doc_ref = projects.document(
-            request.form["project_title"].replace(" ", "").lower()
-        )
+        doc_ref = studies.document(request.form["study_title"].replace(" ", "").lower())
         doc_ref_dict = doc_ref.get().to_dict()
         doc_ref_dict["requested_participants"][g.user["id"]] = request.form.get("role")
         doc_ref.set(
@@ -47,7 +43,7 @@ def index():
         )
         return redirect(url_for("gwas.index"))
 
-    return render_template("gwas/index.html", projects=projects_list)
+    return render_template("gwas/index.html", studies=studies_list)
 
 
 @bp.route("/create", methods=("GET", "POST"))
@@ -68,10 +64,10 @@ def create():
         return r
 
     # validate that title is unique
-    projects = db.collection("projects").stream()
-    for project in projects:
+    studies = db.collection("studies").stream()
+    for study in studies:
         if (
-            project.to_dict()["title"].replace(" ", "").lower()
+            study.to_dict()["title"].replace(" ", "").lower()
             == title.replace(" ", "").lower()
         ):
             r = redirect(url_for("gwas.create"))
@@ -82,7 +78,7 @@ def create():
         ["", g.user["id"], ""] if role == "studyParticipant" else [g.user["id"], "", ""]
     )
 
-    doc_ref = db.collection("projects").document(title.replace(" ", "").lower())
+    doc_ref = db.collection("studies").document(title.replace(" ", "").lower())
     doc_ref.set(
         {
             "title": title,
@@ -157,11 +153,11 @@ def create():
 #     return render_template("gwas/update.html", project=project)
 
 
-@bp.route("/delete/<project_title>", methods=("POST",))
+@bp.route("/delete/<study_title>", methods=("POST",))
 @login_required
-def delete(project_title):
+def delete(study_title):
     db = current_app.config["DATABASE"]
-    doc_ref = db.collection("projects").document(project_title.replace(" ", "").lower())
+    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
 
     google_cloud_compute = GoogleCloudCompute("")
@@ -195,10 +191,10 @@ def delete(project_title):
 #     return redirect(url_for("gwas.index"))
 
 
-@bp.route("/approve_join_project/<project_name>/<user_id>", methods=("GET", "POST"))
-def approve_join_project(project_name, user_id):
+@bp.route("/approve_join_study/<study_title>/<user_id>", methods=("GET", "POST"))
+def approve_join_study(study_title, user_id):
     db = current_app.config["DATABASE"]
-    doc_ref = db.collection("projects").document(project_name.replace(" ", "").lower())
+    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
     doc_ref_dict["status"][str(len(doc_ref_dict["status"]))] = [""]
     role = doc_ref_dict["requested_participants"].pop(user_id)
@@ -212,8 +208,8 @@ def approve_join_project(project_name, user_id):
     elif role == "computeParty" and participants[0] == "":
         participants[0] = user_id
     else:
-        r = redirect(url_for("gwas.start", project_title=project_name))
-        flash(r, "Project is full.")
+        r = redirect(url_for("gwas.start", study_title=study_title))
+        flash(r, "Study is full.")
         return r
 
     doc_ref.set(
@@ -228,36 +224,36 @@ def approve_join_project(project_name, user_id):
     # I need to do this separately since I am deleting from a dict
     doc_ref.update({"requested_participants": doc_ref_dict["requested_participants"]})
 
-    return redirect(url_for("gwas.start", project_title=project_name))
+    return redirect(url_for("gwas.start", study_title=study_title))
 
 
-@bp.route("/validate_bucket/<project_title>", methods=("GET", "POST"))
+@bp.route("/validate_bucket/<study_title>", methods=("GET", "POST"))
 @login_required
-def validate_bucket(project_title):
+def validate_bucket(study_title):
     db = current_app.config["DATABASE"]
-    doc_ref = db.collection("projects").document(project_title.replace(" ", "").lower())
-    project_doc_dict = doc_ref.get().to_dict()
-    role: str = str(project_doc_dict["participants"].index(g.user["id"]))
-    gcp_project = project_doc_dict["personal_parameters"][g.user["id"]]["GCP_PROJECT"][
+    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref_dict = doc_ref.get().to_dict()
+    role: str = str(doc_ref_dict["participants"].index(g.user["id"]))
+    gcp_project = doc_ref_dict["personal_parameters"][g.user["id"]]["GCP_PROJECT"][
         "value"
     ]
-    bucket_name = project_doc_dict["personal_parameters"][g.user["id"]]["BUCKET_NAME"][
+    bucket_name = doc_ref_dict["personal_parameters"][g.user["id"]]["BUCKET_NAME"][
         "value"
     ]
     if not gcp_project or gcp_project == "" or not bucket_name or bucket_name == "":
-        r = redirect(url_for("gwas.personal_parameters", project_title=project_title))
+        r = redirect(url_for("gwas.personal_parameters", study_title=study_title))
         flash(r, "Please set your GCP project and storage bucket location.")
         return r
 
-    statuses = project_doc_dict["status"]
+    statuses = doc_ref_dict["status"]
     statuses[role] = ["validating"]
     doc_ref.set({"status": statuses}, merge=True)
 
     gcloudCompute = GoogleCloudCompute(gcp_project)
-    gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, project_title)
+    gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
 
     gcloudPubsub.create_topic_and_subscribe()
-    instance = create_instance_name(project_title, role)
+    instance = create_instance_name(study_title, role)
     gcloudCompute.setup_networking(role)
     gcloudCompute.setup_instance(
         constants.ZONE,
@@ -273,50 +269,48 @@ def validate_bucket(project_title):
     )
     gcloudPubsub.add_pub_iam_member("roles/pubsub.publisher", member)
 
-    return redirect(url_for("gwas.start", project_title=project_title))
+    return redirect(url_for("gwas.start", study_title=study_title))
 
 
-@bp.route("/start/<project_title>", methods=("GET", "POST"))
+@bp.route("/start/<study_title>", methods=("GET", "POST"))
 @login_required
-def start(project_title):
+def start(study_title):
     db = current_app.config["DATABASE"]
-    doc_ref = db.collection("projects").document(project_title.replace(" ", "").lower())
-    project_doc_dict = doc_ref.get().to_dict()
+    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref_dict = doc_ref.get().to_dict()
     public_keys = [
-        project_doc_dict["personal_parameters"][user]["PUBLIC_KEY"]["value"]
-        for user in project_doc_dict["participants"]
+        doc_ref_dict["personal_parameters"][user]["PUBLIC_KEY"]["value"]
+        for user in doc_ref_dict["participants"]
         if user != ""
     ]
     id = g.user["id"]
-    role: int = project_doc_dict["participants"].index(id)
+    role: int = doc_ref_dict["participants"].index(id)
 
     if request.method == "GET":
         return render_template(
             "gwas/start.html",
-            project=project_doc_dict,
+            study=doc_ref_dict,
             public_keys=public_keys,
             role=role,
-            parameters=project_doc_dict["personal_parameters"][id],
+            parameters=doc_ref_dict["personal_parameters"][id],
         )
 
-    gcp_project = project_doc_dict["personal_parameters"][id]["GCP_PROJECT"]["value"]
+    gcp_project = doc_ref_dict["personal_parameters"][id]["GCP_PROJECT"]["value"]
 
     # check if pos.txt is in the google cloud bucket
     gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
     if not gcloudStorage.check_file_exists("pos.txt"):
-        message = "Please upload a pos.txt file or have one of the entities you are runnning this project with do so for you."
-        r = redirect(
-            url_for("gwas.parameters", project_title=project_title, section="pos")
-        )
+        message = "Please upload a pos.txt file or have one of the entities you are runnning this study with do so for you."
+        r = redirect(url_for("gwas.parameters", study_title=study_title, section="pos"))
         flash(r, message)
         return r
 
-    statuses = project_doc_dict["status"]
+    statuses = doc_ref_dict["status"]
     if statuses[str(role)] == ["not ready"]:
         gcloudIAM = GoogleCloudIAM()
         if gcloudIAM.test_permissions(gcp_project):
             statuses[str(role)] = ["ready"]
-            personal_parameters = project_doc_dict["personal_parameters"]
+            personal_parameters = doc_ref_dict["personal_parameters"]
             personal_parameters[id]["NUM_CPUS"]["value"] = request.form["NUM_CPUS"]
             personal_parameters[id]["NUM_THREADS"]["value"] = request.form["NUM_CPUS"]
             personal_parameters[id]["BOOT_DISK_SIZE"]["value"] = request.form[
@@ -346,12 +340,12 @@ def start(project_title):
             },
             merge=True,
         )
-        project_doc_dict = doc_ref.get().to_dict()
+        doc_ref_dict = doc_ref.get().to_dict()
         run_gwas(
             str(role),
             gcp_project,
-            project_title,
-            vm_parameters=project_doc_dict["personal_parameters"][id],
+            study_title,
+            vm_parameters=doc_ref_dict["personal_parameters"][id],
         )
     # else:
     #     statuses[role] = get_status(
@@ -362,30 +356,30 @@ def start(project_title):
     #         merge=True,
     #     )
 
-    project_doc_dict = (
-        db.collection("projects")
-        .document(project_title.replace(" ", "").lower())
+    doc_ref_dict = (
+        db.collection("studies")
+        .document(study_title.replace(" ", "").lower())
         .get()
         .to_dict()
     )
     return render_template(
-        "gwas/start.html", project=project_doc_dict, public_keys=public_keys, role=role
+        "gwas/start.html", study=doc_ref_dict, public_keys=public_keys, role=role
     )
 
 
-@bp.route("/parameters/<project_title>", methods=("GET", "POST"))
+@bp.route("/parameters/<study_title>", methods=("GET", "POST"))
 @login_required
-def parameters(project_title):
+def parameters(study_title):
     google_cloud_storage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
 
     db = current_app.config["DATABASE"]
-    doc_ref = db.collection("projects").document(project_title.replace(" ", "").lower())
+    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     parameters = doc_ref.get().to_dict().get("parameters")
     pos_file_uploaded = google_cloud_storage.check_file_exists("pos.txt")
     if request.method == "GET":
         return render_template(
             "gwas/parameters.html",
-            project_title=project_title,
+            study_title=study_title,
             parameters=parameters,
             pos_file_uploaded=pos_file_uploaded,
         )
@@ -393,19 +387,19 @@ def parameters(project_title):
         for p in parameters["index"]:
             parameters[p]["value"] = request.form.get(p)
         doc_ref.set({"parameters": parameters}, merge=True)
-        return redirect(url_for("gwas.start", project_title=project_title))
+        return redirect(url_for("gwas.start", study_title=study_title))
     elif "upload" in request.form:
         file = request.files["file"]
         if file.filename == "":
-            r = redirect(url_for("gwas.parameters", project_title=project_title))
+            r = redirect(url_for("gwas.parameters", study_title=study_title))
             flash(r, "Please select a file to upload.")
             return r
         elif file and file.filename == "pos.txt":
             gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
             gcloudStorage.upload_to_bucket(file, file.filename)
-            return redirect(url_for("gwas.start", project_title=project_title))
+            return redirect(url_for("gwas.start", study_title=study_title))
         else:
-            r = redirect(url_for("gwas.parameters", project_title=project_title))
+            r = redirect(url_for("gwas.parameters", study_title=study_title))
             flash(r, "Please upload a valid pos.txt file.")
             return r
     else:
@@ -413,16 +407,16 @@ def parameters(project_title):
         exit(1)
 
 
-@bp.route("/personal_parameters/<project_title>", methods=("GET", "POST"))
-def personal_parameters(project_title):
+@bp.route("/personal_parameters/<study_title>", methods=("GET", "POST"))
+def personal_parameters(study_title):
     db = current_app.config["DATABASE"]
-    doc_ref = db.collection("projects").document(project_title.replace(" ", "").lower())
+    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     parameters = doc_ref.get().to_dict().get("personal_parameters")
 
     if request.method == "GET":
         return render_template(
             "gwas/personal_parameters.html",
-            project_title=project_title,
+            study_title=study_title,
             parameters=parameters[g.user["id"]],
         )
 
@@ -430,7 +424,7 @@ def personal_parameters(project_title):
         if p in request.form:
             parameters[g.user["id"]][p]["value"] = request.form.get(p)
     doc_ref.set({"personal_parameters": parameters}, merge=True)
-    return redirect(url_for("gwas.start", project_title=project_title))
+    return redirect(url_for("gwas.start", study_title=study_title))
 
 
 # def get_status(role: str, gcp_project, status, project_title):
@@ -453,15 +447,15 @@ def personal_parameters(project_title):
 #     return status
 
 
-def run_gwas(role, gcp_project, project_title, vm_parameters=None):
+def run_gwas(role, gcp_project, study_title, vm_parameters=None):
     gcloudCompute = GoogleCloudCompute(gcp_project)
     gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
-    gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, project_title)
+    gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
 
     # copy parameters to parameter files
-    gcloudStorage.copy_parameters_to_bucket(project_title, role)
+    gcloudStorage.copy_parameters_to_bucket(study_title, role)
 
-    instance = create_instance_name(project_title, role)
+    instance = create_instance_name(study_title, role)
     gcloudCompute.setup_instance(
         constants.ZONE,
         instance,

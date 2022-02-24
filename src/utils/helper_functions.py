@@ -6,9 +6,9 @@ def flash(response, message):
     return response
 
 
-def create_instance_name(project_title, role):
+def create_instance_name(study_title, role):
     return (
-        f"{project_title.replace(' ', '').lower()}-{constants.INSTANCE_NAME_ROOT}{role}"
+        f"{study_title.replace(' ', '').lower()}-{constants.INSTANCE_NAME_ROOT}{role}"
     )
 
 

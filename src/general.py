@@ -45,13 +45,13 @@ def index() -> Tuple[str, int]:
     print(f"Pub/Sub message received: {msg_lst}")
 
     try:
-        project_title: str = msg_lst[0]
+        study_title: str = msg_lst[0]
         role: str = msg_lst[-2][-1]
         content: str = msg_lst[-1]
 
         db = current_app.config["DATABASE"]
-        doc_ref = db.collection("projects").document(
-            project_title.replace(" ", "").lower()
+        doc_ref = db.collection("studies").document(
+            study_title.replace(" ", "").lower()
         )
         doc_ref_dict = doc_ref.get().to_dict()
         statuses = doc_ref_dict.get("status")

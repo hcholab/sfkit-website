@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 
-{% block title %}Project Start?{% endblock %}
+{% block title %}Study Start?{% endblock %}
 
 {% block content %}
-  <meta id="project-title-data" data-value="{{ project['title'] }}">
+  <meta id="study-title-data" data-value="{{ study['title'] }}">
   <meta id="role-data" data-value="{{ role }}">
   <meta id="num-cpus-data" data-value="{{ request.form['NUM_CPUS'] or parameters['NUM_CPUS']['value'] }}">
 
@@ -15,25 +15,25 @@
             <span>
               <small class="text-muted">
                 Created by
-                {{ project['owner'] }}
+                {{ study['owner'] }}
                 on
-                {{ project['created'].strftime('%m-%d-%Y') }}
+                {{ study['created'].strftime('%m-%d-%Y') }}
               </small>
             </span>
-            <h2 class="mt-2 fw-bold">{{ project['title'] }}</h2>
-            <p class="lead text-muted">{{ project['description']  }}</p>
+            <h2 class="mt-2 fw-bold">{{ study['title'] }}</h2>
+            <p class="lead text-muted">{{ study['description']  }}</p>
             <div class="mb-3">
               <div>
                 <p class="fw-bold mb-0">Compute Party:</p>
-                {{project['participants'][0]}}
+                {{study['participants'][0]}}
               </div>
               <div>
                 <p class="fw-bold mb-0">Study Participants:</p>
                 {% for i in range(1, 3) %}
-                  {% if project['participants'][i] != "" %}
+                  {% if study['participants'][i] != "" %}
                     Role
                     {{i}}:
-                    {{project['participants'][i]}}
+                    {{study['participants'][i]}}
                     <small class="text-muted">
                       {% if public_keys[i]%}
                         <br>
@@ -46,14 +46,14 @@
                 {% endfor %}
               </div>
             </div>
-            {% if project['requested_participants'] %}
+            {% if study['requested_participants'] %}
               <div class="mb-3">
                 Requested Participants:
-                {% for participant in project['requested_participants'] %}
+                {% for participant in study['requested_participants'] %}
                   <br>
                   <small class="text-muted ms-2 me-2">
                     {{ participant }}
-                    <a href="{{ url_for('gwas.approve_join_project', project_name=project['title'], user_id=participant) }}" type="button" class="btn btn-sm btn-info">Approve Request</a>
+                    <a href="{{ url_for('gwas.approve_join_study', study_name=study['title'], user_id=participant) }}" type="button" class="btn btn-sm btn-info">Approve Request</a>
                   </small>
                 {% endfor %}
               </div>
@@ -65,18 +65,18 @@
               <br>
             </p>
             <div class="edit-parameters">
-              <a href="{{ url_for('gwas.parameters', project_title=project['title']) }}" class="btn btn-secondary">Edit Shared Project Parameters</a>
-              <a href="{{ url_for('gwas.personal_parameters', project_title=project['title']) }}" class="btn btn-secondary">Edit User-Specific Parameters</a>
+              <a href="{{ url_for('gwas.parameters', study_title=study['title']) }}" class="btn btn-secondary">Edit Shared Study Parameters</a>
+              <a href="{{ url_for('gwas.personal_parameters', study_title=study['title']) }}" class="btn btn-secondary">Edit User-Specific Parameters</a>
             </div>
-            {% if project["status"][role | string] == [""] %}
-              <a href="{{ url_for('gwas.validate_bucket', project_title=project['title']) }}" class="mt-2 btn btn-secondary">Validate Bucket</a>
-            {% elif project["status"][role | string] == ["validating"] %}
+            {% if study["status"][role | string] == [""] %}
+              <a href="{{ url_for('gwas.validate_bucket', study_title=study['title']) }}" class="mt-2 btn btn-secondary">Validate Bucket</a>
+            {% elif study["status"][role | string] == ["validating"] %}
               <div class="mt-2">
                 Validating Bucket...
                 <br>
-                <a href="{{ url_for('gwas.start', project_title=project['title']) }}" class="btn btn-secondary">Check for update?</a>
+                <a href="{{ url_for('gwas.start', study_title=study['title']) }}" class="btn btn-secondary">Check for update?</a>
               </div>
-            {% elif project["status"][role | string] == ["not ready"] %}
+            {% elif study["status"][role | string] == ["not ready"] %}
               <button type="button" class="mt-2 btn btn-success" data-bs-toggle="modal" data-bs-target="#chooseWorkflow">
                 Ready to begin GWAS?
               </button>
@@ -88,7 +88,7 @@
                       <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body container">
-                      <form action="{{ url_for('gwas.start', project_title=project['title']) }}" method="post">
+                      <form action="{{ url_for('gwas.start', study_title=study['title']) }}" method="post">
                         <div class="text-start row">
                           <label for="BOOT_DISK_SIZE" class="col-sm-3 col-form-label">{{parameters['BOOT_DISK_SIZE']['name']}}</label>
                           <div class="col-sm-9">
@@ -132,10 +132,10 @@
                 </div>
               </div>
             {% else %}
-              <form action="{{ url_for('gwas.start', project_title=project['title']) }}" method="post">
+              <form action="{{ url_for('gwas.start', study_title=study['title']) }}" method="post">
                 <br>
                 Status:
-                {% if ((["not ready"] in project["status"].values())or([""] in project["status"].values())or(["invalid data"] in project["status"].values())or(["validating"] in project["status"].values())) %}
+                {% if ((["not ready"] in study["status"].values())or([""] in study["status"].values())or(["invalid data"] in study["status"].values())or(["validating"] in study["status"].values())) %}
                   Waiting for others to be ready...
                 {% else %}
                   <div class="status text-start"></div>
@@ -194,12 +194,12 @@
       const auth = getAuth(app);
       signInWithCustomToken(auth, custom_token);
 
-      var project_title = $('#project-title-data')
+      var study_title = $('#study-title-data')
         .data()['value']
         .toLowerCase()
         .replace(/\s/g, '');
       var role = Number($('#role-data').data()['value']);
-      const unsub = onSnapshot(doc(db, "projects", project_title), (doc) => {
+      const unsub = onSnapshot(doc(db, "studies", study_title), (doc) => {
         console.log("Current data: ", doc.data());
         console.log(doc.data()["status"]);
         console.log(doc.data()["status"][role]);

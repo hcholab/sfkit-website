@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block title %}
-  New Project
+  New Study
 {% endblock %}
 
 {% block content %}
@@ -10,10 +10,10 @@
       <div class="row">
         <div class="col-12 col-lg-8 mx-auto text-center">
           <div class="p-5 bg-light rounded text-center">
-            <h2 class="display-5 fw-bold mt-2 mb-3">Let's create a new GWAS project:</h2>
+            <h2 class="display-5 fw-bold mt-2 mb-3">Let's create a new GWAS study:</h2>
             <form method="post">
-              <input class="form-control mb-2" name="title" id="title" value="{{ request.form['title'] }}" maxlength="50" required="required" placeholder="An Awesome Project Title">
-              <textarea class="form-control mb-2" name="description" id="description" required="required" placeholder="An awesome description for an awesome project.">
+              <input class="form-control mb-2" name="title" id="title" value="{{ request.form['title'] }}" maxlength="50" required="required" placeholder="An Awesome Study Title">
+              <textarea class="form-control mb-2" name="description" id="description" required="required" placeholder="An awesome description for an awesome study.">
                 {{ request.form['description'] }}
               </textarea>
               <p class="text-start mt-4 fw-bold">What role will you play in the study?</p>
