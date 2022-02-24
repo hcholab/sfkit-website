@@ -219,7 +219,7 @@ class GoogleCloudCompute:
         source_disk_image = image_response["selfLink"]
 
         # Configure the machine
-        machine_type = f"zones/{zone}/machineTypes/n2d-standard-{num_cpus}"
+        machine_type = f"zones/{zone}/machineTypes/e2-highmem-{num_cpus}"
         if validate:
             startup_script = open(
                 os.path.join(
@@ -245,12 +245,6 @@ class GoogleCloudCompute:
         instance_body = {
             "name": name,
             "machineType": machine_type,
-            "confidentialInstanceConfig": {
-                "enableConfidentialCompute": True,
-            },
-            "scheduling": {
-                "onHostMaintenance": "TERMINATE",
-            },
             "networkInterfaces": [
                 {
                     "network": "projects/{}/global/networks/{}".format(
