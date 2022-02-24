@@ -132,25 +132,15 @@
                 </div>
               </div>
             {% else %}
-              <form action="{{ url_for('gwas.start', study_title=study['title']) }}" method="post">
-                <br>
-                Status:
-                {% if ((["not ready"] in study["status"].values())or([""] in study["status"].values())or(["invalid data"] in study["status"].values())or(["validating"] in study["status"].values())) %}
-                  Waiting for others to be ready...
-                {% else %}
-                  <div class="status text-start"></div>
-                {% endif %}
-                <br>
-                <button class="mt-2 btn btn-secondary" type="submit" onclick="loading();">
-                  <div id="loading" style="display:none">
-                    <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
-                    Loading...
-                  </div>
-                  <div id="normal-content">
-                    Check for update?
-                  </div>
-                </button>
-              </form>
+              <br>
+              Status:
+              {% if ((["not ready"] in study["status"].values())or([""] in study["status"].values())or(["invalid data"] in study["status"].values())or(["validating"] in study["status"].values())) %}
+                Waiting for others to be ready...
+              {% else %}
+                <div class="status text-start"></div>
+              {% endif %}
+              <br>
+              <a href="{{ url_for('gwas.start', study_title=study['title']) }}" class="btn btn-secondary">Check for update?</a>
             {% endif %}
           </div>
         </div>
