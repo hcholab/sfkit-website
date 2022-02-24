@@ -71,7 +71,9 @@ class GoogleCloudStorage:
         if role == file.split(".")[-2]:
             parameters = (
                 parameters
-                | doc_dict["personal_parameters"][doc_dict["participants"][int(role)]]
+                | doc_dict["personal_parameters"][
+                    doc_dict["participants"][int(role) - 1]
+                ]
             )
 
         for line in fileinput.input(file, inplace=True):

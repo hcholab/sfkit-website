@@ -13,7 +13,7 @@ def create_instance_name(study_title, role):
 
 
 def validate(size: int, doc_ref_dict: dict, role: int) -> bool:
-    id: str = doc_ref_dict.get("participants", [])[role]
+    id: str = doc_ref_dict.get("participants", [])[role - 1]
     num_snps: int = int(
         doc_ref_dict.get("parameters", {}).get("NUM_SNPS", {}).get("value", "0")
     )

@@ -55,14 +55,15 @@ def index() -> Tuple[str, int]:
         )
         doc_ref_dict = doc_ref.get().to_dict()
         statuses = doc_ref_dict.get("status")
+        id = doc_ref_dict.get("participants")[int(role) - 1]
 
         if content.isnumeric():
             if validate(int(content), doc_ref_dict, int(role)):
-                statuses[role] = ["not ready"]
+                statuses[id] = ["not ready"]
             else:
-                statuses[role] = ["invalid data"]
+                statuses[id] = ["invalid data"]
         else:
-            statuses.get(role).append(f"{content} - {publishTime}")
+            statuses.get(id).append(f"{content} - {publishTime}")
         doc_ref.set({"status": statuses}, merge=True)
     except Exception as e:
         print(f"error: {e}")

@@ -28,34 +28,29 @@ def index():
     studies = db.collection("studies")
     studies_list = [study.to_dict() for study in studies.stream()]
 
-    if request.method == "POST":  # user wants to join a study
-        if "study_title" not in request.form:
-            r = redirect(url_for("gwas.index"))
-            flash(r, "Error processing your request.")
-            return r
+    if request.method == "GET":
+        return render_template("gwas/index.html", studies=studies_list)
 
-        doc_ref = studies.document(request.form["study_title"].replace(" ", "").lower())
-        doc_ref_dict = doc_ref.get().to_dict()
-        doc_ref_dict["requested_participants"][g.user["id"]] = request.form.get("role")
-        doc_ref.set(
-            {"requested_participants": doc_ref_dict["requested_participants"]},
-            merge=True,
-        )
-        return redirect(url_for("gwas.index"))
-
-    return render_template("gwas/index.html", studies=studies_list)
+    # user wants to join a study
+    doc_ref = studies.document(request.form["study_title"].replace(" ", "").lower())
+    doc_ref_dict = doc_ref.get().to_dict()
+    doc_ref_dict["requested_participants"] = [g.user["id"]]
+    doc_ref.set(
+        {"requested_participants": doc_ref_dict["requested_participants"]},
+        merge=True,
+    )
+    return redirect(url_for("gwas.index"))
 
 
 @bp.route("/create", methods=("GET", "POST"))
 @login_required
 def create():
-    if request.method != "POST":
+    if request.method == "GET":
         return render_template("gwas/create.html")
-    db = current_app.config["DATABASE"]
 
+    db = current_app.config["DATABASE"]
     title = request.form["title"]
     description = request.form["description"]
-    role = request.form["role"]
 
     if not re.match(r"^[a-zA-Z][ a-zA-Z0-9-]*$", title):
         r = redirect(url_for("gwas.create"))
@@ -74,10 +69,6 @@ def create():
             flash(r, "Title already exists.")
             return r
 
-    participants = (
-        ["", g.user["id"], ""] if role == "studyParticipant" else [g.user["id"], "", ""]
-    )
-
     doc_ref = db.collection("studies").document(title.replace(" ", "").lower())
     doc_ref.set(
         {
@@ -85,13 +76,11 @@ def create():
             "description": description,
             "owner": g.user["id"],
             "created": datetime.now(),
-            "participants": participants,
-            "status": {"0": [""]},
-            "parameters": constants.DEFAULT_PARAMETERS,
-            "personal_parameters": {
-                g.user["id"]: constants.DEFAULT_PERSONAL_PARAMETERS
-            },
-            "requested_participants": {},
+            "participants": [g.user["id"]],
+            "status": {g.user["id"]: [""]},
+            "parameters": constants.DEFAULT_SHARED_PARAMETERS,
+            "personal_parameters": {g.user["id"]: constants.DEFAULT_USER_PARAMETERS},
+            "requested_participants": [],
         }
     )
     return redirect(url_for("gwas.index"))
@@ -160,11 +149,10 @@ def delete(study_title):
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
 
+    # delete vms that may still exist
     google_cloud_compute = GoogleCloudCompute("")
     for participant in doc_ref_dict["personal_parameters"].values():
-        print(participant)
         if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
-            print(gcp_project)
             google_cloud_compute.project = gcp_project
             for instance in google_cloud_compute.list_instances():
                 if constants.INSTANCE_NAME_ROOT in instance:
@@ -196,33 +184,19 @@ def approve_join_study(study_title, user_id):
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
-    doc_ref_dict["status"][str(len(doc_ref_dict["status"]))] = [""]
-    role = doc_ref_dict["requested_participants"].pop(user_id)
-    print(f"Requested participants after pop: {doc_ref_dict['requested_participants']}")
-
-    participants = doc_ref_dict["participants"]
-    if role == "studyParticipant" and participants[1] == "":
-        participants[1] = user_id
-    elif role == "studyParticipant" and participants[2] == "":
-        participants[2] = user_id
-    elif role == "computeParty" and participants[0] == "":
-        participants[0] = user_id
-    else:
-        r = redirect(url_for("gwas.start", study_title=study_title))
-        flash(r, "Study is full.")
-        return r
 
     doc_ref.set(
         {
-            "participants": participants,
+            "requested_participants": doc_ref_dict["requested_participants"].remove(
+                user_id
+            ),
+            "participants": doc_ref_dict["participants"] + [user_id],
             "personal_parameters": doc_ref_dict["personal_parameters"]
-            | {user_id: constants.DEFAULT_PERSONAL_PARAMETERS},
-            "status": doc_ref_dict["status"],
+            | {user_id: constants.DEFAULT_USER_PARAMETERS},
+            "status": doc_ref_dict["status"] | {user_id: [""]},
         },
         merge=True,
     )
-    # I need to do this separately since I am deleting from a dict
-    doc_ref.update({"requested_participants": doc_ref_dict["requested_participants"]})
 
     return redirect(url_for("gwas.start", study_title=study_title))
 
@@ -233,7 +207,7 @@ def validate_bucket(study_title):
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
-    role: str = str(doc_ref_dict["participants"].index(g.user["id"]))
+    role: str = str(doc_ref_dict["participants"].index(g.user["id"]) + 1)
     gcp_project = doc_ref_dict["personal_parameters"][g.user["id"]]["GCP_PROJECT"][
         "value"
     ]
@@ -246,7 +220,7 @@ def validate_bucket(study_title):
         return r
 
     statuses = doc_ref_dict["status"]
-    statuses[role] = ["validating"]
+    statuses[g.user["id"]] = ["validating"]
     doc_ref.set({"status": statuses}, merge=True)
 
     gcloudCompute = GoogleCloudCompute(gcp_project)
@@ -281,10 +255,9 @@ def start(study_title):
     public_keys = [
         doc_ref_dict["personal_parameters"][user]["PUBLIC_KEY"]["value"]
         for user in doc_ref_dict["participants"]
-        if user != ""
     ]
     id = g.user["id"]
-    role: int = doc_ref_dict["participants"].index(id)
+    role: int = doc_ref_dict["participants"].index(id) + 1
 
     if request.method == "GET":
         return render_template(
@@ -306,10 +279,10 @@ def start(study_title):
         return r
 
     statuses = doc_ref_dict["status"]
-    if statuses[str(role)] == ["not ready"]:
+    if statuses[id] == ["not ready"]:
         gcloudIAM = GoogleCloudIAM()
         if gcloudIAM.test_permissions(gcp_project):
-            statuses[str(role)] = ["ready"]
+            statuses[id] = ["ready"]
             personal_parameters = doc_ref_dict["personal_parameters"]
             personal_parameters[id]["NUM_CPUS"]["value"] = request.form["NUM_CPUS"]
             personal_parameters[id]["NUM_THREADS"]["value"] = request.form["NUM_CPUS"]
@@ -331,8 +304,8 @@ def start(study_title):
 
     if any("not ready" in status for status in statuses.values()):
         pass
-    elif statuses[str(role)] == ["ready"]:
-        statuses[str(role)] = ["setting up your vm instance"]
+    elif statuses[id] == ["ready"]:
+        statuses[id] = ["setting up your vm instance"]
 
         doc_ref.set(
             {
@@ -341,6 +314,23 @@ def start(study_title):
             merge=True,
         )
         doc_ref_dict = doc_ref.get().to_dict()
+        if role == 1:
+            # start CP0 as well
+            gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
+            instance = create_instance_name(study_title, "0")
+            vm_parameters = doc_ref_dict["personal_parameters"][id]
+            gcloudCompute.setup_networking("0")
+            gcloudCompute.setup_instance(
+                constants.ZONE,
+                instance,
+                "0",
+                vm_parameters["NUM_CPUS"]["value"],
+                metadata={
+                    "key": "bucketname",
+                    "value": vm_parameters["BUCKET_NAME"]["value"],
+                },
+                boot_disk_size=vm_parameters["BOOT_DISK_SIZE"]["value"],
+            )
         run_gwas(
             str(role),
             gcp_project,
@@ -447,7 +437,7 @@ def personal_parameters(study_title):
 #     return status
 
 
-def run_gwas(role, gcp_project, study_title, vm_parameters=None):
+def run_gwas(role: str, gcp_project: str, study_title: str, vm_parameters=None) -> None:
     gcloudCompute = GoogleCloudCompute(gcp_project)
     gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
     gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
@@ -456,6 +446,7 @@ def run_gwas(role, gcp_project, study_title, vm_parameters=None):
     gcloudStorage.copy_parameters_to_bucket(study_title, role)
 
     instance = create_instance_name(study_title, role)
+    gcloudCompute.setup_networking(role)
     gcloudCompute.setup_instance(
         constants.ZONE,
         instance,

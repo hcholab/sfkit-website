@@ -10,7 +10,7 @@ PARAMETER_FILES = ["test.par.0.txt", "test.par.1.txt", "test.par.2.txt"]
 BASE_P = "1461501637330902918203684832716283019655932542929"
 DATA_VALIDATION_CONSTANT = 4 * len(BASE_P)
 
-DEFAULT_PARAMETERS = {
+DEFAULT_SHARED_PARAMETERS = {
     "NUM_SNPS": {
         "name": "Number of SNPs",
         "description": "The number of SNPs (Single Nucleotide Polymorphisms) in the dataset.",
@@ -105,7 +105,7 @@ DEFAULT_PARAMETERS = {
     ],
 }
 
-DEFAULT_PERSONAL_PARAMETERS = {
+DEFAULT_USER_PARAMETERS = {
     "PUBLIC_KEY": {
         "name": "Public Key",
         "description": "Your public cryptographic key that you and the other participant will use to encrypt each of your data (combined with your respective private keys, of course).",

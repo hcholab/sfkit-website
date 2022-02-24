@@ -196,7 +196,7 @@ def test_run_gwas(mocker):
         "role",
         "gcp_project",
         "study title",
-        vm_parameters=constants.DEFAULT_PERSONAL_PARAMETERS,
+        vm_parameters=constants.DEFAULT_USER_PARAMETERS,
     )
 
 
