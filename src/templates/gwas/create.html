@@ -13,9 +13,7 @@
             <h2 class="display-5 fw-bold mt-2 mb-3">Let's create a new GWAS study:</h2>
             <form method="post">
               <input class="form-control mb-2" name="title" id="title" value="{{ request.form['title'] }}" maxlength="50" required="required" placeholder="An Awesome Study Title">
-              <textarea class="form-control mb-2" name="description" id="description" required="required" placeholder="An awesome description for an awesome study.">
-                {{ request.form['description'] }}
-              </textarea>
+              <textarea class="form-control mb-2" name="description" id="description" value="{{ request.form['description'] }}" required="required" placeholder="An awesome description for an awesome study."></textarea>
               <p class="text-start mt-4 fw-bold">What role will you play in the study?</p>
               <div class="form-check text-start">
                 <input class="form-check-input" type="radio" name="role" id="studyParticipant" value="studyParticipant" checked="checked">
