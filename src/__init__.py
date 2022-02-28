@@ -1,15 +1,32 @@
 import os
+import secrets
 
 import firebase_admin
 from flask import Flask
 from flask_bootstrap import Bootstrap
 from google.cloud import firestore
 
+from src import auth, general, gwas
 
-def create_app():
+
+def create_app() -> Flask:
+    initialize_firebase_admin()
+
     app = Flask(__name__)
+    app.config.from_mapping(
+        SECRET_KEY=secrets.token_hex(16), DATABASE=firestore.Client()
+    )
 
-    # if serviceAccountKey.json file exists, use it to initialize the app
+    Bootstrap(app)
+    app.register_blueprint(auth.bp)
+    app.register_blueprint(gwas.bp)
+    app.register_blueprint(general.bp)
+
+    return app
+
+
+def initialize_firebase_admin() -> None:
+    # if serviceAccountKey.json file exists, use it to initialize the app (for local testing)
     if os.path.exists("serviceAccountKey.json"):
         print("Using serviceAccountKey.json for the firebase_admin")
         firebase_admin.initialize_app(
@@ -18,17 +35,3 @@ def create_app():
     else:
         print("Using default service account for the firebase_admin")
         firebase_admin.initialize_app()
-
-    app.config.from_mapping(
-        SECRET_KEY=os.urandom(12).hex(), DATABASE=firestore.Client()
-    )
-
-    Bootstrap(app)
-
-    from src import auth, general, gwas
-
-    app.register_blueprint(auth.bp)
-    app.register_blueprint(gwas.bp)
-    app.register_blueprint(general.bp)
-
-    return app
