@@ -6,7 +6,7 @@ from flask import Flask
 from flask_bootstrap import Bootstrap
 from google.cloud import firestore
 
-from src import auth, general, gwas
+from src import auth, general, gwas, studies
 
 
 def create_app() -> Flask:
@@ -21,6 +21,7 @@ def create_app() -> Flask:
     app.register_blueprint(auth.bp)
     app.register_blueprint(gwas.bp)
     app.register_blueprint(general.bp)
+    app.register_blueprint(studies.bp)
 
     return app
 

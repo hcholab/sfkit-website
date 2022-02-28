@@ -1,7 +1,5 @@
 {% extends 'base.html' %}
-
 {% block title %}Study Start?{% endblock %}
-
 {% block content %}
   <meta id="study-title-data" data-value="{{ study['title'] }}">
   <meta id="id-data" data-value="{{ g.user['id'] }}">
@@ -21,7 +19,7 @@
               </small>
             </span>
             <h2 class="mt-2 fw-bold">{{ study['title'] }}</h2>
-            <p class="lead text-muted">{{ study['description']  }}</p>
+            <p class="lead text-muted">{{ study['description'] }}</p>
             <div class="mb-3">
               <div>
                 <p class="fw-bold mb-0">Study Participants:</p>
@@ -47,7 +45,7 @@
                   <br>
                   <small class="text-muted ms-2 me-2">
                     {{ participant }}
-                    <a href="{{ url_for('gwas.approve_join_study', study_title=study['title'], user_id=participant) }}" type="button" class="btn btn-sm btn-info">Approve Request</a>
+                    <a href="{{ url_for('studies.approve_join_study', study_title=study['title'], user_id=participant) }}" type="button" class="btn btn-sm btn-info">Approve Request</a>
                   </small>
                 {% endfor %}
               </div>
@@ -59,8 +57,8 @@
               <br>
             </p>
             <div class="edit-parameters">
-              <a href="{{ url_for('gwas.parameters', study_title=study['title']) }}" class="btn btn-secondary">Edit Shared Study Parameters</a>
-              <a href="{{ url_for('gwas.personal_parameters', study_title=study['title']) }}" class="btn btn-secondary">Edit User-Specific Parameters</a>
+              <a href="{{ url_for('studies.parameters', study_title=study['title']) }}" class="btn btn-secondary">Edit Shared Study Parameters</a>
+              <a href="{{ url_for('studies.personal_parameters', study_title=study['title']) }}" class="btn btn-secondary">Edit User-Specific Parameters</a>
             </div>
             {% if study["status"][g.user["id"]] == [""] %}
               <a href="{{ url_for('gwas.validate_bucket', study_title=study['title']) }}" class="mt-2 btn btn-secondary">Validate Bucket</a>
@@ -68,7 +66,7 @@
               <div class="mt-2">
                 Validating Bucket...
                 <br>
-                <a href="{{ url_for('gwas.start', study_title=study['title']) }}" class="btn btn-secondary">Check for update?</a>
+                <a href="{{ url_for('studies.study', study_title=study['title']) }}" class="btn btn-secondary">Check for update?</a>
               </div>
             {% elif study["status"][g.user["id"]] == ["not ready"] %}
               <button type="button" class="mt-2 btn btn-success" data-bs-toggle="modal" data-bs-target="#chooseWorkflow">
@@ -82,7 +80,7 @@
                       <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body container">
-                      <form action="{{ url_for('gwas.start', study_title=study['title']) }}" method="post">
+                      <form action="{{ url_for('gwas.start_gwas', study_title=study['title']) }}" method="post">
                         <div class="text-start row">
                           <label for="BOOT_DISK_SIZE" class="col-sm-3 col-form-label">{{parameters['BOOT_DISK_SIZE']['name']}}</label>
                           <div class="col-sm-9">
@@ -130,8 +128,8 @@
                 <div class="status text-start"></div>
               {% endif %}
               <br>
-              <form action="{{ url_for('gwas.start', study_title=study['title']) }}" method="post">
-                <button type="submit" class="btn btn-secondary">Check for Update?</button>
+              <form action="{{ url_for('gwas.start_gwas', study_title=study['title']) }}" method="post">
+                <button type="submit" class="btn btn-secondary">Check again if others are ready?</button>
               </form>
             {% endif %}
           </div>
@@ -140,7 +138,6 @@
     </div>
   </section>
 {% endblock %}
-
 {% block javascript %}
   <script type="text/javascript">
     function loading() {
@@ -153,10 +150,8 @@
     import {initializeApp} from "https://www.gstatic.com/firebasejs/9.6.6/firebase-app.js";
     import {getFirestore, doc, onSnapshot} from "https://www.gstatic.com/firebasejs/9.6.6/firebase-firestore.js";
     import {getAuth, signInWithCustomToken} from "https://www.gstatic.com/firebasejs/9.6.6/firebase-auth.js"
-
     $(document).ready(function () {
       $('#NUM_CPUS').val($('#num-cpus-data').data()['value']);
-
       const firebaseConfig = {
         apiKey: "AIzaSyAJ5Ql7iZ4QMi640Xryx0YbBzwhGdGxKdE",
         authDomain: "broad-cho-priv1.firebaseapp.com",
@@ -168,14 +163,11 @@
         databaseURL: "",
         serviceAccount: "serviceAccountKey.json"
       };
-
       const app = initializeApp(firebaseConfig);
       const db = getFirestore(app);
-
       const custom_token = "{{g.custom_token}}";
       const auth = getAuth(app);
       signInWithCustomToken(auth, custom_token);
-
       var study_title = $('#study-title-data')
         .data()['value']
         .toLowerCase()

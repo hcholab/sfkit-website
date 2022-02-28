@@ -21,11 +21,10 @@ def test_copy_parameters_to_bucket(app, client, auth, mocker):
 
     auth.register()
     response = client.post(
-        "create",
+        "create_study",
         data={
             "title": "study title",
             "description": "test description",
-            "role": "computeParticipant",
         },
     )
     assert response.headers["Location"] == "http://localhost/index"

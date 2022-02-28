@@ -1,26 +1,28 @@
 import base64
 from typing import Tuple
-from flask import Blueprint, current_app, render_template, request
 
-from src.utils.helper_functions import validate
+from flask import Blueprint, current_app, make_response, render_template, request
+from werkzeug import Response
+
+from src.utils.gwas_functions import data_is_valid
 
 bp = Blueprint("general", __name__)
 
 
 @bp.route("/", methods=["GET"])
 @bp.route("/home", methods=["GET"])
-def home() -> str:
-    return render_template("home.html")
+def home() -> Response:
+    return make_response(render_template("home.html"))
 
 
 @bp.route("/workflow")
-def workflow() -> str:
-    return render_template("workflow.html")
+def workflow() -> Response:
+    return make_response(render_template("workflow.html"))
 
 
 @bp.route("/permissions")
-def permissions() -> str:
-    return render_template("permissions.html")
+def permissions() -> Response:
+    return make_response(render_template("permissions.html"))
 
 
 # for the pubsub
@@ -58,7 +60,7 @@ def index() -> Tuple[str, int]:
         id = doc_ref_dict.get("participants")[int(role) - 1]
 
         if content.isnumeric():
-            if validate(int(content), doc_ref_dict, int(role)):
+            if data_is_valid(int(content), doc_ref_dict, int(role)):
                 statuses[id] = ["not ready"]
             else:
                 statuses[id] = ["invalid data"]

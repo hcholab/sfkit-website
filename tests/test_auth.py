@@ -1,3 +1,5 @@
+from flask import redirect, url_for
+from werkzeug import Response
 import pytest
 
 from conftest import MockFirebaseAdminAuth
@@ -5,7 +7,7 @@ from conftest import MockFirebaseAdminAuth
 
 @pytest.mark.parametrize(
     "path",
-    ("/create", "/delete/1", "/start/1"),  # , "auth/user/1"),
+    ("/create_study", "/delete_study/1", "/study/1"),  # , "auth/user/1"),
 )
 def test_login_required(client, path):
     response = client.post(path)
@@ -23,7 +25,6 @@ def test_register(client, mocker):
         data={"email": "a@a.a", "password": "a", "password_check": "a"},
     )
     assert response.headers.get("Location") == "http://localhost/index"
-    assert "a@a.a" in response.headers["Set-Cookie"]
 
 
 @pytest.mark.parametrize(
@@ -99,12 +100,20 @@ def test_logout(client, auth):
 
 
 def setup_mocking(mocker):
-    mocker.patch(
-        "src.auth.sign_in_with_email_and_password", mock_sign_in_with_email_and_password
-    )
+    mocker.patch("src.auth.update_user", mock_update_user)
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     mocker.patch("src.auth.GoogleCloudIAM", MockGoogleCloudIAM)
     mocker.patch("src.auth.id_token.verify_oauth2_token", mock_verify_token)
+
+
+def mock_update_user(email: str, password: str) -> Response:
+    if password == "INVALID_PASSWORD":
+        print("Invalid password")
+    elif password == "USER_NOT_FOUND":
+        print("No user found with that email.")
+    elif password == "BAD":
+        print("Error logging in.")
+    return redirect(url_for("studies.index"))
 
 
 def mock_verify_token(token, blah, blah2):

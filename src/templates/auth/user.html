@@ -22,7 +22,7 @@
                 <input class="form-control mb-3" name="public_key" id="public_key" value="{{ request.form['public_key'] or user['public_key'] }}" placeholder="Public Key">
               </div>
               <div class="d-flex flex-wrap justify-content-center">
-                <a href="{{ url_for('gwas.index', id=g.user['id']) }}" class="btn btn-outline-secondary me-2 mb-2 mb-sm-0">Cancel</a>
+                <a href="{{ url_for('studies.index', id=g.user['id']) }}" class="btn btn-outline-secondary me-2 mb-2 mb-sm-0">Cancel</a>
                 <input type="submit" value="Save" class="btn btn-primary me-2 mb-2 mb-sm-0">
               </div>
             </form>

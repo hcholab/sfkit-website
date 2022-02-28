@@ -1,6 +1,4 @@
-import datetime
 import functools
-import json
 import secrets
 import string
 
@@ -15,15 +13,13 @@ from flask import (
     request,
     url_for,
 )
-from google.auth import jwt
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
-from requests import post
-from requests.exceptions import HTTPError
 from werkzeug import Response
 
+from src.utils.auth_functions import update_user
+from src.utils.generic_functions import redirect_with_flash
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
-from src.utils.helper_functions import flash, redirect_with_flash
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -39,7 +35,11 @@ def load_logged_in_user() -> None:
         )
         g.user = {"id": user_dict["email"]}
     except Exception as e:
-        if "session cookie provided: None" not in str(e):
+        no_user_strings = [
+            "session cookie provided: None",
+            "session cookie must be a non-empty string",
+        ]
+        if all(s not in str(e) for s in no_user_strings):
             print(f'Error logging in user: "{e}"')
         g.user = None
     else:
@@ -86,7 +86,7 @@ def register() -> Response:
         gcloudIAM = GoogleCloudIAM()
         gcloudIAM.give_cloud_build_view_permissions(email)
 
-        return update_session_cookie_and_return_to_index(email, password)
+        return update_user(email, password)
     except Exception as e:
         if ("EMAIL_EXISTS") in str(e):
             return redirect_with_flash(
@@ -110,7 +110,7 @@ def login() -> Response:
     password = request.form["password"]
 
     try:
-        return update_session_cookie_and_return_to_index(email, password)
+        return update_user(email, password)
     except Exception as e:
         if ("INVALID_PASSWORD") in str(e):
             return redirect_with_flash(
@@ -136,80 +136,37 @@ def logout() -> Response:
     return response
 
 
-@bp.route("/callback", methods=("POST",))
+@bp.route("/login_with_google_callback", methods=("POST",))
 def login_with_google_callback() -> Response:
     try:
-        decoded_token = id_token.verify_oauth2_token(
+        decoded_jwt_token = id_token.verify_oauth2_token(
             request.form["credential"],
             google_requests.Request(),
             "419003787216-rcif34r976a9qm3818qgeqed7c582od6.apps.googleusercontent.com",
         )
     except Exception as e:
         return redirect_with_flash(
-            location="gwas.index", message="Invalid Google account.", error=str(e)
+            location="studies.index", message="Invalid Google account.", error=str(e)
         )
 
-    token = jwt.decode(
-        request.form["credential"], verify=False
-    )  # verify = False because we already verified the token separately
-
-    print(f"Decoded token: {decoded_token}")
-    print(f"Token: {token}")
-
     rand_temp_password = "".join(
-        secrets.choice(string.ascii_lowercase) for _ in range(16)
+        secrets.choice(string.ascii_letters) for _ in range(16)
     )
 
     try:
-        firebase_auth.get_user_by_email(token["email"])
+        firebase_auth.get_user_by_email(decoded_jwt_token["email"])
         firebase_auth.update_user(
-            uid=token["email"], email=token["email"], password=rand_temp_password
+            uid=decoded_jwt_token["email"],
+            email=decoded_jwt_token["email"],
+            password=rand_temp_password,
         )
     except firebase_auth.UserNotFoundError:
         firebase_auth.create_user(
-            uid=token["email"], email=token["email"], password=rand_temp_password
+            uid=decoded_jwt_token["email"],
+            email=decoded_jwt_token["email"],
+            password=rand_temp_password,
         )
         gcloudIAM = GoogleCloudIAM()
-        gcloudIAM.give_cloud_build_view_permissions(token["email"])
+        gcloudIAM.give_cloud_build_view_permissions(decoded_jwt_token["email"])
 
-    return update_session_cookie_and_return_to_index(token["email"], rand_temp_password)
-
-
-def update_session_cookie_and_return_to_index(email, password):
-    expires_in = datetime.timedelta(days=1)
-
-    user = sign_in_with_email_and_password(email, password)
-    session_cookie = firebase_auth.create_session_cookie(
-        user["idToken"], expires_in=expires_in
-    )
-    response = redirect(url_for("gwas.index"))
-    response.set_cookie(
-        "session",
-        session_cookie,
-        expires=datetime.datetime.now() + expires_in,
-        httponly=True,
-        secure=True,
-    )
-
-    return response
-
-
-def sign_in_with_email_and_password(email, password):
-    with open("fbconfig.json") as f:
-        config = json.load(f)
-    api_key = config["apiKey"]
-    request_ref = "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key={0}".format(
-        api_key
-    )
-    headers = {"content-type": "application/json; charset=UTF-8"}
-    data = json.dumps({"email": email, "password": password, "returnSecureToken": True})
-    request_object = post(request_ref, headers=headers, data=data)
-    raise_detailed_error(request_object)
-    return request_object.json()
-
-
-def raise_detailed_error(request_object):
-    try:
-        request_object.raise_for_status()
-    except HTTPError as e:
-        raise HTTPError(e, request_object.text) from e
+    return update_user(decoded_jwt_token["email"], rand_temp_password)
