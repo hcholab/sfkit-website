@@ -46,11 +46,11 @@ gsutil cp gs://${bucket}/g.bin /home/secure-gwas/test_data/g.bin &&
     gsutil cp gs://${bucket}/pos.txt /home/secure-gwas/test_data/pos.txt &&
     gsutil cp gs://secure-gwas-data/test.par.${role}.txt /home/secure-gwas/par/test.par.${role}.txt
 if [[ $? -ne 0 && "$role" != "0\n" ]]; then
-    gcloud pubsub topics publish ${topic_id} --message="${topic_id}-Failed to download data from storage bucket: ${bucket}" --ordering-key="1" --project="broad-cho-priv1"
+    gcloud pubsub topics publish ${topic_id} --message="${topic_id}-Failed to download data from storage bucket" --ordering-key="1" --project="broad-cho-priv1"
     printf "\n\n Failed to download data from storage bucket: ${bucket} \n\n"
     exit 1
 else
-    gcloud pubsub topics publish ${topic_id} --message="${topic_id}-Done downloading data from storage bucket: ${bucket}" --ordering-key="1" --project="broad-cho-priv1"
+    gcloud pubsub topics publish ${topic_id} --message="${topic_id}-Done downloading data from storage bucket" --ordering-key="1" --project="broad-cho-priv1"
     printf "\n\n Done downloading data from storage bucket: ${bucket} \n\n"
 fi
 

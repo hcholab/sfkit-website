@@ -223,6 +223,11 @@ def validate_bucket(study_title):
     statuses[g.user["id"]] = ["validating"]
     doc_ref.set({"status": statuses}, merge=True)
 
+    if role == "1":
+        # setup networking for CP0 as well
+        gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
+        gcloudCompute.setup_networking("0")
+
     gcloudCompute = GoogleCloudCompute(gcp_project)
     gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
 
@@ -319,7 +324,7 @@ def start(study_title):
             gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
             instance = create_instance_name(study_title, "0")
             vm_parameters = doc_ref_dict["personal_parameters"][id]
-            gcloudCompute.setup_networking("0")
+            # gcloudCompute.setup_networking("0")
             gcloudCompute.setup_instance(
                 constants.ZONE,
                 instance,
@@ -353,7 +358,11 @@ def start(study_title):
         .to_dict()
     )
     return render_template(
-        "gwas/start.html", study=doc_ref_dict, public_keys=public_keys, role=role
+        "gwas/start.html",
+        study=doc_ref_dict,
+        public_keys=public_keys,
+        role=role,
+        parameters=doc_ref_dict["personal_parameters"][id],
     )
 
 
@@ -437,7 +446,9 @@ def personal_parameters(study_title):
 #     return status
 
 
-def run_gwas(role: str, gcp_project: str, study_title: str, vm_parameters=None) -> None:
+def run_gwas(
+    role: str, gcp_project: str, study_title: str, vm_parameters: dict = dict()
+) -> None:
     gcloudCompute = GoogleCloudCompute(gcp_project)
     gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
     gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
@@ -446,7 +457,7 @@ def run_gwas(role: str, gcp_project: str, study_title: str, vm_parameters=None) 
     gcloudStorage.copy_parameters_to_bucket(study_title, role)
 
     instance = create_instance_name(study_title, role)
-    gcloudCompute.setup_networking(role)
+    # gcloudCompute.setup_networking(role)
     gcloudCompute.setup_instance(
         constants.ZONE,
         instance,

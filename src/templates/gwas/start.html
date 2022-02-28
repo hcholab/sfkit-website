@@ -130,7 +130,9 @@
                 <div class="status text-start"></div>
               {% endif %}
               <br>
-              <a href="{{ url_for('gwas.start', study_title=study['title']) }}" class="btn btn-secondary">Check for update?</a>
+              <form action="{{ url_for('gwas.start', study_title=study['title']) }}" method="post">
+                <button type="submit" class="btn btn-secondary">Check for Update?</button>
+              </form>
             {% endif %}
           </div>
         </div>
