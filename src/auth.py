@@ -38,6 +38,7 @@ def load_logged_in_user() -> None:
         no_user_strings = [
             "session cookie provided: None",
             "session cookie must be a non-empty string",
+            "The default Firebase app does not exist. Make sure to initialize the SDK by calling initialize_app().",
         ]
         if all(s not in str(e) for s in no_user_strings):
             print(f'Error logging in user: "{e}"')

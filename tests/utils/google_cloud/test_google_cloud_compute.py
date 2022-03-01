@@ -9,6 +9,7 @@ def setup_mocking(mocker):
         "src.utils.google_cloud.google_cloud_compute.googleapi",
         MockMakeMockCompute,
     )
+    MockExecutable.error = ""
 
 
 @pytest.mark.parametrize(
@@ -99,6 +100,19 @@ def test_setup_instance(
     except Exception as e:
         if str(e) != "fake error" and "RetryError" not in str(e):
             raise
+
+
+def test_create_instance(mocker):
+    setup_mocking(mocker)
+    google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
+    google_cloud_compute.create_instance(
+        zone="zone",
+        name=constants.NETWORK_NAME,
+        role="role",
+        num_cpus=4,
+        validate=True,
+        metadata="hi",
+    )
 
 
 def test_stop_instance(mocker):

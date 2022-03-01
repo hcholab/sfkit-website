@@ -1,4 +1,11 @@
 import json
+from copy import deepcopy
+from src.utils import constants
+
+test_create_data = {
+    "title": "blah",
+    "description": "test description",
+}
 
 
 def test_home(client):
@@ -24,32 +31,45 @@ def test_permissions_page(client):
     assert b"Permissions" in response.data
 
 
-def test_index_from_pubsub(client, app):
-    with app.app_context():
-        db = app.config["DATABASE"]
-        doc_ref = db.collection("studies").document("blah")
-        doc_ref.set({"status": ["", "", "", "", "", ""]})
+def test_index_from_pubsub(client, app, mocker):
+    mocker.patch("src.general.data_is_valid", mock_data_is_valid)
 
-    client.post("/")
+    doc_ref = app.config["DATABASE"].collection("studies").document("blah")
+    doc_ref.set(
+        {"status": {"a@a.com": ["not ready"]}, "participants": ["a@a.com"]},
+        merge=True,
+    )
+
+    assert client.post("/").status_code == 400
 
     headers = {"Content-Type": "application/json"}
+
     data = json.dumps({"data": "test"})
-    client.post("/", data=data, headers=headers)
+    assert client.post("/", data=data, headers=headers).status_code == 400
 
     data = json.dumps({"message": "blah"})
-    client.post("/", data=data, headers=headers)
-
-    data = json.dumps(
-        {"message": {"data": "YmxhaA=="}}
-    )  # base64.b64encode("blah".encode("utf-8"))
-    client.post("/", data=data, headers=headers)
+    assert client.post("/", data=data, headers=headers).status_code == 400
 
     data = json.dumps(
         {"message": {"data": "YmxhaC1ibGFoLWJsYWg="}}
     )  # base64.b64encode("blah-blah-blah".encode("utf-8"))
-    client.post("/", data=data, headers=headers)
+    assert client.post("/", data=data, headers=headers).status_code == 204
 
     data = json.dumps(
-        {"message": {"data": "YmxhaC01LWJsYWg="}}
-    )  # base64.b64encode("blah-5-blah".encode("utf-8"))
-    client.post("/", data=data, headers=headers)
+        {"message": {"data": "YmxhaC0xLWJsYWg="}}
+    )  # base64.b64encode("blah-1-blah".encode("utf-8"))
+    assert client.post("/", data=data, headers=headers).status_code == 204
+
+    data = json.dumps(
+        {"message": {"data": "YmxhaC0xLTY="}}
+    )  # base64.b64encode("blah-1-6".encode("utf-8"))
+    assert client.post("/", data=data, headers=headers).status_code == 204
+
+    data = json.dumps(
+        {"message": {"data": "YmxhaC0xLTU="}}
+    )  # base64.b64encode("blah-1-5".encode("utf-8"))
+    assert client.post("/", data=data, headers=headers).status_code == 204
+
+
+def mock_data_is_valid(size, dic_ref_dict, role):
+    return size == 6

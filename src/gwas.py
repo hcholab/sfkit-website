@@ -3,7 +3,7 @@ from werkzeug import Response
 
 from src.auth import login_required
 from src.utils import constants
-from src.utils.generic_functions import flash, redirect_with_flash
+from src.utils.generic_functions import redirect_with_flash
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 from src.utils.google_cloud.google_cloud_pubsub import GoogleCloudPubsub
@@ -28,7 +28,7 @@ def validate_bucket(study_title: str) -> Response:
     ]
     if not gcp_project or gcp_project == "" or not bucket_name or bucket_name == "":
         return redirect_with_flash(
-            location="studies.personal_parameters",
+            url=url_for("studies.personal_parameters", study_title=study_title),
             message="Please set your GCP project and storage bucket location.",
         )
 
@@ -78,12 +78,10 @@ def start_gwas(study_title: str) -> Response:
     # check if pos.txt is in the google cloud bucket
     gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
     if not gcloudStorage.check_file_exists("pos.txt"):
-        message = "Please upload a pos.txt file or have one of the entities you are runnning this study with do so for you."
-        r = redirect(
-            url_for("studies.parameters", study_title=study_title, section="pos")
+        return redirect_with_flash(
+            url=url_for("studies.parameters", study_title=study_title, section="pos"),
+            message="Please upload a pos.txt file or have one of the entities you are runnning this study with do so for you.",
         )
-        flash(r, message)
-        return r
 
     if statuses[id] == ["not ready"]:
         if not GoogleCloudIAM().test_permissions(gcp_project):

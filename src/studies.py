@@ -168,7 +168,7 @@ def parameters(study_title: str) -> Response:
         file = request.files["file"]
         if file.filename == "":
             return redirect_with_flash(
-                location="studies.parameters",
+                url=url_for("studies.parameters", study_title=study_title),
                 message="Please select a file to upload.",
             )
         elif file and file.filename == "pos.txt":
@@ -176,12 +176,12 @@ def parameters(study_title: str) -> Response:
             return redirect(url_for("studies.study", study_title=study_title))
         else:
             return redirect_with_flash(
-                location="studies.parameters",
+                url=url_for("studies.parameters", study_title=study_title),
                 message="Please upload a valid pos.txt file.",
             )
     else:
         return redirect_with_flash(
-            location="studies.parameters",
+            url=url_for("studies.parameters", study_title=study_title),
             message="Something went wrong. Please try again.",
         )
 

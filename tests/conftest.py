@@ -26,10 +26,10 @@ class AuthActions:
         self._mocker = mocker
         self._app = app
 
-    def register(self, email="a@a.a", password="a", password_check="a"):
+    def register(self, email="a@a.com", password="a", password_check="a"):
         self.login(email, password)
 
-    def login(self, email="a@a.a", password="a"):
+    def login(self, email="a@a.com", password="a"):
         self._client.set_cookie("localhost", "session", email)
 
     def logout(self):
@@ -38,6 +38,8 @@ class AuthActions:
 
 class MockFirebaseAdminAuth:
     UserNotFoundError = Exception
+    throw_verify_session_cookie_exception = False
+    throw_create_custom_token_exception = False
 
     @staticmethod
     def create_user(email, password, uid=None):
@@ -52,6 +54,10 @@ class MockFirebaseAdminAuth:
 
     @staticmethod
     def verify_session_cookie(session_cookie, check_revoked=True):
+        if MockFirebaseAdminAuth.throw_verify_session_cookie_exception:
+            raise Exception("A Dell Mouse")
+        if MockFirebaseAdminAuth.throw_create_custom_token_exception:
+            return {"email": "testing", "uid": "uid".encode("utf-8")}
         if session_cookie:
             return {"email": session_cookie, "uid": "uid".encode("utf-8")}
         raise Exception("session cookie provided: None")
@@ -67,4 +73,6 @@ class MockFirebaseAdminAuth:
 
     @staticmethod
     def create_custom_token(uid):
+        if MockFirebaseAdminAuth.throw_create_custom_token_exception:
+            raise Exception("A Dell Mouse")
         return uid
