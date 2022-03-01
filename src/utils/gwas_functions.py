@@ -2,7 +2,7 @@ from typing import Tuple
 from xmlrpc.client import Boolean
 from flask import current_app, redirect, url_for
 from werkzeug import Response
-from src import constants
+from src.utils import constants
 import re
 
 from src.utils.generic_functions import redirect_with_flash

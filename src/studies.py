@@ -12,9 +12,9 @@ from flask import (
 )
 from werkzeug import Response
 
-from src import constants
+from src.utils import constants
 from src.auth import login_required
-from src.utils.generic_functions import flash, redirect_with_flash
+from src.utils.generic_functions import redirect_with_flash
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
 from src.utils.google_cloud.google_cloud_storage import GoogleCloudStorage
 from src.utils.gwas_functions import valid_study_title
@@ -27,7 +27,7 @@ def index() -> Response:
     db = current_app.config["DATABASE"]
     studies = db.collection("studies")
     studies_list = [study.to_dict() for study in studies.stream()]
-    return make_response(render_template("gwas/index.html", studies=studies_list))
+    return make_response(render_template("studies/index.html", studies=studies_list))
 
 
 @bp.route("/study/<study_title>", methods=("GET", "POST"))
@@ -45,7 +45,7 @@ def study(study_title: str) -> Response:
 
     return make_response(
         render_template(
-            "gwas/study.html",
+            "studies/study.html",
             study=doc_ref_dict,
             public_keys=public_keys,
             role=role,
@@ -58,7 +58,7 @@ def study(study_title: str) -> Response:
 @login_required
 def create_study() -> Response:
     if request.method == "GET":
-        return make_response(render_template("gwas/create_study.html"))
+        return make_response(render_template("studies/create_study.html"))
 
     db = current_app.config["DATABASE"]
     title = request.form["title"]
@@ -153,7 +153,7 @@ def parameters(study_title: str) -> Response:
     if request.method == "GET":
         return make_response(
             render_template(
-                "gwas/parameters.html",
+                "studies/parameters.html",
                 study_title=study_title,
                 parameters=parameters,
                 pos_file_uploaded=pos_file_uploaded,
@@ -194,7 +194,7 @@ def personal_parameters(study_title):
 
     if request.method == "GET":
         return render_template(
-            "gwas/personal_parameters.html",
+            "studies/personal_parameters.html",
             study_title=study_title,
             parameters=parameters[g.user["id"]],
         )

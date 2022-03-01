@@ -1,18 +1,9 @@
-from flask import (
-    Blueprint,
-    current_app,
-    g,
-    make_response,
-    redirect,
-    render_template,
-    request,
-    url_for,
-)
+from flask import Blueprint, current_app, g, redirect, request, url_for
 from werkzeug import Response
 
-from src import constants
 from src.auth import login_required
-from src.utils.generic_functions import redirect_with_flash, flash
+from src.utils import constants
+from src.utils.generic_functions import flash, redirect_with_flash
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 from src.utils.google_cloud.google_cloud_pubsub import GoogleCloudPubsub

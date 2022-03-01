@@ -47,7 +47,7 @@
             <div class="row">
               {% for study in studies %}
                 {% if g.user['id'] in study['participants'] %}
-                  {% include 'gwas/utils/display_study.html' %}
+                  {% include 'studies/utils/display_study.html' %}
                 {% endif %}
               {% endfor %}
             </div>
@@ -56,7 +56,7 @@
             <div class="row">
               {% for study in studies %}
                 {% if g.user['id'] not in study['participants'] %}
-                  {% include 'gwas/utils/display_study.html' %}
+                  {% include 'studies/utils/display_study.html' %}
                 {% endif %}
               {% endfor %}
             </div>

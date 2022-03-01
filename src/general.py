@@ -12,17 +12,17 @@ bp = Blueprint("general", __name__)
 @bp.route("/", methods=["GET"])
 @bp.route("/home", methods=["GET"])
 def home() -> Response:
-    return make_response(render_template("home.html"))
+    return make_response(render_template("general/home.html"))
 
 
 @bp.route("/workflow")
 def workflow() -> Response:
-    return make_response(render_template("workflow.html"))
+    return make_response(render_template("general/workflow.html"))
 
 
 @bp.route("/permissions")
 def permissions() -> Response:
-    return make_response(render_template("permissions.html"))
+    return make_response(render_template("general/permissions.html"))
 
 
 # for the pubsub

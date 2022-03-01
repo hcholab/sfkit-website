@@ -1,5 +1,5 @@
 import pytest
-from src import constants
+from src.utils import constants
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
 
 

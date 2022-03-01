@@ -4,7 +4,7 @@ import time
 
 import googleapiclient.discovery as googleapi
 from pytz import timezone
-from src import constants
+from src.utils import constants
 from tenacity import retry
 from tenacity.stop import stop_after_attempt
 from tenacity.wait import wait_fixed
@@ -150,7 +150,7 @@ class GoogleCloudCompute:
         )
         self.wait_for_regionOperation(region, operation["name"])
 
-    def create_firewalls(self, network_name: str):
+    def create_firewalls(self, network_name: str) -> None:
         print(f"Creating new firewalls for network {network_name}")
         network_url = ""
         for net in (
@@ -293,7 +293,7 @@ class GoogleCloudCompute:
 
         self.wait_for_zoneOperation(zone, operation["name"])
 
-    def stop_instance(self, zone, instance):
+    def stop_instance(self, zone: str, instance: str) -> None:
         print("Stopping VM instance with name ", instance)
         operation = (
             self.compute.instances()
