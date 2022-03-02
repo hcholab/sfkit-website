@@ -35,27 +35,33 @@ class GoogleCloudStorage:
             print(f"Updated parameters in {filename}")
 
     def update_parameters(self, file, study_title, role):
-        db = current_app.config["DATABASE"]
-        doc_dict = (
-            db.collection("studies")
+        db = (
+            current_app.config["DATABASE"]
+            .collection("studies")
             .document(study_title.replace(" ", "").lower())
             .get()
             .to_dict()
         )
-        parameters = doc_dict["parameters"]
+        pars = db["parameters"]
 
         if role == file.split(".")[-2]:
-            parameters = (
-                parameters
-                | doc_dict["personal_parameters"][
-                    doc_dict["participants"][int(role) - 1]
-                ]
-            )
+            pars = pars | db["personal_parameters"][db["participants"][int(role) - 1]]
+
+        pars["NUM_INDS_SP_1"] = db["personal_parameters"][db["participants"][0]][
+            "NUM_INDS"
+        ]
+        pars["NUM_INDS_SP_2"] = db["personal_parameters"][db["participants"][1]][
+            "NUM_INDS"
+        ]
+        pars["NUM_INDS"] = {"value": ""}
+        pars["NUM_INDS"]["value"] = str(
+            int(pars["NUM_INDS_SP_1"]["value"]) + int(pars["NUM_INDS_SP_2"]["value"])
+        )
 
         for line in fileinput.input(file, inplace=True):
             key = str(line).split(" ")[0]
-            if key in parameters:
-                line = f"{key} " + str(parameters[key]["value"]) + "\n"
+            if key in pars:
+                line = f"{key} " + str(pars[key]["value"]) + "\n"
             print(line, end="")
 
     def upload_to_bucket(self, file, filename):

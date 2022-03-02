@@ -122,7 +122,6 @@ def start_gwas(study_title: str) -> Response:
             gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
             instance = create_instance_name(study_title, "0")
             vm_parameters = doc_ref_dict["personal_parameters"][id]
-            # gcloudCompute.setup_networking("0")
             gcloudCompute.setup_instance(
                 constants.ZONE,
                 instance,
@@ -155,7 +154,6 @@ def run_gwas(
     gcloudStorage.copy_parameters_to_bucket(study_title, role)
 
     instance = create_instance_name(study_title, role)
-    # gcloudCompute.setup_networking(role)
     gcloudCompute.setup_instance(
         constants.ZONE,
         instance,

@@ -94,7 +94,7 @@ class MockGoogleCloudCompute:
     def __init__(self, project):
         pass
 
-    def setup_networking(self, role):
+    def setup_networking(self, doc_ref_dict, role):
         pass
 
     def setup_instance(

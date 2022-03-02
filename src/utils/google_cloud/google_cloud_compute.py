@@ -1,10 +1,8 @@
 import ipaddr
-import datetime
 import os
 import time
 
 import googleapiclient.discovery as googleapi
-from pytz import timezone
 from src.utils import constants
 from tenacity import retry
 from tenacity.stop import stop_after_attempt
@@ -411,13 +409,3 @@ class GoogleCloudCompute:
             .execute()
         )
         return response["serviceAccounts"][0]["email"]
-
-    # def old(self, timestamp, minutes=30):
-    #     benchmark = (
-    #         datetime.datetime.now(tz=timezone("us/pacific"))
-    #         - datetime.timedelta(minutes=minutes)
-    #     ).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "-7:00"
-    #     if timestamp < benchmark:
-    #         return True
-    #     print("Young...")
-    #     return False

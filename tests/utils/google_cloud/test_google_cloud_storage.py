@@ -11,28 +11,28 @@ def test_add_bucket_iam_member(mocker):
     google_cloud_storage.add_bucket_iam_member("bucket_name", "role", "member")
 
 
-def test_copy_parameters_to_bucket(app, client, auth, mocker):
-    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
-    mocker.patch(
-        "src.utils.google_cloud.google_cloud_storage.storage", MockMakeMockStorage
-    )
-    mocker.patch("src.utils.google_cloud.google_cloud_storage.fileinput", MockFileInput)
-    google_cloud_storage = GoogleCloudStorage("project")
+# def test_copy_parameters_to_bucket(app, client, auth, mocker):
+#     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+#     mocker.patch(
+#         "src.utils.google_cloud.google_cloud_storage.storage", MockMakeMockStorage
+#     )
+#     mocker.patch("src.utils.google_cloud.google_cloud_storage.fileinput", MockFileInput)
+#     google_cloud_storage = GoogleCloudStorage("project")
 
-    auth.register()
-    response = client.post(
-        "create_study",
-        data={
-            "title": "study title",
-            "description": "test description",
-        },
-    )
-    assert response.headers["Location"] == "http://localhost/index"
+#     auth.register()
+#     response = client.post(
+#         "create_study",
+#         data={
+#             "title": "study title",
+#             "description": "test description",
+#         },
+#     )
+#     assert response.headers["Location"] == "http://localhost/index"
 
-    with app.app_context():
-        google_cloud_storage.copy_parameters_to_bucket("study title", role="0")
-        MockFileInput.return_garbage = True
-        google_cloud_storage.copy_parameters_to_bucket("study title", role="0")
+#     with app.app_context():
+#         google_cloud_storage.copy_parameters_to_bucket("study title", role="0")
+#         MockFileInput.return_garbage = True
+#         google_cloud_storage.copy_parameters_to_bucket("study title", role="0")
 
 
 def test_upload_to_bucket(mocker):
