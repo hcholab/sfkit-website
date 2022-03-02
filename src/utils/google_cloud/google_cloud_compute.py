@@ -1,3 +1,4 @@
+import ipaddr
 import datetime
 import os
 import time
@@ -15,142 +16,40 @@ class GoogleCloudCompute:
         self.project = project
         self.compute = googleapi.build("compute", "v1")
 
-    def setup_networking(self, role: str) -> None:
-        existing_nets = [
-            net["name"]
-            for net in self.compute.networks()
-            .list(project=self.project)
-            .execute()["items"]
-        ]
-
-        if constants.NETWORK_NAME not in existing_nets:
-            self.create_network(constants.NETWORK_NAME)
-            self.create_firewalls(constants.NETWORK_NAME)
-        else:
-            self.remove_peerings(self.project)
-            self.remove_peerings(constants.SERVER_GCP_PROJECT)
-            self.remove_old_subnets()
-        self.create_subnet(constants.REGION, constants.NETWORK_NAME, role)
-
-        # TODO: generalize to more than 2 networks
-        if self.project != constants.SERVER_GCP_PROJECT:
-            self.setup_vpc_peering(self.project, constants.SERVER_GCP_PROJECT)
-            self.setup_vpc_peering(constants.SERVER_GCP_PROJECT, self.project)
-
-    @retry(stop=stop_after_attempt(5), wait=wait_fixed(30))
-    def remove_old_subnets(self):
-        for subnet in (
-            self.compute.subnetworks()
-            .list(project=self.project, region=constants.REGION)
-            .execute()["items"]
-        ):
-            if subnet["name"].split("-")[:2] == ["secure", "gwas"] and self.old(
-                subnet["creationTimestamp"], 3
-            ):
-                for instance in self.list_instances(
-                    constants.ZONE, subnetwork=subnet["selfLink"]
-                ):
-                    self.delete_instance(instance)
-
-                print(f"Deleting subnet {subnet['name']}")
-                self.compute.subnetworks().delete(
-                    project=self.project,
-                    region=constants.REGION,
-                    subnetwork=subnet["name"],
-                ).execute()
-                time.sleep(10)
-
-    @retry(stop=stop_after_attempt(3), wait=wait_fixed(10))
-    def remove_peerings(self, project):
-        network_info = (
-            self.compute.networks()
-            .get(project=project, network=constants.NETWORK_NAME)
-            .execute()
+    def setup_networking(self, doc_ref_dict: dict, role: str) -> None:
+        gcp_projects = [constants.SERVER_GCP_PROJECT]
+        gcp_projects.extend(
+            doc_ref_dict["personal_parameters"][participant]["GCP_PROJECT"]["value"]
+            for participant in doc_ref_dict["participants"]
         )
-        peerings = (
-            [
-                peering["name"].replace("peering-", "")
-                for peering in network_info["peerings"]
-            ]
-            if "peerings" in network_info
-            else []
-        )
-        for project2 in peerings:
-            print(f"Deleting peering from {project} to {project2}")
-            body = {"name": f"peering-{project2}"}
-            self.compute.networks().removePeering(
-                project=project, network=constants.NETWORK_NAME, body=body
-            ).execute()
-            time.sleep(2)
 
-    @retry(stop=stop_after_attempt(3), wait=wait_fixed(30))
-    def setup_vpc_peering(self, project1, project2):
-        network_info = (
-            self.compute.networks()
-            .get(project=project1, network=constants.NETWORK_NAME)
-            .execute()
-        )
-        peerings = (
-            [
-                peering["name"].replace("peering-", "")
-                for peering in network_info["peerings"]
-            ]
-            if "peerings" in network_info
-            else []
-        )
-        if project2 not in peerings:
-            print("Creating peering from", project1, "to", project2)
-            body = {
-                "networkPeering": {
-                    "name": "peering-{}".format(project2),
-                    "network": "https://www.googleapis.com/compute/v1/projects/{}/global/networks/{}".format(
-                        project2, constants.NETWORK_NAME
-                    ),
-                    "exchangeSubnetRoutes": True,
-                }
+        self.create_network()
+        self.remove_conflicting_peerings(gcp_projects)
+        self.remove_conflicting_subnets(gcp_projects)
+        self.create_subnet(role)
+        self.create_peerings(gcp_projects)
+
+    def create_network(self, network_name: str = constants.NETWORK_NAME) -> None:
+        networks = self.compute.networks().list(project=self.project).execute()["items"]
+        network_names = [net["name"] for net in networks]
+
+        if network_name not in network_names:
+            print(f"Creating new network {network_name}")
+            req_body = {
+                "name": network_name,
+                "autoCreateSubnetworks": False,
+                "routingConfig": {"routingMode": "GLOBAL"},
             }
-            self.compute.networks().addPeering(
-                project=project1, network=constants.NETWORK_NAME, body=body
-            ).execute()
+            operation = (
+                self.compute.networks()
+                .insert(project=self.project, body=req_body)
+                .execute()
+            )
+            self.wait_for_operation(operation["name"])
 
-    def create_network(self, network_name):
-        print(f"Creating new network {network_name}")
-        req_body = {
-            "name": network_name,
-            "autoCreateSubnetworks": False,
-            "routingConfig": {"routingMode": "GLOBAL"},
-        }
-        operation = (
-            self.compute.networks()
-            .insert(project=self.project, body=req_body)
-            .execute()
-        )
-        self.wait_for_operation(operation["name"])
+            self.create_firewall(network_name)
 
-    @retry(stop=stop_after_attempt(3), wait=wait_fixed(30))
-    def create_subnet(self, region: str, network_name: str, role: str) -> None:
-        subnet_name = constants.SUBNET_NAME + role
-        print(f"Creating new subnetwork {subnet_name}")
-        network_url = ""
-        for net in (
-            self.compute.networks().list(project=self.project).execute()["items"]
-        ):
-            if net["name"] == network_name:
-                network_url = net["selfLink"]
-
-        req_body = {
-            "name": subnet_name,
-            "network": network_url,
-            "ipCidrRange": f"10.0.{role}.0/28",
-        }
-        operation = (
-            self.compute.subnetworks()
-            .insert(project=self.project, region=region, body=req_body)
-            .execute()
-        )
-        self.wait_for_regionOperation(region, operation["name"])
-
-    def create_firewalls(self, network_name: str) -> None:
+    def create_firewall(self, network_name: str = constants.NETWORK_NAME) -> None:
         print(f"Creating new firewalls for network {network_name}")
         network_url = ""
         for net in (
@@ -172,6 +71,125 @@ class GoogleCloudCompute:
             .execute()
         )
         self.wait_for_operation(operation["name"])
+
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(10))
+    def remove_conflicting_peerings(self, gcp_projects: list) -> None:
+        # a peering is conflicting if it connects to a project that is not in the current study
+        network_info = (
+            self.compute.networks()
+            .get(project=self.project, network=constants.NETWORK_NAME)
+            .execute()
+        )
+        peerings = [
+            peer["name"].replace("peering-", "")
+            for peer in network_info.get("peerings", [])
+        ]
+
+        for other_project in peerings:
+            if other_project not in gcp_projects:
+                print(f"Deleting peering from {self.project} to {other_project}")
+                body = {"name": f"peering-{other_project}"}
+                self.compute.networks().removePeering(
+                    project=self.project, network=constants.NETWORK_NAME, body=body
+                ).execute()
+                time.sleep(2)
+
+    def remove_conflicting_subnets(self, gcp_projects: list) -> None:
+        # a subnet is conflicting if it has an IpCidrRange that does not match the expected ranges based on the roles of participants in the study
+        subnets = (
+            self.compute.subnetworks()
+            .list(project=self.project, region=constants.REGION)
+            .execute()["items"]
+        )
+        ip_cidr_ranges_for_this_network = [
+            f"10.0.{i}.0/24" for i in range(3) if gcp_projects[i] == self.project
+        ]
+        for subnet in subnets:
+            if (
+                constants.NETWORK_NAME in subnet["network"]
+                and subnet["ipCidrRange"] not in ip_cidr_ranges_for_this_network
+            ):
+                n1 = ipaddr.IPNetwork(subnet["ipCidrRange"])
+                if any(
+                    n1.overlaps(ipaddr.IPNetwork(n2))
+                    for n2 in ip_cidr_ranges_for_this_network
+                ):
+                    self.delete_subnet(subnet)
+
+    @retry(stop=stop_after_attempt(5), wait=wait_fixed(30))
+    def delete_subnet(self, subnet: dict) -> None:
+        for instance in self.list_instances(
+            constants.ZONE, subnetwork=subnet["selfLink"]
+        ):
+            self.delete_instance(instance)
+
+        print(f"Deleting subnet {subnet['name']}")
+        self.compute.subnetworks().delete(
+            project=self.project,
+            region=constants.REGION,
+            subnetwork=subnet["name"],
+        ).execute()
+        time.sleep(10)
+
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(30))
+    def create_subnet(self, role: str, region: str = constants.REGION) -> None:
+        # create subnet if it doesn't already exist
+        subnet_name = constants.SUBNET_NAME + role
+        subnets = (
+            self.compute.subnetworks()
+            .list(project=self.project, region=constants.REGION)
+            .execute()["items"]
+        )
+        subnet_names = [subnet["name"] for subnet in subnets]
+        if subnet_name not in subnet_names:
+            print(f"Creating new subnetwork {subnet_name}")
+            network_url = ""
+            for net in (
+                self.compute.networks().list(project=self.project).execute()["items"]
+            ):
+                if net["name"] == constants.NETWORK_NAME:
+                    network_url = net["selfLink"]
+
+            req_body = {
+                "name": subnet_name,
+                "network": network_url,
+                "ipCidrRange": f"10.0.{role}.0/28",
+            }
+            operation = (
+                self.compute.subnetworks()
+                .insert(project=self.project, region=region, body=req_body)
+                .execute()
+            )
+            self.wait_for_regionOperation(region, operation["name"])
+
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(30))
+    def create_peerings(self, gcp_projects: list) -> None:
+        # create peerings if they dont' already exist
+        network_info = (
+            self.compute.networks()
+            .get(project=self.project, network=constants.NETWORK_NAME)
+            .execute()
+        )
+        peerings = [
+            peer["name"].replace("peering-", "")
+            for peer in network_info.get("peerings", [])
+        ]
+        other_projects = [p for p in gcp_projects if p != self.project]
+        for other_project in other_projects:
+            if other_project not in peerings:
+                print("Creating peering from", self.project, "to", other_project)
+                body = {
+                    "networkPeering": {
+                        "name": "peering-{}".format(other_project),
+                        "network": "https://www.googleapis.com/compute/v1/projects/{}/global/networks/{}".format(
+                            other_project, constants.NETWORK_NAME
+                        ),
+                        "exchangeSubnetRoutes": True,
+                    }
+                }
+                self.compute.networks().addPeering(
+                    project=self.project, network=constants.NETWORK_NAME, body=body
+                ).execute()
 
     def setup_instance(
         self,
@@ -394,12 +412,12 @@ class GoogleCloudCompute:
         )
         return response["serviceAccounts"][0]["email"]
 
-    def old(self, timestamp, minutes=30):
-        benchmark = (
-            datetime.datetime.now(tz=timezone("us/pacific"))
-            - datetime.timedelta(minutes=minutes)
-        ).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "-7:00"
-        if timestamp < benchmark:
-            return True
-        print("Young...")
-        return False
+    # def old(self, timestamp, minutes=30):
+    #     benchmark = (
+    #         datetime.datetime.now(tz=timezone("us/pacific"))
+    #         - datetime.timedelta(minutes=minutes)
+    #     ).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "-7:00"
+    #     if timestamp < benchmark:
+    #         return True
+    #     print("Young...")
+    #     return False

@@ -39,14 +39,14 @@ def validate_bucket(study_title: str) -> Response:
     if role == "1":
         # setup networking for CP0 as well
         gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
-        gcloudCompute.setup_networking("0")
+        gcloudCompute.setup_networking(doc_ref_dict, "0")
 
     gcloudCompute = GoogleCloudCompute(gcp_project)
     gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
 
     gcloudPubsub.create_topic_and_subscribe()
     instance = create_instance_name(study_title, role)
-    gcloudCompute.setup_networking(role)
+    gcloudCompute.setup_networking(doc_ref_dict, role)
     gcloudCompute.setup_instance(
         constants.ZONE,
         instance,
