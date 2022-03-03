@@ -17,10 +17,10 @@ def test_home(client):
     assert home_response.data == response.data
 
 
-def test_workflow_page(client):
-    response = client.get("/workflow")
+def test_instructions_page(client):
+    response = client.get("/instructions")
     assert response.status_code == 200
-    assert b"Workflow" in response.data
+    assert b"Instructions" in response.data
 
 
 # test permissions page

@@ -80,7 +80,7 @@
             {% endif %}
             <p>
               Not sure what to do next? Go to the
-              <a href="{{url_for('general.workflow')}}" class="text-decoration-none">Workflow</a>
+              <a href="{{url_for('general.instructions')}}" class="text-decoration-none">Instructions</a>
               page for the full instructions.
               <br>
             </p>
@@ -97,14 +97,14 @@
                 <a href="{{ url_for('studies.study', study_title=study['title']) }}" class="btn btn-secondary">Check for update?</a>
               </div>
             {% elif study["status"][g.user["id"]] == ["not ready"] %}
-              <button type="button" class="mt-2 btn btn-success" data-bs-toggle="modal" data-bs-target="#chooseWorkflow">
-                Ready to begin GWAS?
+              <button type="button" class="mt-2 btn btn-success" data-bs-toggle="modal" data-bs-target="#vmConfig">
+                Ready to begin GWAS
               </button>
-              <div class="modal fade" id="chooseWorkflow" tabindex="-1">
+              <div class="modal fade" id="vmConfig" tabindex="-1">
                 <div class="modal-dialog modal-lg">
                   <div class="modal-content">
                     <div class="modal-header">
-                      <h5 class="modal-title" id="chooseWorkflowLabel">Choose Virtual Machine Configuration</h5>
+                      <h5 class="modal-title" id="vmConfigLabel">Choose Virtual Machine Configuration</h5>
                       <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body container">

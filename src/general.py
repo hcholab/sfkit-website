@@ -15,9 +15,9 @@ def home() -> Response:
     return make_response(render_template("general/home.html"))
 
 
-@bp.route("/workflow")
-def workflow() -> Response:
-    return make_response(render_template("general/workflow.html"))
+@bp.route("/instructions")
+def instructions() -> Response:
+    return make_response(render_template("general/instructions.html"))
 
 
 @bp.route("/permissions")

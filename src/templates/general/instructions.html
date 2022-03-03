@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
 
-{% block title %}Workflow{% endblock %}
+{% block title %}Instructions{% endblock %}
 
 {% block content %}
   <section class="py-5">
     <div class="container">
       <div class="row">
         <div class="col-12 col-lg-9 mx-auto">
-          <h1 class="h1 fw-bold mb-5 text-center">Workflow Instructions</h2>
+          <h1 class="h1 fw-bold mb-5 text-center">Instructions</h2>
           <p class="text-muted">This page details the instructions for how to use this portal to securely run GWAS:</p>
-          <div class="accordion" id="workflow">
+          <div class="accordion" id="instructions">
             <div class="accordion-item">
               <h2 class="accordion-header">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target=".collapse-1">
@@ -24,7 +24,7 @@
                     page and either create a new study or join an existing study.
                   </p>
                   <p class="text-muted">
-                    Note: If you are creating a new study, you will also need to set study paramters. If you are joining a study, you should confirm that the configured study parameters are what you want.
+                    Note: If you are creating a new study, you will also need to set study parameters. If you are joining a study, you should confirm that the configured study parameters are what you want.
                   </p>
                   <p class="text-end mb-0 mt-0">
                     <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target=".collapse-1-2">
@@ -109,7 +109,7 @@
                   </p>
                   <p>
                     4. Upload the encrypted data to a google cloud storage bucket in your GCP (Google Cloud Platform) project. If you are unfamiliar with Google Cloud Storage, see the google documentation
-                    <a class="text-decoration-none" href="https://cloud.google.com/storage/docs/quickstart-console">here</a>. You should also update the "Personal Parameters" on your project's page with the name of your GCP project and the name of the storage bucket with your data.
+                    <a class="text-decoration-none" href="https://cloud.google.com/storage/docs/quickstart-console">here</a>. You should also update the "User-Specific Parameters" on your project's page with the name of your GCP project and the name of the storage bucket with your data.
                   </p>
                   <p class="text-muted px-5">
                     Note: You should have a unique GCP project for use with this portal. If you already have a GCP account, you should create a new project if you haven't already. If you are new to GCP, go to
