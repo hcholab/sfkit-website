@@ -23,7 +23,7 @@
             </button>
             <code id="gcloud-command" class="language-bash" data-lang="bash" style="font-size: 60%">
               <div>gcloud iam roles create secureGwasRole --project=$(gcloud config get-value project) \</div>
-              <div>--title="Secure GWAS Role" --permissions=compute.disks.create,compute.firewallPolicies.create,\</div>
+              <div>--title="Secure GWAS Role" --permissions=compute.disks.create,compute.firewalls.create,compute.firewallPolicies.create,\</div>
               <div>compute.firewallPolicies.get,compute.instances.create,compute.instances.delete,compute.instances.get,\</div>
               <div>compute.instances.list,compute.instances.setMetadata,compute.instances.setServiceAccount,\</div>
               <div>compute.instances.stop,compute.networks.access,compute.networks.addPeering,compute.networks.create,\</div>
@@ -68,9 +68,11 @@
                     is needed to create a Compute Engine disk for the VM. This disk stores information such as the operating system, and so is required to create the virtual machine.
                   </li>
                   <li>
+                    <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/firewalls/insert#iam-permissions">compute.firewalls.create</a>,
                     <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/firewall-policies/rules/create">
                       compute.firewallPolicies.create
-                    </a>and
+                    </a>
+                    and
                     <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/firewallPolicies/get">
                       compute.firewallPolicies.get
                     </a>

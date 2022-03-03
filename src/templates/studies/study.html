@@ -94,7 +94,7 @@
               <div class="mt-2">
                 Validating Data...
                 <br>
-                <a href="{{ url_for('studies.study', study_title=study['title']) }}" class="btn btn-secondary">Check for update?</a>
+                <a href="{{ url_for('studies.study', study_title=study['title']) }}" class="btn btn-secondary">Check for update</a>
               </div>
             {% elif study["status"][g.user["id"]] == ["not ready"] %}
               <button type="button" class="mt-2 btn btn-success" data-bs-toggle="modal" data-bs-target="#vmConfig">
@@ -157,7 +157,7 @@
               {% endif %}
               <br>
               <form action="{{ url_for('gwas.start_gwas', study_title=study['title']) }}" method="post">
-                <button type="submit" class="btn btn-secondary">Check again if others are ready?</button>
+                <button type="submit" class="btn btn-secondary">Check for update</button>
               </form>
             {% endif %}
           </div>

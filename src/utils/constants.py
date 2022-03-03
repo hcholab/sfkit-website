@@ -112,9 +112,9 @@ DEFAULT_USER_PARAMETERS = {
         "value": "",
     },
     "GCP_PROJECT": {
-        "name": "GCP Project",
-        "description": "The name of the GCP project you're using (the one where you put your encrypted data and the VM instance will run).  \
-        If you don't have a dedicated GCP project for this workflow, you will need to make one.",
+        "name": "GCP Project ID",
+        "description": "The Project ID for the GCP project you're using (the one where you put your encrypted data and the VM instance will run).  \
+        If you don't have a dedicated GCP project for this workflow, you will need to make one.  Note that this Project ID MAY or MAY NOT be the same as your Project Name.",
         "value": "",
     },
     "BUCKET_NAME": {
