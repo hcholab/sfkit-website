@@ -148,15 +148,15 @@
             <div class="accordion-item">
               <h2 class="accordion-header">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target=".collapse-5">
-                  5. Begin Workflow
+                  5. Validate Data
                 </button>
               </h2>
               <div class="accordion-collapse collapse collapse-5 collapse-4-5 collapse-5-6">
                 <div class="accordion-body">
                   <p>
                     Go to your study, and confirm that all the "Shared Study Parameters" and "User-Specific Parameters" are as desired.
-                    <br>When you are ready, click on the "Ready to begin GWAS?" button.
-                    <br>Once all participants have done so, the protocol will begin.
+                    <br>When you are ready, click on the "Validate Data" button. This will validate that this portal is able to create a VM that can access your encyrpted data that you uploaded in step 3.
+                    <br>It will also validate that your data is approximately the correct size, based on your study parameters.
                   </p>
                   <p class="text-end mb-0 mt-0">
                     <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target=".collapse-5-6">
@@ -169,17 +169,38 @@
             <div class="accordion-item">
               <h2 class="accordion-header">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target=".collapse-6">
-                  6. Enjoy the Results
+                  5. Begin Workflow
                 </button>
               </h2>
               <div class="accordion-collapse collapse collapse-6 collapse-5-6 collapse-6-7">
+                <div class="accordion-body">
+                  <p>
+                    Go to your study, and confirm that all the "Shared Study Parameters" and "User-Specific Parameters" are as desired.
+                    <br>When you are ready, click on the "Ready to begin GWAS?" button.
+                    <br>Once all participants have done so, the protocol will begin.
+                  </p>
+                  <p class="text-end mb-0 mt-0">
+                    <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target=".collapse-6-7">
+                      Next
+                    </button>
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target=".collapse-7">
+                  6. Enjoy the Results
+                </button>
+              </h2>
+              <div class="accordion-collapse collapse collapse-7 collapse-6-7 collapse-7-8">
                 <div class="accordion-body">
                   <p>
                     Once the protocol is complete, the study page will indicate this with a "GWAS Completed!" status.
                     <br>You can then download the results (from your storage bucket in your GCP project) to share and analyze at your leisure.
                   </p>
                   <p class="text-end mb-0 mt-0">
-                    <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target=".collapse-6-7">
+                    <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target=".collapse-7-8">
                       Done
                     </button>
                   </p>

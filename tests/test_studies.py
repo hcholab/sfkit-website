@@ -9,6 +9,7 @@ from src.utils import constants
 test_create_data = {
     "title": "testtitle",
     "description": "test description",
+    "study_information": "hi",
 }
 
 

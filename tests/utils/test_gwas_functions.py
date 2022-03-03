@@ -5,11 +5,13 @@ from src.utils import gwas_functions
 test_create_data = {
     "title": "testtitle",
     "description": "test description",
+    "study_information": "hi",
 }
 
 test_create_data2 = {
     "title": "testtitle2",
     "description": "test description2",
+    "study_information": "hi",
 }
 
 test_doc_ref_dict = {

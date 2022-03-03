@@ -1,20 +1,18 @@
-import io
-from flask import current_app, g
 from copy import deepcopy
 
-import pytest
-from src.utils import constants
 from src.gwas import run_gwas
+from src.utils import constants
 
 from conftest import MockFirebaseAdminAuth
 
 test_create_data = {
     "title": "testtitle",
     "description": "test description",
+    "study_information": "hi",
 }
 
 
-def test_validate_bucket(client, app, auth, mocker):
+def test_validate_data(client, app, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     mocker.patch("src.gwas.GoogleCloudCompute", MockGoogleCloudCompute)
     mocker.patch("src.gwas.GoogleCloudStorage", MockGoogleCloudStorage)
@@ -22,7 +20,7 @@ def test_validate_bucket(client, app, auth, mocker):
 
     auth.login()
     client.post("create_study", data=test_create_data)
-    assert client.get("validate_bucket/testtitle").status_code == 302
+    assert client.get("validate_data/testtitle").status_code == 302
 
     user_parameters = deepcopy(constants.DEFAULT_USER_PARAMETERS)
     user_parameters["GCP_PROJECT"]["value"] = "gcp_project"
@@ -30,10 +28,10 @@ def test_validate_bucket(client, app, auth, mocker):
     doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
     doc_ref.set({"personal_parameters": {"a@a.com": user_parameters}}, merge=True)
 
-    client.get("validate_bucket/testtitle")
+    client.get("validate_data/testtitle")
 
     doc_ref.set({"participants": ["blah", "a@a.com"]}, merge=True)
-    client.get("validate_bucket/testtitle")
+    client.get("validate_data/testtitle")
 
 
 def test_start_gwas(client, app, auth, mocker):

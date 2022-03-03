@@ -1,10 +1,9 @@
 import json
-from copy import deepcopy
-from src.utils import constants
 
 test_create_data = {
     "title": "blah",
     "description": "test description",
+    "study_information": "hi",
 }
 
 

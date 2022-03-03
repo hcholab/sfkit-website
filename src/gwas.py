@@ -13,9 +13,9 @@ from src.utils.gwas_functions import create_instance_name
 bp = Blueprint("gwas", __name__)
 
 
-@bp.route("/validate_bucket/<study_title>")
+@bp.route("/validate_data/<study_title>")
 @login_required
-def validate_bucket(study_title: str) -> Response:
+def validate_data(study_title: str) -> Response:
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()

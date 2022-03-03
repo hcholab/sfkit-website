@@ -19,7 +19,35 @@
               </small>
             </span>
             <h2 class="mt-2 fw-bold">{{ study['title'] }}</h2>
-            <p class="lead text-muted">{{ study['description'] }}</p>
+            <p class="lead text-muted mb-1">{{ study['description'] }}</p>
+            <div class="mb-2">
+              <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#studyInformation{{ study['title'] }}">
+                Study Information
+              </button>
+
+              <div class="modal fade" id="studyInformation{{ study['title'] }}" tabindex="-1">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="studyInformationLabel">Study Title:
+                        {{ study['title'] }}</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                      <p class="text-start">
+                        Study Description:
+                        {{ study['description'] }}
+                        <br><br>Study Information:
+                        <br>{{ study['study_information'] }}
+                      </p>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
             <div class="mb-3">
               <div>
                 <p class="fw-bold mb-0">Study Participants:</p>
@@ -61,10 +89,10 @@
               <a href="{{ url_for('studies.personal_parameters', study_title=study['title']) }}" class="btn btn-secondary">Edit User-Specific Parameters</a>
             </div>
             {% if study["status"][g.user["id"]] == [""] %}
-              <a href="{{ url_for('gwas.validate_bucket', study_title=study['title']) }}" class="mt-2 btn btn-secondary">Validate Bucket</a>
+              <a href="{{ url_for('gwas.validate_data', study_title=study['title']) }}" class="mt-2 btn btn-secondary">Validate Data</a>
             {% elif study["status"][g.user["id"]] == ["validating"] %}
               <div class="mt-2">
-                Validating Bucket...
+                Validating Data...
                 <br>
                 <a href="{{ url_for('studies.study', study_title=study['title']) }}" class="btn btn-secondary">Check for update?</a>
               </div>

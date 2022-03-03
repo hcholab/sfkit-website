@@ -63,6 +63,7 @@ def create_study() -> Response:
     db = current_app.config["DATABASE"]
     title = request.form["title"]
     description = request.form["description"]
+    study_information = request.form["study_information"]
 
     (valid, response) = valid_study_title(title)
     if not valid:
@@ -73,6 +74,7 @@ def create_study() -> Response:
         {
             "title": title,
             "description": description,
+            "study_information": study_information,
             "owner": g.user["id"],
             "created": datetime.now(),
             "participants": [g.user["id"]],
@@ -93,7 +95,9 @@ def delete_study(study_title: str) -> Response:
     doc_ref_dict = doc_ref.get().to_dict()
 
     # delete vms that may still exist
-    google_cloud_compute = GoogleCloudCompute("")
+    google_cloud_compute = GoogleCloudCompute(
+        ""
+    )  # TODO: delete the server's VM as well
     for participant in doc_ref_dict["personal_parameters"].values():
         if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
             google_cloud_compute.project = gcp_project
