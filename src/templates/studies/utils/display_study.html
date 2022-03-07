@@ -14,11 +14,11 @@
   {% endif %}
   <p class="lead text-muted mb-1">{{ study['description'] }}</p>
   <div class="mb-2">
-    <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#studyInformation{{ study['title'] }}">
+    <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#studyInformation{{ study['title']|replace(' ', '') }}">
       Study Information
     </button>
 
-    <div class="modal fade" id="studyInformation{{ study['title'] }}" tabindex="-1">
+    <div class="modal fade" id="studyInformation{{ study['title']|replace(' ', '') }}" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
