@@ -64,5 +64,5 @@ def mock_redirect(url):
     return url
 
 
-def mock_url_for(endpoint):
+def mock_url_for(endpoint, study_title=""):
     return endpoint

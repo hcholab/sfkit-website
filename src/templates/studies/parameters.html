@@ -7,7 +7,7 @@
 {% block content %}
   <section class="container row">
     <div class="col-12 col-lg-8 mx-auto text-center p-3 rounded">
-      <h2 class="h2 display-8 mt-0 mb-5">GWAS shared parameters for study "{{ study_title }}"</h2>
+      <h2 class="h2 display-8 mt-0 mb-5">Edit Shared Study Parameters</h2>
       <form method="post">
         <div class="row mb-3 p-3 bg-light text-start">
           {% for parameter_name in parameters["index"] %}
@@ -28,42 +28,40 @@
         </div>
       </form>
     </div>
-  </div>
-  <div class=""><br></div>
-  <div class="col-12 col-lg-8 mx-auto text-center" id="pos">
-    <div class="p-5 bg-light rounded text-center">
-      <h2 class="display-8 mt-0 mb-2">pos.txt file</h2>
-      <p class="mb-4">
-        The pos.txt file contains the genomic positions of SNPs to be tested, and is considered public (shared here for all parties).
-      </p>
-      {% if pos_file_uploaded %}
-        <p class="lead">
-          The pos.txt file has already been uploaded! You can replace it by uploading a new one.
+
+    {# <div class=""><br></div>
+    <div class="col-12 col-lg-8 mx-auto text-center mb-5" id="pos">
+      <div class="p-5 bg-light rounded text-center">
+        <h2 class="display-8 mt-0 mb-2">pos.txt file</h2>
+        <p class="mb-4">
+          The pos.txt file contains the genomic positions of SNPs to be tested, and is considered public (shared here for all parties).
         </p>
-      {% endif %}
-      <form method="post" enctype="multipart/form-data">
-        <input type="file" name="file">
-        <input type="submit" name="upload" value="Upload">
-      </form>
-    </div>
-  </div>
-</div>
-</div>
-</section>
+        {% if pos_file_uploaded %}
+          <p class="lead">
+            The pos.txt file has already been uploaded! You can replace it by uploading a new one.
+          </p>
+        {% endif %}
+        <form method="post" enctype="multipart/form-data">
+          <input type="file" name="file">
+          <input type="submit" name="upload" value="Upload">
+        </form>
+      </div>
+    </div> #}
+  </section>
 {% endblock %}
 
 {% block javascript %}
-{% if request
-.args
-.get('section') %}
-<script>
-$(function () {
-  $("html, body").animate({
-    scrollTop: $("#{{ request.args.get('section') }}")
-      .offset()
-      .top
-  }, 500);
-});
-</script>
-{% endif %}
+  {% if request
+    .args
+    .get('section') %}
+    <script>
+      $(function () {
+        $("html, body").animate({
+          scrollTop: $("#{{ request.args.get('section') }}")
+            .offset()
+            .top
+        }, 500);
+      });
+    </script>
+  {% endif %}
 {% endblock %}

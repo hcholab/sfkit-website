@@ -34,7 +34,7 @@ def valid_study_title(study_title: str) -> Tuple[bool, Response]:
                 ),
             )
 
-    return (True, redirect(url_for("studies.index")))
+    return (True, redirect(url_for("studies.parameters", study_title=study_title)))
 
 
 def create_instance_name(study_title: str, role: str) -> str:

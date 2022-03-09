@@ -1,4 +1,5 @@
 from datetime import datetime
+import io
 
 from flask import (
     Blueprint,
@@ -8,6 +9,7 @@ from flask import (
     redirect,
     render_template,
     request,
+    send_file,
     url_for,
 )
 from werkzeug import Response
@@ -52,6 +54,49 @@ def study(study_title: str) -> Response:
             parameters=doc_ref_dict["personal_parameters"][id],
         )
     )
+
+
+@bp.route("/study/<study_title>/download_public_key/<role>")
+@login_required
+def download_public_key(study_title: str, role: str) -> Response:
+    db = current_app.config["DATABASE"]
+    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref_dict = doc_ref.get().to_dict()
+    id = doc_ref_dict["participants"][int(role) - 1]
+    public_key = doc_ref_dict["personal_parameters"][id]["PUBLIC_KEY"]["value"]
+    key_file = io.BytesIO(public_key.encode("utf-8") + b"\n" + role.encode("utf-8"))
+    return send_file(
+        key_file,
+        download_name=f"public_key_{id}.txt",
+        mimetype="text/plain",
+        as_attachment=True,
+    )
+
+
+@bp.route("/study/<study_title>/upload_public_key", methods=("GET", "POST"))
+@login_required
+def upload_public_key(study_title: str) -> Response:
+    db = current_app.config["DATABASE"]
+    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref_dict = doc_ref.get().to_dict()
+    file = request.files["file"]
+    if file.filename == "":
+        return redirect_with_flash(
+            url=url_for("studies.study", study_title=study_title),
+            message="Please select a file to upload.",
+        )
+    elif file and file.filename == "my_public_key.txt":
+        public_key = file.read().decode("utf-8")
+        doc_ref_dict["personal_parameters"][g.user["id"]]["PUBLIC_KEY"][
+            "value"
+        ] = public_key
+        doc_ref.set(doc_ref_dict)
+        return redirect(url_for("studies.study", study_title=study_title))
+    else:
+        return redirect_with_flash(
+            url=url_for("studies.study", study_title=study_title),
+            message="Please upload a valid my_public_key.txt file.",
+        )
 
 
 @bp.route("/create_study", methods=("GET", "POST"))

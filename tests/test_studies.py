@@ -36,7 +36,7 @@ def test_create_study(client, auth, mocker):
     auth.login()
     assert client.get("create_study").status_code == 200
     response = client.post("create_study", data=test_create_data)
-    assert response.headers["Location"] == "http://localhost/index"
+    assert response.headers["Location"] == "http://localhost/parameters/testtitle"
     response = client.post("create_study", data=test_create_data)
     assert response.headers["Location"] == "http://localhost/create_study"
 

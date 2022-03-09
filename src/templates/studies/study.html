@@ -57,9 +57,8 @@
                   {{study['participants'][i]}}
                   {% if public_keys[i]%}
                     <small class="text-muted">
-                      <br>
-                      Public Key =
-                      {{public_keys[i]}}
+                      -
+                      <a class="text-decoration-none" href="{{url_for('studies.download_public_key', study_title=study['title'], role=i+1)}}">Download Public Key</a>
                     </small>
                   {% endif %}
                   <br>
@@ -67,7 +66,7 @@
               </div>
             </div>
             {% if study['requested_participants'] %}
-              <div class="mb-3">
+              <div class=" mb-3">
                 Requested Participants:
                 {% for participant in study['requested_participants'] %}
                   <br>
@@ -78,18 +77,25 @@
                 {% endfor %}
               </div>
             {% endif %}
-            <p>
-              Not sure what to do next? Go to the
-              <a href="{{url_for('general.instructions')}}" class="text-decoration-none">Instructions</a>
-              page for the full instructions.
-              <br>
-            </p>
+            <div class="mb-3" id="instructions">
+              <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasScrolling">View Instructions</button>
+
+              <div class="offcanvas offcanvas-start w-50 show" data-bs-scroll="true" data-bs-backdrop="true" tabindex="-1" id="offcanvasScrolling">
+                <div class="offcanvas-header">
+                  <h3 class="offcanvas-title" id="offcanvasScrollingLabel">Instructions/Walkthrough for setting up your study</h3>
+                  <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"></button>
+                </div>
+                <div class="offcanvas-body">
+                  {% include 'studies/utils/instructions.html' %}
+                </div>
+              </div>
+            </div>
             <div class="edit-parameters">
               <a href="{{ url_for('studies.parameters', study_title=study['title']) }}" class="btn btn-secondary">Edit Shared Study Parameters</a>
               <a href="{{ url_for('studies.personal_parameters', study_title=study['title']) }}" class="btn btn-secondary">Edit User-Specific Parameters</a>
             </div>
             {% if study["status"][g.user["id"]] == [""] %}
-              <a href="{{ url_for('gwas.validate_data', study_title=study['title']) }}" class="mt-2 btn btn-secondary">Validate Data</a>
+              <a href="{{ url_for('gwas.validate_data', study_title=study['title']) }}" class="mt-2 btn btn-success">Validate Data</a>
             {% elif study["status"][g.user["id"]] == ["validating"] %}
               <div class="mt-2">
                 Validating Data...
@@ -206,6 +212,70 @@
         console.log(doc.data()["status"]);
         console.log(doc.data()["status"][id]);
         $("div.status").html(doc.data()["status"][id].reduce((acc, curr) => acc + "<br>" + curr));
+      });
+    });
+  </script>
+
+  {# To save your place in the instructions workflow: #}
+  <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
+  <script>
+    $(document).ready(function () {
+
+      var last = Cookies.get('activeAccordionGroup');
+
+      if (last != null) {
+        //remove default collapse settings
+        $("#accordion .collapse").removeClass('show');
+        $("#accordion .accordion-button").addClass('collapsed');
+        //show the last visible group
+        $("#" + last).collapse("show");
+      }
+    });
+
+    //when a group is shown, save it as the active accordion group
+    $("#accordion").bind('shown.bs.collapse', function () {
+      var active = $("#accordion .show").attr('id');
+      Cookies.set('activeAccordionGroup', active);
+    });
+  </script>
+
+  <script>
+    $(document).ready(function () {
+      // Get the Tooltip
+      new bootstrap.Tooltip($('#copy-button'));
+      let btn_tooltip = $('#copy-button');
+
+      // Change Tooltip Text on mouse enter
+      btn_tooltip.mouseenter(function () {
+        btn_tooltip
+          .attr('title', 'Copy to Clipboard')
+          .tooltip('dispose');
+        btn_tooltip.tooltip('show');
+      });
+
+      // remove tooltip when user moves mouse away
+      btn_tooltip.mouseleave(function () {
+        btn_tooltip
+          .tooltip('dispose')
+          .tooltip('hide');
+      });
+
+      // Update Tooltip and Copy Text on click
+      btn_tooltip.click(function () {
+        let copyText = $('#gcloud-command')
+          .text()
+          .replace(/^\s+/gm, ''); // Remove leading whitespace
+        navigator
+          .clipboard
+          .writeText(copyText)
+          .then(function () {
+            btn_tooltip // Update tooltip text
+              .attr('title', 'Copied!')
+              .tooltip('dispose');
+            btn_tooltip.tooltip('show');
+          }, function () {
+            console.log('Failure to copy. Check permissions for clipboard')
+          });
       });
     });
   </script>
