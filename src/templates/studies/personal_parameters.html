@@ -21,14 +21,14 @@
           <p class="mt-3 text-start text-muted">
             {{parameters['GCP_PROJECT']['description']}}
           </p>
-          <label for="BUCKET_NAME" class="col-sm-3 col-form-label text-start">
-            {{parameters['BUCKET_NAME']['name']}}
+          <label for="DATA_PATH" class="col-sm-3 col-form-label text-start">
+            {{parameters['DATA_PATH']['name']}}
           </label>
           <div class="col-sm-9">
-            <input type="text" class="form-control" name="BUCKET_NAME" id="BUCKET_NAME" value="{{ request.form['BUCKET_NAME'] or parameters['BUCKET_NAME']['value'] }}">
+            <input type="text" class="form-control" name="DATA_PATH" id="DATA_PATH" value="{{ request.form['DATA_PATH'] or parameters['DATA_PATH']['value'] }}">
           </div>
           <p class="mt-3 text-start text-muted">
-            {{parameters['BUCKET_NAME']['description']}}
+            {{parameters['DATA_PATH']['description']}}
           </p>
         </div>
 

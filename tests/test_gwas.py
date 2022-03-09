@@ -24,7 +24,7 @@ def test_validate_data(client, app, auth, mocker):
 
     user_parameters = deepcopy(constants.DEFAULT_USER_PARAMETERS)
     user_parameters["GCP_PROJECT"]["value"] = "gcp_project"
-    user_parameters["BUCKET_NAME"]["value"] = "bucket_name"
+    user_parameters["DATA_PATH"]["value"] = "data_path"
     doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
     doc_ref.set({"personal_parameters": {"a@a.com": user_parameters}}, merge=True)
 

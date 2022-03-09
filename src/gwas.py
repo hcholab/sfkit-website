@@ -23,10 +23,8 @@ def validate_data(study_title: str) -> Response:
     gcp_project = doc_ref_dict["personal_parameters"][g.user["id"]]["GCP_PROJECT"][
         "value"
     ]
-    bucket_name = doc_ref_dict["personal_parameters"][g.user["id"]]["BUCKET_NAME"][
-        "value"
-    ]
-    if not gcp_project or gcp_project == "" or not bucket_name or bucket_name == "":
+    data_path = doc_ref_dict["personal_parameters"][g.user["id"]]["DATA_PATH"]["value"]
+    if not gcp_project or gcp_project == "" or not data_path or data_path == "":
         return redirect_with_flash(
             url=url_for("studies.personal_parameters", study_title=study_title),
             message="Please set your GCP project and storage bucket location.",
@@ -52,7 +50,7 @@ def validate_data(study_title: str) -> Response:
         instance,
         role,
         validate=True,
-        metadata={"key": "bucketname", "value": bucket_name},
+        metadata={"key": "bucketname", "value": data_path},
     )
 
     # Give instance publish access to pubsub for status updates
@@ -159,7 +157,7 @@ def run_gwas(
         instance,
         role,
         vm_parameters["NUM_CPUS"]["value"],
-        metadata={"key": "bucketname", "value": vm_parameters["BUCKET_NAME"]["value"]},
+        metadata={"key": "bucketname", "value": vm_parameters["DATA_PATH"]["value"]},
         boot_disk_size=vm_parameters["BOOT_DISK_SIZE"]["value"],
     )
 

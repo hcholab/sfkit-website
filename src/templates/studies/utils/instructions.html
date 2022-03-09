@@ -28,290 +28,306 @@
 
 <div class="accordion" id="accordion">
 
-  {% call instruction_step(i = 1, title = "Generate Keys", collapsed = "", show = "show") %}
-
-  <p>Prerequisites: If you don't already have them, you will need to install
-    <a class="text-decoration-none" href="https://git-scm.com/book/en/v2/Getting-Started-Installing-Git">Git</a>
-    and
-    <a class="text-decoration-none" href="https://www.python.org/downloads/">Python3</a>.</p>
-
-  <p>Open your terminal and run the following commands:</p>
-  <code>git clone https://github.com/simonjmendelsohn/secure-gwas-keys-and-encryption.git</code>
-  <br>
-  <code>cd secure-gwas-keys-and-encryption</code>
-  <br>
-  <code>python3 -m venv venv && source venv/bin/activate</code>
-  <br>
-  <code>python -m pip install -r requirements.txt</code>
-  <br>
-  <code>python generate_personal_keys.py</code>
-  <p class="mt-3">
-    <button class="btn btn-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample">
-      What are these commands doing?
-    </button>
-  </p>
-  <div class="collapse" id="collapseExample">
-    <div class="text-muted mb-2">
-      <code>git clone https://github.com/simonjmendelsohn/secure-gwas-keys-and-encryption.git</code>
-      copies the
-      <a class="text-decoration-none" href="https://github.com/simonjmendelsohn/secure-gwas-keys-and-encryption">Secure GWAS Cryptographic Keys and Encryption</a>
-      repository to your computer.
-      <br><br>
-      <code>cd secure-gwas-keys-and-encryption</code>
-      changes the directory to the repository.
-      <br><br>
-      <code>python3 -m venv venv && source venv/bin/activate</code>
-      creates a python virtual environment and activates it. While this is not necessary, it is good practice as it keeps all the python libraries you install here separate from the rest of your computer. For more information about python virtual environments, see
-      <a class="text-decoration-none" href="https://docs.python.org/3/library/venv.html">the official documentation</a>.
-      <br><br>
-      <code>pip install -r requirements.txt</code>
-      installs all the python libraries required for the repo.
-      <br><br>
-      <code>python generate_personal_keys.py</code>
-      generates a public key and a private key that are used for Public Key Encryption. It uses the PyNaCl library, which is a python binding for the popular and well-regarded
-      <a href="https://doc.libsodium.org/" class="text-decoration-none">Sodium cryptography library.</a>
-    </div>
-  </div>
-
-  <form method="post" action="{{url_for('studies.upload_public_key', study_title=study['title'])}}" enctype="multipart/form-data">
-    <label for="formFile" class="form-label">Please upload
-      <em>my_public_key.txt</em>
-      that you just generated:
-    </label>
-    <input class="form-control" type="file" name="file" id="formFile">
-    {% if parameters["PUBLIC_KEY"]["value"] %}
-      <input class="mt-1" type="submit" name="upload" value="Upload" disabled="disabled">
-      <span class="fw-bold">Your public key has been uploaded!</span>
-    {% else %}
-      <input class="mt-1" type="submit" name="upload" value="Upload">
-    {% endif %}
-  </form>
-
-  {% endcall %}
-
-  {% call instruction_step(i = 2, title = "Encrypt Data") %}
-
-  <p>1. Download the other study participant's public key.
-    <strong>Note: you cannot proceed without this key. If the other participant hasn't joined yet, or hasn't uploaded a public key yet, then you must wait.</strong>
-  </p>
-  <p class="mb-1">
-    2. Go back to the secure-gwas-keys-and-encryption repo (in your terminal) and run
-    <code>python encrypt_data.py</code>
-    to encrypt your data. (You may have to run
-    <code>source venv/bin/activate</code>
-    first to reactivate your python virtual environment.)
-  </p>
-  <p class="mb-1">
-    <button class="btn btn-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEncryptData">
-      What does this command do?
-    </button>
-  </p>
-  <div class="collapse" id="collapseEncryptData">
-    <div class="text-muted px-3 mb-2">
-      1. It uses your public key and the other participant's private key to generate two shared keys. These are keys accessible ONLY to you and the other participant, as they require one participant's private key and the other participant's public key to generate them. One shared key will be used to encrypt your data, and the other shared key will be used to encrypt the other participant's data.
-      <br>2. It uses one of the shared keys to make a cryptographically secure random number generator (rng). This rng generates random bytes that are subtracted from your data in order to encrypt your data.
-      <br>3. It converts the newly encrypted data into a special matrix format for convenience in running the GWAS.
-    </div>
-  </div>
-
-  <div class="mt-2">
-    <p>
-      3. Upload the encrypted data to a google cloud storage bucket in your GCP (Google Cloud Platform) project. If you are unfamiliar with Google Cloud Storage, see the google documentation
-      <a class="text-decoration-none" href="https://cloud.google.com/storage/docs/quickstart-console">here</a>.
+  {% call instruction_step(i = 1, title = "Prerequisites", collapsed = "", show = "show") %}
+  <div>
+    <p>1. If you don't already have them, you will need to install
+      <a class="text-decoration-none" href="https://git-scm.com/book/en/v2/Getting-Started-Installing-Git">Git</a>
+      and
+      <a class="text-decoration-none" href="https://www.python.org/downloads/">Python3</a>.
     </p>
-    <p class="text-muted px-3">
-      Note: You should have a unique GCP project for use with this portal. If you already have a GCP account, you should create a new project if you haven't already. If you are new to GCP, go to
+    <p>2. You should create a GCP (Google Cloud Platform) project that is dedicated to this study. If you are new to GCP, go to
       <a href="https://console.cloud.google.com/" class="text-decoration-none">console.cloud.google.com</a>
-      and create an account.
-    </p>
-    <p>
-      4. Please set the following user-specfic parameters:
-      <form method="post" action="{{url_for('studies.personal_parameters', study_title=study['title'])}}">
-        <div class="row mb-3 p-3 bg-light">
-          <label for="GCP_PROJECT" class="col-sm-3 col-form-label text-start">
-            {{parameters['GCP_PROJECT']['name']}}
-          </label>
-          <div class="col-sm-9">
-            <input type="text" class="form-control" name="GCP_PROJECT" id="GCP_PROJECT" value="{{ request.form['GCP_PROJECT'] or parameters['GCP_PROJECT']['value'] }}">
-          </div>
-          <p class="mt-3 text-start text-muted">
-            {{parameters['GCP_PROJECT']['description']}}
-          </p>
-          <label for="BUCKET_NAME" class="col-sm-3 col-form-label text-start">
-            {{parameters['BUCKET_NAME']['name']}}
-          </label>
-          <div class="col-sm-9">
-            <input type="text" class="form-control" name="BUCKET_NAME" id="BUCKET_NAME" value="{{ request.form['BUCKET_NAME'] or parameters['BUCKET_NAME']['value'] }}">
-          </div>
-          <p class="mt-3 text-start text-muted">
-            {{parameters['BUCKET_NAME']['description']}}
-          </p>
-          <label for="NUM_INDS" class="col-sm-3 col-form-label text-start">
-            {{parameters['NUM_INDS']['name']}}
-          </label>
-          <div class="col-sm-9">
-            <input type="number" class="form-control" name="NUM_INDS" id="NUM_INDS" min="0" value="{{ request.form['NUM_INDS'] or parameters['NUM_INDS']['value'] }}">
-          </div>
-          <p class="mt-3 text-start text-muted">
-            {{parameters['NUM_INDS']['description']}}
-          </p>
-          <div class="d-flex flex-wrap justify-content-center">
-            {% if parameters['NUM_INDS']['value'] and parameters['BUCKET_NAME']['value'] and parameters['GCP_PROJECT']['value'] %}
-              <input type="submit" name="save" value="Save" class="btn btn-primary me-2 mb-2 mb-sm-0" disabled="disabled">
-            {% else %}
-              <input type="submit" name="save" value="Save" class="btn btn-primary me-2 mb-2 mb-sm-0">
-            {% endif %}
-          </div>
+      and create an account and a project.
+      <p class="px-2">2a. You need to have the
+        <code>gcloud.iam.roles.create</code>
+        permission in your GCP project. If you are the owner of the project, this is automatically given.</p>
+      <p class="px-2">If you are within an organization such that you are not the owner, please talk to your administrator to get the appropriate role.</p>
+      <p class="px-2">This could be "owner", but there are also other roles (such as "Project IAM Admin") that have this permission.</p>
+      <p class="px-2">2b. You need to enable the
+        <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1">Compute Engine API</a>
+        in your GCP account. If you don't know how to enable an API, see the documentation
+        <a href="https://cloud.google.com/endpoints/docs/openapi/enable-api" class="text-decoration-none">here</a>
+      </p>
+      <p class="px-2">2c. You need to enable the
+        <a class="text-decoration-none" href="https://cloud.google.com/pubsub/docs/reference/rest">PubSub API</a>
+        as well.</p>
+    </div>
+    {% endcall %}
+    {% call instruction_step(i = 2, title = "Generate Keys") %}
+    <div>
+      <p>Open your terminal and run the following commands:</p>
+      <code>git clone https://github.com/simonjmendelsohn/secure-gwas-keys-and-encryption.git</code>
+      <br>
+      <code>cd secure-gwas-keys-and-encryption</code>
+      <br>
+      <code>python3 -m venv venv && source venv/bin/activate</code>
+      <br>
+      <code>python -m pip install -r requirements.txt</code>
+      <br>
+      <code>python generate_personal_keys.py</code>
+      <p class="mt-3">
+        <button class="btn btn-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample">
+          What are these commands doing?
+        </button>
+      </p>
+      <div class="collapse" id="collapseExample">
+        <div class="text-muted mb-2">
+          <code>git clone https://github.com/simonjmendelsohn/secure-gwas-keys-and-encryption.git</code>
+          copies the
+          <a class="text-decoration-none" href="https://github.com/simonjmendelsohn/secure-gwas-keys-and-encryption">Secure GWAS Cryptographic Keys and Encryption</a>
+          repository to your computer.
+          <br><br>
+          <code>cd secure-gwas-keys-and-encryption</code>
+          changes the directory to the repository.
+          <br><br>
+          <code>python3 -m venv venv && source venv/bin/activate</code>
+          creates a python virtual environment and activates it. While this is not necessary, it is good practice as it keeps all the python libraries you install here separate from the rest of your computer. For more information about python virtual environments, see
+          <a class="text-decoration-none" href="https://docs.python.org/3/library/venv.html">the official documentation</a>.
+          <br><br>
+          <code>pip install -r requirements.txt</code>
+          installs all the python libraries required for the repo.
+          <br><br>
+          <code>python generate_personal_keys.py</code>
+          generates a public key and a private key that are used for Public Key Encryption. It uses the
+          <a class="text-decoration-none" href="https://pypi.org/project/PyNaCl/">PyNaCl</a>
+          library, which is a python binding for the popular and well-regarded
+          <a href="https://doc.libsodium.org/" class="text-decoration-none">Sodium cryptography library.</a>
         </div>
+      </div>
+
+      <form method="post" action="{{url_for('studies.upload_public_key', study_title=study['title'])}}" enctype="multipart/form-data">
+        <label for="formFile" class="form-label">Please upload
+          <em>my_public_key.txt</em>
+          that you just generated:
+        </label>
+        <input class="form-control" type="file" name="file" id="formFile">
+        {% if parameters["PUBLIC_KEY"]["value"] %}
+          <input class="mt-1" type="submit" name="upload" value="Upload" disabled="disabled">
+          <span class="fw-bold">Your public key has been uploaded!</span>
+        {% else %}
+          <input class="mt-1" type="submit" name="upload" value="Upload">
+        {% endif %}
       </form>
-    </p>
-  </div>
-
-  {% endcall %}
-
-  {% call instruction_step(i = 3, title = "Give Permissions") %}
-
-  <p>Log into
-    <a class="text-decoration-none" href="https://console.cloud.google.com">https://console.cloud.google.com</a>. Then click the icon in the top right to "Activate Cloud Shell". Once the Terminal is ready, please copy and run the following:
-  </p>
-  <div class="p-2 bg-light rounded">
-    <button id="copy-button" data-bs-toggle="tooltip" data-bs-trigger='manual' style="position:relative;float:right" type="button" class="btn btn-outline-secondary btn-sm">
-      Copy
-    </button>
-    <code id="gcloud-command" class="language-bash" data-lang="bash" style="font-size: 60%">
-      <div>gcloud iam roles create secureGwasRole --project=$(gcloud config get-value project) \</div>
-      <div>--title="Secure GWAS Role" --permissions=compute.disks.create,compute.firewalls.create,compute.firewallPolicies.create,\</div>
-      <div>compute.firewallPolicies.get,compute.instances.create,compute.instances.delete,compute.instances.get,\</div>
-      <div>compute.instances.list,compute.instances.setMetadata,compute.instances.setServiceAccount,\</div>
-      <div>compute.instances.stop,compute.networks.access,compute.networks.addPeering,compute.networks.create,\</div>
-      <div>compute.networks.get,compute.networks.list,compute.networks.removePeering,compute.networks.updatePolicy,\</div>
-      <div>compute.subnetworks.create,compute.subnetworks.delete,compute.subnetworks.list,compute.subnetworks.use,\</div>
-      <div>compute.subnetworks.useExternalIp,iam.serviceAccounts.actAs && \</div>
-      <div>gcloud projects add-iam-policy-binding $(gcloud config get-value project) \</div>
-      <div>--member=serviceAccount:419003787216-compute@developer.gserviceaccount.com \</div>
-      <div>--role=projects/$(gcloud config get-value project)/roles/secureGwasRole</div>
-    </code>
-  </div>
-  <br>
-  <p>The console will ask for confirmation: type Y (for yes) and you're done. That's it!</p>
-  <p class="mt-3">
-    <button class="btn btn-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#permissionsExplanation">
-      What is this command doing and why do we need it?
-    </button>
-  </p>
-  <div class="collapse" id="permissionsExplanation">
-    <div class="text-muted bg-light rounded">
-      <div>
-        <h4>Why do we need these permissions?</h4>
-        <p>We want to run GWAS without access to your data. That is the reason we have this website/portal, rather than just sharing all the data and running plain-old GWAS.</p>
-        <p>Therefore, we ask you to personally encrypt your data and upload it to your own GCP project. However, we still need
-          <i>some</i>
-          indirect access to this account, so that we can set up a VM (virtual machine) to run the GWAS protocol for you.</p>
-        <p>And so, this is the single command that we need you to run to give us permission to set up a VM to run the GWAS.</p>
+    </div>
+    {% endcall %}
+    {% call instruction_step(i = 3, title = "Encrypt Data") %}
+    <div>
+      <p>1. Download the other study participant's public key.
+        <strong>Note: you cannot proceed without this key. If the other participant hasn't joined yet, or hasn't uploaded a public key yet, then you must wait.</strong>
+      </p>
+      <p class="mb-1">
+        2. Go back to the secure-gwas-keys-and-encryption repo (in your terminal) and run
+        <code>python encrypt_data.py</code>
+        to encrypt your data. (You may have to run
+        <code>source venv/bin/activate</code>
+        first to reactivate your python virtual environment.)
+      </p>
+      <p class="mb-1">
+        <button class="btn btn-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEncryptData">
+          What does this command do?
+        </button>
+      </p>
+      <div class="collapse" id="collapseEncryptData">
+        <div class="text-muted px-3 mb-2">
+          1. It uses your public key and the other participant's private key to generate two shared keys. These are keys accessible ONLY to you and the other participant, as they require one participant's private key and the other participant's public key to generate them. One shared key will be used to encrypt your data, and the other shared key will be used to encrypt the other participant's data.
+          <br>2. It uses one of the shared keys to make a cryptographically secure pseudorandom number generator (PRNG). This PRNG generates random bytes that are subtracted from your data in order to encrypt your data.
+          <br>3. It converts the newly encrypted data into a special matrix format for convenience in running the GWAS.
+        </div>
       </div>
-      <div>
-        <h4>That shell command looks complicated though. What exactly is it doing?</h4>
-        <p>The shell command is actually 2 commands put together. The first part creates a custom google IAM
-          <a class="text-decoration-none" href="https://cloud.google.com/iam/docs/understanding-roles">role</a>
-          that has permissions to set up a VM for GWAS.</p>
-        <img class="img-fluid w-50" src="../static/top_part.png" alt="">
-        <p class="mt-3">The Second part assigns that role to this portal (or, to be precise, to the service account that runs this portal).</p>
-        <img class="img-fluid w-50" src="../static/bottom_part.png" alt="">
-      </div>
-      <div>
-        <h4 class="mt-3">Okay. So what are all these permissions?</h4>
-        <p>Let's go through the list, shall we?
-          <ul>
-            <li>
-              <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/disks/create">compute.disks.create</a>
-              is needed to create a Compute Engine disk for the VM. This disk stores information such as the operating system, and so is required to create the virtual machine.
-            </li>
-            <li>
-              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/firewalls/insert#iam-permissions">compute.firewalls.create</a>,
-              <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/firewall-policies/rules/create">
-                compute.firewallPolicies.create
-              </a>
-              and
-              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/firewallPolicies/get">
-                compute.firewallPolicies.get
-              </a>
-              are needed to set up the
-              <a class="text-decoration-none" href="https://cloud.google.com/firewalls">firewall</a>
-              rules for the VM so that it can interact with the other study participants' VMs during the protocol.
-            </li>
-            <li>
-              <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/instances/create">compute.instances.create</a>,
-              <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/instances/delete">compute.instances.delete</a>,
-              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/get">compute.instances.get</a>,
-              <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/instances/list">compute.instances.list</a>,
-              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/setMetadata">compute.instances.setMetadata</a>,
-              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/setServiceAccount">compute.instances.setServiceAccount</a>, and
-              <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/instances/stop">compute.instances.stop</a>
-              are needed to set up the
-              <a class="text-decoration-none" href="https://cloud.google.com/compute">virtual machine</a>. This includes creating it, setting the metadata associated with it, and so on.
-            </li>
-            <li>
-              compute.networks.access,
-              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/networks/addPeering">compute.networks.addPeering</a>,
-              <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/networks/create">compute.networks.create</a>,
-              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/networks/get">compute.networks.get</a>,
-              <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/networks/list">compute.networks.list</a>,
-              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/networks/removePeering">compute.networks.removePeering</a>, and compute.networks.updatePolicy are needed to set up the
-              <a class="text-decoration-none" href="https://cloud.google.com/vpc/docs/vpc">VPC (Virtual Private Cloud) network</a>
-              that the VM will be in. This includes
-              <a class="text-decoration-none" href="https://cloud.google.com/vpc/docs/vpc-peering">VPC Network Peering</a>, which allows the VM to connect to the other study participants' VMs in a seamless fashion.
-            </li>
-            <li>compute.subnetworks.create,
-              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/subnetworks/delete">compute.subnetworks.delete</a>,
-              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/subnetworks/list">compute.subnetworks.list</a>, and compute.subnetworks.use, and compute.subnetworks.useExternalIp are needed to set up the
-              <a class="text-decoration-none" href="https://cloud.google.com/vpc/docs/vpc#vpc_networks_and_subnets">subnet</a>
-              that the VM will be in. This includes creating and using these subnets.
-            </li>
-            <li>
-              <a class="text-decoration-none" href="https://cloud.google.com/iam/docs/service-accounts-actas">iam.serviceAccounts.actAs</a>
-              is needed to act as a service account to do the various setup for the network and VM as described.</li>
-          </ul>
+
+      <div class="mt-2">
+        <p>
+          3. Upload the encrypted data to a google cloud storage bucket in your GCP (Google Cloud Platform) project. If you are unfamiliar with Google Cloud Storage, see the google documentation
+          <a class="text-decoration-none" href="https://cloud.google.com/storage/docs/quickstart-console">here</a>
+          (the default configuration/settings for the bucket are fine).
+        </p>
+        <p>
+          4. Please set the following user-specfic parameters:
+          <form method="post" action="{{url_for('studies.personal_parameters', study_title=study['title'])}}">
+            <div class="row mb-3 p-3 bg-light">
+              <label for="GCP_PROJECT" class="col-sm-3 col-form-label text-start">
+                {{parameters['GCP_PROJECT']['name']}}
+              </label>
+              <div class="col-sm-9">
+                <input type="text" class="form-control" name="GCP_PROJECT" id="GCP_PROJECT" value="{{ request.form['GCP_PROJECT'] or parameters['GCP_PROJECT']['value'] }}">
+              </div>
+              <p class="mt-3 text-start text-muted">
+                {{parameters['GCP_PROJECT']['description']}}
+              </p>
+              <label for="DATA_PATH" class="col-sm-3 col-form-label text-start">
+                {{parameters['DATA_PATH']['name']}}
+              </label>
+              <div class="col-sm-9">
+                <input type="text" class="form-control" name="DATA_PATH" id="DATA_PATH" value="{{ request.form['DATA_PATH'] or parameters['DATA_PATH']['value'] }}">
+              </div>
+              <p class="mt-3 text-start text-muted">
+                {{parameters['DATA_PATH']['description']}}
+              </p>
+              <label for="NUM_INDS" class="col-sm-3 col-form-label text-start">
+                {{parameters['NUM_INDS']['name']}}
+              </label>
+              <div class="col-sm-9">
+                <input type="number" class="form-control" name="NUM_INDS" id="NUM_INDS" min="0" value="{{ request.form['NUM_INDS'] or parameters['NUM_INDS']['value'] }}">
+              </div>
+              <p class="mt-3 text-start text-muted">
+                {{parameters['NUM_INDS']['description']}}
+              </p>
+              <div class="d-flex flex-wrap justify-content-center">
+                {% if parameters['NUM_INDS']['value'] and parameters['DATA_PATH']['value'] and parameters['GCP_PROJECT']['value'] %}
+                  <input type="submit" name="save" value="Save" class="btn btn-primary me-2 mb-2 mb-sm-0" disabled="disabled">
+                {% else %}
+                  <input type="submit" name="save" value="Save" class="btn btn-primary me-2 mb-2 mb-sm-0">
+                {% endif %}
+              </div>
+            </div>
+          </form>
         </p>
       </div>
     </div>
+    {% endcall %}
+    {% call instruction_step(i = 4, title = "Give Permissions") %}
+    <div>
+      <p>Log into
+        <a class="text-decoration-none" href="https://console.cloud.google.com">https://console.cloud.google.com</a>. Then click the icon in the top right to "Activate Cloud Shell". Once the Terminal is ready, please copy and run the following:
+      </p>
+      <div class="p-2 bg-light rounded">
+        <button id="copy-button" data-bs-toggle="tooltip" data-bs-trigger='manual' style="position:relative;float:right" type="button" class="btn btn-outline-secondary btn-sm">
+          Copy
+        </button>
+        <code id="gcloud-command" class="language-bash" data-lang="bash" style="font-size: 60%">
+          <div>gcloud iam roles create secureGwasRole --project=$(gcloud config get-value project) \</div>
+          <div>--title="Secure GWAS Role" --permissions=compute.disks.create,compute.firewalls.create,compute.firewallPolicies.create,\</div>
+          <div>compute.firewallPolicies.get,compute.instances.create,compute.instances.delete,compute.instances.get,\</div>
+          <div>compute.instances.list,compute.instances.setMetadata,compute.instances.setServiceAccount,\</div>
+          <div>compute.instances.stop,compute.networks.access,compute.networks.addPeering,compute.networks.create,\</div>
+          <div>compute.networks.get,compute.networks.list,compute.networks.removePeering,compute.networks.updatePolicy,\</div>
+          <div>compute.subnetworks.create,compute.subnetworks.delete,compute.subnetworks.list,compute.subnetworks.use,\</div>
+          <div>compute.subnetworks.useExternalIp,iam.serviceAccounts.actAs && \</div>
+          <div>gcloud projects add-iam-policy-binding $(gcloud config get-value project) \</div>
+          <div>--member=serviceAccount:419003787216-compute@developer.gserviceaccount.com \</div>
+          <div>--role=projects/$(gcloud config get-value project)/roles/secureGwasRole</div>
+        </code>
+      </div>
+      <br>
+      <p>The console will ask for confirmation: type Y (for yes) and you're done. That's it!</p>
+      <p class="mt-3">
+        <button class="btn btn-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#permissionsExplanation">
+          What is this command doing and why do we need it?
+        </button>
+      </p>
+      <div class="collapse" id="permissionsExplanation">
+        <div class="text-muted bg-light rounded">
+          <div>
+            <h4>Why do we need these permissions?</h4>
+            <p>We want to run GWAS without access to your data. That is the reason we have this website/portal, rather than just sharing all the data and running plain-old GWAS.</p>
+            <p>Therefore, we ask you to personally encrypt your data and upload it to your own GCP project. However, we still need
+              <i>some</i>
+              indirect access to this account, so that we can set up a VM (virtual machine) to run the GWAS protocol for you.</p>
+            <p>And so, this is the single command that we need you to run to give us permission to set up a VM to run the GWAS.</p>
+          </div>
+          <div>
+            <h4>That shell command looks complicated though. What exactly is it doing?</h4>
+            <p>The shell command is actually 2 commands put together. The first part creates a custom google IAM
+              <a class="text-decoration-none" href="https://cloud.google.com/iam/docs/understanding-roles">role</a>
+              that has permissions to set up a VM for GWAS.</p>
+            <img class="img-fluid w-50" src="../static/top_part.png" alt="">
+            <p class="mt-3">The Second part assigns that role to this portal (or, to be precise, to the service account that runs this portal).</p>
+            <img class="img-fluid w-50" src="../static/bottom_part.png" alt="">
+          </div>
+          <div>
+            <h4 class="mt-3">Okay. So what are all these permissions?</h4>
+            <p>Let's go through the list, shall we?
+              <ul>
+                <li>
+                  <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/disks/create">compute.disks.create</a>
+                  is needed to create a Compute Engine disk for the VM. This disk stores information such as the operating system, and so is required to create the virtual machine.
+                </li>
+                <li>
+                  <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/firewalls/insert#iam-permissions">compute.firewalls.create</a>,
+                  <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/firewall-policies/rules/create">
+                    compute.firewallPolicies.create
+                  </a>
+                  and
+                  <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/firewallPolicies/get">
+                    compute.firewallPolicies.get
+                  </a>
+                  are needed to set up the
+                  <a class="text-decoration-none" href="https://cloud.google.com/firewalls">firewall</a>
+                  rules for the VM so that it can interact with the other study participants' VMs during the protocol.
+                </li>
+                <li>
+                  <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/instances/create">compute.instances.create</a>,
+                  <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/instances/delete">compute.instances.delete</a>,
+                  <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/get">compute.instances.get</a>,
+                  <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/instances/list">compute.instances.list</a>,
+                  <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/setMetadata">compute.instances.setMetadata</a>,
+                  <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/setServiceAccount">compute.instances.setServiceAccount</a>, and
+                  <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/instances/stop">compute.instances.stop</a>
+                  are needed to set up the
+                  <a class="text-decoration-none" href="https://cloud.google.com/compute">virtual machine</a>. This includes creating it, setting the metadata associated with it, and so on.
+                </li>
+                <li>
+                  compute.networks.access,
+                  <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/networks/addPeering">compute.networks.addPeering</a>,
+                  <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/networks/create">compute.networks.create</a>,
+                  <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/networks/get">compute.networks.get</a>,
+                  <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/networks/list">compute.networks.list</a>,
+                  <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/networks/removePeering">compute.networks.removePeering</a>, and compute.networks.updatePolicy are needed to set up the
+                  <a class="text-decoration-none" href="https://cloud.google.com/vpc/docs/vpc">VPC (Virtual Private Cloud) network</a>
+                  that the VM will be in. This includes
+                  <a class="text-decoration-none" href="https://cloud.google.com/vpc/docs/vpc-peering">VPC Network Peering</a>, which allows the VM to connect to the other study participants' VMs in a seamless fashion.
+                </li>
+                <li>compute.subnetworks.create,
+                  <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/subnetworks/delete">compute.subnetworks.delete</a>,
+                  <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/subnetworks/list">compute.subnetworks.list</a>, and compute.subnetworks.use, and compute.subnetworks.useExternalIp are needed to set up the
+                  <a class="text-decoration-none" href="https://cloud.google.com/vpc/docs/vpc#vpc_networks_and_subnets">subnet</a>
+                  that the VM will be in. This includes creating and using these subnets.
+                </li>
+                <li>
+                  <a class="text-decoration-none" href="https://cloud.google.com/iam/docs/service-accounts-actas">iam.serviceAccounts.actAs</a>
+                  is needed to act as a service account to do the various setup for the network and VM as described.</li>
+              </ul>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endcall %}
+    {% call instruction_step(i = 5, title = "Validate Data") %}
+    <div>
+      <p>
+        1. Go to your study, and confirm that all the
+        <span class="text-secondary">Shared Study Parameters</span>
+        and
+        <span class="text-secondary">User-Specific Parameters</span>
+        are as desired.
+        <br>2. When you are ready, click on the
+        <span class="text-success">Validate Data</span>
+        button. This will validate that this portal is able to create a VM that can access your encyrpted data that you uploaded in step 3.
+        <br>It will also validate that your data is approximately the correct size, based on your study parameters.
+      </p>
+    </div>
+    {% endcall %}
+    {% call instruction_step(i = 6, title = "Begin Workflow") %}
+    <div>
+      <p>
+        When the validation has finished, and you are ready, click on the
+        <span class="text-success">Ready to begin GWAS</span>
+        button.
+        <br>Once all participants have done so, the protocol will begin.
+      </p>
+      <p class="text-muted">(Optional) While the protocol is running, if you want a more detailed view into what the VM is doing, you can ssh into your VM and run the command
+        <code>sudo journalctl -u google-startup-scripts.service</code>
+        to see detailed logs.</p>
+    </div>
+    {% endcall %}
+    {% call instruction_step(i = 7, title = "Enjoy the Results") %}
+    <div>
+      <p>
+        Once the protocol is complete, the study page will indicate this with a "GWAS Completed!" status.
+        <br>You can then download the results (from your storage bucket in your GCP project) to share and analyze at your leisure.
+      </p>
+    </div>
+    {% endcall %}
+
   </div>
-
-  {% endcall %}
-
-  {% call instruction_step(i = 4, title = "Validate Data") %}
-
-  <p>
-    1. Go to your study, and confirm that all the
-    <span class="text-secondary">Shared Study Parameters</span>
-    and
-    <span class="text-secondary">User-Specific Parameters</span>
-    are as desired.
-    <br>2. When you are ready, click on the
-    <span class="text-success">Validate Data</span>
-    button. This will validate that this portal is able to create a VM that can access your encyrpted data that you uploaded in step 3.
-    <br>It will also validate that your data is approximately the correct size, based on your study parameters.
-  </p>
-
-  {% endcall %}
-
-  {% call instruction_step(i = 5, title = "Begin Workflow") %}
-
-  <p>
-    When the validation has finished, and you are ready, click on the
-    <span class="text-success">Ready to begin GWAS</span>
-    button.
-    <br>Once all participants have done so, the protocol will begin.
-  </p>
-
-  {% endcall %}
-
-  {% call instruction_step(i = 6, title = "Enjoy the Results") %}
-
-  <p>
-    Once the protocol is complete, the study page will indicate this with a "GWAS Completed!" status.
-    <br>You can then download the results (from your storage bucket in your GCP project) to share and analyze at your leisure.
-  </p>
-
-  {% endcall %}
-
-</div>

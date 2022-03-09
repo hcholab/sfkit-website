@@ -117,10 +117,10 @@ DEFAULT_USER_PARAMETERS = {
         If you don't have a dedicated GCP project for this workflow, you will need to make one.  Note that this Project ID MAY or MAY NOT be the same as your Project Name.",
         "value": "",
     },
-    "BUCKET_NAME": {
-        "name": "Storage Bucket Name",
-        "description": "The name of the storage bucket where you put your encrypted data.  \
-            (this can be anything you want, but it should be unique for this workflow)",
+    "DATA_PATH": {
+        "name": "GCP Path to Data",
+        "description": "The path to your encrypted data in the GCP bucket.  For example, if I put the 'encrypted_data' folder in a bucket called 'secure-gwas-data', \
+            the the path would be 'secure-gwas-data/encrypted_data'.",
         "value": "",
     },
     "NUM_INDS": {
@@ -152,7 +152,7 @@ DEFAULT_USER_PARAMETERS = {
     "index": [
         "PUBLIC_KEY",
         "GCP_PROJECT",
-        "BUCKET_NAME",
+        "DATA_PATH",
         "NUM_INDS",
         "NUM_THREADS",
         "NUM_CPUS",
