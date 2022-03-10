@@ -27,12 +27,12 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
-            <p class="text-start">
-              Study Description:
-              {{ study['description'] }}
-              <br><br>Study Information:
-              <br>{{ study['study_information'] }}
-            </p>
+            <div class="text-start mt-0 mb-0">
+              <p class="mt-0 mb-0">Study Description:
+                {{ study['description'] }}</p>
+              <p>Study Information:</p>
+              <p class="mt-0 mb-0" style="white-space: pre-wrap;">{{ study['study_information'] }}</p>
+            </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

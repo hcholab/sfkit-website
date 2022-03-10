@@ -99,7 +99,7 @@
     <form method="post" action="{{url_for('studies.upload_public_key', study_title=study['title'])}}" enctype="multipart/form-data">
       <label for="formFile" class="form-label">Please upload
         <em>my_public_key.txt</em>
-        that you just generated:
+        that you just generated: (Optional - if you would rather share the public key directly with the other participant, you may do so instead.)
       </label>
       <input class="form-control" type="file" name="file" id="formFile">
       {% if parameters["PUBLIC_KEY"]["value"] %}
@@ -113,8 +113,8 @@
   {% endcall %}
   {% call instruction_step(i = 2, title = "Encrypt Data") %}
   <div>
-    <p>1. Download the other study participant's public key.
-      <strong>Note: you cannot proceed without this key. If the other participant hasn't joined yet, or hasn't uploaded a public key yet, then you must wait.</strong>
+    <p>1. Download the other study participant's public key. (Optional - if you would rather share the public key directly with the other participant, you may do so instead.)
+      <strong>Note: you cannot proceed without this key.</strong>
     </p>
     <p class="mb-1">
       2. Go back to the secure-gwas-keys-and-encryption repo (in your terminal) and run

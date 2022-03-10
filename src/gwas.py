@@ -73,14 +73,6 @@ def start_gwas(study_title: str) -> Response:
     gcp_project = doc_ref_dict["personal_parameters"][id]["GCP_PROJECT"]["value"]
     statuses = doc_ref_dict["status"]
 
-    # check if pos.txt is in the google cloud bucket
-    gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
-    if not gcloudStorage.check_file_exists("pos.txt"):
-        return redirect_with_flash(
-            url=url_for("studies.parameters", study_title=study_title, section="pos"),
-            message="Please upload a pos.txt file or have one of the entities you are running this study with do so for you.",
-        )
-
     if statuses[id] == ["not ready"]:
         if not GoogleCloudIAM().test_permissions(gcp_project):
             return redirect_with_flash(
