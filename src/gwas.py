@@ -78,7 +78,7 @@ def start_gwas(study_title: str) -> Response:
     if not gcloudStorage.check_file_exists("pos.txt"):
         return redirect_with_flash(
             url=url_for("studies.parameters", study_title=study_title, section="pos"),
-            message="Please upload a pos.txt file or have one of the entities you are runnning this study with do so for you.",
+            message="Please upload a pos.txt file or have one of the entities you are running this study with do so for you.",
         )
 
     if statuses[id] == ["not ready"]:

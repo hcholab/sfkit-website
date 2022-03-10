@@ -127,7 +127,20 @@ class GoogleCloudCompute:
             region=constants.REGION,
             subnetwork=subnet["name"],
         ).execute()
-        time.sleep(10)
+
+        # wait for the subnet to be deleted
+        for i in range(30):
+            if i == 25:
+                print(f"Failure to delete subnet {subnet['name']}")
+                quit(1)
+            subnets = (
+                self.compute.subnetworks()
+                .list(project=self.project, region=constants.REGION)
+                .execute()["items"]
+            )
+            if subnet["name"] not in [sub["name"] for sub in subnets]:
+                break
+            time.sleep(2)
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(30))
     def create_subnet(self, role: str, region: str = constants.REGION) -> None:
@@ -162,7 +175,7 @@ class GoogleCloudCompute:
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(30))
     def create_peerings(self, gcp_projects: list) -> None:
-        # create peerings if they dont' already exist
+        # create peerings if they don't already exist
         network_info = (
             self.compute.networks()
             .get(project=self.project, network=constants.NETWORK_NAME)

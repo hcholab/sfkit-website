@@ -85,7 +85,7 @@
         creates a python virtual environment and activates it. While this is not necessary, it is good practice as it keeps all the python libraries you install here separate from the rest of your computer. For more information about python virtual environments, see
         <a class="text-decoration-none" href="https://docs.python.org/3/library/venv.html">the official documentation</a>.
         <br><br>
-        <code>pip install -r requirements.txt</code>
+        <code>python -m pip install -r requirements.txt</code>
         installs all the python libraries required for the repo.
         <br><br>
         <code>python generate_personal_keys.py</code>
@@ -144,7 +144,7 @@
         (the default configuration/settings for the bucket are fine).
       </p>
       <p>
-        4. Please set the following user-specfic parameters:
+        4. Please set the following user-specific parameters:
         <form method="post" action="{{url_for('studies.personal_parameters', study_title=study['title'])}}">
           <div class="row mb-3 p-3 bg-light">
             <label for="GCP_PROJECT" class="col-sm-3 col-form-label text-start">
@@ -305,7 +305,7 @@
       are as desired.
       <br>2. When you are ready, click on the
       <span class="text-success">Validate Data</span>
-      button. This will validate that this portal is able to create a VM that can access your encyrpted data that you uploaded in step 3.
+      button. This will validate that this portal is able to create a VM that can access your encrypted data that you uploaded in step 3.
       <br>It will also validate that your data is approximately the correct size, based on your study parameters.
     </p>
   </div>
