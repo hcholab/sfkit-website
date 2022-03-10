@@ -28,7 +28,7 @@
 
 <div class="accordion" id="accordion">
 
-  {% call instruction_step(i = 1, title = "Prerequisites", collapsed = "", show = "show") %}
+  {% call instruction_step(i = 0, title = "Prerequisites", collapsed = "", show = "show") %}
   <div>
     <p>1. If you don't already have them, you will need to install
       <a class="text-decoration-none" href="https://git-scm.com/book/en/v2/Getting-Started-Installing-Git">Git</a>
@@ -38,14 +38,14 @@
     <p>2. You should create a GCP (Google Cloud Platform) project that is dedicated to this study. If you are new to GCP, go to
       <a href="https://console.cloud.google.com/" class="text-decoration-none">console.cloud.google.com</a>
       and create an account and a project.
-      <p class="px-2">2a. You need to have the
+      <p class="px-2 mb-0">2a. You need to have the
         <code>gcloud.iam.roles.create</code>
         permission in your GCP project. If you are the owner of the project, this is automatically given.</p>
-      <p class="px-2">If you are within an organization such that you are not the owner, please talk to your administrator to get the appropriate role.</p>
-      <p class="px-2">This could be "owner", but there are also other roles (such as "Project IAM Admin") that have this permission.</p>
+      <p class="px-2 mt-0 mb-0">If you are within an organization such that you are not the owner, please talk to your administrator to get the appropriate role.</p>
+      <p class="px-2 mt-0">This could be "owner", but there are also other roles (such as "Project IAM Admin") that have this permission.</p>
       <p class="px-2">2b. You need to enable the
         <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1">Compute Engine API</a>
-        in your GCP account. If you don't know how to enable an API, see the documentation
+        in your GCP account. If you don't know how to enable an API, see the Google documentation
         <a href="https://cloud.google.com/endpoints/docs/openapi/enable-api" class="text-decoration-none">here</a>
       </p>
       <p class="px-2">2c. You need to enable the
@@ -54,7 +54,7 @@
     </p>
   </div>
   {% endcall %}
-  {% call instruction_step(i = 2, title = "Generate Keys") %}
+  {% call instruction_step(i = 1, title = "Generate Keys") %}
   <div>
     <p>Open your terminal and run the following commands:</p>
     <code>git clone https://github.com/simonjmendelsohn/secure-gwas-keys-and-encryption.git</code>
@@ -111,7 +111,7 @@
     </form>
   </div>
   {% endcall %}
-  {% call instruction_step(i = 3, title = "Encrypt Data") %}
+  {% call instruction_step(i = 2, title = "Encrypt Data") %}
   <div>
     <p>1. Download the other study participant's public key.
       <strong>Note: you cannot proceed without this key. If the other participant hasn't joined yet, or hasn't uploaded a public key yet, then you must wait.</strong>
@@ -187,7 +187,7 @@
     </div>
   </div>
   {% endcall %}
-  {% call instruction_step(i = 4, title = "Give Permissions") %}
+  {% call instruction_step(i = 3, title = "Give Permissions") %}
   <div>
     <p>Log into
       <a class="text-decoration-none" href="https://console.cloud.google.com">https://console.cloud.google.com</a>. Then click the icon in the top right to "Activate Cloud Shell". Once the Terminal is ready, please copy and run the following:
@@ -295,7 +295,7 @@
     </div>
   </div>
   {% endcall %}
-  {% call instruction_step(i = 5, title = "Validate Data") %}
+  {% call instruction_step(i = 4, title = "Validate Data") %}
   <div>
     <p>
       1. Go to your study, and confirm that all the
@@ -310,7 +310,7 @@
     </p>
   </div>
   {% endcall %}
-  {% call instruction_step(i = 6, title = "Begin Workflow") %}
+  {% call instruction_step(i = 5, title = "Begin Workflow") %}
   <div>
     <p>
       When the validation has finished, and you are ready, click on the
@@ -323,7 +323,7 @@
       to see detailed logs.</p>
   </div>
   {% endcall %}
-  {% call instruction_step(i = 7, title = "Enjoy the Results") %}
+  {% call instruction_step(i = 6, title = "Enjoy the Results") %}
   <div>
     <p>
       Once the protocol is complete, the study page will indicate this with a "GWAS Completed!" status.
