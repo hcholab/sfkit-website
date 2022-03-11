@@ -14,32 +14,7 @@
   {% endif %}
   <p class="lead text-muted mb-1">{{ study['description'] }}</p>
   <div class="mb-2">
-    <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#studyInformation{{ study['title']|replace(' ', '') }}">
-      Study Information
-    </button>
-
-    <div class="modal fade" id="studyInformation{{ study['title']|replace(' ', '') }}" tabindex="-1">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="studyInformationLabel">Study Title:
-              {{ study['title'] }}</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <div class="text-start mt-0 mb-0">
-              <p class="mt-0 mb-0">Study Description:
-                {{ study['description'] }}</p>
-              <p>Study Information:</p>
-              <p class="mt-0 mb-0" style="white-space: pre-wrap;">{{ study['study_information'] }}</p>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
+    {% include 'studies/utils/study_information.html'%}
   </div>
   {% if g.user['id'] == study['owner'] %}
     <form action="{{ url_for('studies.delete_study', study_title=study['title']) }}" method="post">

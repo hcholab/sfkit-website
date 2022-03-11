@@ -9,60 +9,9 @@
     <div class="col-12 col-lg-8 mx-auto text-center p-3 rounded">
       <h2 class="h2 display-8 mt-0 mb-4">Edit Shared Study Parameters</h2>
       <p class="mt-0">Note: If you're not sure about some of these parameters, you can always come back to them later.</p>
-      <form method="post">
-        <div class="row mb-3 p-3 bg-light text-start">
-          {% for parameter_name in parameters["index"] %}
-            <label for="{{ parameter_name }}" class="col-sm-5 col-form-label">
-              {{parameters[parameter_name]['name']}}
-            </label>
-            <div class="col-sm-7">
-              <input type="number" step="any" class="form-control" name="{{parameter_name}}" id="{{parameter_name}}" min="0" value="{{ request.form['{{parameter_name}}'] or parameters[parameter_name]['value'] }}">
-            </div>
-            <p class="mt-1 text-start text-muted">
-              {{parameters[parameter_name]['description']}}
-            </p>
-          {% endfor %}
-          <div class="d-flex flex-wrap justify-content-center">
-            <a href="{{ url_for('studies.study', study_title=study_title) }}" class="btn btn-outline-secondary me-2 mb-2 mb-sm-0">Cancel</a>
-            <input type="submit" name="save" value="Save" class="btn btn-primary me-2 mb-2 mb-sm-0">
-          </div>
-        </div>
-      </form>
-    </div>
-
-    {# <div class=""><br></div>
-    <div class="col-12 col-lg-8 mx-auto text-center mb-5" id="pos">
-      <div class="p-5 bg-light rounded text-center">
-        <h2 class="display-8 mt-0 mb-2">pos.txt file</h2>
-        <p class="mb-4">
-          The pos.txt file contains the genomic positions of SNPs to be tested, and is considered public (shared here for all parties).
-        </p>
-        {% if pos_file_uploaded %}
-          <p class="lead">
-            The pos.txt file has already been uploaded! You can replace it by uploading a new one.
-          </p>
-        {% endif %}
-        <form method="post" enctype="multipart/form-data">
-          <input type="file" name="file">
-          <input type="submit" name="upload" value="Upload">
-        </form>
+      <div class="bg-light">
+        {% include 'studies/utils/shared_study_parameters.html' %}
       </div>
-    </div> #}
+    </div>
   </section>
-{% endblock %}
-
-{% block javascript %}
-  {% if request
-    .args
-    .get('section') %}
-    <script>
-      $(function () {
-        $("html, body").animate({
-          scrollTop: $("#{{ request.args.get('section') }}")
-            .offset()
-            .top
-        }, 500);
-      });
-    </script>
-  {% endif %}
 {% endblock %}

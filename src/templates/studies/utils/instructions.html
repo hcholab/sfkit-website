@@ -102,11 +102,9 @@
         that you just generated: (Optional - if you would rather share the public key directly with the other participant, you may do so instead.)
       </label>
       <input class="form-control" type="file" name="file" id="formFile">
+      <input class="mt-1" type="submit" name="upload" value="Upload">
       {% if parameters["PUBLIC_KEY"]["value"] %}
-        <input class="mt-1" type="submit" name="upload" value="Upload" disabled="disabled">
         <span class="fw-bold">Your public key has been uploaded!</span>
-      {% else %}
-        <input class="mt-1" type="submit" name="upload" value="Upload">
       {% endif %}
     </form>
   </div>
@@ -175,11 +173,7 @@
               {{parameters['NUM_INDS']['description']}}
             </p>
             <div class="d-flex flex-wrap justify-content-center">
-              {% if parameters['NUM_INDS']['value'] and parameters['DATA_PATH']['value'] and parameters['GCP_PROJECT']['value'] %}
-                <input type="submit" name="save" value="Save" class="btn btn-primary me-2 mb-2 mb-sm-0" disabled="disabled">
-              {% else %}
-                <input type="submit" name="save" value="Save" class="btn btn-primary me-2 mb-2 mb-sm-0">
-              {% endif %}
+              <input type="submit" name="save" value="Save" class="btn btn-primary me-2 mb-2 mb-sm-0">
             </div>
           </div>
         </form>

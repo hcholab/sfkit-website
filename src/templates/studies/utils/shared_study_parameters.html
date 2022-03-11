@@ -1,0 +1,26 @@
+{%set owner = (g.user['id'] == study['owner'])%}
+
+<form method="post" action="{{ url_for('studies.parameters', study_title=study['title']) }}">
+  <div class="row p-3 text-start">
+    {% if not owner %}
+      <p>Note: Only the creator of the study can edit the Shared Study Parameters.</p>
+    {% endif %}
+    {% for parameter_name in study["parameters"]["index"] %}
+      <label for="{{ parameter_name }}" class="col-sm-5 col-form-label">
+        {{study["parameters"][parameter_name]['name']}}
+      </label>
+      <div class="col-sm-7">
+        <input type="number" step="any" class="form-control" name="{{parameter_name}}" id="{{parameter_name}}" min="0" value="{{ request.form['{{parameter_name}}'] or study['parameters'][parameter_name]['value'] }}" {% if not owner %} disabled="disabled" {% endif %}>
+      </div>
+      <p class="mt-1 text-start text-muted">
+        {{study["parameters"][parameter_name]['description']}}
+      </p>
+    {% endfor %}
+    {% if owner %}
+      <div class="d-flex flex-wrap justify-content-center">
+        <a href="{{ url_for('studies.study', study_title=study['title']) }}" class="btn btn-outline-secondary me-2 mb-2 mb-sm-0">Cancel</a>
+        <input type="submit" name="save" value="Save" class="btn btn-primary me-2">
+      </div>
+    {% endif %}
+  </div>
+</form>

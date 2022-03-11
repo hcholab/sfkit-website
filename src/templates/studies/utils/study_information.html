@@ -1,0 +1,49 @@
+{% set study_id = study['title'] | replace(' ', '') %}
+<button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#studyInformation{{ study_id }}">
+  Study Information
+</button>
+
+<div class="modal fade" id="studyInformation{{ study_id }}" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="studyInformationLabel">
+          Study Title:
+          {{ study['title'] }}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+
+        <ul class="nav nav-tabs">
+          <li class="nav-item">
+            <a class="nav-link active" href="#study_details{{ study_id }}" data-bs-toggle="tab">Study Details</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#shared_study_parameters{{ study_id }}" data-bs-toggle="tab">Shared Study Parameters</a>
+          </li>
+        </ul>
+
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="study_details{{ study_id }}">
+            <div class="text-start mt-0 mb-0">
+              <p class="mt-0 mb-0">Study Description:
+                {{ study['description'] }}</p>
+              <p>Study Information:</p>
+              <p class="mt-0 mb-0" style="white-space: pre-wrap;">
+                {{ study['study_information'] }}
+              </p>
+            </div>
+          </div>
+          <div class="tab-pane fade" id="shared_study_parameters{{ study_id }}">
+            {% include 'studies/utils/shared_study_parameters.html' %}
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

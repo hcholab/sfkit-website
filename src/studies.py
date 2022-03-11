@@ -193,19 +193,15 @@ def approve_join_study(study_title: str, user_id: str) -> Response:
 @bp.route("/parameters/<study_title>", methods=("GET", "POST"))
 @login_required
 def parameters(study_title: str) -> Response:
-    gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
-
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
-    parameters = doc_ref.get().to_dict().get("parameters")
-    pos_file_uploaded = gcloudStorage.check_file_exists("pos.txt")
+    doc_ref_dict = doc_ref.get().to_dict()
+    parameters = doc_ref_dict.get("parameters")
     if request.method == "GET":
         return make_response(
             render_template(
                 "studies/parameters.html",
-                study_title=study_title,
-                parameters=parameters,
-                pos_file_uploaded=pos_file_uploaded,
+                study=doc_ref_dict,
             )
         )
     elif "save" in request.form:
@@ -213,21 +209,6 @@ def parameters(study_title: str) -> Response:
             parameters[p]["value"] = request.form.get(p)
         doc_ref.set({"parameters": parameters}, merge=True)
         return redirect(url_for("studies.study", study_title=study_title))
-    elif "upload" in request.form:
-        file = request.files["file"]
-        if file.filename == "":
-            return redirect_with_flash(
-                url=url_for("studies.parameters", study_title=study_title),
-                message="Please select a file to upload.",
-            )
-        elif file and file.filename == "pos.txt":
-            gcloudStorage.upload_to_bucket(file, file.filename)
-            return redirect(url_for("studies.study", study_title=study_title))
-        else:
-            return redirect_with_flash(
-                url=url_for("studies.parameters", study_title=study_title),
-                message="Please upload a valid pos.txt file.",
-            )
     else:
         return redirect_with_flash(
             url=url_for("studies.parameters", study_title=study_title),
