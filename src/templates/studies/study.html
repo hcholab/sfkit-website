@@ -28,11 +28,6 @@
                 <p class="fw-bold mb-0">Study Participants:</p>
                 {% for i in range(study['participants'] | length) %}
                   {{study['participants'][i]}}:
-                  {% if public_keys[i]%}
-                    <small class="text-muted">
-                      <a class="text-decoration-none" href="{{url_for('studies.download_public_key', study_title=study['title'], role=i+1)}}">Download Public Key</a>
-                    </small>
-                  {% endif %}
                   <br>
                 {% endfor %}
               </div>

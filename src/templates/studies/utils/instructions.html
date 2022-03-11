@@ -111,8 +111,13 @@
   {% endcall %}
   {% call instruction_step(i = 2, title = "Encrypt Data") %}
   <div>
-    <p>1. Download the other study participant's public key. (Optional - if you would rather share the public key directly with the other participant, you may do so instead.)
-      <strong>Note: you cannot proceed without this key.</strong>
+    <p>1. Download the other participant's public key:
+      {% if public_keys[2 - role] %}
+        <a class="text-decoration-none" href="{{url_for('studies.download_public_key', study_title=study['title'], role=3-role)}}">Download Public Key</a>
+      {% else %}
+        <strong>The other participant has not yet uploaded their key. Note: You cannot proceed without this key.</strong>
+      {% endif %}
+      <br>(Optional - if you would rather share the public key directly with the other participant, you may do so instead.)
     </p>
     <p class="mb-1">
       2. Go back to the secure-gwas-keys-and-encryption repo (in your terminal) and run
