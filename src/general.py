@@ -4,7 +4,7 @@ from typing import Tuple
 from flask import Blueprint, current_app, make_response, render_template, request
 from werkzeug import Response
 
-from src.utils.gwas_functions import data_is_valid
+from src.utils.gwas_functions import data_has_valid_size, data_has_valid_files
 
 bp = Blueprint("general", __name__)
 
@@ -43,13 +43,12 @@ def index() -> Tuple[str, int]:
 
     publishTime = pubsub_message.get("publishTime")
     message = base64.b64decode(pubsub_message["data"])
-    msg_lst = message.decode("utf-8").strip().split("-")
-    print(f"Pub/Sub message received: {msg_lst}")
+    msg = message.decode("utf-8").strip()
+    print(f"Pub/Sub message decoded: {msg}")
 
     try:
-        study_title: str = msg_lst[0]
-        role: str = msg_lst[-2][-1]
-        content: str = msg_lst[-1]
+        [study_title, rest] = msg.split("-secure-gwas", maxsplit=1)
+        [role, content] = rest.split("-", maxsplit=1)
 
         db = current_app.config["DATABASE"]
         doc_ref = db.collection("studies").document(
@@ -59,8 +58,11 @@ def index() -> Tuple[str, int]:
         statuses = doc_ref_dict.get("status")
         id = doc_ref_dict.get("participants")[int(role) - 1]
 
-        if content.isnumeric():
-            if data_is_valid(int(content), doc_ref_dict, int(role)):
+        if "validate" in content:
+            [_, size, files] = content.split("|", maxsplit=2)
+            if data_has_valid_size(
+                int(size), doc_ref_dict, int(role)
+            ) and data_has_valid_files(files):
                 statuses[id] = ["not ready"]
             else:
                 statuses[id] = ["invalid data"]

@@ -9,7 +9,7 @@ sudo -s
 
 topic_id=$(hostname)
 role=$(hostname | tail -c 2)
-bucket=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/bucketname" -H "Metadata-Flavor: Google")
+data_path=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/data_path" -H "Metadata-Flavor: Google")
 
 printf "\n\n Begin installing dependencies \n\n"
 apt-get --assume-yes update &&
@@ -37,21 +37,21 @@ cd /home
 git clone https://github.com/simonjmendelsohn/secure-gwas /home/secure-gwas
 printf "\n\n Done installing GWAS repo \n\n"
 
-printf "\n\n Download data from storage bucket"
+printf "\n\n Download data from storage data_path"
 mkdir -p /home/secure-gwas/test_data
-gsutil cp gs://${bucket}/g.bin /home/secure-gwas/test_data/g.bin &&
-    gsutil cp gs://${bucket}/m.bin /home/secure-gwas/test_data/m.bin &&
-    gsutil cp gs://${bucket}/p.bin /home/secure-gwas/test_data/p.bin &&
-    gsutil cp gs://${bucket}/other_shared_key.bin /home/secure-gwas/test_data/other_shared_key.bin &&
-    gsutil cp gs://${bucket}/pos.txt /home/secure-gwas/test_data/pos.txt &&
+gsutil cp gs://${data_path}/g.bin /home/secure-gwas/test_data/g.bin &&
+    gsutil cp gs://${data_path}/m.bin /home/secure-gwas/test_data/m.bin &&
+    gsutil cp gs://${data_path}/p.bin /home/secure-gwas/test_data/p.bin &&
+    gsutil cp gs://${data_path}/other_shared_key.bin /home/secure-gwas/test_data/other_shared_key.bin &&
+    gsutil cp gs://${data_path}/pos.txt /home/secure-gwas/test_data/pos.txt &&
     gsutil cp gs://secure-gwas-data/test.par.${role}.txt /home/secure-gwas/par/test.par.${role}.txt
 if [[ $? -ne 0 && "$role" != "0\n" ]]; then
-    gcloud pubsub topics publish ${topic_id} --message="${topic_id}-Failed to download data from storage bucket" --ordering-key="1" --project="broad-cho-priv1"
-    printf "\n\n Failed to download data from storage bucket: ${bucket} \n\n"
+    gcloud pubsub topics publish ${topic_id} --message="${topic_id}-Failed to download data from storage data_path" --ordering-key="1" --project="broad-cho-priv1"
+    printf "\n\n Failed to download data from storage data_path: ${data_path} \n\n"
     exit 1
 else
-    gcloud pubsub topics publish ${topic_id} --message="${topic_id}-Done downloading data from storage bucket" --ordering-key="1" --project="broad-cho-priv1"
-    printf "\n\n Done downloading data from storage bucket: ${bucket} \n\n"
+    gcloud pubsub topics publish ${topic_id} --message="${topic_id}-Done downloading data from storage data_path" --ordering-key="1" --project="broad-cho-priv1"
+    printf "\n\n Done downloading data from storage data_path: ${data_path} \n\n"
 fi
 
 printf "\n\n Begin installing NTL library \n\n"
@@ -125,6 +125,6 @@ else
     gcloud pubsub topics publish ${topic_id} --message="${topic_id}-GWAS Completed!" --ordering-key="1" --project="broad-cho-priv1"
     printf "\n\n GWAS Completed! \n\n"
 
-    # copy results to storage bucket
-    gsutil cp -r /home/secure-gwas/out gs://${bucket}/out
+    # copy results to storage data_path
+    gsutil cp -r /home/secure-gwas/out gs://${data_path}/out
 fi

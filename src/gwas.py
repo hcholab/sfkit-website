@@ -50,7 +50,7 @@ def validate_data(study_title: str) -> Response:
         instance,
         role,
         validate=True,
-        metadata={"key": "bucketname", "value": data_path},
+        metadata={"key": "data_path", "value": data_path},
     )
 
     # Give instance publish access to pubsub for status updates

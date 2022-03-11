@@ -43,7 +43,7 @@ def create_instance_name(study_title: str, role: str) -> str:
     )
 
 
-def data_is_valid(size: int, doc_ref_dict: dict, role: int) -> bool:
+def data_has_valid_size(size: int, doc_ref_dict: dict, role: int) -> bool:
     id: str = doc_ref_dict.get("participants", [])[role - 1]
     num_snps: int = int(
         doc_ref_dict.get("parameters", {}).get("NUM_SNPS", {}).get("value", "0")
@@ -64,3 +64,9 @@ def data_is_valid(size: int, doc_ref_dict: dict, role: int) -> bool:
         return False
 
     return True
+
+
+def data_has_valid_files(files: str) -> bool:
+    return all(
+        desired_file in files for desired_file in constants.DATA_VALIDATION_FILES
+    )

@@ -31,7 +31,7 @@ def test_home(client):
 
 
 def test_index_from_pubsub(client, app, mocker):
-    mocker.patch("src.general.data_is_valid", mock_data_is_valid)
+    mocker.patch("src.general.data_has_valid_size", mock_data_has_valid_size)
 
     doc_ref = app.config["DATABASE"].collection("studies").document("blah")
     doc_ref.set(
@@ -70,5 +70,5 @@ def test_index_from_pubsub(client, app, mocker):
     assert client.post("/", data=data, headers=headers).status_code == 204
 
 
-def mock_data_is_valid(size, dic_ref_dict, role):
+def mock_data_has_valid_size(size, dic_ref_dict, role):
     return size == 6

@@ -8,8 +8,9 @@ touch /home/startup_was_launched
 sudo -s
 
 topic_id=$(hostname)
-bucket=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/bucketname" -H "Metadata-Flavor: Google")
-message=$(gsutil du -s gs://${bucket} | awk '{print $1}')
+data_path=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/data_path" -H "Metadata-Flavor: Google")
+size=$(gsutil du -s gs://${data_path} | awk '{print $1}')
+files=$(gsutil ls gs://${data_path})
 
-gcloud pubsub topics publish ${topic_id} --message="${topic_id}-${message}" --ordering-key="1" --project="broad-cho-priv1"
+gcloud pubsub topics publish ${topic_id} --message="${topic_id}-validate|${size}|${files}" --ordering-key="1" --project="broad-cho-priv1"
 printf "\n\n Done getting dataset size \n\n"

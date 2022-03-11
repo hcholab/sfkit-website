@@ -9,6 +9,7 @@ TEMP_FOLDER = "src/temp"
 PARAMETER_FILES = ["test.par.0.txt", "test.par.1.txt", "test.par.2.txt"]
 BASE_P = "1461501637330902918203684832716283019655932542929"
 DATA_VALIDATION_CONSTANT = 4 * len(BASE_P)
+DATA_VALIDATION_FILES = ["g.bin", "m.bin", "p.bin", "other_shared_key.bin", "pos.txt"]
 
 DEFAULT_SHARED_PARAMETERS = {
     "NUM_SNPS": {

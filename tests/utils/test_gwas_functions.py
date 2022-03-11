@@ -42,9 +42,9 @@ def test_create_instance_name():
 
 
 def test_data_is_valid():
-    assert gwas_functions.data_is_valid(20000, test_doc_ref_dict, 1) == True
-    assert gwas_functions.data_is_valid(2000, test_doc_ref_dict, 1) == False
-    assert gwas_functions.data_is_valid(200000, test_doc_ref_dict, 1) == False
+    assert gwas_functions.data_has_valid_size(20000, test_doc_ref_dict, 1) == True
+    assert gwas_functions.data_has_valid_size(2000, test_doc_ref_dict, 1) == False
+    assert gwas_functions.data_has_valid_size(200000, test_doc_ref_dict, 1) == False
 
 
 def setup_mocking(mocker):
