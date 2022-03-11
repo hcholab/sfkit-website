@@ -45,15 +45,22 @@
               </div>
             {% endif %}
             <div class="mb-3" id="instructions">
-              <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasScrolling">Configure Study</button>
+              <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#configure_study_modal">Configure Study</button>
 
-              <div class="offcanvas offcanvas-start w-50 show" data-bs-scroll="true" data-bs-backdrop="true" tabindex="-1" id="offcanvasScrolling">
-                <div class="offcanvas-header">
-                  <h3 class="offcanvas-title" id="offcanvasScrollingLabel">Configure your Study</h3>
-                  <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"></button>
-                </div>
-                <div class="offcanvas-body">
-                  {% include 'studies/utils/instructions.html' %}
+              <div class="modal fade" id="configure_study_modal" tabindex="-1">
+                <div class="modal-dialog modal-xl">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="configure_study_modal_label">Configure your Study</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                      {% include 'studies/utils/instructions.html' %}
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -183,7 +190,22 @@
   <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
   <script>
     $(document).ready(function () {
+      var modalOpen = Cookies.get('modalOpen');
 
+      if (modalOpen == null || modalOpen == "true") {
+        $('#configure_study_modal').modal('show');
+      }
+    });
+
+    $('#configure_study_modal').on('hidden.bs.modal', function () {
+      Cookies.set('modalOpen', false);
+    });
+    $("#configure_study_modal").bind('shown.bs.modal', function () {
+      Cookies.set('modalOpen', true);
+    });
+  </script>
+  <script>
+    $(document).ready(function () {
       var last = Cookies.get('activeAccordionGroup');
 
       if (last != null) {
