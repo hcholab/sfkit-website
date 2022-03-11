@@ -1,28 +1,26 @@
 {% macro instruction_step(i, title, collapsed="collapsed", show="") -%}
   <div class="text-start">
-    <small>
-      <div class="accordion-item">
-        <h2 class="accordion-header">
-          <button class="accordion-button {{collapsed}}" type="button" data-bs-toggle="collapse" data-bs-target=".collapse-{{i}}">
-            {{i}}.
-            {{title}}
-          </button>
-        </h2>
-        <div id="collapse-{{i}}" class="{{show}} accordion-collapse collapse collapse-{{i}} collapse-{{i-1}}-{{i}} collapse-{{i}}-{{i+1}}">
-          <div class="accordion-body">
-            {{ caller() }}
-            <p class="text-end mb-0 mt-0">
-              <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target=".collapse-{{i-1}}-{{i}}">
-                Previous
-              </button>
-              <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target=".collapse-{{i}}-{{i+1}}">
-                Next
-              </button>
-            </p>
-          </div>
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button {{collapsed}}" type="button" data-bs-toggle="collapse" data-bs-target=".collapse-{{i}}">
+          {{i}}.
+          {{title}}
+        </button>
+      </h2>
+      <div id="collapse-{{i}}" class="{{show}} accordion-collapse collapse collapse-{{i}} collapse-{{i-1}}-{{i}} collapse-{{i}}-{{i+1}}">
+        <div class="accordion-body">
+          {{ caller() }}
+          <p class="text-end mb-0 mt-0">
+            <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target=".collapse-{{i-1}}-{{i}}">
+              Previous
+            </button>
+            <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target=".collapse-{{i}}-{{i+1}}">
+              Next
+            </button>
+          </p>
         </div>
       </div>
-    </small>
+    </div>
   </div>
 {%- endmacro %}
 
@@ -297,15 +295,27 @@
   {% call instruction_step(i = 4, title = "Validate Data") %}
   <div>
     <p>
-      1. Go to your study, and confirm that all the
-      <span class="text-secondary">Shared Study Parameters</span>
-      and
-      <span class="text-secondary">User-Specific Parameters</span>
-      are as desired.
-      <br>2. When you are ready, click on the
+      1. When you are ready, click on the
       <span class="text-success">Validate Data</span>
-      button. This will validate that this portal is able to create a VM that can access your encrypted data that you uploaded in step 3.
-      <br>It will also validate that your data is approximately the correct size, based on your study parameters.
+      button:
+      {% if study['status'][g.user['id']] == [''] %}
+        <p>
+          <a href="{{ url_for('gwas.validate_data', study_title=study['title']) }}" class="mt-2 btn btn-success">Validate Data</a>
+        </p>
+      {% elif study["status"][g.user["id"]] == ["validating"] %}
+        <p>
+          Validating Data...
+          <br>
+          <a href="{{ url_for('studies.study', study_title=study['title']) }}" class="btn btn-secondary">Check for update</a>
+        </p>
+      {% else %}
+        <p>
+          <a href="{{ url_for('gwas.validate_data', study_title=study['title']) }}" class="mt-2 btn btn-success disabled">Validate Data</a>
+          <strong>You have already validated your data.</strong>
+        </p>
+      {% endif %}
+      This button validates that we are able to create a VM that can access your encrypted data that you uploaded in step 2.
+      <br>It will also validate that your data is in the right format and approximately the correct size, insofar as we can do this on encrypted data.
     </p>
   </div>
   {% endcall %}
@@ -313,7 +323,7 @@
   <div>
     <p>
       When the validation has finished, and you are ready, click on the
-      <span class="text-success">Ready to begin GWAS</span>
+      <span class="text-success">Begin GWAS Workflow</span>
       button. For the virtual machine configuration, the default should be fine unless you have a particularly large dataset.
     </p>
     <p>Once all participants have done so, the protocol will begin.</p>

@@ -64,17 +64,14 @@
                 </div>
               </div>
             </div>
-            {% if study["status"][g.user["id"]] == [""] %}
-              <a href="{{ url_for('gwas.validate_data', study_title=study['title']) }}" class="mt-2 btn btn-success">Validate Data</a>
-            {% elif study["status"][g.user["id"]] == ["validating"] %}
-              <div class="mt-2">
-                Validating Data...
-                <br>
-                <a href="{{ url_for('studies.study', study_title=study['title']) }}" class="btn btn-secondary">Check for update</a>
-              </div>
+            {% if study["status"][g.user["id"]] == [""] or study["status"][g.user["id"]] == ["validating"] %}
+              <button type="button" class="mt-2 btn btn-success" data-bs-toggle="modal" data-bs-target="#vmConfig" disabled="disabled">
+                Begin GWAS Workflow
+              </button>
+              <p>You must finish configuring your study before you can begin the GWAS workflow</p>
             {% elif study["status"][g.user["id"]] == ["not ready"] %}
               <button type="button" class="mt-2 btn btn-success" data-bs-toggle="modal" data-bs-target="#vmConfig">
-                Ready to begin GWAS
+                Begin GWAS Workflow
               </button>
               <div class="modal fade" id="vmConfig" tabindex="-1">
                 <div class="modal-dialog modal-lg">
