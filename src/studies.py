@@ -1,5 +1,5 @@
-from datetime import datetime
 import io
+from datetime import datetime
 
 from flask import (
     Blueprint,
@@ -14,11 +14,10 @@ from flask import (
 )
 from werkzeug import Response
 
-from src.utils import constants
 from src.auth import login_required
-from src.utils.generic_functions import redirect_with_flash
+from src.utils import constants
+from src.utils.generic_functions import add_notification, redirect_with_flash
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
-from src.utils.google_cloud.google_cloud_storage import GoogleCloudStorage
 from src.utils.gwas_functions import valid_study_title
 
 bp = Blueprint("studies", __name__)
@@ -186,6 +185,8 @@ def approve_join_study(study_title: str, user_id: str) -> Response:
         },
         merge=True,
     )
+
+    add_notification(f"You have been accepted to {study_title}", user_id=user_id)
 
     return redirect(url_for("studies.study", study_title=study_title))
 

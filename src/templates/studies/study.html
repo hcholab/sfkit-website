@@ -139,126 +139,29 @@
     </div>
   </section>
 {% endblock %}
+
 {% block javascript %}
-  <script type="text/javascript">
+  <script>
     function loading() {
       $("#loading").show();
       $("#normal-content").hide();
     }
   </script>
 
-  <script type="module">
-    import {initializeApp} from "https://www.gstatic.com/firebasejs/9.6.6/firebase-app.js";
-    import {getFirestore, doc, onSnapshot} from "https://www.gstatic.com/firebasejs/9.6.6/firebase-firestore.js";
-    import {getAuth, signInWithCustomToken} from "https://www.gstatic.com/firebasejs/9.6.6/firebase-auth.js"
+  <script>
     $(document).ready(function () {
       $('#NUM_CPUS').val($('#num-cpus-data').data()['value']);
-      const firebaseConfig = {
-        apiKey: "AIzaSyAJ5Ql7iZ4QMi640Xryx0YbBzwhGdGxKdE",
-        authDomain: "broad-cho-priv1.firebaseapp.com",
-        projectId: "broad-cho-priv1",
-        storageBucket: "broad-cho-priv1.appspot.com",
-        messagingSenderId: "419003787216",
-        appId: "1:419003787216:web:1128a872a2eb31c00cfbd5",
-        measurementId: "G-FV14RX2JXN",
-        databaseURL: "",
-        serviceAccount: "serviceAccountKey.json"
-      };
-      const app = initializeApp(firebaseConfig);
-      const db = getFirestore(app);
-      const custom_token = "{{g.custom_token}}";
-      const auth = getAuth(app);
-      signInWithCustomToken(auth, custom_token);
-      var study_title = $('#study-title-data')
-        .data()['value']
-        .toLowerCase()
-        .replace(/\s/g, '');
-      var id = $('#id-data').data()['value'];
-      const unsub = onSnapshot(doc(db, "studies", study_title), (doc) => {
-        console.log("Current data: ", doc.data());
-        console.log(doc.data()["status"]);
-        console.log(doc.data()["status"][id]);
-        $("div.status").html(doc.data()["status"][id].reduce((acc, curr) => acc + "<br>" + curr));
-      });
     });
   </script>
 
-  {# To save your place in the instructions workflow: #}
+  <script>
+    const custom_token = "{{g.custom_token}}";
+  </script>
+  <script type="module" src="{{ url_for('static', filename='javascript/firestore.js') }}"></script>
+
   <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
-  <script>
-    $(document).ready(function () {
-      var modalOpen = Cookies.get('modalOpen');
+  <script type="module" src="{{ url_for('static', filename='javascript/save_page_state.js') }}"></script>
 
-      if (modalOpen == null || modalOpen == "true") {
-        $('#configure_study_modal').modal('show');
-      }
-    });
+  <script type="module" src="{{ url_for('static', filename='javascript/copy_button.js') }}"></script>
 
-    $('#configure_study_modal').on('hidden.bs.modal', function () {
-      Cookies.set('modalOpen', false);
-    });
-    $("#configure_study_modal").bind('shown.bs.modal', function () {
-      Cookies.set('modalOpen', true);
-    });
-  </script>
-  <script>
-    $(document).ready(function () {
-      var last = Cookies.get('activeAccordionGroup');
-
-      if (last != null) {
-        //remove default collapse settings
-        $("#accordion .collapse").removeClass('show');
-        $("#accordion .accordion-button").addClass('collapsed');
-        //show the last visible group
-        $("#" + last).collapse("show");
-      }
-    });
-
-    //when a group is shown, save it as the active accordion group
-    $("#accordion").bind('shown.bs.collapse', function () {
-      var active = $("#accordion .show").attr('id');
-      Cookies.set('activeAccordionGroup', active);
-    });
-  </script>
-
-  <script>
-    $(document).ready(function () {
-      // Get the Tooltip
-      new bootstrap.Tooltip($('#copy-button'));
-      let btn_tooltip = $('#copy-button');
-
-      // Change Tooltip Text on mouse enter
-      btn_tooltip.mouseenter(function () {
-        btn_tooltip
-          .attr('title', 'Copy to Clipboard')
-          .tooltip('dispose');
-        btn_tooltip.tooltip('show');
-      });
-
-      // remove tooltip when user moves mouse away
-      btn_tooltip.mouseleave(function () {
-        btn_tooltip
-          .tooltip('dispose')
-          .tooltip('hide');
-      });
-
-      // Update Tooltip and Copy Text on click
-      btn_tooltip.click(function () {
-        let copyText = $('#gcloud-command')
-          .text()
-          .replace(/^\s+/gm, ''); // Remove leading whitespace
-        navigator
-          .clipboard
-          .writeText(copyText)
-          .then(function () {
-            btn_tooltip // Update tooltip text
-              .attr('title', 'Copied!')
-              .tooltip('dispose');
-            btn_tooltip.tooltip('show');
-          }, function () {
-            console.log('Failure to copy. Check permissions for clipboard')
-          });
-      });
-    });
-  </script>
 {% endblock %}
