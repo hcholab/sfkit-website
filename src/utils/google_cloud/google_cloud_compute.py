@@ -1,8 +1,8 @@
-import ipaddr
 import os
 import time
 
 import googleapiclient.discovery as googleapi
+import ipaddr
 from src.utils import constants
 from tenacity import retry
 from tenacity.stop import stop_after_attempt
@@ -114,7 +114,7 @@ class GoogleCloudCompute:
                 ):
                     self.delete_subnet(subnet)
 
-    @retry(stop=stop_after_attempt(5), wait=wait_fixed(30))
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(30))
     def delete_subnet(self, subnet: dict) -> None:
         for instance in self.list_instances(
             constants.ZONE, subnetwork=subnet["selfLink"]
@@ -129,18 +129,18 @@ class GoogleCloudCompute:
         ).execute()
 
         # wait for the subnet to be deleted
-        for i in range(30):
-            if i == 25:
-                print(f"Failure to delete subnet {subnet['name']}")
-                quit(1)
+        for _ in range(30):
             subnets = (
                 self.compute.subnetworks()
                 .list(project=self.project, region=constants.REGION)
                 .execute()["items"]
             )
             if subnet["name"] not in [sub["name"] for sub in subnets]:
-                break
+                return
             time.sleep(2)
+
+        print(f"Failure to delete subnet {subnet['name']}")
+        raise Exception(f"Failure to delete subnet {subnet['name']}")
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(30))
     def create_subnet(self, role: str, region: str = constants.REGION) -> None:

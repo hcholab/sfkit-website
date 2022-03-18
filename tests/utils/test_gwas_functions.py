@@ -1,7 +1,6 @@
 from conftest import MockFirebaseAdminAuth
 from src.utils import gwas_functions
 
-
 test_create_data = {
     "title": "testtitle",
     "description": "test description",
@@ -41,10 +40,20 @@ def test_create_instance_name():
     )
 
 
-def test_data_is_valid():
+def test_data_has_valid_size():
     assert gwas_functions.data_has_valid_size(20000, test_doc_ref_dict, 1) == True
     assert gwas_functions.data_has_valid_size(2000, test_doc_ref_dict, 1) == False
     assert gwas_functions.data_has_valid_size(200000, test_doc_ref_dict, 1) == False
+
+
+def test_data_has_valid_files():
+    assert (
+        gwas_functions.data_has_valid_files(
+            "g.bin m.bin p.bin other_shared_key.bin pos.txt"
+        )
+        == True
+    )
+    assert gwas_functions.data_has_valid_files("one two three") == False
 
 
 def setup_mocking(mocker):

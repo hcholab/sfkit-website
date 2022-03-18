@@ -4,16 +4,11 @@ from typing import Tuple
 from flask import Blueprint, current_app, make_response, render_template, request
 from werkzeug import Response
 
+from src.auth import login_required
 from src.utils.generic_functions import remove_notification
 from src.utils.gwas_functions import data_has_valid_files, data_has_valid_size
 
 bp = Blueprint("general", __name__)
-
-
-@bp.route("/update_notifications", methods=["POST"])
-def update_notifications() -> Response:
-    remove_notification(request.data.decode("utf-8"))
-    return Response(status=200)
 
 
 @bp.route("/", methods=["GET"])
@@ -22,14 +17,21 @@ def home() -> Response:
     return make_response(render_template("general/home.html"))
 
 
-@bp.route("/instructions")
-def instructions() -> Response:
-    return make_response(render_template("general/instructions.html"))
+# @bp.route("/instructions")
+# def instructions() -> Response:
+#     return make_response(render_template("general/instructions.html"))
 
 
-@bp.route("/permissions")
-def permissions() -> Response:
-    return make_response(render_template("general/permissions.html"))
+# @bp.route("/permissions")
+# def permissions() -> Response:
+#     return make_response(render_template("general/permissions.html"))
+
+
+@bp.route("/update_notifications", methods=["POST"])
+@login_required
+def update_notifications() -> Response:
+    remove_notification(request.data.decode("utf-8"))
+    return Response(status=200)
 
 
 # for the pubsub

@@ -1,54 +1,60 @@
-from src.utils.google_cloud.google_cloud_storage import GoogleCloudStorage
-from src.utils import constants
 from conftest import MockFirebaseAdminAuth
+from src.utils.google_cloud.google_cloud_storage import GoogleCloudStorage
+
+test_create_data = {
+    "title": "testtitle",
+    "description": "test description",
+    "study_information": "hi",
+}
+
+patch_prefix = "src.utils.google_cloud.google_cloud_storage"
 
 
 def test_add_bucket_iam_member(mocker):
-    mocker.patch(
-        "src.utils.google_cloud.google_cloud_storage.storage", MockMakeMockStorage
-    )
-    google_cloud_storage = GoogleCloudStorage("project")
+    google_cloud_storage = setup_mocking_and_get_storage(mocker)
     google_cloud_storage.add_bucket_iam_member("bucket_name", "role", "member")
 
 
-# def test_copy_parameters_to_bucket(app, client, auth, mocker):
-#     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
-#     mocker.patch(
-#         "src.utils.google_cloud.google_cloud_storage.storage", MockMakeMockStorage
-#     )
-#     mocker.patch("src.utils.google_cloud.google_cloud_storage.fileinput", MockFileInput)
-#     google_cloud_storage = GoogleCloudStorage("project")
+def test_copy_parameters_to_bucket(mocker):
+    google_cloud_storage = setup_mocking_and_get_storage(mocker)
+    mocker.patch(
+        f"{patch_prefix}.GoogleCloudStorage.update_parameters",
+        return_value=None,
+    )
+    google_cloud_storage.copy_parameters_to_bucket("study title", role="0")
 
-#     auth.register()
-#     response = client.post(
-#         "create_study",
-#         data={
-#             "title": "study title",
-#             "description": "test description",
-#         },
-#     )
-#     assert response.headers["Location"] == "http://localhost/index"
 
-#     with app.app_context():
-#         google_cloud_storage.copy_parameters_to_bucket("study title", role="0")
-#         MockFileInput.return_garbage = True
-#         google_cloud_storage.copy_parameters_to_bucket("study title", role="0")
+def test_update_parameters(app, mocker, auth, client):
+    google_cloud_storage = setup_mocking_and_get_storage(mocker)
+    auth.login()
+    client.post(
+        "create_study",
+        data=test_create_data,
+    )
+    doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
+    doc_ref.set({"participants": ["a@a.com", "a@a.com"]}, merge=True)
+
+    with app.app_context():
+        google_cloud_storage.update_parameters("test.par.1.txt", "testtitle", "1")
+        google_cloud_storage.update_parameters("test.par.1.txt", "testtitle", "2")
 
 
 def test_upload_to_bucket(mocker):
-    mocker.patch(
-        "src.utils.google_cloud.google_cloud_storage.storage", MockMakeMockStorage
-    )
-    google_cloud_storage = GoogleCloudStorage("project")
+    google_cloud_storage = setup_mocking_and_get_storage(mocker)
     google_cloud_storage.upload_to_bucket("file", "filename")
 
 
 def test_check_file_exists(mocker):
-    mocker.patch(
-        "src.utils.google_cloud.google_cloud_storage.storage", MockMakeMockStorage
-    )
-    google_cloud_storage = GoogleCloudStorage("project")
+    google_cloud_storage = setup_mocking_and_get_storage(mocker)
     assert not google_cloud_storage.check_file_exists("filename")
+
+
+def setup_mocking_and_get_storage(mocker):
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+    mocker.patch(f"{patch_prefix}.storage", MockMakeMockStorage)
+    mocker.patch(f"{patch_prefix}.fileinput", MockFileInput)
+
+    return GoogleCloudStorage("project")
 
 
 class MockMakeMockStorage:
@@ -94,12 +100,6 @@ class MockPolicy:
 
 
 class MockFileInput:
-    return_garbage = False
-
     @staticmethod
     def input(fine, inplace):
-        return (
-            ["asdf"]
-            if MockFileInput.return_garbage
-            else ["NUM_INDS 42", "NUM_SNPS 1000"]
-        )
+        return ["NUM_INDS 42", "NUM_SNPS 1000", "asdf"]

@@ -2,123 +2,107 @@ import pytest
 from src.utils import constants
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
 
-
-def setup_mocking(mocker):
-    mocker.patch("time.sleep", lambda x: None)
-    mocker.patch(
-        "src.utils.google_cloud.google_cloud_compute.googleapi",
-        MockMakeMockCompute,
-    )
-    MockExecutable.error = ""
+patch_prefix = "src.utils.google_cloud.google_cloud_compute.GoogleCloudCompute"
 
 
-@pytest.mark.parametrize(
-    ("networkName1", "networkName2", "status", "creationTimestamp", "project", "error"),
-    (
-        (
-            constants.NETWORK_NAME,
-            constants.NETWORK_NAME,
-            "RUNNING",
-            "newTimestamp",
-            "broad-cho-priv1",
-            None,
-        ),
-        (
-            constants.NETWORK_NAME,
-            constants.NETWORK_NAME,
-            "RUNNING",
-            "2020-04-01T00:00:00Z",
-            "broad-cho-priv1",
-            None,
-        ),
-        (
-            constants.NETWORK_NAME,
-            constants.NETWORK_NAME,
-            "RUNNING",
-            "newTimestamp",
-            "broad-cho-priv1",
-            "fake error",
-        ),
-        ("1", "1", "RUNNING", "2020-04-01T00:00:00Z", "broad-cho-priv2", None),
-        ("1", "1", "RUNNING", "2020-04-01T00:00:00Z", "broad-cho-priv2", "fake error"),
-    ),
-)
-def test_setup_networking(
-    mocker, networkName1, networkName2, status, creationTimestamp, project, error
-):
+def test_setup_networking(mocker):
     setup_mocking(mocker)
-    MockExecutable.networkName1 = networkName1
-    MockExecutable.networkName2 = networkName2
-    MockExecutable.status = status
-    MockExecutable.creationTimestamp = creationTimestamp
-    MockExecutable.project = project
-    MockExecutable.error = error
+    mocker.patch(f"{patch_prefix}.create_network", return_value=None)
+    mocker.patch(f"{patch_prefix}.remove_conflicting_peerings", return_value=None)
+    mocker.patch(f"{patch_prefix}.remove_conflicting_subnets", return_value=None)
+    mocker.patch(f"{patch_prefix}.create_subnet", return_value=None)
+    mocker.patch(f"{patch_prefix}.create_peerings", return_value=None)
 
-    MockOperations.trial = 0
-    google_cloud_compute = GoogleCloudCompute(project)
-
-    doc_ref_dict = {
-        "participants": ["a", "b"],
-        "personal_parameters": {
-            "a": {
-                "GCP_PROJECT": {
-                    "value": "broad-cho-priv1",
-                }
-            },
-            "b": {
-                "GCP_PROJECT": {
-                    "value": "broad-cho-priv1",
-                }
-            },
+    google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
+    google_cloud_compute.setup_networking(
+        {
+            "personal_parameters": {"p": {"GCP_PROJECT": {"value": "b"}}},
+            "participants": ["p"],
         },
-    }
-    try:
-        google_cloud_compute.setup_networking(doc_ref_dict, "0")
-    except Exception as e:
-        if str(e) != "fake error" and "RetryError" not in str(e):
-            raise
+        "role",
+    )
 
 
-@pytest.mark.parametrize(
-    ("networkName1", "networkName2", "status", "creationTimestamp", "project", "error"),
-    (
-        (
-            constants.NETWORK_NAME,
-            constants.NETWORK_NAME,
-            "RUNNING",
-            "newTimestamp",
-            "broad-cho-priv1",
-            None,
-        ),
-        ("1", "1", "RUNNING", "2020-04-01T00:00:00Z", "broad-cho-priv2", None),
-        ("1", "1", "RUNNING", "2020-04-01T00:00:00Z", "broad-cho-priv2", "fake error"),
-    ),
-)
-def test_setup_instance(
-    mocker, networkName1, networkName2, status, creationTimestamp, project, error
-):
+def test_create_network(mocker):
     setup_mocking(mocker)
-    MockExecutable.networkName1 = networkName1
-    MockExecutable.networkName2 = networkName2
-    MockExecutable.status = status
-    MockExecutable.creationTimestamp = creationTimestamp
-    MockExecutable.project = project
-    MockExecutable.error = error
+    mocker.patch(f"{patch_prefix}.wait_for_operation", return_value=None)
+    mocker.patch(f"{patch_prefix}.create_firewall", return_value=None)
+    google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
+    google_cloud_compute.create_network()
+    google_cloud_compute.create_network("bad_name")
 
-    MockOperations.trial = 0
+
+def test_create_firewall(mocker):
+    setup_mocking(mocker)
+    mocker.patch(f"{patch_prefix}.wait_for_operation", return_value=None)
+    google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
+    google_cloud_compute.create_firewall()
+
+
+def test_remove_conflicting_peerings(mocker):
+    setup_mocking(mocker)
+    google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
+    google_cloud_compute.remove_conflicting_peerings(["broad-cho-priv1"])
+
+
+def test_remove_conflicting_subnets(mocker):
+    setup_mocking(mocker)
+    mocker.patch(f"{patch_prefix}.delete_subnet", return_value=None)
+    google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
+    google_cloud_compute.remove_conflicting_subnets(
+        ["broad-cho-priv1", "peeringproject2", "project3"]
+    )
+
+
+def test_delete_subnet(mocker):
+    setup_mocking(mocker)
+    mocker.patch(f"{patch_prefix}.list_instances", return_value=["name"])
+    mocker.patch(f"{patch_prefix}.delete_instance", return_value=None)
+    google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
+    google_cloud_compute.delete_subnet({"name": "name", "selfLink": "link"})
+
+    try:
+        with pytest.raises(Exception) as _:
+            google_cloud_compute.delete_subnet(
+                {"name": "secure-gwas-subnet0", "selfLink": "link"}
+            )
+    except Exception as e:
+        if "RetryError" not in str(e):
+            raise e from e
+
+
+def test_create_subnet(mocker):
+    setup_mocking(mocker)
+    google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
+    google_cloud_compute.create_subnet("0")
+    google_cloud_compute.create_subnet("role")
+
+
+def test_create_peerings(mocker):
+    setup_mocking(mocker)
+    google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
+    google_cloud_compute.create_peerings(
+        gcp_projects=["broad-cho-priv1", "peeringproject2", "project3"]
+    )
+
+
+def test_setup_instance(mocker):
+    setup_mocking(mocker)
+    mocker.patch(f"{patch_prefix}.list_instances", return_value=[])
+    mocker.patch(f"{patch_prefix}.delete_instance", return_value=None)
+    mocker.patch(f"{patch_prefix}.create_instance", return_value=None)
+    mocker.patch(f"{patch_prefix}.get_vm_external_ip_address", return_value=None)
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
 
-    try:
-        google_cloud_compute.setup_instance(
-            zone="zone", name=constants.NETWORK_NAME, role="role", num_cpus=4
-        )
-    except Exception as e:
-        if str(e) != "fake error" and "RetryError" not in str(e):
-            raise
+    google_cloud_compute.setup_instance("zone", "name", "role")
+
+    mocker.patch(f"{patch_prefix}.list_instances", return_value=["name"])
+    google_cloud_compute.setup_instance("zone", "name", "role")
 
 
 def test_create_instance(mocker):
     setup_mocking(mocker)
+    mocker.patch(f"{patch_prefix}.wait_for_zoneOperation", return_value=None)
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
     google_cloud_compute.create_instance(
         zone="zone",
@@ -129,22 +113,94 @@ def test_create_instance(mocker):
         metadata="hi",
     )
 
+    google_cloud_compute.create_instance(
+        zone="zone",
+        name=constants.NETWORK_NAME,
+        role="role",
+        num_cpus=4,
+    )
+
 
 def test_stop_instance(mocker):
     setup_mocking(mocker)
+    mocker.patch(f"{patch_prefix}.wait_for_zoneOperation", return_value=None)
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
+    google_cloud_compute.stop_instance(zone=constants.ZONE, instance="name")
 
-    try:
-        google_cloud_compute.stop_instance(zone="zone", instance="name")
-    except Exception as e:
-        if str(e) != "fake error" and "RetryError" not in str(e):
-            raise
+
+def test_list_instances(mocker):
+    setup_mocking(mocker)
+    google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
+    google_cloud_compute.list_instances()
+
+
+def test_delete_instance(mocker):
+    setup_mocking(mocker)
+    google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
+    google_cloud_compute.delete_instance(name="name")
+
+
+def test_wait_for_operation(mocker):
+    setup_mocking(mocker)
+    google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
+    google_cloud_compute.wait_for_operation(operation="operation")
+
+    MockExecutable.error = "fake error"
+
+    with pytest.raises(Exception) as _:
+        google_cloud_compute.wait_for_operation(operation="operation")
+
+
+def test_wait_for_zoneOperation(mocker):
+    setup_mocking(mocker)
+    google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
+    google_cloud_compute.wait_for_zoneOperation(zone="zone", operation="operation")
+
+    MockExecutable.error = "fake error"
+
+    with pytest.raises(Exception) as _:
+        google_cloud_compute.wait_for_zoneOperation(zone="zone", operation="operation")
+
+
+def test_wait_for_regionOperation(mocker):
+    setup_mocking(mocker)
+    google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
+    google_cloud_compute.wait_for_regionOperation(
+        region="region", operation="operation"
+    )
+
+    MockExecutable.error = "fake error"
+
+    with pytest.raises(Exception) as _:
+        google_cloud_compute.wait_for_regionOperation("region", "operation")
+
+
+def test_vm_external_ip_address(mocker):
+    setup_mocking(mocker)
+    google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
+    assert (
+        google_cloud_compute.get_vm_external_ip_address("zone", "name") == "1877.0.0.1"
+    )
 
 
 def test_get_service_account_for_vm(mocker):
     setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
-    google_cloud_compute.get_service_account_for_vm(zone="zone", instance="name")
+    assert (
+        google_cloud_compute.get_service_account_for_vm("zone", "name")
+        == "test_email@email.com"
+    )
+
+
+def setup_mocking(mocker):
+    mocker.patch("time.sleep", lambda x: None)
+    mocker.patch(
+        "src.utils.google_cloud.google_cloud_compute.googleapi",
+        MockMakeMockCompute,
+    )
+    MockOperations.trial = 0
+    MockExecutable.error = ""
+    MockExecutable.status = "RUNNING"
 
 
 class MockMakeMockCompute:
@@ -218,12 +274,12 @@ class MockInsertable:
 
 
 class MockExecutable:
-    status: str
-    networkName1: str
-    networkName2: str
-    project: str
-    error: str
-    creationTimestamp: str
+    status: str = "RUNNING"
+    networkName1: str = constants.NETWORK_NAME
+    networkName2: str = constants.NETWORK_NAME
+    project: str = "broad-cho-priv1"
+    error: str = ""
+    creationTimestamp: str = "2020-04-01T00:00:00Z"
 
     def execute(self):
         res = {
@@ -233,10 +289,19 @@ class MockExecutable:
                     "creationTimestamp": MockExecutable.creationTimestamp,
                     "selfLink": "hi",
                     "network": "broad-cho-priv1",
+                    "ipCidrRange": "10.0.0.0/24",
                     "networkInterfaces": [{"subnetwork": "hi"}],
                 },
                 {
-                    "name": MockExecutable.networkName2,
+                    "name": "secure-gwas-subnet0",
+                    "creationTimestamp": MockExecutable.creationTimestamp,
+                    "selfLink": "hi",
+                    "network": "secure-gwas",
+                    "ipCidrRange": "0.0.0.0/0",
+                    "networkInterfaces": [{"subnetwork": "hi"}],
+                },
+                {
+                    "name": "secure-gwas-subnet0",
                     "creationTimestamp": MockExecutable.creationTimestamp,
                     "selfLink": "hi",
                     "network": "secure-gwas",
@@ -248,9 +313,12 @@ class MockExecutable:
             "name": "operation",
             "network": "broad-cho-priv1",
             "selfLink": "selfLink",
-            "networkInterfaces": [{"accessConfigs": [{"natIP": "hi"}]}],
-            "peerings": [{"name": f"peering-{MockExecutable.project}"}],
-            "serviceAccounts": [{"email": "hi"}],
+            "networkInterfaces": [{"accessConfigs": [{"natIP": "1877.0.0.1"}]}],
+            "peerings": [
+                {"name": f"peering-{MockExecutable.project}"},
+                {"name": "peering-peeringproject2"},
+            ],
+            "serviceAccounts": [{"email": "test_email@email.com"}],
         }
         if MockExecutable.error:
             res["error"] = "fake error"

@@ -1,5 +1,7 @@
 import json
 
+from conftest import MockFirebaseAdminAuth
+
 test_create_data = {
     "title": "blah",
     "description": "test description",
@@ -17,6 +19,14 @@ def test_home(client):
     assert home_response.data == response.data
 
 
+def test_update_notifications(client, auth, mocker):
+    mocker.patch("src.general.remove_notification", mock_remove_notification)
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+    auth.login()
+    response = client.post("/update_notifications", data=json.dumps({"data": "test"}))
+    assert response.status_code == 200
+
+
 # def test_instructions_page(client):
 #     response = client.get("/instructions")
 #     assert response.status_code == 200
@@ -32,6 +42,7 @@ def test_home(client):
 
 def test_index_from_pubsub(client, app, mocker):
     mocker.patch("src.general.data_has_valid_size", mock_data_has_valid_size)
+    mocker.patch("src.general.data_has_valid_files", mock_data_has_valid_files)
 
     doc_ref = app.config["DATABASE"].collection("studies").document("blah")
     doc_ref.set(
@@ -50,25 +61,33 @@ def test_index_from_pubsub(client, app, mocker):
     assert client.post("/", data=data, headers=headers).status_code == 400
 
     data = json.dumps(
-        {"message": {"data": "YmxhaC1ibGFoLWJsYWg="}}
-    )  # base64.b64encode("blah-blah-blah".encode("utf-8"))
+        {"message": {"data": "YmFk"}}
+    )  # base64.b64encode("bad".encode("utf-8"))
     assert client.post("/", data=data, headers=headers).status_code == 204
 
     data = json.dumps(
-        {"message": {"data": "YmxhaC0xLWJsYWg="}}
-    )  # base64.b64encode("blah-1-blah".encode("utf-8"))
+        {"message": {"data": "YmxhaC1zZWN1cmUtZ3dhczAtYmxhaA=="}}
+    )  # base64.b64encode("blah-secure-gwas0-blah".encode("utf-8"))
     assert client.post("/", data=data, headers=headers).status_code == 204
 
     data = json.dumps(
-        {"message": {"data": "YmxhaC0xLTY="}}
-    )  # base64.b64encode("blah-1-6".encode("utf-8"))
+        {"message": {"data": "YmxhaC1zZWN1cmUtZ3dhczAtdmFsaWRhdGV8Nnxwb3MudHh0"}}
+    )  # base64.b64encode("blah-secure-gwas0-validate|6|pos.txt".encode("utf-8"))
     assert client.post("/", data=data, headers=headers).status_code == 204
 
     data = json.dumps(
-        {"message": {"data": "YmxhaC0xLTU="}}
-    )  # base64.b64encode("blah-1-5".encode("utf-8"))
+        {"message": {"data": "YmxhaC1zZWN1cmUtZ3dhczAtdmFsaWRhdGV8MTAwfHBvcy50eHQ="}}
+    )  # base64.b64encode("blah-secure-gwas0-validate|100|pos.txt".encode("utf-8"))
     assert client.post("/", data=data, headers=headers).status_code == 204
 
 
 def mock_data_has_valid_size(size, dic_ref_dict, role):
     return size == 6
+
+
+def mock_data_has_valid_files(files):
+    return True
+
+
+def mock_remove_notification(notification: str) -> None:
+    pass

@@ -1,10 +1,9 @@
-from copy import deepcopy
 import io
-from flask import current_app
-import pytest
-from conftest import MockFirebaseAdminAuth
+from copy import deepcopy
+
 from src.utils import constants
 
+from conftest import MockFirebaseAdminAuth
 
 test_create_data = {
     "title": "testtitle",
@@ -29,6 +28,57 @@ def test_study(client, auth, mocker):
     assert response.status_code == 200
     assert b"parameters" in response.data
     assert b"personal_parameters" in response.data
+
+
+def test_download_public_key(app, client, auth, mocker):
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+    auth.login()
+    doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
+    doc_ref.set(
+        {
+            "participants": ["a@a.com"],
+            "personal_parameters": {"a@a.com": {"PUBLIC_KEY": {"value": "public_key"}}},
+        }
+    )
+
+    response = client.get("/study/testtitle/download_public_key/1")
+    assert response.status_code == 200
+    assert b"public_key" in response.data
+
+
+def test_upload_public_key(app, client, auth, mocker):
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+    auth.login()
+    doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
+    doc_ref.set(
+        {
+            "personal_parameters": {
+                "a@a.com": {"PUBLIC_KEY": {"value": "old_public_key"}}
+            },
+        }
+    )
+
+    client.post(
+        "/study/testtitle/upload_public_key",
+        data={"file": (io.BytesIO(b"new_public_key"), "")},
+    )
+    client.post(
+        "/study/testtitle/upload_public_key",
+        data={"file": (io.BytesIO(b"new_public_key"), "garbage.txt")},
+    )
+    assert (
+        doc_ref.get().to_dict()["personal_parameters"]["a@a.com"]["PUBLIC_KEY"]["value"]
+        == "old_public_key"
+    )
+
+    client.post(
+        "/study/testtitle/upload_public_key",
+        data={"file": (io.BytesIO(b"new_public_key"), "my_public_key.txt")},
+    )
+    assert (
+        doc_ref.get().to_dict()["personal_parameters"]["a@a.com"]["PUBLIC_KEY"]["value"]
+        == "new_public_key"
+    )
 
 
 def test_create_study(client, auth, mocker):
@@ -86,42 +136,44 @@ def test_approve_join_study(client, auth, mocker):
     assert response.headers["Location"] == "http://localhost/study/testtitle"
 
 
-# def test_parameters(client, auth, mocker):
-#     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
-#     mocker.patch("src.studies.GoogleCloudStorage", MockGoogleCloudStorage)
-#     auth.register()
-#     client.post("create_study", data=test_create_data)
-#     assert client.get("parameters/testtitle").status_code == 200
+def test_parameters(client, auth, mocker):
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+    auth.login()
+    client.post("create_study", data=test_create_data)
+    assert client.get("parameters/testtitle").status_code == 200
 
-#     response = client.post("parameters/testtitle", data={"save": "save"})
-#     assert response.headers["Location"] == "http://localhost/study/testtitle"
+    response = client.post("parameters/testtitle", data={"save": "save"})
+    assert response.headers["Location"] == "http://localhost/study/testtitle"
 
-#     response = client.post(
-#         "parameters/testtitle",
-#         data={
-#             "upload": "upload",
-#             "file": (io.BytesIO(b"abcdef"), ""),
-#         },
-#         content_type="multipart/form-data",
-#     )
-#     assert response.headers["Location"] == "http://localhost/parameters/testtitle"
+    response = client.post("parameters/testtitle")
+    assert "Something went wrong" in str(response.headers)
 
-#     response = client.post(
-#         "parameters/testtitle",
-#         data={"upload": "upload", "file": (io.BytesIO(b"abcdef"), "pos.txt")},
-#         content_type="multipart/form-data",
-#     )
-#     assert response.headers["Location"] == "http://localhost/study/testtitle"
+    # response = client.post(
+    #     "parameters/testtitle",
+    #     data={
+    #         "upload": "upload",
+    #         "file": (io.BytesIO(b"abcdef"), ""),
+    #     },
+    #     content_type="multipart/form-data",
+    # )
+    # assert response.headers["Location"] == "http://localhost/parameters/testtitle"
 
-#     response = client.post(
-#         "parameters/testtitle",
-#         data={"upload": "upload", "file": (io.BytesIO(b"abcdef"), "bad_file")},
-#         content_type="multipart/form-data",
-#     )
-#     assert response.headers["Location"] == "http://localhost/parameters/testtitle"
+    # response = client.post(
+    #     "parameters/testtitle",
+    #     data={"upload": "upload", "file": (io.BytesIO(b"abcdef"), "pos.txt")},
+    #     content_type="multipart/form-data",
+    # )
+    # assert response.headers["Location"] == "http://localhost/study/testtitle"
 
-#     response = client.post("parameters/testtitle")
-#     assert response.headers["Location"] == "http://localhost/parameters/testtitle"
+    # response = client.post(
+    #     "parameters/testtitle",
+    #     data={"upload": "upload", "file": (io.BytesIO(b"abcdef"), "bad_file")},
+    #     content_type="multipart/form-data",
+    # )
+    # assert response.headers["Location"] == "http://localhost/parameters/testtitle"
+
+    # response = client.post("parameters/testtitle")
+    # assert response.headers["Location"] == "http://localhost/parameters/testtitle"
 
 
 def test_personal_parameters(client, auth, mocker):

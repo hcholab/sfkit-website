@@ -1,11 +1,10 @@
-from typing import Tuple
-from xmlrpc.client import Boolean
-from flask import current_app, redirect, url_for
-from werkzeug import Response
-from src.utils import constants
 import re
+from typing import Tuple
 
+from flask import current_app, redirect, url_for
+from src.utils import constants
 from src.utils.generic_functions import redirect_with_flash
+from werkzeug import Response
 
 
 def valid_study_title(study_title: str) -> Tuple[bool, Response]:
