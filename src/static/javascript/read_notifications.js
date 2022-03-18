@@ -16,15 +16,10 @@ $(document).ready(function () {
     };
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    // const custom_token = "{{g.custom_token}}"; // now in the html
     const auth = getAuth(app);
     signInWithCustomToken(auth, custom_token);
-    // var study_title = $('#study-title-data')
-    //     .data()['value']
-    //     .toLowerCase()
-    //     .replace(/\s/g, '');
+  
     onSnapshot(doc(db, "users", id), (doc) => {
-        // $("div.notifications").html(doc.data()["notifications"].reduce((acc, curr) => acc + "<br>" + curr));
         const notifications = doc.data()["notifications"];
 
         if (notifications.length > 0) {
@@ -39,21 +34,14 @@ $(document).ready(function () {
             }
 
             document.getElementById("notification_list").innerHTML = '';
+            
+            const p = document.createElement("p");
+            p.classList.add("text-center", "small", "mb-2", "mt-2");
+            p.innerHTML = "Notifications";
+            document.getElementById("notification_list").appendChild(p);
 
             for (const notification of notifications) {
-                const li = document.createElement("li");
-                const span = document.createElement("span");
-                span.classList.add("dropdown-item-text", "alert", "alert-info", "alert-dismissible");
-                span.innerHTML = notification;
-                const button = document.createElement("button");
-                button.classList.add("btn-sm", "btn-close");
-                button.setAttribute("type", "button");
-                button.setAttribute("data-bs-dismiss", "alert");
-                button.setAttribute("onclick", "removeNotification(this.parentElement.innerHTML.split('<')[0])");
-                
-                span.appendChild(button);
-                li.appendChild(span);
-                document.getElementById("notification_list").appendChild(li);
+                addNotificationToList(notification);
             }
         } else {
             const num_notifications = document.getElementById("num_notifications");
@@ -71,3 +59,19 @@ $(document).ready(function () {
         }
     })
 });
+
+function addNotificationToList(notification) {
+    const li = document.createElement("li");
+    const span = document.createElement("span");
+    span.classList.add("dropdown-item-text", "alert", "alert-info", "alert-dismissible", "mb-0", "mt-0", "text-muted", "small");
+    span.innerHTML = notification;
+    const button = document.createElement("button");
+    button.classList.add("btn-sm", "btn-close");
+    button.setAttribute("type", "button");
+    button.setAttribute("data-bs-dismiss", "alert");
+    button.setAttribute("onclick", "removeNotification(this.parentElement.innerHTML.split('<')[0])");
+    
+    span.appendChild(button);
+    li.appendChild(span);
+    document.getElementById("notification_list").appendChild(li);
+}

@@ -1,11 +1,11 @@
 import base64
 from typing import Tuple
 
-from flask import Blueprint, current_app, make_response, render_template, request
+from flask import Blueprint, current_app, g, make_response, render_template, request
 from werkzeug import Response
 
 from src.auth import login_required
-from src.utils.generic_functions import remove_notification
+from src.utils.generic_functions import add_notification, remove_notification
 from src.utils.gwas_functions import data_has_valid_files, data_has_valid_size
 
 bp = Blueprint("general", __name__)
@@ -31,6 +31,7 @@ def home() -> Response:
 @login_required
 def update_notifications() -> Response:
     remove_notification(request.data.decode("utf-8"))
+    add_notification(request.data.decode("utf-8"), g.user["id"], "old_notifications")
     return Response(status=200)
 
 

@@ -32,13 +32,18 @@ def remove_notification(notification: str) -> None:
     doc_ref_dict = doc_ref.get().to_dict()
     notifications = doc_ref_dict.get("notifications") if doc_ref_dict else []
     notifications.remove(notification)
-    doc_ref.update({"notifications": notifications})
+    doc_ref.set({"notifications": notifications}, merge=True)
 
 
-def add_notification(notification: str, user_id: str) -> None:
+def add_notification(
+    notification: str, user_id: str, location: str = "notifications"
+) -> None:
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("users").document(user_id)
     doc_ref_dict = doc_ref.get().to_dict()
-    notifications = doc_ref_dict.get("notifications") if doc_ref_dict else []
-    notifications.append(notification)
-    doc_ref.set({"notifications": notifications})
+    notifications: List[str] = doc_ref_dict.get(location)
+    if notifications:
+        notifications.append(notification)
+    else:
+        notifications = [notification]
+    doc_ref.set({location: notifications}, merge=True)
