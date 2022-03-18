@@ -27,17 +27,10 @@ def test_update_notifications(client, auth, mocker):
     assert response.status_code == 200
 
 
-# def test_instructions_page(client):
-#     response = client.get("/instructions")
-#     assert response.status_code == 200
-#     assert b"Instructions" in response.data
-
-
-# # test permissions page
-# def test_permissions_page(client):
-#     response = client.get("/permissions")
-#     assert response.status_code == 200
-#     assert b"Permissions" in response.data
+def test_instructions_page(client):
+    response = client.get("/instructions")
+    assert response.status_code == 200
+    assert b"Instructions" in response.data
 
 
 def test_index_from_pubsub(client, app, mocker):

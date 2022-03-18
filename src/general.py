@@ -17,14 +17,9 @@ def home() -> Response:
     return make_response(render_template("general/home.html"))
 
 
-# @bp.route("/instructions")
-# def instructions() -> Response:
-#     return make_response(render_template("general/instructions.html"))
-
-
-# @bp.route("/permissions")
-# def permissions() -> Response:
-#     return make_response(render_template("general/permissions.html"))
+@bp.route("/instructions")
+def instructions() -> Response:
+    return make_response(render_template("general/instructions.html"))
 
 
 @bp.route("/update_notifications", methods=["POST"])

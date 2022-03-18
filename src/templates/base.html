@@ -29,15 +29,12 @@
             <li class="nav-item me-4">
               <a class="nav-link" href="{{ url_for('general.home') }}">Home</a>
             </li>
-            {# <li class="nav-item me-4">
+            <li class="nav-item me-4">
               <a class="nav-link" href="{{ url_for('general.instructions') }}">Instructions</a>
-            </li> #}
+            </li>
             <li class="nav-item me-4">
               <a class="nav-link" href="{{ url_for('studies.index') }}">Studies</a>
             </li>
-            {# <li class="nav-item me-4">
-              <a class="nav-link" href="{{ url_for('general.permissions') }}">How to Give Permissions</a>
-            </li> #}
           </ul>
           <div>
             {% if g.user %}
