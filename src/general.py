@@ -5,8 +5,14 @@ from flask import Blueprint, current_app, g, make_response, render_template, req
 from werkzeug import Response
 
 from src.auth import login_required
+from src.utils import constants
 from src.utils.generic_functions import add_notification, remove_notification
-from src.utils.gwas_functions import data_has_valid_files, data_has_valid_size
+from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
+from src.utils.gwas_functions import (
+    create_instance_name,
+    data_has_valid_files,
+    data_has_valid_size,
+)
 
 bp = Blueprint("general", __name__)
 
@@ -62,6 +68,17 @@ def index() -> Tuple[str, int]:
         doc_ref_dict = doc_ref.get().to_dict()
         statuses = doc_ref_dict.get("status")
         id = doc_ref_dict.get("participants")[int(role) - 1]
+
+        if "validate" in content or "GWAS Completed!" in content:
+            google_cloud_compute = GoogleCloudCompute(
+                doc_ref_dict.get("personal_parameters", {})
+                .get(id, {})
+                .get("GCP_PROJECT", {})
+                .get("value")
+            )
+            google_cloud_compute.stop_instance(
+                zone=constants.ZONE, instance=create_instance_name(study_title, role)
+            )
 
         if "validate" in content:
             [_, size, files] = content.split("|", maxsplit=2)

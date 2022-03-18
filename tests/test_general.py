@@ -36,6 +36,7 @@ def test_instructions_page(client):
 def test_index_from_pubsub(client, app, mocker):
     mocker.patch("src.general.data_has_valid_size", mock_data_has_valid_size)
     mocker.patch("src.general.data_has_valid_files", mock_data_has_valid_files)
+    mocker.patch("src.general.GoogleCloudCompute", MockGoogleCloudCompute)
 
     doc_ref = app.config["DATABASE"].collection("studies").document("blah")
     doc_ref.set(
@@ -84,3 +85,12 @@ def mock_data_has_valid_files(files):
 
 def mock_remove_notification(notification: str) -> None:
     pass
+
+
+# class to mock GoogleCloudCompute
+class MockGoogleCloudCompute:
+    def __init__(self, project):
+        pass
+
+    def stop_instance(self, zone, instance):
+        pass
