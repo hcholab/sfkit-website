@@ -26,13 +26,11 @@
 
         <div class="tab-content">
           <div class="tab-pane fade show active" id="study_details{{ study_id }}">
-            <div class="text-start mt-0 mb-0">
+            <div class="text-start p-0 m-0">
               <p class="mt-0 mb-0">Study Description:
                 {{ study['description'] }}</p>
-              <p>Study Information:</p>
-              <p class="mt-0 mb-0" style="white-space: pre-wrap;">
-                {{ study['study_information'] }}
-              </p>
+              Study Information:
+              <p class="p-0 m-0" style="white-space: pre-wrap;">{{ study['study_information'] }}</p>
             </div>
           </div>
           <div class="tab-pane fade" id="shared_study_parameters{{ study_id }}">

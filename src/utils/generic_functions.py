@@ -3,9 +3,7 @@ from flask import current_app, g, redirect, url_for
 from werkzeug import Response
 
 
-def redirect_with_flash(
-    url="", location: str = "", message: str = "", error: str = ""
-) -> Response:
+def redirect_with_flash(url="", location: str = "", message: str = "", error: str = "") -> Response:
     if location:
         url = url_for(location)
     r = redirect(url)
@@ -35,9 +33,7 @@ def remove_notification(notification: str) -> None:
     doc_ref.set({"notifications": notifications}, merge=True)
 
 
-def add_notification(
-    notification: str, user_id: str, location: str = "notifications"
-) -> None:
+def add_notification(notification: str, user_id: str, location: str = "notifications") -> None:
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("users").document(user_id)
     doc_ref_dict = doc_ref.get().to_dict()

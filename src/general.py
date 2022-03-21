@@ -62,29 +62,23 @@ def index() -> Tuple[str, int]:
         [role, content] = rest.split("-", maxsplit=1)
 
         db = current_app.config["DATABASE"]
-        doc_ref = db.collection("studies").document(
-            study_title.replace(" ", "").lower()
-        )
+        doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
         doc_ref_dict = doc_ref.get().to_dict()
         statuses = doc_ref_dict.get("status")
         user_id = doc_ref_dict.get("participants")[int(role) - 1]
 
         if "validate" in content or "GWAS Completed!" in content:
             google_cloud_compute = GoogleCloudCompute(
-                doc_ref_dict.get("personal_parameters", {})
-                .get(user_id, {})
-                .get("GCP_PROJECT", {})
-                .get("value")
+                doc_ref_dict.get("personal_parameters", {}).get(user_id, {}).get("GCP_PROJECT", {}).get("value")
             )
             google_cloud_compute.stop_instance(
-                zone=constants.ZONE, instance=create_instance_name(study_title, role)
+                zone=constants.SERVER_ZONE,
+                instance=create_instance_name(study_title, role),
             )
 
         if "validate" in content:
             [_, size, files] = content.split("|", maxsplit=2)
-            if data_has_valid_size(
-                int(size), doc_ref_dict, int(role)
-            ) and data_has_valid_files(files):
+            if data_has_valid_size(int(size), doc_ref_dict, int(role)) and data_has_valid_files(files):
                 statuses[user_id] = ["not ready"]
             else:
                 statuses[user_id] = ["invalid data"]

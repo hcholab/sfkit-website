@@ -30,9 +30,7 @@ def load_logged_in_user() -> None:
     try:
         # extract jwt for user from session cookie
         session_cookie = flask.request.cookies.get("session")
-        user_dict = firebase_auth.verify_session_cookie(
-            session_cookie, check_revoked=True
-        )
+        user_dict = firebase_auth.verify_session_cookie(session_cookie, check_revoked=True)
         g.user = {"id": user_dict["email"]}
     except Exception as e:
         no_user_strings = [
@@ -46,9 +44,7 @@ def load_logged_in_user() -> None:
     else:
         try:
             # for use in accessing firebase from the frontend.  See https://firebase.google.com/docs/auth/admin/create-custom-tokens
-            g.custom_token = firebase_auth.create_custom_token(user_dict["uid"]).decode(
-                "utf-8"
-            )
+            g.custom_token = firebase_auth.create_custom_token(user_dict["uid"]).decode("utf-8")
         except Exception as e:
             print(f"Error creating custom token: {e}")
 
@@ -114,9 +110,7 @@ def login() -> Response:
         return update_user(email, password)
     except Exception as e:
         if ("INVALID_PASSWORD") in str(e):
-            return redirect_with_flash(
-                location="auth.login", message="Invalid password. Please try again."
-            )
+            return redirect_with_flash(location="auth.login", message="Invalid password. Please try again.")
         elif ("USER_NOT_FOUND") in str(e):
             return redirect_with_flash(
                 location="auth.login",
@@ -146,13 +140,9 @@ def login_with_google_callback() -> Response:
             "419003787216-rcif34r976a9qm3818qgeqed7c582od6.apps.googleusercontent.com",
         )
     except Exception as e:
-        return redirect_with_flash(
-            location="studies.index", message="Invalid Google account.", error=str(e)
-        )
+        return redirect_with_flash(location="studies.index", message="Invalid Google account.", error=str(e))
 
-    rand_temp_password = "".join(
-        secrets.choice(string.ascii_letters) for _ in range(16)
-    )
+    rand_temp_password = "".join(secrets.choice(string.ascii_letters) for _ in range(16))
 
     try:
         firebase_auth.get_user_by_email(decoded_jwt_token["email"])

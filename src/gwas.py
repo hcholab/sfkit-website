@@ -20,9 +20,7 @@ def validate_data(study_title: str) -> Response:
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
     role: str = str(doc_ref_dict["participants"].index(g.user["id"]) + 1)
-    gcp_project = doc_ref_dict["personal_parameters"][g.user["id"]]["GCP_PROJECT"][
-        "value"
-    ]
+    gcp_project = doc_ref_dict["personal_parameters"][g.user["id"]]["GCP_PROJECT"]["value"]
     data_path = doc_ref_dict["personal_parameters"][g.user["id"]]["DATA_PATH"]["value"]
     if not gcp_project or gcp_project == "" or not data_path or data_path == "":
         return redirect_with_flash(
@@ -46,16 +44,12 @@ def validate_data(study_title: str) -> Response:
     instance = create_instance_name(study_title, role)
     gcloudCompute.setup_networking(doc_ref_dict, role)
     gcloudCompute.setup_instance(
-        constants.ZONE,
-        instance,
-        role,
-        validate=True,
-        metadata={"key": "data_path", "value": data_path},
+        constants.SERVER_ZONE, instance, role, {"key": "data_path", "value": data_path}, validate=True
     )
 
     # Give instance publish access to pubsub for status updates
     member = "serviceAccount:" + gcloudCompute.get_service_account_for_vm(
-        zone=constants.ZONE, instance=instance
+        zone=constants.SERVER_ZONE, instance=instance
     )
     gcloudPubsub.add_pub_iam_member("roles/pubsub.publisher", member)
 
@@ -84,9 +78,7 @@ def start_gwas(study_title: str) -> Response:
         personal_parameters = doc_ref_dict["personal_parameters"]
         personal_parameters[user_id]["NUM_CPUS"]["value"] = request.form["NUM_CPUS"]
         personal_parameters[user_id]["NUM_THREADS"]["value"] = request.form["NUM_CPUS"]
-        personal_parameters[user_id]["BOOT_DISK_SIZE"]["value"] = request.form[
-            "BOOT_DISK_SIZE"
-        ]
+        personal_parameters[user_id]["BOOT_DISK_SIZE"]["value"] = request.form["BOOT_DISK_SIZE"]
         doc_ref.set(
             {
                 "status": statuses,
@@ -113,29 +105,24 @@ def start_gwas(study_title: str) -> Response:
             instance = create_instance_name(study_title, "0")
             vm_parameters = doc_ref_dict["personal_parameters"][user_id]
             gcloudCompute.setup_instance(
-                constants.ZONE,
+                constants.SERVER_ZONE,
                 instance,
                 "0",
+                {"key": "data_path", "value": "secure-gwas-data0"},
                 vm_parameters["NUM_CPUS"]["value"],
-                metadata={
-                    "key": "data_path",
-                    "value": "secure-gwas-data0",
-                },
                 boot_disk_size=vm_parameters["BOOT_DISK_SIZE"]["value"],
             )
         run_gwas(
             str(role),
             gcp_project,
             study_title,
-            vm_parameters=doc_ref_dict["personal_parameters"][user_id],
+            doc_ref_dict["personal_parameters"][user_id],
         )
 
     return redirect(url_for("studies.study", study_title=study_title))
 
 
-def run_gwas(
-    role: str, gcp_project: str, study_title: str, vm_parameters: dict = dict()
-) -> None:
+def run_gwas(role: str, gcp_project: str, study_title: str, vm_parameters: dict) -> None:
     gcloudCompute = GoogleCloudCompute(gcp_project)
     gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
     gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
@@ -145,22 +132,20 @@ def run_gwas(
 
     instance = create_instance_name(study_title, role)
     gcloudCompute.setup_instance(
-        constants.ZONE,
+        constants.SERVER_ZONE,
         instance,
         role,
+        {"key": "data_path", "value": vm_parameters["DATA_PATH"]["value"]},
         vm_parameters["NUM_CPUS"]["value"],
-        metadata={"key": "data_path", "value": vm_parameters["DATA_PATH"]["value"]},
         boot_disk_size=vm_parameters["BOOT_DISK_SIZE"]["value"],
     )
 
     # Give instance publish access to pubsub for status updates
     member = "serviceAccount:" + gcloudCompute.get_service_account_for_vm(
-        zone=constants.ZONE, instance=instance
+        zone=constants.SERVER_ZONE, instance=instance
     )
     gcloudPubsub.add_pub_iam_member("roles/pubsub.publisher", member)
     # give instance read access to storage buckets for parameter files
-    gcloudStorage.add_bucket_iam_member(
-        constants.BUCKET_NAME, "roles/storage.objectViewer", member
-    )
+    gcloudStorage.add_bucket_iam_member(constants.PARAMETER_BUCKET, "roles/storage.objectViewer", member)
 
     print("I've done what I can.  GWAS should be running now.")

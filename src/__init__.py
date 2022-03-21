@@ -13,9 +13,7 @@ def create_app() -> Flask:
     initialize_firebase_admin()
 
     app = Flask(__name__)
-    app.config.from_mapping(
-        SECRET_KEY=secrets.token_hex(16), DATABASE=firestore.Client()
-    )
+    app.config.from_mapping(SECRET_KEY=secrets.token_hex(16), DATABASE=firestore.Client())
 
     Bootstrap(app)
     app.register_blueprint(auth.bp)
@@ -30,9 +28,7 @@ def initialize_firebase_admin() -> None:
     # if serviceAccountKey.json file exists, use it to initialize the app (for local testing)
     if os.path.exists("serviceAccountKey.json"):
         # print("Using serviceAccountKey.json for the firebase_admin")
-        firebase_admin.initialize_app(
-            firebase_admin.credentials.Certificate("serviceAccountKey.json")
-        )
+        firebase_admin.initialize_app(firebase_admin.credentials.Certificate("serviceAccountKey.json"))
     else:
         print("Using default service account for the firebase_admin")
         firebase_admin.initialize_app()

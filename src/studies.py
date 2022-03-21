@@ -38,11 +38,10 @@ def study(study_title: str) -> Response:
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
     public_keys = [
-        doc_ref_dict["personal_parameters"][user]["PUBLIC_KEY"]["value"]
-        for user in doc_ref_dict["participants"]
+        doc_ref_dict["personal_parameters"][user]["PUBLIC_KEY"]["value"] for user in doc_ref_dict["participants"]
     ]
-    id = g.user["id"]
-    role: int = doc_ref_dict["participants"].index(id) + 1
+    user_id = g.user["id"]
+    role: int = doc_ref_dict["participants"].index(user_id) + 1
 
     return make_response(
         render_template(
@@ -50,7 +49,7 @@ def study(study_title: str) -> Response:
             study=doc_ref_dict,
             public_keys=public_keys,
             role=role,
-            parameters=doc_ref_dict["personal_parameters"][id],
+            parameters=doc_ref_dict["personal_parameters"][user_id],
         )
     )
 
@@ -61,12 +60,12 @@ def download_public_key(study_title: str, role: str) -> Response:
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
-    id = doc_ref_dict["participants"][int(role) - 1]
-    public_key = doc_ref_dict["personal_parameters"][id]["PUBLIC_KEY"]["value"]
+    user_id = doc_ref_dict["participants"][int(role) - 1]
+    public_key = doc_ref_dict["personal_parameters"][user_id]["PUBLIC_KEY"]["value"]
     key_file = io.BytesIO(public_key.encode("utf-8") + b"\n" + role.encode("utf-8"))
     return send_file(
         key_file,
-        download_name=f"public_key_{id}.txt",
+        download_name=f"public_key_{user_id}.txt",
         mimetype="text/plain",
         as_attachment=True,
     )
@@ -86,9 +85,7 @@ def upload_public_key(study_title: str) -> Response:
         )
     elif file and file.filename == "my_public_key.txt":
         public_key = file.read().decode("utf-8")
-        doc_ref_dict["personal_parameters"][g.user["id"]]["PUBLIC_KEY"][
-            "value"
-        ] = public_key
+        doc_ref_dict["personal_parameters"][g.user["id"]]["PUBLIC_KEY"]["value"] = public_key
         doc_ref.set(doc_ref_dict)
         return redirect(url_for("studies.study", study_title=study_title))
     else:
@@ -139,9 +136,7 @@ def delete_study(study_title: str) -> Response:
     doc_ref_dict = doc_ref.get().to_dict()
 
     # delete vms that may still exist
-    google_cloud_compute = GoogleCloudCompute(
-        ""
-    )  # TODO: delete the server's VM as well
+    google_cloud_compute = GoogleCloudCompute("")  # TODO: delete the server's VM as well
     for participant in doc_ref_dict["personal_parameters"].values():
         if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
             google_cloud_compute.project = gcp_project
@@ -168,6 +163,7 @@ def request_join_study(study_title: str) -> Response:
 
 
 @bp.route("/approve_join_study/<study_title>/<user_id>")
+@login_required
 def approve_join_study(study_title: str, user_id: str) -> Response:
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
@@ -175,12 +171,9 @@ def approve_join_study(study_title: str, user_id: str) -> Response:
 
     doc_ref.set(
         {
-            "requested_participants": doc_ref_dict["requested_participants"].remove(
-                user_id
-            ),
+            "requested_participants": doc_ref_dict["requested_participants"].remove(user_id),
             "participants": doc_ref_dict["participants"] + [user_id],
-            "personal_parameters": doc_ref_dict["personal_parameters"]
-            | {user_id: constants.DEFAULT_USER_PARAMETERS},
+            "personal_parameters": doc_ref_dict["personal_parameters"] | {user_id: constants.DEFAULT_USER_PARAMETERS},
             "status": doc_ref_dict["status"] | {user_id: [""]},
         },
         merge=True,

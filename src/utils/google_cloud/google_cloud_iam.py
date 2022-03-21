@@ -7,7 +7,7 @@ class GoogleCloudIAM:
         self.service = googleapi.build("cloudresourcemanager", "v1")
         self.project = constants.SERVER_GCP_PROJECT
 
-    def get_policy(self, version=1):
+    def get_policy(self, version: int = 1):
         """Gets IAM policy for a project."""
 
         return (
@@ -36,11 +36,7 @@ class GoogleCloudIAM:
     def set_policy(self, policy):
         """Sets IAM policy for a project."""
 
-        policy = (
-            self.service.projects()
-            .setIamPolicy(resource=self.project, body={"policy": policy})
-            .execute()
-        )
+        policy = self.service.projects().setIamPolicy(resource=self.project, body={"policy": policy}).execute()
         return policy
 
     def give_cloud_build_view_permissions(self, user):
@@ -48,12 +44,8 @@ class GoogleCloudIAM:
         print(f"Giving Cloud Build Viewer permissions to user: {user}")
 
         policy = self.get_policy()
-        policy = self.modify_policy_add_member(
-            policy, "roles/cloudbuild.builds.viewer", f"user:{user}"
-        )
-        policy = self.modify_policy_add_member(
-            policy, "roles/logging.viewer", f"user:{user}"
-        )
+        policy = self.modify_policy_add_member(policy, "roles/cloudbuild.builds.viewer", f"user:{user}")
+        policy = self.modify_policy_add_member(policy, "roles/logging.viewer", f"user:{user}")
         self.set_policy(policy)
 
     def test_permissions(self, project_id) -> bool:
@@ -89,9 +81,7 @@ class GoogleCloudIAM:
         permissions = {"permissions": desired_permissions}
 
         returnedPermissions = (
-            self.service.projects()
-            .testIamPermissions(resource=project_id, body=permissions)
-            .execute()
+            self.service.projects().testIamPermissions(resource=project_id, body=permissions).execute()
         )
 
         print(f'Returned permissions: {returnedPermissions.get("permissions")}')

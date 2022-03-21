@@ -52,9 +52,7 @@ def test_remove_conflicting_subnets(mocker):
     setup_mocking(mocker)
     mocker.patch(f"{patch_prefix}.delete_subnet", return_value=None)
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
-    google_cloud_compute.remove_conflicting_subnets(
-        ["broad-cho-priv1", "peeringproject2", "project3"]
-    )
+    google_cloud_compute.remove_conflicting_subnets(["broad-cho-priv1", "peeringproject2", "project3"])
 
 
 def test_delete_subnet(mocker):
@@ -66,9 +64,7 @@ def test_delete_subnet(mocker):
 
     try:
         with pytest.raises(Exception) as _:
-            google_cloud_compute.delete_subnet(
-                {"name": "secure-gwas-subnet0", "selfLink": "link"}
-            )
+            google_cloud_compute.delete_subnet({"name": "secure-gwas-subnet0", "selfLink": "link"})
     except Exception as e:
         if "RetryError" not in str(e):
             raise e from e
@@ -84,9 +80,7 @@ def test_create_subnet(mocker):
 def test_create_peerings(mocker):
     setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
-    google_cloud_compute.create_peerings(
-        gcp_projects=["broad-cho-priv1", "peeringproject2", "project3"]
-    )
+    google_cloud_compute.create_peerings(gcp_projects=["broad-cho-priv1", "peeringproject2", "project3"])
 
 
 def test_setup_instance(mocker):
@@ -97,38 +91,25 @@ def test_setup_instance(mocker):
     mocker.patch(f"{patch_prefix}.get_vm_external_ip_address", return_value=None)
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
 
-    google_cloud_compute.setup_instance("zone", "name", "role")
+    google_cloud_compute.setup_instance("zone", "name", "role", "metadata")
 
     mocker.patch(f"{patch_prefix}.list_instances", return_value=["name"])
-    google_cloud_compute.setup_instance("zone", "name", "role")
+    google_cloud_compute.setup_instance("zone", "name", "role", "metadata")
 
 
 def test_create_instance(mocker):
     setup_mocking(mocker)
     mocker.patch(f"{patch_prefix}.wait_for_zoneOperation", return_value=None)
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
-    google_cloud_compute.create_instance(
-        zone="zone",
-        name=constants.NETWORK_NAME,
-        role="role",
-        num_cpus=4,
-        validate=True,
-        metadata="hi",
-    )
-
-    google_cloud_compute.create_instance(
-        zone="zone",
-        name=constants.NETWORK_NAME,
-        role="role",
-        num_cpus=4,
-    )
+    google_cloud_compute.create_instance("zone", constants.NETWORK_NAME, "role", "metadata", 4, 10, validate=True)
+    google_cloud_compute.create_instance("zone", constants.NETWORK_NAME, "role", "metadata", 4, 10, validate=False)
 
 
 def test_stop_instance(mocker):
     setup_mocking(mocker)
     mocker.patch(f"{patch_prefix}.wait_for_zoneOperation", return_value=None)
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
-    google_cloud_compute.stop_instance(zone=constants.ZONE, instance="name")
+    google_cloud_compute.stop_instance(zone=constants.SERVER_ZONE, instance="name")
 
 
 def test_list_instances(mocker):
@@ -168,9 +149,7 @@ def test_wait_for_zoneOperation(mocker):
 def test_wait_for_regionOperation(mocker):
     setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
-    google_cloud_compute.wait_for_regionOperation(
-        region="region", operation="operation"
-    )
+    google_cloud_compute.wait_for_regionOperation(region="region", operation="operation")
 
     MockExecutable.error = "fake error"
 
@@ -181,18 +160,13 @@ def test_wait_for_regionOperation(mocker):
 def test_vm_external_ip_address(mocker):
     setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
-    assert (
-        google_cloud_compute.get_vm_external_ip_address("zone", "name") == "1877.0.0.1"
-    )
+    assert google_cloud_compute.get_vm_external_ip_address("zone", "name") == "1877.0.0.1"
 
 
 def test_get_service_account_for_vm(mocker):
     setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
-    assert (
-        google_cloud_compute.get_service_account_for_vm("zone", "name")
-        == "test_email@email.com"
-    )
+    assert google_cloud_compute.get_service_account_for_vm("zone", "name") == "test_email@email.com"
 
 
 def setup_mocking(mocker):
@@ -258,9 +232,7 @@ class MockInsertable:
     def get(self, project=None, network=None, zone=None, instance=None):
         return MockExecutable()
 
-    def delete(
-        self, project=None, zone=None, region=None, subnetwork=None, instance=None
-    ):
+    def delete(self, project=None, zone=None, region=None, subnetwork=None, instance=None):
         return MockExecutable()
 
     def stop(self, project, zone, instance):
