@@ -45,7 +45,7 @@ class GoogleCloudIAM:
 
     def give_cloud_build_view_permissions(self, user):
         """Gives Cloud Build Viewer permissions to a user."""
-        print("Giving Cloud Build Viewer permissions to user: {}".format(user))
+        print(f"Giving Cloud Build Viewer permissions to user: {user}")
 
         policy = self.get_policy()
         policy = self.modify_policy_add_member(
@@ -58,7 +58,7 @@ class GoogleCloudIAM:
 
     def test_permissions(self, project_id) -> bool:
         """Tests IAM permissions of the caller"""
-        print("Testing IAM permissions for project: {}".format(project_id))
+        print(f"Testing IAM permissions for project: {project_id}")
 
         desired_permissions = [
             "compute.disks.create",
@@ -94,6 +94,6 @@ class GoogleCloudIAM:
             .execute()
         )
 
-        print("Returned permissions: {}".format(returnedPermissions.get("permissions")))
+        print(f'Returned permissions: {returnedPermissions.get("permissions")}')
 
         return returnedPermissions.get("permissions") == desired_permissions

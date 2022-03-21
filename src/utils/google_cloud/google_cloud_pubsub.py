@@ -37,21 +37,19 @@ class GoogleCloudPubsub:
             map(lambda topic: str(topic).split('"')[1], subscription_list)
         )
         if self.subscription_path in subscription_list:
-            print(f"Deleting subscription {self.subscription_path}")
-            self.subscriber.delete_subscription(
-                request={"subscription": self.subscription_path}
+            print(f"Subscription {self.subscription_path} already exists")
+        else:
+            print(f"Creating subscription {self.subscription_path}")
+            self.subscriber.create_subscription(
+                request={
+                    "name": self.subscription_path,
+                    "topic": self.topic_path,
+                    "enable_message_ordering": True,
+                    "push_config": {
+                        "push_endpoint": "https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/",
+                    },
+                }
             )
-        print(f"Creating subscription {self.subscription_path}")
-        self.subscriber.create_subscription(
-            request={
-                "name": self.subscription_path,
-                "topic": self.topic_path,
-                "enable_message_ordering": True,
-                "push_config": {
-                    "push_endpoint": "https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/",
-                },
-            }
-        )
 
     def add_pub_iam_member(self, role: str, member: str) -> None:
         policy = self.publisher.get_iam_policy(request={"resource": self.topic_path})  # type: ignore
@@ -60,4 +58,4 @@ class GoogleCloudPubsub:
             request={"resource": self.topic_path, "policy": policy}  # type: ignore
         )
 
-        print("IAM policy for topic {} set: {}".format(self.topic_id, policy))
+        print(f"IAM policy for topic {self.topic_id} set: {policy}")

@@ -68,23 +68,23 @@ def start_gwas(study_title: str) -> Response:
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
-    id = g.user["id"]
-    role: int = doc_ref_dict["participants"].index(id) + 1
-    gcp_project = doc_ref_dict["personal_parameters"][id]["GCP_PROJECT"]["value"]
+    user_id = g.user["id"]
+    role: int = doc_ref_dict["participants"].index(user_id) + 1
+    gcp_project = doc_ref_dict["personal_parameters"][user_id]["GCP_PROJECT"]["value"]
     statuses = doc_ref_dict["status"]
 
-    if statuses[id] == ["not ready"]:
+    if statuses[user_id] == ["not ready"]:
         if not GoogleCloudIAM().test_permissions(gcp_project):
             return redirect_with_flash(
                 location="general.permissions",
                 message="Please give the service appropriate permissions first.",
             )
 
-        statuses[id] = ["ready"]
+        statuses[user_id] = ["ready"]
         personal_parameters = doc_ref_dict["personal_parameters"]
-        personal_parameters[id]["NUM_CPUS"]["value"] = request.form["NUM_CPUS"]
-        personal_parameters[id]["NUM_THREADS"]["value"] = request.form["NUM_CPUS"]
-        personal_parameters[id]["BOOT_DISK_SIZE"]["value"] = request.form[
+        personal_parameters[user_id]["NUM_CPUS"]["value"] = request.form["NUM_CPUS"]
+        personal_parameters[user_id]["NUM_THREADS"]["value"] = request.form["NUM_CPUS"]
+        personal_parameters[user_id]["BOOT_DISK_SIZE"]["value"] = request.form[
             "BOOT_DISK_SIZE"
         ]
         doc_ref.set(
@@ -97,8 +97,8 @@ def start_gwas(study_title: str) -> Response:
 
     if any("not ready" in status for status in statuses.values()):
         pass
-    elif statuses[id] == ["ready"]:
-        statuses[id] = ["setting up your vm instance"]
+    elif statuses[user_id] == ["ready"]:
+        statuses[user_id] = ["setting up your vm instance"]
 
         doc_ref.set(
             {
@@ -111,14 +111,14 @@ def start_gwas(study_title: str) -> Response:
             # start CP0 as well
             gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
             instance = create_instance_name(study_title, "0")
-            vm_parameters = doc_ref_dict["personal_parameters"][id]
+            vm_parameters = doc_ref_dict["personal_parameters"][user_id]
             gcloudCompute.setup_instance(
                 constants.ZONE,
                 instance,
                 "0",
                 vm_parameters["NUM_CPUS"]["value"],
                 metadata={
-                    "key": "bucketname",
+                    "key": "data_path",
                     "value": "secure-gwas-data0",
                 },
                 boot_disk_size=vm_parameters["BOOT_DISK_SIZE"]["value"],
@@ -127,7 +127,7 @@ def start_gwas(study_title: str) -> Response:
             str(role),
             gcp_project,
             study_title,
-            vm_parameters=doc_ref_dict["personal_parameters"][id],
+            vm_parameters=doc_ref_dict["personal_parameters"][user_id],
         )
 
     return redirect(url_for("studies.study", study_title=study_title))
@@ -149,7 +149,7 @@ def run_gwas(
         instance,
         role,
         vm_parameters["NUM_CPUS"]["value"],
-        metadata={"key": "bucketname", "value": vm_parameters["DATA_PATH"]["value"]},
+        metadata={"key": "data_path", "value": vm_parameters["DATA_PATH"]["value"]},
         boot_disk_size=vm_parameters["BOOT_DISK_SIZE"]["value"],
     )
 

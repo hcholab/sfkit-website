@@ -21,7 +21,7 @@ class GoogleCloudStorage:
         policy = bucket.get_iam_policy(requested_policy_version=3)
         policy.bindings.append({"role": role, "members": {member}})
         bucket.set_iam_policy(policy)
-        print("Added {} with role {} to {}.".format(member, role, bucket_name))
+        print(f"Added {member} with role {role} to {bucket_name}.")
 
     def copy_parameters_to_bucket(self, study_title, role):
         bucket = self.storage_client.bucket(constants.BUCKET_NAME)

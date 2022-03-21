@@ -11,7 +11,7 @@ from tenacity.wait import wait_fixed
 
 class GoogleCloudCompute:
     def __init__(self, project) -> None:
-        self.project = project
+        self.project: str = project
         self.compute = googleapi.build("compute", "v1")
 
     def setup_networking(self, doc_ref_dict: dict, role: str) -> None:
@@ -56,10 +56,34 @@ class GoogleCloudCompute:
             if net["name"] == network_name:
                 network_url = net["selfLink"]
 
+        source_ranges = ["0.0.0.0/0"]
+        if "broad-cho-priv" in self.project:
+            source_ranges = [
+                "69.173.112.0/21",
+                "69.173.127.232/29",
+                "69.173.127.128/26",
+                "69.173.127.0/25",
+                "69.173.127.240/28",
+                "69.173.127.224/30",
+                "69.173.127.230/31",
+                "69.173.120.0/22",
+                "69.173.127.228/32",
+                "69.173.126.0/24",
+                "69.173.96.0/20",
+                "69.173.64.0/19",
+                "69.173.127.192/27",
+                "69.173.124.0/23",
+                "10.0.0.10",  # other VMs doing the computation
+                "10.0.1.10",
+                "10.0.2.10",
+                "35.235.240.0/20",  # IAP TCP forwarding
+            ]
+
         firewall_body = {
             "name": f"{network_name}-vm-ingress",
             "network": network_url,
-            "sourceRanges": ["0.0.0.0/0"],
+            "targetTags": [constants.INSTANCE_NAME_ROOT],
+            "sourceRanges": source_ranges,
             "allowed": [{"ports": ["8000-8999", "22"], "IPProtocol": "tcp"}],
         }
 
@@ -164,7 +188,7 @@ class GoogleCloudCompute:
             req_body = {
                 "name": subnet_name,
                 "network": network_url,
-                "ipCidrRange": f"10.0.{role}.0/28",
+                "ipCidrRange": f"10.0.{role}.0/24",
             }
             operation = (
                 self.compute.subnetworks()
@@ -191,13 +215,12 @@ class GoogleCloudCompute:
                 print("Creating peering from", self.project, "to", other_project)
                 body = {
                     "networkPeering": {
-                        "name": "peering-{}".format(other_project),
-                        "network": "https://www.googleapis.com/compute/v1/projects/{}/global/networks/{}".format(
-                            other_project, constants.NETWORK_NAME
-                        ),
+                        "name": f"peering-{other_project}",
+                        "network": f"https://www.googleapis.com/compute/v1/projects/{other_project}/global/networks/{constants.NETWORK_NAME}",
                         "exchangeSubnetRoutes": True,
                     }
                 }
+
                 self.compute.networks().addPeering(
                     project=self.project, network=constants.NETWORK_NAME, body=body
                 ).execute()
@@ -269,19 +292,14 @@ class GoogleCloudCompute:
         }
         if metadata:
             metadata_config["items"].append(metadata)
-            print("Metadata:", metadata_config)
 
         instance_body = {
             "name": name,
             "machineType": machine_type,
             "networkInterfaces": [
                 {
-                    "network": "projects/{}/global/networks/{}".format(
-                        self.project, constants.NETWORK_NAME
-                    ),
-                    "subnetwork": "regions/{}/subnetworks/{}".format(
-                        constants.REGION, constants.SUBNET_NAME + role
-                    ),
+                    "network": f"projects/{self.project}/global/networks/{constants.NETWORK_NAME}",
+                    "subnetwork": f"regions/{constants.REGION}/subnetworks/{constants.SUBNET_NAME + role}",
                     "networkIP": f"10.0.{role}.10",
                     "accessConfigs": [
                         {
@@ -300,8 +318,6 @@ class GoogleCloudCompute:
                     "diskSizeGb": boot_disk_size,
                 }
             ],
-            # Allow the instance to access cloud storage and logging.
-            # Logging access necessary for the startup-script to work.
             "serviceAccounts": [
                 {
                     "email": "default",
@@ -313,7 +329,9 @@ class GoogleCloudCompute:
                 }
             ],
             "metadata": metadata_config,
+            "tags": {"items": [constants.INSTANCE_NAME_ROOT]},
         }
+
         operation = (
             self.compute.instances()
             .insert(project=self.project, zone=zone, body=instance_body)
@@ -364,11 +382,7 @@ class GoogleCloudCompute:
             )
 
             if result["status"] == "DONE":
-                print("done.")
-                if "error" in result:
-                    raise Exception(result["error"])
-                return result
-
+                return self.return_result_or_error(result)
             time.sleep(1)
 
     def wait_for_zoneOperation(self, zone, operation):
@@ -381,29 +395,27 @@ class GoogleCloudCompute:
             )
 
             if result["status"] == "DONE":
-                print("done.")
-                if "error" in result:
-                    raise Exception(result["error"])
-                return result
-
+                return self.return_result_or_error(result)
             time.sleep(1)
 
-    def wait_for_regionOperation(self, region, operation):
+    def wait_for_regionOperation(self, region: str, operation: str) -> dict[str, str]:
         print("Waiting for operation to finish...")
         while True:
-            result = (
+            result: dict[str, str] = (
                 self.compute.regionOperations()
                 .get(project=self.project, region=region, operation=operation)
                 .execute()
             )
 
             if result["status"] == "DONE":
-                print("done.")
-                if "error" in result:
-                    raise Exception(result["error"])
-                return result
-
+                return self.return_result_or_error(result)
             time.sleep(1)
+
+    def return_result_or_error(self, result: dict[str, str]) -> dict[str, str]:
+        print("done.")
+        if "error" in result:
+            raise Exception(result["error"])
+        return result
 
     def get_vm_external_ip_address(self, zone, instance):
         print("Getting the IP address for VM instance", instance)

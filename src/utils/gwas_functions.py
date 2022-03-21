@@ -43,13 +43,13 @@ def create_instance_name(study_title: str, role: str) -> str:
 
 
 def data_has_valid_size(size: int, doc_ref_dict: dict, role: int) -> bool:
-    id: str = doc_ref_dict.get("participants", [])[role - 1]
+    user_id: str = doc_ref_dict.get("participants", [])[role - 1]
     num_snps: int = int(
         doc_ref_dict.get("parameters", {}).get("NUM_SNPS", {}).get("value", "0")
     )
     num_inds: int = int(
         doc_ref_dict.get("personal_parameters", {})
-        .get(id, {})
+        .get(user_id, {})
         .get("NUM_INDS", {})
         .get("value", "0")
     )

@@ -1,10 +1,10 @@
 SERVER_GCP_PROJECT = "broad-cho-priv1"
-ZONE = "us-central1-a"
 REGION = "us-central1"
+ZONE = f"{REGION}-a"
 NETWORK_NAME = "secure-gwas"
-SUBNET_NAME = "secure-gwas-subnet"
-INSTANCE_NAME_ROOT = "secure-gwas"
-BUCKET_NAME = "secure-gwas-data"
+SUBNET_NAME = f"{NETWORK_NAME}-subnet"
+INSTANCE_NAME_ROOT = NETWORK_NAME
+BUCKET_NAME = f"{NETWORK_NAME}-data"
 TEMP_FOLDER = "src/temp"
 PARAMETER_FILES = ["test.par.0.txt", "test.par.1.txt", "test.par.2.txt"]
 BASE_P = "1461501637330902918203684832716283019655932542929"

@@ -38,6 +38,9 @@ def test_create_firewall(mocker):
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
     google_cloud_compute.create_firewall()
 
+    google_cloud_compute = GoogleCloudCompute("blah-blah-blah")
+    google_cloud_compute.create_firewall()
+
 
 def test_remove_conflicting_peerings(mocker):
     setup_mocking(mocker)

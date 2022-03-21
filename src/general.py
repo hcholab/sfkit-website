@@ -67,12 +67,12 @@ def index() -> Tuple[str, int]:
         )
         doc_ref_dict = doc_ref.get().to_dict()
         statuses = doc_ref_dict.get("status")
-        id = doc_ref_dict.get("participants")[int(role) - 1]
+        user_id = doc_ref_dict.get("participants")[int(role) - 1]
 
         if "validate" in content or "GWAS Completed!" in content:
             google_cloud_compute = GoogleCloudCompute(
                 doc_ref_dict.get("personal_parameters", {})
-                .get(id, {})
+                .get(user_id, {})
                 .get("GCP_PROJECT", {})
                 .get("value")
             )
@@ -85,11 +85,11 @@ def index() -> Tuple[str, int]:
             if data_has_valid_size(
                 int(size), doc_ref_dict, int(role)
             ) and data_has_valid_files(files):
-                statuses[id] = ["not ready"]
+                statuses[user_id] = ["not ready"]
             else:
-                statuses[id] = ["invalid data"]
+                statuses[user_id] = ["invalid data"]
         else:
-            statuses.get(id).append(f"{content} - {publishTime}")
+            statuses.get(user_id).append(f"{content} - {publishTime}")
         doc_ref.set({"status": statuses}, merge=True)
     except Exception as e:
         print(f"error: {e}")
