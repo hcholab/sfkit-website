@@ -33,6 +33,15 @@ def test_instructions_page(client):
     assert b"Instructions" in response.data
 
 
+def test_all_notifications(client, auth, mocker):
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+    auth.login()
+
+    response = client.get("/all_notifications")
+    assert response.status_code == 200
+    assert b"All Notifications" in response.data
+
+
 def test_index_from_pubsub(client, app, mocker):
     mocker.patch("src.general.data_has_valid_size", mock_data_has_valid_size)
     mocker.patch("src.general.data_has_valid_files", mock_data_has_valid_files)
@@ -54,9 +63,7 @@ def test_index_from_pubsub(client, app, mocker):
     data = json.dumps({"message": "blah"})
     assert client.post("/", data=data, headers=headers).status_code == 400
 
-    data = json.dumps(
-        {"message": {"data": "YmFk"}}
-    )  # base64.b64encode("bad".encode("utf-8"))
+    data = json.dumps({"message": {"data": "YmFk"}})  # base64.b64encode("bad".encode("utf-8"))
     assert client.post("/", data=data, headers=headers).status_code == 204
 
     data = json.dumps(

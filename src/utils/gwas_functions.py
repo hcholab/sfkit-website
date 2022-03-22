@@ -1,5 +1,4 @@
 import re
-from typing import Tuple
 
 from flask import current_app, redirect, url_for
 from src.utils import constants
@@ -7,7 +6,7 @@ from src.utils.generic_functions import redirect_with_flash
 from werkzeug import Response
 
 
-def valid_study_title(study_title: str) -> Tuple[bool, Response]:
+def valid_study_title(study_title: str) -> tuple[bool, Response]:
     if not re.match(r"^[a-zA-Z][ a-zA-Z0-9-]*$", study_title):
         return (
             False,

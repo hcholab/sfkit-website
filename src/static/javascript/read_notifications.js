@@ -22,6 +22,9 @@ $(document).ready(function () {
     onSnapshot(doc(db, "users", id), (doc) => {
         const notifications = doc.data()["notifications"];
 
+        const notification_list = document.getElementById("notification_list");
+        notification_list.innerHTML = '';
+
         if (notifications.length > 0) {
             const num_notifications = document.getElementById("num_notifications");
             num_notifications.classList.remove("bg-secondary")
@@ -32,13 +35,11 @@ $(document).ready(function () {
             if (no_notifications) {
                 no_notifications.remove();
             }
-
-            document.getElementById("notification_list").innerHTML = '';
             
             const p = document.createElement("p");
             p.classList.add("text-center", "small", "mb-2", "mt-2");
             p.innerHTML = "Notifications";
-            document.getElementById("notification_list").appendChild(p);
+            notification_list.appendChild(p);
 
             for (const notification of notifications) {
                 addNotificationToList(notification);
@@ -48,15 +49,25 @@ $(document).ready(function () {
             num_notifications.classList.remove("bg-danger")
             num_notifications.classList.add("bg-secondary")
             num_notifications.innerHTML = 0;
+
             const no_notifications = document.getElementById("no_notifications");
             if (!no_notifications) {
                 const li = document.createElement("li");
                 li.id = "no_notifications";
                 li.classList.add("dropdown-item-text", "text-center", "text-muted");
-                li.innerHTML = "No notifications";
-                document.getElementById("notification_list").appendChild(li);
+                li.innerHTML = "No new notifications";
+                notification_list.appendChild(li);
             }
         }
+        const all_notifications = document.createElement("li");
+        all_notifications.classList.add("dropdown-item-text", "text-center");
+        const all_notifications_link = document.createElement("a");
+        all_notifications_link.setAttribute("href", "/all_notifications");
+        all_notifications_link.innerHTML = "View all notifications";
+        all_notifications_link.classList.add("text-decoration-none");
+        all_notifications.appendChild(all_notifications_link);
+        notification_list.appendChild(document.createElement("hr"));
+        notification_list.appendChild(all_notifications);
     })
 });
 

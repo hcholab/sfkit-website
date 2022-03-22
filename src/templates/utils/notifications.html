@@ -7,9 +7,14 @@
       0
     </span>
   </button>
-  <ul id="notification_list" class="dropdown-menu dropdown-menu-end pt-0 pb-0" style='min-width: 300px;'>
+  <ul id="notification_list" class="dropdown-menu dropdown-menu-end pt-1 pb-2" style='min-width: 300px;'>
     <li id="no_notifications">
-      <span class="dropdown-item-text text-center">No notifications</span>
+      <span class="dropdown-item-text text-center">No new notifications</span>
+    </li>
+    <li id="all_notifications" class="dropdown-item-text text-center">
+      <a class="text-decoration-none" href="{{url_for('general.all_notifications')}}">
+        View all notifications
+      </a>
     </li>
   </ul>
 </li>

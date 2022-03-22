@@ -1,4 +1,3 @@
-from typing import List
 from flask import current_app, g, redirect, url_for
 from werkzeug import Response
 
@@ -17,7 +16,7 @@ def flash(response: Response, message: str) -> Response:
     return response
 
 
-def get_notifications() -> List[str]:
+def get_notifications() -> list[str]:
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("users").document(g.user["id"])
     doc_ref_dict = doc_ref.get().to_dict()
@@ -37,7 +36,7 @@ def add_notification(notification: str, user_id: str, location: str = "notificat
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("users").document(user_id)
     doc_ref_dict = doc_ref.get().to_dict()
-    notifications: List[str] = doc_ref_dict.get(location)
+    notifications: list[str] = doc_ref_dict.get(location)
     if notifications:
         notifications.append(notification)
     else:
