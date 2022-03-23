@@ -1,7 +1,8 @@
 import {initializeApp} from "https://www.gstatic.com/firebasejs/9.6.6/firebase-app.js";
 import {getFirestore, doc, onSnapshot} from "https://www.gstatic.com/firebasejs/9.6.6/firebase-firestore.js";
 import {getAuth, signInWithCustomToken} from "https://www.gstatic.com/firebasejs/9.6.6/firebase-auth.js"
-$(document).ready(function () {
+
+export function getFirestoreDatabase(custom_token) {
     const firebaseConfig = {
         apiKey: "AIzaSyAJ5Ql7iZ4QMi640Xryx0YbBzwhGdGxKdE",
         authDomain: "broad-cho-priv1.firebaseapp.com",
@@ -14,16 +15,85 @@ $(document).ready(function () {
         serviceAccount: "serviceAccountKey.json"
     };
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    // const custom_token = "{{g.custom_token}}"; // now in the html
     const auth = getAuth(app);
     signInWithCustomToken(auth, custom_token);
-    var study_title = $('#study-title-data')
-        .data()['value']
-        .toLowerCase()
-        .replace(/\s/g, '');
-    var id = $('#id-data').data()['value'];
+    
+    const db = getFirestore(app);
+    return db;
+}
+
+export function readNotifications(db, user_id) {
+    onSnapshot(doc(db, "users", user_id), (doc) => {
+        const notifications = doc.data()["notifications"];
+
+        const notification_list = document.getElementById("notification_list");
+        notification_list.innerHTML = '';
+
+        if (notifications.length > 0) {
+            const num_notifications = document.getElementById("num_notifications");
+            num_notifications.classList.remove("bg-secondary")
+            num_notifications.classList.add("bg-danger")
+            num_notifications.innerHTML = notifications.length;
+
+            const no_notifications = document.getElementById("no_notifications");
+            if (no_notifications) {
+                no_notifications.remove();
+            }
+            
+            const p = document.createElement("p");
+            p.classList.add("text-center", "small", "mb-2", "mt-2");
+            p.innerHTML = "Notifications";
+            notification_list.appendChild(p);
+
+            for (const notification of notifications) {
+                addNotificationToList(notification);
+            }
+        } else {
+            const num_notifications = document.getElementById("num_notifications");
+            num_notifications.classList.remove("bg-danger")
+            num_notifications.classList.add("bg-secondary")
+            num_notifications.innerHTML = 0;
+
+            const no_notifications = document.getElementById("no_notifications");
+            if (!no_notifications) {
+                const li = document.createElement("li");
+                li.id = "no_notifications";
+                li.classList.add("dropdown-item-text", "text-center", "text-muted");
+                li.innerHTML = "No new notifications";
+                notification_list.appendChild(li);
+            }
+        }
+        const all_notifications = document.createElement("li");
+        all_notifications.classList.add("dropdown-item-text", "text-center");
+        const all_notifications_link = document.createElement("a");
+        all_notifications_link.setAttribute("href", "/all_notifications");
+        all_notifications_link.innerHTML = "View all notifications";
+        all_notifications_link.classList.add("text-decoration-none");
+        all_notifications.appendChild(all_notifications_link);
+        notification_list.appendChild(document.createElement("hr"));
+        notification_list.appendChild(all_notifications);
+    })
+}
+
+function addNotificationToList(notification) {
+    const li = document.createElement("li");
+    const span = document.createElement("span");
+    span.classList.add("dropdown-item-text", "alert", "alert-info", "alert-dismissible", "mb-0", "mt-0", "text-muted", "small");
+    span.innerHTML = notification;
+    const button = document.createElement("button");
+    button.classList.add("btn-sm", "btn-close");
+    button.setAttribute("type", "button");
+    button.setAttribute("data-bs-dismiss", "alert");
+    button.setAttribute("onclick", "removeNotification(this.parentElement.innerHTML.split('<')[0])");
+    
+    span.appendChild(button);
+    li.appendChild(span);
+    document.getElementById("notification_list").appendChild(li);
+}
+
+export function getStatusUpdates(db, study_title, user_id) {
     onSnapshot(doc(db, "studies", study_title), (doc) => {
-        $("div.status").html(doc.data()["status"][id].reduce((acc, curr) => acc + "<br>" + curr));
+        $("div.status").html(doc.data()["status"][user_id].reduce((acc, curr) => acc + "<br>" + curr));
     });
-});
+}
+    

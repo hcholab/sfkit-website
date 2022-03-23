@@ -154,10 +154,19 @@
     });
   </script>
 
-  <script>
-    var custom_token = "{{g.custom_token}}";
+  <script type="module">
+    // get the status updates from firestore
+    import {getStatusUpdates} from "/static/javascript/firestore.js";
+
+    var study_title = document
+      .getElementById("study-title-data")
+      .attributes["data-value"]
+      .value
+      .toLowerCase()
+      .replace(/\s/g, '');
+
+    getStatusUpdates(window.firestoreDatabase, study_title, window.user_id);
   </script>
-  <script type="module" src="{{ url_for('static', filename='javascript/firestore.js') }}"></script>
 
   <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
   <script type="module" src="{{ url_for('static', filename='javascript/save_page_state.js') }}"></script>

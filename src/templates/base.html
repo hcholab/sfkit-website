@@ -86,10 +86,15 @@
           })
         }
       </script>
-      <script>
+      <script type="module">
+        // get the notifications for the user
+        import {getFirestoreDatabase, readNotifications} from "/static/javascript/firestore.js";
+
         var custom_token = "{{g.custom_token}}";
+        window.user_id = "{{g.user['id']}}"
+        window.firestoreDatabase = getFirestoreDatabase(custom_token);
+        readNotifications(window.firestoreDatabase, window.user_id);
       </script>
-      <script type="module" src="{{ url_for('static', filename='javascript/read_notifications.js') }}"></script>
     {% endif %}
 
     {% block javascript %}{% endblock %}
