@@ -185,112 +185,7 @@
   </div>
   {% endcall %}
   {% call instruction_step(i = 3, title = "Give Permissions") %}
-  <div>
-    <p>Log into
-      <a class="text-decoration-none" href="https://console.cloud.google.com">https://console.cloud.google.com</a>. Then click the icon in the top right to "Activate Cloud Shell". Once the Terminal is ready, please copy and run the following:
-    </p>
-    <div class="p-2 bg-light rounded">
-      <button id="copy-button" data-bs-toggle="tooltip" data-bs-trigger='manual' style="position:relative;float:right" type="button" class="btn btn-outline-secondary btn-sm">
-        Copy
-      </button>
-      <code id="gcloud-command" class="language-bash" data-lang="bash" style="font-size: 60%">
-        <div>gcloud iam roles create secureGwasRole --project=$(gcloud config get-value project) \</div>
-        <div>--title="Secure GWAS Role" --permissions=compute.disks.create,compute.firewalls.create,compute.firewallPolicies.create,\</div>
-        <div>compute.firewallPolicies.get,compute.instances.create,compute.instances.delete,compute.instances.get,\</div>
-        <div>compute.instances.list,compute.instances.setMetadata,compute.instances.setServiceAccount,\</div>
-        <div>compute.instances.stop,compute.networks.access,compute.networks.addPeering,compute.networks.create,\</div>
-        <div>compute.networks.get,compute.networks.list,compute.networks.removePeering,compute.networks.updatePolicy,\</div>
-        <div>compute.subnetworks.create,compute.subnetworks.delete,compute.subnetworks.list,compute.subnetworks.use,\</div>
-        <div>compute.subnetworks.useExternalIp,iam.serviceAccounts.actAs && \</div>
-        <div>gcloud projects add-iam-policy-binding $(gcloud config get-value project) \</div>
-        <div>--member=serviceAccount:419003787216-compute@developer.gserviceaccount.com \</div>
-        <div>--role=projects/$(gcloud config get-value project)/roles/secureGwasRole</div>
-      </code>
-    </div>
-    <br>
-    <p>The console will ask for confirmation: type Y (for yes) and you're done. That's it!</p>
-    <p class="mt-3">
-      <button class="btn btn-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#permissionsExplanation">
-        What is this command doing and why do we need it?
-      </button>
-    </p>
-    <div class="collapse" id="permissionsExplanation">
-      <div class="text-muted bg-light rounded">
-        <div>
-          <h4>Why do we need these permissions?</h4>
-          <p>We want to run GWAS without access to your data. That is the reason we have this website/portal, rather than just sharing all the data and running plain-old GWAS.</p>
-          <p>Therefore, we ask you to personally encrypt your data and upload it to your own GCP project. However, we still need
-            <i>some</i>
-            indirect access to this account, so that we can set up a VM (virtual machine) to run the GWAS protocol for you.</p>
-          <p>And so, this is the single command that we need you to run to give us permission to set up a VM to run the GWAS.</p>
-        </div>
-        <div>
-          <h4>That shell command looks complicated though. What exactly is it doing?</h4>
-          <p>The shell command is actually 2 commands put together. The first part creates a custom google IAM
-            <a class="text-decoration-none" href="https://cloud.google.com/iam/docs/understanding-roles">role</a>
-            that has permissions to set up a VM for GWAS.</p>
-          <img class="img-fluid w-50" src="../static/images/top_part.png" alt="">
-          <p class="mt-3">The Second part assigns that role to this portal (or, to be precise, to the service account that runs this portal).</p>
-          <img class="img-fluid w-50" src="../static/images/bottom_part.png" alt="">
-        </div>
-        <div>
-          <h4 class="mt-3">Okay. So what are all these permissions?</h4>
-          <p>Let's go through the list, shall we?
-            <ul>
-              <li>
-                <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/disks/create">compute.disks.create</a>
-                is needed to create a Compute Engine disk for the VM. This disk stores information such as the operating system, and so is required to create the virtual machine.
-              </li>
-              <li>
-                <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/firewalls/insert#iam-permissions">compute.firewalls.create</a>,
-                <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/firewall-policies/rules/create">
-                  compute.firewallPolicies.create
-                </a>
-                and
-                <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/firewallPolicies/get">
-                  compute.firewallPolicies.get
-                </a>
-                are needed to set up the
-                <a class="text-decoration-none" href="https://cloud.google.com/firewalls">firewall</a>
-                rules for the VM so that it can interact with the other study participants' VMs during the protocol.
-              </li>
-              <li>
-                <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/instances/create">compute.instances.create</a>,
-                <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/instances/delete">compute.instances.delete</a>,
-                <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/get">compute.instances.get</a>,
-                <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/instances/list">compute.instances.list</a>,
-                <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/setMetadata">compute.instances.setMetadata</a>,
-                <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/setServiceAccount">compute.instances.setServiceAccount</a>, and
-                <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/instances/stop">compute.instances.stop</a>
-                are needed to set up the
-                <a class="text-decoration-none" href="https://cloud.google.com/compute">virtual machine</a>. This includes creating it, setting the metadata associated with it, and so on.
-              </li>
-              <li>
-                compute.networks.access,
-                <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/networks/addPeering">compute.networks.addPeering</a>,
-                <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/networks/create">compute.networks.create</a>,
-                <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/networks/get">compute.networks.get</a>,
-                <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/networks/list">compute.networks.list</a>,
-                <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/networks/removePeering">compute.networks.removePeering</a>, and compute.networks.updatePolicy are needed to set up the
-                <a class="text-decoration-none" href="https://cloud.google.com/vpc/docs/vpc">VPC (Virtual Private Cloud) network</a>
-                that the VM will be in. This includes
-                <a class="text-decoration-none" href="https://cloud.google.com/vpc/docs/vpc-peering">VPC Network Peering</a>, which allows the VM to connect to the other study participants' VMs in a seamless fashion.
-              </li>
-              <li>compute.subnetworks.create,
-                <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/subnetworks/delete">compute.subnetworks.delete</a>,
-                <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/subnetworks/list">compute.subnetworks.list</a>, and compute.subnetworks.use, and compute.subnetworks.useExternalIp are needed to set up the
-                <a class="text-decoration-none" href="https://cloud.google.com/vpc/docs/vpc#vpc_networks_and_subnets">subnet</a>
-                that the VM will be in. This includes creating and using these subnets.
-              </li>
-              <li>
-                <a class="text-decoration-none" href="https://cloud.google.com/iam/docs/service-accounts-actas">iam.serviceAccounts.actAs</a>
-                is needed to act as a service account to do the various setup for the network and VM as described.</li>
-            </ul>
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
+  {% include 'studies/utils/permissions.html' %}
   {% endcall %}
   {% call instruction_step(i = 4, title = "Validate Data") %}
   <div>
@@ -308,10 +203,15 @@
           <br>
           <a href="{{ url_for('studies.study', study_title=study['title']) }}" class="btn btn-secondary">Check for update</a>
         </p>
+      {% elif study["status"][g.user["id"]] == ["invalid data"] %}
+        <p>
+          <strong>Your data validation has failed! Please double check that you uploaded your data correctly and set the correct path in the previous step.</strong>
+          <a href="{{ url_for('gwas.validate_data', study_title=study['title']) }}" class="mt-2 btn btn-success">Retry Data Validation</a>
+        </p>
       {% else %}
         <p>
           <a href="{{ url_for('gwas.validate_data', study_title=study['title']) }}" class="mt-2 btn btn-success disabled">Validate Data</a>
-          <strong>You have already validated your data.</strong>
+          <strong>You have successfully validated your data!</strong>
         </p>
       {% endif %}
       This button validates that we are able to create a VM that can access your encrypted data that you uploaded in step 2.

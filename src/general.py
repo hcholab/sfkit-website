@@ -75,15 +75,6 @@ def index() -> tuple[str, int]:
         statuses = doc_ref_dict.get("status")
         user_id = doc_ref_dict.get("participants")[int(role) - 1]
 
-        if "validate" in content or "GWAS Completed!" in content:
-            google_cloud_compute = GoogleCloudCompute(
-                doc_ref_dict.get("personal_parameters", {}).get(user_id, {}).get("GCP_PROJECT", {}).get("value")
-            )
-            google_cloud_compute.stop_instance(
-                zone=constants.SERVER_ZONE,
-                instance=create_instance_name(study_title, role),
-            )
-
         if "validate" in content:
             [_, size, files] = content.split("|", maxsplit=2)
             if data_has_valid_size(int(size), doc_ref_dict, int(role)) and data_has_valid_files(files):
@@ -93,6 +84,15 @@ def index() -> tuple[str, int]:
         else:
             statuses.get(user_id).append(f"{content} - {publishTime}")
         doc_ref.set({"status": statuses}, merge=True)
+
+        if "validate" in content or "GWAS Completed!" in content:
+            google_cloud_compute = GoogleCloudCompute(
+                doc_ref_dict.get("personal_parameters", {}).get(user_id, {}).get("GCP_PROJECT", {}).get("value")
+            )
+            google_cloud_compute.stop_instance(
+                zone=constants.SERVER_ZONE,
+                instance=create_instance_name(study_title, role),
+            )
     except Exception as e:
         print(f"error: {e}")
     finally:
