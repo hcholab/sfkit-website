@@ -10,12 +10,12 @@ from tenacity.wait import wait_fixed
 
 
 class GoogleCloudCompute:
-    def __init__(self, project) -> None:
+    def __init__(self, project: str) -> None:
         self.project: str = project
         self.compute = googleapi.build("compute", "v1")
 
     def setup_networking(self, doc_ref_dict: dict, role: str) -> None:
-        gcp_projects = [constants.SERVER_GCP_PROJECT]
+        gcp_projects: list = [constants.SERVER_GCP_PROJECT]
         gcp_projects.extend(
             doc_ref_dict["personal_parameters"][participant]["GCP_PROJECT"]["value"]
             for participant in doc_ref_dict["participants"]
@@ -28,8 +28,8 @@ class GoogleCloudCompute:
         self.create_peerings(gcp_projects)
 
     def create_network(self, network_name: str = constants.NETWORK_NAME) -> None:
-        networks = self.compute.networks().list(project=self.project).execute()["items"]
-        network_names = [net["name"] for net in networks]
+        networks: list = self.compute.networks().list(project=self.project).execute()["items"]
+        network_names: list[str] = [net["name"] for net in networks]
 
         if network_name not in network_names:
             print(f"Creating new network {network_name}")
@@ -45,39 +45,16 @@ class GoogleCloudCompute:
 
     def create_firewall(self, network_name: str = constants.NETWORK_NAME) -> None:
         print(f"Creating new firewalls for network {network_name}")
-        network_url = ""
+        network_url: str = ""
         for net in self.compute.networks().list(project=self.project).execute()["items"]:
             if net["name"] == network_name:
                 network_url = net["selfLink"]
 
-        source_ranges = ["0.0.0.0/0"]
-        if "broad-cho-priv" in self.project:
-            source_ranges = [
-                "69.173.112.0/21",
-                "69.173.127.232/29",
-                "69.173.127.128/26",
-                "69.173.127.0/25",
-                "69.173.127.240/28",
-                "69.173.127.224/30",
-                "69.173.127.230/31",
-                "69.173.120.0/22",
-                "69.173.127.228/32",
-                "69.173.126.0/24",
-                "69.173.96.0/20",
-                "69.173.64.0/19",
-                "69.173.127.192/27",
-                "69.173.124.0/23",
-                "10.0.0.10",  # other VMs doing the computation
-                "10.0.1.10",
-                "10.0.2.10",
-                "35.235.240.0/20",  # IAP TCP forwarding
-            ]
-
-        firewall_body = {
+        firewall_body: dict = {
             "name": f"{network_name}-vm-ingress",
             "network": network_url,
             "targetTags": [constants.INSTANCE_NAME_ROOT],
-            "sourceRanges": source_ranges,
+            "sourceRanges": constants.BROAD_VM_SOURCE_IP_RANGES if "broad-cho-priv" in self.project else ["0.0.0.0/0"],
             "allowed": [{"ports": ["8000-8999", "22"], "IPProtocol": "tcp"}],
         }
 
@@ -104,14 +81,11 @@ class GoogleCloudCompute:
         subnets = (
             self.compute.subnetworks().list(project=self.project, region=constants.SERVER_REGION).execute()["items"]
         )
-        ip_cidr_ranges_for_this_network = [f"10.0.{i}.0/24" for i in range(3) if gcp_projects[i] == self.project]
+        ip_ranges = [f"10.0.{i}.0/24" for i in range(3) if gcp_projects[i] == self.project]
         for subnet in subnets:
-            if (
-                constants.NETWORK_NAME in subnet["network"]
-                and subnet["ipCidrRange"] not in ip_cidr_ranges_for_this_network
-            ):
+            if constants.NETWORK_NAME in subnet["network"] and subnet["ipCidrRange"] not in ip_ranges:
                 n1 = ipaddr.IPNetwork(subnet["ipCidrRange"])
-                if any(n1.overlaps(ipaddr.IPNetwork(n2)) for n2 in ip_cidr_ranges_for_this_network):
+                if any(n1.overlaps(ipaddr.IPNetwork(n2)) for n2 in ip_ranges):
                     self.delete_subnet(subnet)
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(30))

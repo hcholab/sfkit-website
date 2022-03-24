@@ -59,13 +59,12 @@ def validate_data(study_title: str) -> Response:
 @bp.route("/start_gwas/<study_title>", methods=["POST"])
 @login_required
 def start_gwas(study_title: str) -> Response:
-    db = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
-    doc_ref_dict = doc_ref.get().to_dict()
-    user_id = g.user["id"]
+    doc_ref = current_app.config["DATABASE"].collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref_dict: dict = doc_ref.get().to_dict()
+    user_id: str = g.user["id"]
     role: int = doc_ref_dict["participants"].index(user_id) + 1
-    gcp_project = doc_ref_dict["personal_parameters"][user_id]["GCP_PROJECT"]["value"]
-    statuses = doc_ref_dict["status"]
+    gcp_project: str = doc_ref_dict["personal_parameters"][user_id]["GCP_PROJECT"]["value"]
+    statuses: dict = doc_ref_dict["status"]
 
     if statuses[user_id] == ["not ready"]:
         if not GoogleCloudIAM().test_permissions(gcp_project):
@@ -91,18 +90,12 @@ def start_gwas(study_title: str) -> Response:
         pass
     elif statuses[user_id] == ["ready"]:
         statuses[user_id] = ["setting up your vm instance"]
-
-        doc_ref.set(
-            {
-                "status": statuses,
-            },
-            merge=True,
-        )
+        doc_ref.set({"status": statuses}, merge=True)
         doc_ref_dict = doc_ref.get().to_dict()
         if role == 1:
             # start CP0 as well
             gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
-            instance = create_instance_name(study_title, "0")
+            instance: str = create_instance_name(study_title, "0")
             vm_parameters = doc_ref_dict["personal_parameters"][user_id]
             gcloudCompute.setup_instance(
                 constants.SERVER_ZONE,
@@ -130,7 +123,7 @@ def run_gwas(role: str, gcp_project: str, study_title: str, vm_parameters: dict)
     # copy parameters to parameter files
     gcloudStorage.copy_parameters_to_bucket(study_title, role)
 
-    instance = create_instance_name(study_title, role)
+    instance: str = create_instance_name(study_title, role)
     gcloudCompute.setup_instance(
         constants.SERVER_ZONE,
         instance,
@@ -141,11 +134,10 @@ def run_gwas(role: str, gcp_project: str, study_title: str, vm_parameters: dict)
     )
 
     # Give instance publish access to pubsub for status updates
-    member = "serviceAccount:" + gcloudCompute.get_service_account_for_vm(
-        zone=constants.SERVER_ZONE, instance=instance
-    )
+    member: str = "serviceAccount:" + gcloudCompute.get_service_account_for_vm(constants.SERVER_ZONE, instance)
     gcloudPubsub.add_pub_iam_member("roles/pubsub.publisher", member)
+
     # give instance read access to storage buckets for parameter files
     gcloudStorage.add_bucket_iam_member(constants.PARAMETER_BUCKET, "roles/storage.objectViewer", member)
 
-    print("I've done what I can.  GWAS should be running now.")
+    print("Set up is complete!  Your GWAS is now running.")
