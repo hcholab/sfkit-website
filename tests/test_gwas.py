@@ -60,9 +60,10 @@ def test_start_gwas(client, app, auth, mocker):
     doc_ref.set({"participants": ["b@b.com", "a@a.com"]}, merge=True)
     client.post("start_gwas/testtitle", data={"NUM_CPUS": "1", "BOOT_DISK_SIZE": "1"})
 
-    doc_ref.set(
-        {"status": {"a@a.com": ["ready"], "b@b.com": ["not ready"]}}, merge=True
-    )
+    doc_ref.set({"status": {"a@a.com": ["ready"], "b@b.com": ["not ready"]}}, merge=True)
+    client.post("start_gwas/testtitle", data={"NUM_CPUS": "1", "BOOT_DISK_SIZE": "1"})
+
+    doc_ref.set({"status": {"a@a.com": ["blah blah blah"], "b@b.com": ["ready"]}}, merge=True)
     client.post("start_gwas/testtitle", data={"NUM_CPUS": "1", "BOOT_DISK_SIZE": "1"})
 
 

@@ -195,7 +195,15 @@
       button:
       {% if study['status'][g.user['id']] == [''] %}
         <p>
-          <a href="{{ url_for('gwas.validate_data', study_title=study['title']) }}" class="mt-2 btn btn-success">Validate Data</a>
+          <a href="{{ url_for('gwas.validate_data', study_title=study['title']) }}" class="mt-2 btn btn-success" onclick="loading();">
+            <span class="normal-content">
+              Validate Data
+            </span>
+            <span class="loading" style="display:none">
+              <span class="spinner-grow spinner-grow-sm"></span>
+              Loading...
+            </span>
+          </a>
         </p>
       {% elif study["status"][g.user["id"]] == ["validating"] %}
         <p>

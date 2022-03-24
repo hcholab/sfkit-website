@@ -87,7 +87,7 @@ def start_gwas(study_title: str) -> Response:
             merge=True,
         )
 
-    if any("not ready" in status for status in statuses.values()):
+    if any(s in str(statuses.values()) for s in ["['']", "['validating']", "['invalid data']", "['not ready']"]):
         pass
     elif statuses[user_id] == ["ready"]:
         statuses[user_id] = ["setting up your vm instance"]

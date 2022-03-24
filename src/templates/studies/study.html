@@ -107,11 +107,11 @@
                           {{parameters['NUM_CPUS']['description']}}
                         </p>
                         <button class="mt-2 btn btn-primary" type="submit" onclick="loading();">
-                          <div id="loading" style="display:none">
+                          <div class="loading" style="display:none">
                             <span class="spinner-grow spinner-grow-sm" role="status"></span>
                             Loading...
                           </div>
-                          <div id="normal-content">
+                          <div class="normal-content">
                             Confirm Virtual Machine Configuration
                           </div>
                         </button>
@@ -143,8 +143,8 @@
 {% block javascript %}
   <script>
     function loading() {
-      $("#loading").show();
-      $("#normal-content").hide();
+      $(".loading").show();
+      $(".normal-content").hide();
     }
   </script>
 
