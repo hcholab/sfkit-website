@@ -50,9 +50,7 @@ def test_register(client, mocker):
         ("", "a", "a", "Error creating user"),
     ),
 )
-def test_register_validate_input(
-    capfd, client, mocker, email, password, password_check, message
-):
+def test_register_validate_input(capfd, client, mocker, email, password, password_check, message):
     setup_mocking(mocker)
 
     client.post(
