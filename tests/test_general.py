@@ -67,18 +67,28 @@ def test_index_from_pubsub(client, app, mocker):
     assert client.post("/", data=data, headers=headers).status_code == 204
 
     data = json.dumps(
-        {"message": {"data": "YmxhaC1zZWN1cmUtZ3dhczAtYmxhaA=="}}
-    )  # base64.b64encode("blah-secure-gwas0-blah".encode("utf-8"))
-    assert client.post("/", data=data, headers=headers).status_code == 204
-
-    data = json.dumps(
         {"message": {"data": "YmxhaC1zZWN1cmUtZ3dhczAtdmFsaWRhdGV8Nnxwb3MudHh0"}}
     )  # base64.b64encode("blah-secure-gwas0-validate|6|pos.txt".encode("utf-8"))
     assert client.post("/", data=data, headers=headers).status_code == 204
 
     data = json.dumps(
-        {"message": {"data": "YmxhaC1zZWN1cmUtZ3dhczAtdmFsaWRhdGV8MTAwfHBvcy50eHQ="}}
-    )  # base64.b64encode("blah-secure-gwas0-validate|100|pos.txt".encode("utf-8"))
+        {"message": {"data": "YmxhaC1zZWN1cmUtZ3dhczEtYmxhaA=="}}
+    )  # base64.b64encode("blah-secure-gwas1-blah".encode("utf-8"))
+    assert client.post("/", data=data, headers=headers).status_code == 204
+
+    data = json.dumps(
+        {"message": {"data": "YmxhaC1zZWN1cmUtZ3dhczEtcmVhZHk="}}
+    )  # base64.b64encode("blah-secure-gwas1-ready".encode("utf-8"))
+    assert client.post("/", data=data, headers=headers).status_code == 204
+
+    data = json.dumps(
+        {"message": {"data": "YmxhaC1zZWN1cmUtZ3dhczEtdmFsaWRhdGV8Nnxwb3MudHh0"}}
+    )  # base64.b64encode("blah-secure-gwas1-validate|6|pos.txt".encode("utf-8"))
+    assert client.post("/", data=data, headers=headers).status_code == 204
+
+    data = json.dumps(
+        {"message": {"data": "YmxhaC1zZWN1cmUtZ3dhczEtdmFsaWRhdGV8MTAwfHBvcy50eHQ="}}
+    )  # base64.b64encode("blah-secure-gwas1-validate|100|pos.txt".encode("utf-8"))
     assert client.post("/", data=data, headers=headers).status_code == 204
 
 

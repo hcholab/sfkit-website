@@ -30,7 +30,7 @@ class GoogleCloudStorage:
             blob.download_to_filename(os.path.join(constants.TEMP_FOLDER, filename))
             self.update_parameters(os.path.join(constants.TEMP_FOLDER, filename), study_title, role)
             blob.upload_from_filename(os.path.join(constants.TEMP_FOLDER, filename))
-            print(f"Updated parameters in {filename}")
+        print(f"Updated parameters in {constants.PARAMETER_FILES}")
 
     def update_parameters(self, file, study_title, role):
         db = (

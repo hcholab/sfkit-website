@@ -55,7 +55,7 @@ def index() -> tuple[str, int]:
         return fail()
 
     pubsub_message = envelope.get("message")
-    print(f"Pub/Sub message received: {pubsub_message}")
+    # print(f"Pub/Sub message received: {pubsub_message}")
 
     if not isinstance(pubsub_message, dict) or "data" not in pubsub_message:
         return fail()
@@ -69,32 +69,42 @@ def index() -> tuple[str, int]:
         [study_title, rest] = msg.split("-secure-gwas", maxsplit=1)
         [role, content] = rest.split("-", maxsplit=1)
 
-        db = current_app.config["DATABASE"]
-        doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
-        doc_ref_dict = doc_ref.get().to_dict()
-        statuses = doc_ref_dict.get("status")
-        user_id = doc_ref_dict.get("participants")[int(role) - 1]
-
-        if "validate" in content:
-            [_, size, files] = content.split("|", maxsplit=2)
-            if data_has_valid_size(int(size), doc_ref_dict, int(role)) and data_has_valid_files(files):
-                statuses[user_id] = ["not ready"]
-            else:
-                statuses[user_id] = ["invalid data"]
+        if role == "0" and ("validate" in content or "GWAS Completed!" in content):
+            google_cloud_compute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
+            google_cloud_compute.stop_instance(constants.SERVER_ZONE, create_instance_name(study_title, role))
         else:
-            statuses.get(user_id).append(f"{content} - {publishTime}")
-        doc_ref.set({"status": statuses}, merge=True)
+            doc_ref = (
+                current_app.config["DATABASE"].collection("studies").document(study_title.replace(" ", "").lower())
+            )
+            doc_ref_dict = doc_ref.get().to_dict()
+            statuses = doc_ref_dict.get("status")
+            user_id = doc_ref_dict.get("participants")[int(role) - 1]
 
-        if "validate" in content or "GWAS Completed!" in content:
-            google_cloud_compute = GoogleCloudCompute(
-                doc_ref_dict.get("personal_parameters", {}).get(user_id, {}).get("GCP_PROJECT", {}).get("value")
-            )
-            google_cloud_compute.stop_instance(
-                zone=constants.SERVER_ZONE,
-                instance=create_instance_name(study_title, role),
-            )
+            if "validate" in content:
+                [_, size, files] = content.split("|", maxsplit=2)
+                statuses[user_id] = (
+                    ["not ready"]
+                    if data_has_valid_size(int(size), doc_ref_dict, int(role)) and data_has_valid_files(files)
+                    else ["invalid data"]
+                )
+
+            elif content not in str(statuses.get(user_id, [])):
+                statuses.get(user_id).append(f"{content} - {publishTime}")
+            doc_ref.set({"status": statuses}, merge=True)
+
+            if "validate" in content or "GWAS Completed!" in content:
+                google_cloud_compute = GoogleCloudCompute(
+                    doc_ref_dict.get("personal_parameters", {})
+                    .get(user_id, {})
+                    .get("GCP_PROJECT", {})
+                    .get("value", constants.SERVER_GCP_PROJECT)
+                )
+                google_cloud_compute.stop_instance(
+                    zone=constants.SERVER_ZONE,
+                    instance=create_instance_name(study_title, role),
+                )
     except Exception as e:
-        print(f"error: {e}")
+        print(f"error processing pubsub message: {e}")
     finally:
         return ("", 204)
 

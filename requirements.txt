@@ -3,21 +3,10 @@ coverage
 firebase_admin
 Flask
 Flask_Bootstrap
-# gcloud==0.17.0
-# google-api-core==2.5.0
-# google-api-python-client==2.36.0
-# google-auth==2.6.0
-# google-auth-httplib2==0.1.0
-# google-auth-oauthlib==0.4.6
-# google-cloud-core==2.2.2
 google-cloud-firestore
 google-cloud-iam
 google-cloud-pubsub
 google-cloud-storage
-# google-crc32c==1.3.0
-# google-resumable-media==2.2.0
-# googleapis-common-protos==1.54.0
-# grpc-google-iam-v1==0.12.3
 ipaddr
 mock-firestore
 protobuf

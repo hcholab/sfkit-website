@@ -122,9 +122,9 @@ if [[ $? -ne 0 ]]; then
     printf "\n\n Failed to run GWASClient \n\n"
     exit 1
 else
-    gcloud pubsub topics publish ${topic_id} --message="${topic_id}-GWAS Completed!" --ordering-key="1" --project="broad-cho-priv1"
-    printf "\n\n GWAS Completed! \n\n"
-
     # copy results to storage data_path
     gsutil cp -r /home/secure-gwas/out gs://${data_path}/out
+    
+    gcloud pubsub topics publish ${topic_id} --message="${topic_id}-GWAS Completed!" --ordering-key="1" --project="broad-cho-priv1"
+    printf "\n\n GWAS Completed! \n\n"
 fi

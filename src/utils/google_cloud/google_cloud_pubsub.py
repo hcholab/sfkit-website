@@ -36,6 +36,7 @@ class GoogleCloudPubsub:
                 request={
                     "name": self.subscription_path,
                     "topic": self.topic_path,
+                    # "enable_exactly_once_delivery": True, # cannot do this with message ordering
                     "enable_message_ordering": True,
                     "push_config": {
                         "push_endpoint": "https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/",
@@ -48,4 +49,4 @@ class GoogleCloudPubsub:
         policy.bindings.add(role=role, members=[member])  # type: ignore
         policy = self.publisher.set_iam_policy(request={"resource": self.topic_path, "policy": policy})  # type: ignore
 
-        print(f"IAM policy for topic {self.topic_id} set: {policy}")
+        print(f"IAM policy for topic: {self.topic_id} updated to give role: {role} to member: {member}")

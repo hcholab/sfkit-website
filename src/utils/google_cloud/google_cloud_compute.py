@@ -256,7 +256,7 @@ class GoogleCloudCompute:
         self.wait_for_zoneOperation(zone, operation["name"])
 
     def wait_for_operation(self, operation):
-        print("Waiting for operation to finish...")
+        print("Waiting for operation to finish...", end="")
         while True:
             result = self.compute.globalOperations().get(project=self.project, operation=operation).execute()
 
@@ -265,7 +265,7 @@ class GoogleCloudCompute:
             time.sleep(1)
 
     def wait_for_zoneOperation(self, zone, operation):
-        print("Waiting for operation to finish...")
+        print("Waiting for operation to finish...", end="")
         while True:
             result = self.compute.zoneOperations().get(project=self.project, zone=zone, operation=operation).execute()
 
@@ -274,7 +274,7 @@ class GoogleCloudCompute:
             time.sleep(1)
 
     def wait_for_regionOperation(self, region: str, operation: str) -> dict[str, str]:
-        print("Waiting for operation to finish...")
+        print("Waiting for operation to finish...", end="")
         while True:
             result: dict[str, str] = (
                 self.compute.regionOperations().get(project=self.project, region=region, operation=operation).execute()

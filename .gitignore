@@ -21,3 +21,4 @@ run.py
 src/temp/test*
 node_modules/*
 serviceAccountKey.json
+requirements2.txt 
