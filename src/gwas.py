@@ -33,9 +33,11 @@ def validate_data(study_title: str) -> Response:
     doc_ref.set({"status": statuses}, merge=True)
 
     if role == "1":
-        # setup networking for CP0 as well
+        # setup networking and pubsub for CP0 as well
         gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
         gcloudCompute.setup_networking(doc_ref_dict, "0")
+        gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, "0", study_title)
+        gcloudPubsub.create_topic_and_subscribe()
 
     gcloudCompute = GoogleCloudCompute(gcp_project)
     gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
@@ -89,7 +91,7 @@ def start_gwas(study_title: str) -> Response:
     if any(s in str(statuses.values()) for s in ["['']", "['validating']", "['invalid data']", "['not ready']"]):
         pass
     elif statuses[user_id] == ["ready"]:
-        statuses[user_id] = ["setting up your vm instance"]
+        statuses[user_id] = ["Setting up your vm instance..."]
         doc_ref.set({"status": statuses}, merge=True)
         doc_ref_dict = doc_ref.get().to_dict()
         if role == 1:
