@@ -20,9 +20,7 @@ def test_update_user(mocker):
 
 def test_sign_in_with_email_and_password(mocker):
     mocker.patch("src.utils.auth_functions.post", mock_post)
-    mocker.patch(
-        "src.utils.auth_functions.raise_detailed_error", mock_raise_detailed_error
-    )
+    mocker.patch("src.utils.auth_functions.raise_detailed_error", mock_raise_detailed_error)
 
     auth_functions.sign_in_with_email_and_password("email", "password")
 

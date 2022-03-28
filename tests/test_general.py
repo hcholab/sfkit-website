@@ -12,7 +12,7 @@ test_create_data = {
 def test_home(client):
     response = client.get("/")
     assert response.status_code == 200
-    assert b"portal for securely running GWAS" in response.data
+    assert b"portal for running privacy-preserving distributed computation on genomic data" in response.data
 
     home_response = client.get("/home")
     assert home_response.status_code == 200

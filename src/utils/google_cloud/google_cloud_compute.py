@@ -1,5 +1,5 @@
 import os
-import time
+from time import sleep
 
 import googleapiclient.discovery as googleapi
 import ipaddr
@@ -74,7 +74,7 @@ class GoogleCloudCompute:
                 self.compute.networks().removePeering(
                     project=self.project, network=constants.NETWORK_NAME, body=body
                 ).execute()
-                time.sleep(2)
+                sleep(2)
 
     def remove_conflicting_subnets(self, gcp_projects: list) -> None:
         # a subnet is conflicting if it has an IpCidrRange that does not match the expected ranges based on the roles of participants in the study
@@ -109,7 +109,7 @@ class GoogleCloudCompute:
             )
             if subnet["name"] not in [sub["name"] for sub in subnets]:
                 return
-            time.sleep(2)
+            sleep(2)
 
         print(f"Failure to delete subnet {subnet['name']}")
         raise Exception(f"Failure to delete subnet {subnet['name']}")
@@ -262,7 +262,7 @@ class GoogleCloudCompute:
 
             if result["status"] == "DONE":
                 return self.return_result_or_error(result)
-            time.sleep(1)
+            sleep(1)
 
     def wait_for_zoneOperation(self, zone, operation):
         print("Waiting for operation to finish...", end="")
@@ -271,7 +271,7 @@ class GoogleCloudCompute:
 
             if result["status"] == "DONE":
                 return self.return_result_or_error(result)
-            time.sleep(1)
+            sleep(1)
 
     def wait_for_regionOperation(self, region: str, operation: str) -> dict[str, str]:
         print("Waiting for operation to finish...", end="")
@@ -282,7 +282,7 @@ class GoogleCloudCompute:
 
             if result["status"] == "DONE":
                 return self.return_result_or_error(result)
-            time.sleep(1)
+            sleep(1)
 
     def return_result_or_error(self, result: dict[str, str]) -> dict[str, str]:
         print("done.")

@@ -23,21 +23,18 @@ test_doc_ref_dict = {
 def test_valid_study_title(client, app, auth, mocker):
     setup_mocking(mocker)
     with app.app_context():
-        assert gwas_functions.valid_study_title("testtitle")[0] == True
-        assert gwas_functions.valid_study_title("test_title")[0] == False
+        assert gwas_functions.valid_study_title("testtitle", "GWAS")[0] == True
+        assert gwas_functions.valid_study_title("test_title", "GWAS")[0] == False
 
         auth.login()
-        client.post("create_study", data=test_create_data)
-        client.post("create_study", data=test_create_data2)
+        client.post("create_study/GWAS", data=test_create_data)
+        client.post("create_study/GWAS", data=test_create_data2)
 
-        assert gwas_functions.valid_study_title("testtitle2")[0] == False
+        assert gwas_functions.valid_study_title("testtitle2", "GWAS")[0] == False
 
 
 def test_create_instance_name():
-    assert (
-        gwas_functions.create_instance_name("testtitle", "1")
-        == "testtitle-secure-gwas1"
-    )
+    assert gwas_functions.create_instance_name("testtitle", "1") == "testtitle-secure-gwas1"
 
 
 def test_data_has_valid_size():
@@ -47,12 +44,7 @@ def test_data_has_valid_size():
 
 
 def test_data_has_valid_files():
-    assert (
-        gwas_functions.data_has_valid_files(
-            "g.bin m.bin p.bin other_shared_key.bin pos.txt"
-        )
-        == True
-    )
+    assert gwas_functions.data_has_valid_files("g.bin m.bin p.bin other_shared_key.bin pos.txt") == True
     assert gwas_functions.data_has_valid_files("one two three") == False
 
 
@@ -60,12 +52,10 @@ def setup_mocking(mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     mocker.patch("src.utils.gwas_functions.redirect", mock_redirect)
     mocker.patch("src.utils.gwas_functions.url_for", mock_url_for)
-    mocker.patch(
-        "src.utils.gwas_functions.redirect_with_flash", mock_redirect_with_flash
-    )
+    mocker.patch("src.utils.gwas_functions.redirect_with_flash", mock_redirect_with_flash)
 
 
-def mock_redirect_with_flash(location, message):
+def mock_redirect_with_flash(url="", location: str = "", message: str = "", error: str = ""):
     return location
 
 
@@ -73,5 +63,5 @@ def mock_redirect(url):
     return url
 
 
-def mock_url_for(endpoint, study_title=""):
+def mock_url_for(endpoint, study_title="", type=""):
     return endpoint

@@ -49,6 +49,7 @@ def study(study_title: str) -> Response:
             study=doc_ref_dict,
             public_keys=public_keys,
             role=role,
+            type=doc_ref_dict["type"],
             parameters=doc_ref_dict["personal_parameters"][user_id],
         )
     )
@@ -95,18 +96,18 @@ def upload_public_key(study_title: str) -> Response:
         )
 
 
-@bp.route("/create_study", methods=("GET", "POST"))
+@bp.route("/create_study/<type>", methods=("GET", "POST"))
 @login_required
-def create_study() -> Response:
+def create_study(type: str) -> Response:
     if request.method == "GET":
-        return make_response(render_template("studies/create_study.html"))
+        return make_response(render_template("studies/create_study.html", type=type))
 
     db = current_app.config["DATABASE"]
     title = request.form["title"]
     description = request.form["description"]
     study_information = request.form["study_information"]
 
-    (valid, response) = valid_study_title(title)
+    (valid, response) = valid_study_title(title, type)
     if not valid:
         return response
 
@@ -114,6 +115,7 @@ def create_study() -> Response:
     doc_ref.set(
         {
             "title": title,
+            "type": type,
             "description": description,
             "study_information": study_information,
             "owner": g.user["id"],

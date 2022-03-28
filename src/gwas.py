@@ -10,7 +10,7 @@ from src.utils.google_cloud.google_cloud_pubsub import GoogleCloudPubsub
 from src.utils.google_cloud.google_cloud_storage import GoogleCloudStorage
 from src.utils.gwas_functions import create_instance_name
 
-bp = Blueprint("gwas", __name__)
+bp = Blueprint("gwas", __name__, url_prefix="/gwas")
 
 
 @bp.route("/validate_data/<study_title>")
@@ -58,9 +58,9 @@ def validate_data(study_title: str) -> Response:
     return redirect(url_for("studies.study", study_title=study_title))
 
 
-@bp.route("/start_gwas/<study_title>", methods=["POST"])
+@bp.route("/start_protocol/<study_title>", methods=["POST"])
 @login_required
-def start_gwas(study_title: str) -> Response:
+def start_protocol(study_title: str) -> Response:
     doc_ref = current_app.config["DATABASE"].collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict: dict = doc_ref.get().to_dict()
     user_id: str = g.user["id"]

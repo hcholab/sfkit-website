@@ -170,6 +170,7 @@ def test_get_service_account_for_vm(mocker):
 
 
 def setup_mocking(mocker):
+    mocker.patch("src.utils.google_cloud.google_cloud_compute.sleep", lambda x: None)
     mocker.patch("time.sleep", lambda x: None)
     mocker.patch(
         "src.utils.google_cloud.google_cloud_compute.googleapi",

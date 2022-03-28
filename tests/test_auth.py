@@ -22,11 +22,11 @@ def test_load_logged_in_user(mocker, app):
 
 @pytest.mark.parametrize(
     "path",
-    ("/create_study", "/delete_study/1", "/study/1"),
+    ("/create_study/GWAS", "/delete_study/1", "/study/1"),
 )
 def test_login_required(client, path):
     response = client.post(path)
-    assert response.headers.get("Location") == "http://localhost/auth/login"
+    assert "auth/login" in response.headers.get("Location")
 
 
 def test_register(client, mocker):
@@ -39,7 +39,7 @@ def test_register(client, mocker):
         "/auth/register",
         data={"email": "a@a.a", "password": "a", "password_check": "a"},
     )
-    assert response.headers.get("Location") == "http://localhost/index"
+    assert "index" in response.headers.get("Location")
 
 
 @pytest.mark.parametrize(
@@ -67,7 +67,7 @@ def test_login(client, mocker):
     assert client.get("/auth/login").status_code == 200
 
     response = client.post("/auth/login", data={"email": "a@a.a", "password": "a"})
-    assert response.headers["Location"] == "http://localhost/index"
+    assert "index" in response.headers.get("Location")
 
 
 @pytest.mark.parametrize(

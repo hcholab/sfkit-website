@@ -51,7 +51,9 @@
                 <div class="modal-dialog modal-xl">
                   <div class="modal-content">
                     <div class="modal-header">
-                      <h5 class="modal-title" id="configure_study_modal_label">Configure your Study</h5>
+                      <h5 class="modal-title" id="configure_study_modal_label">Configure your
+                        {{ type }}
+                        Study</h5>
                       <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
@@ -66,12 +68,18 @@
             </div>
             {% if study["status"][g.user["id"]] == [""] or study["status"][g.user["id"]] == ["validating"] %}
               <button type="button" class="mt-2 btn btn-success" data-bs-toggle="modal" data-bs-target="#vmConfig" disabled="disabled">
-                Begin GWAS Workflow
+                Begin
+                {{ type }}
+                Workflow
               </button>
-              <p>You must finish configuring your study before you can begin the GWAS workflow</p>
+              <p>You must finish configuring your study before you can begin the
+                {{ type }}
+                workflow</p>
             {% elif study["status"][g.user["id"]] == ["not ready"] %}
               <button type="button" class="mt-2 btn btn-success" data-bs-toggle="modal" data-bs-target="#vmConfig">
-                Begin GWAS Workflow
+                Begin
+                {{ type }}
+                Workflow
               </button>
               <div class="modal fade" id="vmConfig" tabindex="-1">
                 <div class="modal-dialog modal-lg">
@@ -81,7 +89,7 @@
                       <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body container">
-                      <form action="{{ url_for('gwas.start_gwas', study_title=study['title']) }}" method="post">
+                      <form action="{{ url_for(type.lower() + '.start_protocol', study_title=study['title']) }}" method="post">
                         <div class="text-start row">
                           <label for="BOOT_DISK_SIZE" class="col-sm-3 col-form-label">{{parameters['BOOT_DISK_SIZE']['name']}}</label>
                           <div class="col-sm-9">
@@ -129,7 +137,7 @@
                 <div class="status text-start"></div>
               {% endif %}
               <br>
-              <form action="{{ url_for('gwas.start_gwas', study_title=study['title']) }}" method="post">
+              <form action="{{ url_for(type.lower() + '.start_protocol', study_title=study['title']) }}" method="post">
                 <button type="submit" class="btn btn-secondary">Check for update</button>
               </form>
             {% endif %}

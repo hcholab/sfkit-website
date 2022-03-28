@@ -8,9 +8,9 @@
       <div class="row justify-content-center mb-4">
         <div class="col-md-auto text-center">
           {% if studies | length != 0 %}
-            <h2 class="display-5 fw-bold mt-2 mb-0">Registered Secure GWAS Studies</h2>
+            <h2 class="display-5 fw-bold mt-2 mb-0">Registered Studies</h2>
           {% else %}
-            <h2 class="display-5 fw-bold mt-2 mb-0">There are no registered Secure GWAS Studies:</h2>
+            <h2 class="display-5 fw-bold mt-2 mb-0">There are no registered studies.</h2>
           {% endif %}
         </div>
       </div>
@@ -26,7 +26,8 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body">
-                <a class="col-md-auto btn btn-primary" href="{{ url_for('studies.create_study') }}">Secure GWAS Study</a>
+                <a class="col-md-auto btn btn-primary" href="{{ url_for('studies.create_study', type='GWAS') }}">Secure GWAS Study</a>
+                <a class="col-md-auto btn btn-primary" href="{{ url_for('studies.create_study', type='PCA') }}">Secure PCA Study</a>
               </div>
             </div>
           </div>

@@ -19,8 +19,8 @@ def test_validate_data(client, app, auth, mocker):
     mocker.patch("src.gwas.GoogleCloudPubsub", MockGoogleCloudPubsub)
 
     auth.login()
-    client.post("create_study", data=test_create_data)
-    assert client.get("validate_data/testtitle").status_code == 302
+    client.post("create_study/GWAS", data=test_create_data)
+    assert client.get("gwas/validate_data/testtitle").status_code == 302
 
     user_parameters = deepcopy(constants.DEFAULT_USER_PARAMETERS)
     user_parameters["GCP_PROJECT"]["value"] = "gcp_project"
@@ -28,13 +28,13 @@ def test_validate_data(client, app, auth, mocker):
     doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
     doc_ref.set({"personal_parameters": {"a@a.com": user_parameters}}, merge=True)
 
-    client.get("validate_data/testtitle")
+    client.get("gwas/validate_data/testtitle")
 
     doc_ref.set({"participants": ["blah", "a@a.com"]}, merge=True)
-    client.get("validate_data/testtitle")
+    client.get("gwas/validate_data/testtitle")
 
 
-def test_start_gwas(client, app, auth, mocker):
+def test_start_protocol(client, app, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     mocker.patch("src.gwas.GoogleCloudCompute", MockGoogleCloudCompute)
     mocker.patch("src.gwas.GoogleCloudStorage", MockGoogleCloudStorage)
@@ -42,29 +42,29 @@ def test_start_gwas(client, app, auth, mocker):
     mocker.patch("src.gwas.GoogleCloudIAM", MockGoogleCloudIAM)
 
     auth.login()
-    client.post("create_study", data=test_create_data)
+    client.post("create_study/GWAS", data=test_create_data)
 
-    client.post("start_gwas/testtitle")
+    client.post("gwas/start_protocol/testtitle")
 
     MockGoogleCloudStorage.return_value = True
-    client.post("start_gwas/testtitle")
+    client.post("gwas/start_protocol/testtitle")
 
     doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
     doc_ref.set({"status": {"a@a.com": ["not ready"]}}, merge=True)
-    client.post("start_gwas/testtitle")
+    client.post("gwas/start_protocol/testtitle")
 
     MockGoogleCloudIAM.return_value = True
-    client.post("start_gwas/testtitle", data={"NUM_CPUS": "1", "BOOT_DISK_SIZE": "1"})
+    client.post("gwas/start_protocol/testtitle", data={"NUM_CPUS": "1", "BOOT_DISK_SIZE": "1"})
 
     doc_ref.set({"status": {"a@a.com": ["ready"], "b@b.com": ["ready"]}}, merge=True)
     doc_ref.set({"participants": ["b@b.com", "a@a.com"]}, merge=True)
-    client.post("start_gwas/testtitle", data={"NUM_CPUS": "1", "BOOT_DISK_SIZE": "1"})
+    client.post("gwas/start_protocol/testtitle", data={"NUM_CPUS": "1", "BOOT_DISK_SIZE": "1"})
 
     doc_ref.set({"status": {"a@a.com": ["ready"], "b@b.com": ["not ready"]}}, merge=True)
-    client.post("start_gwas/testtitle", data={"NUM_CPUS": "1", "BOOT_DISK_SIZE": "1"})
+    client.post("gwas/start_protocol/testtitle", data={"NUM_CPUS": "1", "BOOT_DISK_SIZE": "1"})
 
     doc_ref.set({"status": {"a@a.com": ["blah blah blah"], "b@b.com": ["ready"]}}, merge=True)
-    client.post("start_gwas/testtitle", data={"NUM_CPUS": "1", "BOOT_DISK_SIZE": "1"})
+    client.post("gwas/start_protocol/testtitle", data={"NUM_CPUS": "1", "BOOT_DISK_SIZE": "1"})
 
 
 def test_run_gwas(mocker):
