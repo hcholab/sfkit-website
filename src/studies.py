@@ -122,7 +122,7 @@ def create_study(type: str) -> Response:
             "created": datetime.now(),
             "participants": [g.user["id"]],
             "status": {g.user["id"]: [""]},
-            "parameters": constants.DEFAULT_SHARED_PARAMETERS,
+            "parameters": constants.get_shared_parameters(type),
             "personal_parameters": {g.user["id"]: constants.DEFAULT_USER_PARAMETERS},
             "requested_participants": [],
         }

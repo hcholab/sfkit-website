@@ -11,7 +11,7 @@ BASE_P = "1461501637330902918203684832716283019655932542929"
 DATA_VALIDATION_CONSTANT = 4 * len(BASE_P)
 DATA_VALIDATION_FILES = ["g.bin", "m.bin", "p.bin", "other_shared_key.bin", "pos.txt"]
 
-DEFAULT_SHARED_PARAMETERS = {
+GWAS_SHARED_PARAMETERS = {
     "NUM_SNPS": {
         "name": "Number of SNPs",
         "description": "The number of SNPs (Single Nucleotide Polymorphisms) in the dataset.",
@@ -105,6 +105,103 @@ DEFAULT_SHARED_PARAMETERS = {
         "LD_DIST_THRES",
     ],
 }
+
+PCA_SHARED_PARAMETERS = {
+    "NUM_SNPS": {
+        "name": "Number of SNPs",
+        "description": "The number of SNPs (Single Nucleotide Polymorphisms) in the dataset.",
+        "value": "1000",
+    },
+    "ITER_PER_EVAL": {
+        "name": "Iterations per Evaluation",
+        "description": "The number of QR iterations per eigenvalue when performing eigendecomposition.",
+        "value": "5",
+    },
+    "NUM_DIM_TO_REMOVE": {
+        "name": "Number of Dimensions to Remove",
+        "description": "The number of principal components to correct for (in the PCA).",
+        "value": "5",
+    },
+    "NUM_OVERSAMPLE": {
+        "name": "Oversampling Parameter for PCA",
+        "description": "An oversampling parameter for randomized principal component analysis: how many extra components should be extracted to improve the accuracy.",
+        "value": "5",
+    },
+    "NUM_POWER_ITER": {
+        "name": "Number of Power Iterations",
+        "description": "The number of power iterations during the randomized PCA.",
+        "value": "10",
+    },
+    "SKIP_QC": {
+        "name": "Skip Quality Control",
+        "description": "A binary value to skip quality control and use all individuals/SNPs.",
+        "value": "0",
+    },
+    "IMISS_UB": {
+        "name": "Individual Missing Rate UB",
+        "description": "The individual missing rate upper bound.",
+        "value": "0.05",
+    },
+    "HET_LB": {
+        "name": "Heterozygosity LB",
+        "description": "The individual heterozygosity lower bound.",
+        "value": "0.2",
+    },
+    "HET_UB": {
+        "name": "Heterozygosity UB",
+        "description": "The individual heterozygosity upper bound.",
+        "value": "0.5",
+    },
+    "GMISS_UB": {
+        "name": "Genotype Missing Rate UB",
+        "description": "The genotype missing rate upper bound.",
+        "value": "0.1",
+    },
+    "MAF_LB": {
+        "name": "Minor Allele Frequency LB",
+        "description": "The minor allele frequency lower bound.",
+        "value": "0",
+    },
+    "MAF_UB": {
+        "name": "Minor Allele Frequency UB",
+        "description": "The minor allele frequency upper bound.",
+        "value": "1",
+    },
+    "HWE_UB": {
+        "name": "Hardy Weinberg Equilibrium UB",
+        "description": "The hardy weinberg equilibrium test statistic upper bound.",
+        "value": "100000",
+    },
+    "LD_DIST_THRES": {
+        "name": "LD Distance Threshold",
+        "description": "The genomic distance threshold for selecting SNPs for principal component analysis.",
+        "value": "1",
+    },
+    "index": [
+        "NUM_SNPS",
+        "ITER_PER_EVAL",
+        "NUM_DIM_TO_REMOVE",
+        "NUM_OVERSAMPLE",
+        "NUM_POWER_ITER",
+        "SKIP_QC",
+        "IMISS_UB",
+        "HET_LB",
+        "HET_UB",
+        "GMISS_UB",
+        "MAF_LB",
+        "MAF_UB",
+        "HWE_UB",
+        "LD_DIST_THRES",
+    ],
+}
+
+
+def get_shared_parameters(type):
+    if type == "PCA":
+        return PCA_SHARED_PARAMETERS
+    elif type == "GWAS":
+        return GWAS_SHARED_PARAMETERS
+
 
 DEFAULT_USER_PARAMETERS = {
     "PUBLIC_KEY": {
