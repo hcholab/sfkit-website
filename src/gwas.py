@@ -13,6 +13,13 @@ from src.utils.gwas_functions import create_instance_name
 bp = Blueprint("gwas", __name__, url_prefix="/gwas")
 
 
+def validate_data_for_cp0(study_title, doc_ref_dict):
+    gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
+    gcloudCompute.setup_networking(doc_ref_dict, "0")
+    gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, "0", study_title)
+    gcloudPubsub.create_topic_and_subscribe()
+
+
 @bp.route("/validate_data/<study_title>")
 @login_required
 def validate_data(study_title: str) -> Response:
@@ -34,10 +41,7 @@ def validate_data(study_title: str) -> Response:
 
     if role == "1":
         # setup networking and pubsub for CP0 as well
-        gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
-        gcloudCompute.setup_networking(doc_ref_dict, "0")
-        gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, "0", study_title)
-        gcloudPubsub.create_topic_and_subscribe()
+        validate_data_for_cp0(study_title, doc_ref_dict)
 
     gcloudCompute = GoogleCloudCompute(gcp_project)
     gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
@@ -50,9 +54,8 @@ def validate_data(study_title: str) -> Response:
     )
 
     # Give instance publish access to pubsub for status updates
-    member = "serviceAccount:" + gcloudCompute.get_service_account_for_vm(
-        zone=constants.SERVER_ZONE, instance=instance
-    )
+    member = f"serviceAccount:{gcloudCompute.get_service_account_for_vm(constants.SERVER_ZONE, instance)}"
+
     gcloudPubsub.add_pub_iam_member("roles/pubsub.publisher", member)
 
     return redirect(url_for("studies.study", study_title=study_title))
@@ -136,7 +139,8 @@ def run_gwas(role: str, gcp_project: str, study_title: str, vm_parameters: dict)
     )
 
     # Give instance publish access to pubsub for status updates
-    member: str = "serviceAccount:" + gcloudCompute.get_service_account_for_vm(constants.SERVER_ZONE, instance)
+    member: str = f"serviceAccount:{gcloudCompute.get_service_account_for_vm(constants.SERVER_ZONE, instance)}"
+
     gcloudPubsub.add_pub_iam_member("roles/pubsub.publisher", member)
 
     # give instance read access to storage buckets for parameter files
