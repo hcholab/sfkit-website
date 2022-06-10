@@ -23,7 +23,7 @@ class GoogleCloudStorage:
         bucket.set_iam_policy(policy)
         print(f"Added {member} with role {role} to {bucket_name}.")
 
-    def copy_parameters_to_bucket(self, study_title, role, bucket_name: str = constants.PARAMETER_BUCKET):
+    def copy_parameters_to_bucket(self, study_title, role: str, bucket_name: str = constants.PARAMETER_BUCKET):
         bucket = self.storage_client.bucket(bucket_name)
         for filename in constants.PARAMETER_FILES:
             blob = bucket.blob(filename)
@@ -32,7 +32,7 @@ class GoogleCloudStorage:
             blob.upload_from_filename(os.path.join(constants.TEMP_FOLDER, filename))
         print(f"Updated parameters in {constants.PARAMETER_FILES}")
 
-    def update_parameters(self, file, study_title, role):
+    def update_parameters(self, file, study_title, role: str):
         db = (
             current_app.config["DATABASE"]
             .collection("studies")

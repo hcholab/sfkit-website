@@ -8,6 +8,7 @@ from src.gwas import validate_data_for_cp0
 from src.utils import constants
 from src.utils.generic_functions import add_notification, remove_notification
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
+from src.utils.google_cloud.google_cloud_storage import GoogleCloudStorage
 from src.utils.gwas_functions import create_instance_name, data_has_valid_files, data_has_valid_size
 
 bp = Blueprint("general", __name__)
@@ -66,11 +67,33 @@ def index() -> tuple[str, int]:
 
     try:
         if msg.startswith("validate_data_for_cp0"):
-            title = msg.split("validate_data_for_cp0")[1]
+            title = msg.split("::")[1]
             doc_ref = current_app.config["DATABASE"].collection("studies").document(title.replace(" ", "").lower())
-
             doc_ref_dict = doc_ref.get().to_dict()
             validate_data_for_cp0(study_title=title, doc_ref_dict=doc_ref_dict)
+        elif msg.startswith("run_protocol_for_cp0"):
+            _, title, member, user_id = msg.split("::")
+            doc_ref = current_app.config["DATABASE"].collection("studies").document(title.replace(" ", "").lower())
+            doc_ref_dict = doc_ref.get().to_dict()
+            role: str = str(doc_ref_dict["participants"].index(user_id) + 1)
+
+            gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
+            # copy parameters to parameter files
+            gcloudStorage.copy_parameters_to_bucket(title, role)
+            # give instance read access to storage buckets for parameter files
+            gcloudStorage.add_bucket_iam_member(constants.PARAMETER_BUCKET, "roles/storage.objectViewer", member)
+
+            gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
+            instance: str = create_instance_name(title, "0")
+            vm_parameters = doc_ref_dict["personal_parameters"][user_id]
+            gcloudCompute.setup_instance(
+                constants.SERVER_ZONE,
+                instance,
+                "0",
+                {"key": "data_path", "value": "secure-gwas-data0"},
+                vm_parameters["NUM_CPUS"]["value"],
+                boot_disk_size=vm_parameters["BOOT_DISK_SIZE"]["value"],
+            )
         else:
             [study_title, rest] = msg.split("-secure-gwas", maxsplit=1)
             [role, content] = rest.split("-", maxsplit=1)
