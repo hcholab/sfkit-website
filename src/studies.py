@@ -218,12 +218,12 @@ def personal_parameters(study_title):
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     parameters = doc_ref.get().to_dict().get("personal_parameters")
 
-    if request.method == "GET":
-        return render_template(
-            "studies/personal_parameters.html",
-            study_title=study_title,
-            parameters=parameters[g.user["id"]],
-        )
+    # if request.method == "GET":
+    #     return render_template(
+    #         "studies/personal_parameters.html",
+    #         study_title=study_title,
+    #         parameters=parameters[g.user["id"]],
+    #     )
 
     for p in parameters[g.user["id"]]["index"]:
         if p in request.form:

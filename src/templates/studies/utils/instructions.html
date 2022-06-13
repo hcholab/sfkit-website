@@ -244,67 +244,115 @@
     {% endcall %}
   {% endif %}
 
-  {% call instruction_step(i.value, "Give Permissions") %}
-  {% set i.value = i.value + 1 %}
-  {% include 'studies/utils/permissions.html' %}
-  {% endcall %}
-  {% call instruction_step(i.value, "Validate Data") %}
-  <div>
+  {% if parameters['CONFIGURE_STUDY_GCP_SETUP_MODE']['value'] == "website" %}
+    {% call instruction_step(i.value, "Give Permissions") %}
     {% set i.value = i.value + 1 %}
-    <p>
-      1. When you are ready, click on the
-      <span class="text-success">Validate Data</span>
-      button:
-      {% if study['status'][g.user['id']] == [''] %}
-        <p>
-          <a href="{{ url_for(type.lower() + '.validate_data', study_title=study['title']) }}" class="mt-2 btn btn-success" onclick="loading();">
-            <span class="normal-content">
-              Validate Data
-            </span>
-            <span class="loading" style="display:none">
-              <span class="spinner-grow spinner-grow-sm"></span>
-              Loading...
-            </span>
-          </a>
-        </p>
-      {% elif study["status"][g.user["id"]] == ["validating"] %}
-        <p>
-          Validating Data...
-          <br>
-          <a href="{{ url_for('studies.study', study_title=study['title']) }}" class="btn btn-secondary">Check for update</a>
-        </p>
-      {% elif study["status"][g.user["id"]] == ["invalid data"] %}
-        <p>
-          <strong>Your data validation has failed! Please double check that you uploaded your data correctly and set the correct path in the previous step.</strong>
-          <a href="{{ url_for('gwas.validate_data', study_title=study['title']) }}" class="mt-2 btn btn-success">Retry Data Validation</a>
-        </p>
-      {% else %}
-        <p>
-          <a href="{{ url_for('gwas.validate_data', study_title=study['title']) }}" class="mt-2 btn btn-success disabled">Validate Data</a>
-          <strong>You have successfully validated your data!</strong>
-        </p>
-      {% endif %}
-      This button validates that we are able to create a VM that can access your encrypted data that you uploaded in step 2.
-      <br>It will also validate that your data is in the right format and approximately the correct size, insofar as we can do this on encrypted data.
-    </p>
-  </div>
-  {% endcall %}
-  {% call instruction_step(i.value, "Begin Workflow") %}
-  <div>
-    {% set i.value = i.value + 1 %}
-    <p>
-      When the validation has finished, and you are ready, click on the
-      <span class="text-success">Begin
-        {{ type }}
-        Workflow</span>
-      button. For the virtual machine configuration, the default should be fine unless you have a particularly large dataset.
-    </p>
-    <p>Once all participants have done so, the protocol will begin.</p>
-    <p class="text-muted">(Optional) While the protocol is running, if you want a more detailed view into what the VM is doing, you can ssh into your VM and run the command
-      <code>sudo journalctl -u google-startup-scripts.service</code>
-      to see detailed logs.</p>
-  </div>
-  {% endcall %}
+    {% include 'studies/utils/permissions.html' %}
+    {% endcall %}
+    {% call instruction_step(i.value, "Validate Data") %}
+    <div>
+      {% set i.value = i.value + 1 %}
+      <p>
+        1. When you are ready, click on the
+        <span class="text-success">Validate Data</span>
+        button:
+        {% if study['status'][g.user['id']] == [''] %}
+          <p>
+            <a href="{{ url_for(type.lower() + '.validate_data', study_title=study['title']) }}" class="mt-2 btn btn-success" onclick="loading();">
+              <span class="normal-content">
+                Validate Data
+              </span>
+              <span class="loading" style="display:none">
+                <span class="spinner-grow spinner-grow-sm"></span>
+                Loading...
+              </span>
+            </a>
+          </p>
+        {% elif study["status"][g.user["id"]] == ["validating"] %}
+          <p>
+            Validating Data...
+            <br>
+            <a href="{{ url_for('studies.study', study_title=study['title']) }}" class="btn btn-secondary">Check for update</a>
+          </p>
+        {% elif study["status"][g.user["id"]] == ["invalid data"] %}
+          <p>
+            <strong>Your data validation has failed! Please double check that you uploaded your data correctly and set the correct path in the previous step.</strong>
+            <a href="{{ url_for('gwas.validate_data', study_title=study['title']) }}" class="mt-2 btn btn-success">Retry Data Validation</a>
+          </p>
+        {% else %}
+          <p>
+            <a href="{{ url_for('gwas.validate_data', study_title=study['title']) }}" class="mt-2 btn btn-success disabled">Validate Data</a>
+            <strong>You have successfully validated your data!</strong>
+          </p>
+        {% endif %}
+        This button validates that we are able to create a VM that can access your encrypted data that you uploaded in step 2.
+        <br>It will also validate that your data is in the right format and approximately the correct size, insofar as we can do this on encrypted data.
+      </p>
+    </div>
+    {% endcall %}
+    {% call instruction_step(i.value, "Begin Workflow") %}
+    <div>
+      {% set i.value = i.value + 1 %}
+      <p>
+        When the validation has finished, and you are ready, click on the
+        <span class="text-success">Begin
+          {{ type }}
+          Workflow</span>
+        button. For the virtual machine configuration, the default should be fine unless you have a particularly large dataset.
+      </p>
+      <p>Once all participants have done so, the protocol will begin.</p>
+      <p class="text-muted">(Optional) While the protocol is running, if you want a more detailed view into what the VM is doing, you can ssh into your VM and run the command
+        <code>sudo journalctl -u google-startup-scripts.service</code>
+        to see detailed logs.</p>
+    </div>
+    {% endcall %}
+  {% else %}
+    {% call instruction_step(i.value, "Validate Data") %}
+    <div>
+      {% set i.value = i.value + 1 %}
+      <p>
+        {% if study['status'][g.user['id']] == [''] %}
+          When you are ready, return to the
+          <i>secure-gwas-keys-and-encryption.git</i>, and run the
+          <code>python validate_data.py</code>
+          command. This step validates that we are able to create a VM that can access your encrypted data that you uploaded in step 2.
+          <br>It will also validate that your data is in the right format and approximately the correct size, insofar as we can do this on encrypted data.
+        {% elif study["status"][g.user["id"]] == ["validating"] %}
+          <p>
+            Validating Data...
+            <br>
+            <a href="{{ url_for('studies.study', study_title=study['title']) }}" class="btn btn-secondary">Check for update</a>
+          </p>
+        {% elif study["status"][g.user["id"]] == ["invalid data"] %}
+          <p>
+            <strong>Your data validation has failed! Please double check that you uploaded your data correctly and set the correct path in the previous step.</strong>
+            <p>Once you have done that. Rerun the
+              <code>python validate_data.py</code>
+              command.</p>
+          </p>
+        {% else %}
+          <p>
+            <strong>You have successfully validated your data!</strong>
+          </p>
+        {% endif %}
+      </p>
+    </div>
+    {% endcall %}
+    {% call instruction_step(i.value, "Begin Workflow") %}
+    <div>
+      {% set i.value = i.value + 1 %}
+      <p>
+        When the validation has finished, and you are ready, enter the
+        <code>python run_workflow.py</code>
+        command. For the virtual machine configuration, the default should be fine unless you have a particularly large dataset.
+      </p>
+      <p>Once all participants have done so, the protocol will begin.</p>
+      <p class="text-muted">(Optional) While the protocol is running, if you want a more detailed view into what the VM is doing, you can ssh into your VM and run the command
+        <code>sudo journalctl -u google-startup-scripts.service</code>
+        to see detailed logs.</p>
+    </div>
+    {% endcall %}
+  {% endif %}
   {% call instruction_step(i.value, "Enjoy the Results") %}
   <div>
     {% set i.value = i.value + 1 %}

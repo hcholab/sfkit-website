@@ -112,7 +112,7 @@ class GoogleCloudCompute:
             sleep(2)
 
         print(f"Failure to delete subnet {subnet['name']}")
-        raise Exception(f"Failure to delete subnet {subnet['name']}")
+        raise RuntimeError(f"Failure to delete subnet {subnet['name']}")
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(30))
     def create_subnet(self, role: str, region: str = constants.SERVER_REGION) -> None:
@@ -287,7 +287,7 @@ class GoogleCloudCompute:
     def return_result_or_error(self, result: dict[str, str]) -> dict[str, str]:
         print("done.")
         if "error" in result:
-            raise Exception(result["error"])
+            raise RuntimeError(result["error"])
         return result
 
     def get_vm_external_ip_address(self, zone, instance):

@@ -247,6 +247,11 @@ DEFAULT_USER_PARAMETERS = {
         "description": "The size of the boot disk for your VM instance. Must be at least 10GB.",
         "value": "10",
     },
+    "CONFIGURE_STUDY_GCP_SETUP_MODE": {
+        "name": "Configure Study GCP Setup Mode",
+        "description": "A binary value to determine who sets up the GCP project for the user: Website | User.",
+        "value": "",
+    },
     "index": [
         "PUBLIC_KEY",
         "GCP_PROJECT",
@@ -256,6 +261,7 @@ DEFAULT_USER_PARAMETERS = {
         "NUM_CPUS",
         "ZONE",
         "BOOT_DISK_SIZE",
+        "CONFIGURE_STUDY_GCP_SETUP_MODE",
     ],
 }
 
