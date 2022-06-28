@@ -146,5 +146,5 @@ def mock_sign_in_with_email_and_password(email, password):
 
 
 class MockGoogleCloudIAM:
-    def give_cloud_build_view_permissions(self, email):
+    def give_user_minimal_required_gcp_permissions(self, email):
         pass

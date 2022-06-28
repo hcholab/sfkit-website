@@ -1,23 +1,14 @@
 import io
 from datetime import datetime
 
-from flask import (
-    Blueprint,
-    current_app,
-    g,
-    make_response,
-    redirect,
-    render_template,
-    request,
-    send_file,
-    url_for,
-)
+from flask import Blueprint, current_app, g, make_response, redirect, render_template, request, send_file, url_for
 from werkzeug import Response
 
 from src.auth import login_required
 from src.utils import constants
 from src.utils.generic_functions import add_notification, redirect_with_flash
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
+from src.utils.google_cloud.google_cloud_pubsub import GoogleCloudPubsub
 from src.utils.gwas_functions import valid_study_title
 
 bp = Blueprint("studies", __name__)
@@ -127,6 +118,11 @@ def create_study(type: str) -> Response:
             "requested_participants": [],
         }
     )
+
+    # add pubsub topic for this user for this study
+    gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, "1", title)
+    gcloudPubsub.create_topic_and_subscribe()
+
     return response
 
 
@@ -182,6 +178,10 @@ def approve_join_study(study_title: str, user_id: str) -> Response:
     )
 
     add_notification(f"You have been accepted to {study_title}", user_id=user_id)
+
+    # add pubsub topic for this user for this study
+    gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, "2", study_title)
+    gcloudPubsub.create_topic_and_subscribe()
 
     return redirect(url_for("studies.study", study_title=study_title))
 

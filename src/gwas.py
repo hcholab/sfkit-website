@@ -46,7 +46,7 @@ def validate_data(study_title: str) -> Response:
     gcloudCompute = GoogleCloudCompute(gcp_project)
     gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
 
-    gcloudPubsub.create_topic_and_subscribe()
+    # gcloudPubsub.create_topic_and_subscribe() # moved to when I create or join a study
     instance = create_instance_name(study_title, role)
     gcloudCompute.setup_networking(doc_ref_dict, role)
     gcloudCompute.setup_instance(

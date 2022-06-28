@@ -18,7 +18,7 @@ def test_give_cloud_build_view_permissions(mocker, role):
     )
 
     google_cloud_iam = GoogleCloudIAM()
-    google_cloud_iam.give_cloud_build_view_permissions("user")
+    google_cloud_iam.give_user_minimal_required_gcp_permissions("user")
 
 
 def test_test_permissions(mocker):
