@@ -66,13 +66,27 @@ def index() -> tuple[str, int]:
     print(f"Pub/Sub message decoded: {msg}")
 
     try:
-        if msg.startswith("validate_data_for_cp0"):
-            title = msg.split("::")[1]
+        if msg.startswith("update_firestore"):
+            _, parameter, title, email = msg.split("::")
             doc_ref = current_app.config["DATABASE"].collection("studies").document(title.replace(" ", "").lower())
-            doc_ref_dict = doc_ref.get().to_dict()
-            validate_data_for_cp0(study_title=title, doc_ref_dict=doc_ref_dict)
+            doc_ref_dict: dict = doc_ref.get().to_dict()
+            if parameter.startswith("public_key"):
+                public_key = parameter.split("=")[1]
+                doc_ref_dict["personal_parameters"][email]["PUBLIC_KEY"]["value"] = public_key
+            elif parameter.startswith("status"):
+                status = parameter.split("=")[1]
+                doc_ref_dict["status"][email] = [status]
+            elif parameter.startswith("data_hash"):
+                data_hash = parameter.split("=")[1]
+                doc_ref_dict["personal_parameters"][email]["DATA_HASH"]["value"] = data_hash
+            doc_ref.set(doc_ref_dict)
+        # elif msg.startswith("cp0_validate_data"):
+        #     title = msg.split("::")[1]
+        #     doc_ref = current_app.config["DATABASE"].collection("studies").document(title.replace(" ", "").lower())
+        #     doc_ref_dict = doc_ref.get().to_dict()
+        #     validate_data_for_cp0(study_title=title, doc_ref_dict=doc_ref_dict)
         elif msg.startswith("run_protocol_for_cp0"):
-            _, title, member, user_id = msg.split("::")
+            _, title, user_id = msg.split("::")
             doc_ref = current_app.config["DATABASE"].collection("studies").document(title.replace(" ", "").lower())
             doc_ref_dict = doc_ref.get().to_dict()
             role: str = str(doc_ref_dict["participants"].index(user_id) + 1)
@@ -80,8 +94,8 @@ def index() -> tuple[str, int]:
             gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
             # copy parameters to parameter files
             gcloudStorage.copy_parameters_to_bucket(title, role)
-            # give instance read access to storage buckets for parameter files
-            gcloudStorage.add_bucket_iam_member(constants.PARAMETER_BUCKET, "roles/storage.objectViewer", member)
+            # give user read access to storage buckets for parameter files
+            gcloudStorage.add_bucket_iam_member(constants.PARAMETER_BUCKET, "roles/storage.objectViewer", user_id)
 
             gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
             instance: str = create_instance_name(title, "0")
@@ -107,18 +121,18 @@ def index() -> tuple[str, int]:
                 )
                 doc_ref_dict = doc_ref.get().to_dict()
                 statuses = doc_ref_dict.get("status")
-                user_id = doc_ref_dict.get("participants")[int(role) - 1]
+                user_id = doc_ref_dict.get("participants")[int(role) - 1]  # type: ignore
 
                 if "validate" in content:
                     [_, size, files] = content.split("|", maxsplit=2)
-                    statuses[user_id] = (
+                    statuses[user_id] = (  # type: ignore
                         ["not ready"]
                         if data_has_valid_size(int(size), doc_ref_dict, int(role)) and data_has_valid_files(files)
                         else ["invalid data"]
                     )
 
-                elif content not in str(statuses.get(user_id, [])):
-                    statuses.get(user_id).append(f"{content} - {publishTime}")
+                elif content not in str(statuses.get(user_id, [])):  # type: ignore
+                    statuses.get(user_id).append(f"{content} - {publishTime}")  # type: ignore
                 doc_ref.set({"status": statuses}, merge=True)
 
                 if "validate" in content or "GWAS Completed!" in content:

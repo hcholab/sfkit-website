@@ -252,6 +252,11 @@ DEFAULT_USER_PARAMETERS = {
         "description": "A binary value to determine who sets up the GCP project for the user: Website | User.",
         "value": "",
     },
+    "DATA_HASH": {
+        "name": "Data Hash",
+        "description": "The hash of the data you are using.  This is used to ensure that you are using the same data that you uploaded.",
+        "value": "",
+    },
     "index": [
         "PUBLIC_KEY",
         "GCP_PROJECT",
@@ -262,6 +267,7 @@ DEFAULT_USER_PARAMETERS = {
         "ZONE",
         "BOOT_DISK_SIZE",
         "CONFIGURE_STUDY_GCP_SETUP_MODE",
+        "DATA_HASH",
     ],
 }
 
