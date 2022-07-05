@@ -79,6 +79,12 @@ def index() -> tuple[str, int]:
             elif parameter.startswith("data_hash"):
                 data_hash = parameter.split("=")[1]
                 doc_ref_dict["personal_parameters"][email]["DATA_HASH"]["value"] = data_hash
+            elif parameter.startswith("ip_address"):
+                ip_address = parameter.split("=")[1]
+                doc_ref_dict["personal_parameters"][email]["IP_ADDRESS"]["value"] = ip_address
+            elif parameter.startswith("ports"):
+                port = parameter.split("=")[1]
+                doc_ref_dict["personal_parameters"][email]["PORTS"]["value"] = port
             doc_ref.set(doc_ref_dict)
         # elif msg.startswith("cp0_validate_data"):
         #     title = msg.split("::")[1]
@@ -95,7 +101,9 @@ def index() -> tuple[str, int]:
             # copy parameters to parameter files
             gcloudStorage.copy_parameters_to_bucket(title, role)
             # give user read access to storage buckets for parameter files
-            gcloudStorage.add_bucket_iam_member(constants.PARAMETER_BUCKET, "roles/storage.objectViewer", user_id)
+            gcloudStorage.add_bucket_iam_member(
+                constants.PARAMETER_BUCKET, "roles/storage.objectViewer", f"user:{user_id}"
+            )
 
             gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
             instance: str = create_instance_name(title, "0")
