@@ -1,10 +1,10 @@
 import base64
+from threading import Thread
 
 from flask import Blueprint, current_app, g, make_response, render_template, request
 from werkzeug import Response
 
 from src.auth import login_required
-from src.gwas import validate_data_for_cp0
 from src.utils import constants
 from src.utils.generic_functions import add_notification, remove_notification
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
@@ -50,114 +50,115 @@ def all_notifications() -> Response:
 @bp.route("/", methods=["POST"])
 def index() -> tuple[str, int]:
     envelope = request.get_json()
-    if not envelope:
-        return fail()
 
-    if not isinstance(envelope, dict) or "message" not in envelope:
+    if not envelope or not isinstance(envelope, dict) or "message" not in envelope:
         return fail()
 
     pubsub_message = envelope.get("message")
     if not isinstance(pubsub_message, dict) or "data" not in pubsub_message:
         return fail()
 
-    publishTime = pubsub_message.get("publishTime")
-    message = base64.b64decode(pubsub_message["data"])
-    msg = message.decode("utf-8").strip()
+    publishTime: str = str(pubsub_message.get("publishTime"))
+    msg = base64.b64decode(pubsub_message["data"]).decode("utf-8").strip()
     print(f"Pub/Sub message decoded: {msg}")
 
     try:
         if msg.startswith("update_firestore"):
-            _, parameter, title, email = msg.split("::")
-            doc_ref = current_app.config["DATABASE"].collection("studies").document(title.replace(" ", "").lower())
-            doc_ref_dict: dict = doc_ref.get().to_dict()
-            if parameter.startswith("public_key"):
-                public_key = parameter.split("=")[1]
-                doc_ref_dict["personal_parameters"][email]["PUBLIC_KEY"]["value"] = public_key
-            elif parameter.startswith("status"):
-                status = parameter.split("=")[1]
-                doc_ref_dict["status"][email] = [status]
-            elif parameter.startswith("data_hash"):
-                data_hash = parameter.split("=")[1]
-                doc_ref_dict["personal_parameters"][email]["DATA_HASH"]["value"] = data_hash
-            elif parameter.startswith("ip_address"):
-                ip_address = parameter.split("=")[1]
-                doc_ref_dict["personal_parameters"][email]["IP_ADDRESS"]["value"] = ip_address
-            elif parameter.startswith("ports"):
-                port = parameter.split("=")[1]
-                doc_ref_dict["personal_parameters"][email]["PORTS"]["value"] = port
-            doc_ref.set(doc_ref_dict)
-        # elif msg.startswith("cp0_validate_data"):
-        #     title = msg.split("::")[1]
-        #     doc_ref = current_app.config["DATABASE"].collection("studies").document(title.replace(" ", "").lower())
-        #     doc_ref_dict = doc_ref.get().to_dict()
-        #     validate_data_for_cp0(study_title=title, doc_ref_dict=doc_ref_dict)
+            update_firestore(msg)
         elif msg.startswith("run_protocol_for_cp0"):
-            _, title, user_id = msg.split("::")
+            _, title = msg.split("::")
             doc_ref = current_app.config["DATABASE"].collection("studies").document(title.replace(" ", "").lower())
-            doc_ref_dict = doc_ref.get().to_dict()
-            role: str = str(doc_ref_dict["participants"].index(user_id) + 1)
-
-            gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
-            # copy parameters to parameter files
-            gcloudStorage.copy_parameters_to_bucket(title, role)
-            # give user read access to storage buckets for parameter files
-            gcloudStorage.add_bucket_iam_member(
-                constants.PARAMETER_BUCKET, "roles/storage.objectViewer", f"user:{user_id}"
-            )
-
-            gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
-            instance: str = create_instance_name(title, "0")
-            vm_parameters = doc_ref_dict["personal_parameters"][user_id]
-            gcloudCompute.setup_instance(
-                constants.SERVER_ZONE,
-                instance,
-                "0",
-                {"key": "data_path", "value": "secure-gwas-data0"},
-                vm_parameters["NUM_CPUS"]["value"],
-                boot_disk_size=vm_parameters["BOOT_DISK_SIZE"]["value"],
-            )
+            thread = Thread(target=run_protocol_for_cp0, args=(msg, title, doc_ref))
+            thread.start()  # separate thread so can return a response right away
         else:
-            [study_title, rest] = msg.split("-secure-gwas", maxsplit=1)
-            [role, content] = rest.split("-", maxsplit=1)
-
-            if role == "0" and ("validate" in content or "GWAS Completed!" in content):
-                google_cloud_compute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
-                google_cloud_compute.stop_instance(constants.SERVER_ZONE, create_instance_name(study_title, role))
-            else:
-                doc_ref = (
-                    current_app.config["DATABASE"].collection("studies").document(study_title.replace(" ", "").lower())
-                )
-                doc_ref_dict = doc_ref.get().to_dict()
-                statuses = doc_ref_dict.get("status")
-                user_id = doc_ref_dict.get("participants")[int(role) - 1]  # type: ignore
-
-                if "validate" in content:
-                    [_, size, files] = content.split("|", maxsplit=2)
-                    statuses[user_id] = (  # type: ignore
-                        ["not ready"]
-                        if data_has_valid_size(int(size), doc_ref_dict, int(role)) and data_has_valid_files(files)
-                        else ["invalid data"]
-                    )
-
-                elif content not in str(statuses.get(user_id, [])):  # type: ignore
-                    statuses.get(user_id).append(f"{content} - {publishTime}")  # type: ignore
-                doc_ref.set({"status": statuses}, merge=True)
-
-                if "validate" in content or "GWAS Completed!" in content:
-                    google_cloud_compute = GoogleCloudCompute(
-                        doc_ref_dict.get("personal_parameters", {})
-                        .get(user_id, {})
-                        .get("GCP_PROJECT", {})
-                        .get("value", constants.SERVER_GCP_PROJECT)
-                    )
-                    google_cloud_compute.stop_instance(
-                        zone=constants.SERVER_ZONE,
-                        instance=create_instance_name(study_title, role),
-                    )
+            process_pubsub_from_website_workflow(publishTime, msg)
+            # thread = Thread(target=process_pubsub_from_website_workflow, args=(publishTime, msg))
+            # thread.start()
     except Exception as e:
         print(f"error processing pubsub message: {e}")
     finally:
         return ("", 204)
+
+
+def process_pubsub_from_website_workflow(publishTime: str, msg: str) -> None:
+    [study_title, rest] = msg.split("-secure-gwas", maxsplit=1)
+    [role, content] = rest.split("-", maxsplit=1)
+
+    if role == "0" and ("validate" in content or "GWAS Completed!" in content):
+        google_cloud_compute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
+        google_cloud_compute.stop_instance(constants.SERVER_ZONE, create_instance_name(study_title, role))
+    else:
+        doc_ref = current_app.config["DATABASE"].collection("studies").document(study_title.replace(" ", "").lower())
+        doc_ref_dict = doc_ref.get().to_dict()
+        statuses = doc_ref_dict.get("status")
+        user_id = doc_ref_dict.get("participants")[int(role)]  # type: ignore
+
+        if "validate" in content:
+            [_, size, files] = content.split("|", maxsplit=2)
+            statuses[user_id] = (  # type: ignore
+                ["not ready"]
+                if data_has_valid_size(int(size), doc_ref_dict, int(role)) and data_has_valid_files(files)
+                else ["invalid data"]
+            )
+
+        elif content not in str(statuses.get(user_id, [])):  # type: ignore
+            statuses.get(user_id).append(f"{content} - {publishTime}")  # type: ignore
+        doc_ref.set({"status": statuses}, merge=True)
+
+        if "validate" in content or "GWAS Completed!" in content:
+            google_cloud_compute = GoogleCloudCompute(
+                doc_ref_dict.get("personal_parameters", {})
+                .get(user_id, {})
+                .get("GCP_PROJECT", {})
+                .get("value", constants.SERVER_GCP_PROJECT)
+            )
+            google_cloud_compute.stop_instance(
+                zone=constants.SERVER_ZONE,
+                instance=create_instance_name(study_title, role),
+            )
+
+
+def update_firestore(msg: str) -> None:
+    _, parameter, title, email = msg.split("::")
+    doc_ref = current_app.config["DATABASE"].collection("studies").document(title.replace(" ", "").lower())
+    doc_ref_dict: dict = doc_ref.get().to_dict()
+    if parameter.startswith("public_key"):
+        public_key = parameter.split("=")[1]
+        doc_ref_dict["personal_parameters"][email]["PUBLIC_KEY"]["value"] = public_key
+    elif parameter.startswith("status"):
+        status = parameter.split("=")[1]
+        doc_ref_dict["status"][email] = [status]
+    elif parameter.startswith("data_hash"):
+        data_hash = parameter.split("=")[1]
+        doc_ref_dict["personal_parameters"][email]["DATA_HASH"]["value"] = data_hash
+    elif parameter.startswith("ip_address"):
+        ip_address = parameter.split("=")[1]
+        doc_ref_dict["personal_parameters"][email]["IP_ADDRESS"]["value"] = ip_address
+    elif parameter.startswith("ports"):
+        port = parameter.split("=")[1]
+        doc_ref_dict["personal_parameters"][email]["PORTS"]["value"] = port
+    doc_ref.set(doc_ref_dict)
+
+
+def run_protocol_for_cp0(msg: str, title, doc_ref) -> None:
+    doc_ref_dict = doc_ref.get().to_dict()
+
+    gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
+    instance_name: str = create_instance_name(title, "0")
+    cp0_ip_address = gcloudCompute.setup_instance(
+        constants.SERVER_ZONE,
+        instance_name,
+        "0",
+        {"key": "data_path", "value": "secure-gwas-data0"},
+        startup_script="cli",
+        delete=False,
+    )
+    doc_ref_dict["personal_parameters"]["Broad"]["IP_ADDRESS"]["value"] = cp0_ip_address
+    doc_ref.set(doc_ref_dict)
+
+    gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
+    # copy parameters to parameter files
+    gcloudStorage.copy_parameters_to_bucket(title, doc_ref=doc_ref)
 
 
 def fail() -> tuple[str, int]:

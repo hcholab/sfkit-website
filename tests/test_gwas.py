@@ -30,7 +30,7 @@ def test_validate_data(client, app, auth, mocker):
 
     client.get("gwas/validate_data/testtitle")
 
-    doc_ref.set({"participants": ["blah", "a@a.com"]}, merge=True)
+    doc_ref.set({"participants": ["Broad", "blah", "a@a.com"]}, merge=True)
     client.get("gwas/validate_data/testtitle")
 
 
@@ -57,7 +57,7 @@ def test_start_protocol(client, app, auth, mocker):
     client.post("gwas/start_protocol/testtitle", data={"NUM_CPUS": "1", "BOOT_DISK_SIZE": "1"})
 
     doc_ref.set({"status": {"a@a.com": ["ready"], "b@b.com": ["ready"]}}, merge=True)
-    doc_ref.set({"participants": ["b@b.com", "a@a.com"]}, merge=True)
+    doc_ref.set({"participants": ["Broad", "b@b.com", "a@a.com"]}, merge=True)
     client.post("gwas/start_protocol/testtitle", data={"NUM_CPUS": "1", "BOOT_DISK_SIZE": "1"})
 
     doc_ref.set({"status": {"a@a.com": ["ready"], "b@b.com": ["not ready"]}}, merge=True)

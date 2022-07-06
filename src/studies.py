@@ -32,7 +32,7 @@ def study(study_title: str) -> Response:
         doc_ref_dict["personal_parameters"][user]["PUBLIC_KEY"]["value"] for user in doc_ref_dict["participants"]
     ]
     user_id = g.user["id"]
-    role: int = doc_ref_dict["participants"].index(user_id) + 1
+    role: int = doc_ref_dict["participants"].index(user_id)
 
     return make_response(
         render_template(
@@ -52,7 +52,7 @@ def download_public_key(study_title: str, role: str) -> Response:
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
-    user_id = doc_ref_dict["participants"][int(role) - 1]
+    user_id = doc_ref_dict["participants"][int(role)]
     public_key = doc_ref_dict["personal_parameters"][user_id]["PUBLIC_KEY"]["value"]
     key_file = io.BytesIO(public_key.encode("utf-8") + b"\n" + role.encode("utf-8"))
     return send_file(
@@ -111,10 +111,13 @@ def create_study(type: str) -> Response:
             "study_information": study_information,
             "owner": g.user["id"],
             "created": datetime.now(),
-            "participants": [g.user["id"]],
+            "participants": ["Broad", g.user["id"]],
             "status": {g.user["id"]: [""]},
             "parameters": constants.get_shared_parameters(type),
-            "personal_parameters": {g.user["id"]: constants.DEFAULT_USER_PARAMETERS},
+            "personal_parameters": {
+                "Broad": constants.DEFAULT_USER_PARAMETERS,
+                g.user["id"]: constants.DEFAULT_USER_PARAMETERS,
+            },
             "requested_participants": [],
         }
     )

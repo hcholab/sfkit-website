@@ -23,32 +23,42 @@ class GoogleCloudStorage:
         bucket.set_iam_policy(policy)
         print(f"Added {member} with role {role} to {bucket_name}.")
 
-    def copy_parameters_to_bucket(self, study_title, role: str, bucket_name: str = constants.PARAMETER_BUCKET):
+    def copy_parameters_to_bucket(self, study_title, doc_ref=None, bucket_name: str = constants.PARAMETER_BUCKET):
+        print(f"Copying parameters to bucket {bucket_name}")
         bucket = self.storage_client.bucket(bucket_name)
         for filename in constants.PARAMETER_FILES:
             blob = bucket.blob(filename)
             blob.download_to_filename(os.path.join(constants.TEMP_FOLDER, filename))
-            self.update_parameters(os.path.join(constants.TEMP_FOLDER, filename), study_title, role)
+            self.update_parameters(os.path.join(constants.TEMP_FOLDER, filename), study_title, doc_ref)
             blob.upload_from_filename(os.path.join(constants.TEMP_FOLDER, filename))
         print(f"Updated parameters in {constants.PARAMETER_FILES}")
 
-    def update_parameters(self, file, study_title, role: str):
-        db = (
-            current_app.config["DATABASE"]
-            .collection("studies")
-            .document(study_title.replace(" ", "").lower())
-            .get()
-            .to_dict()
-        )
+    def update_parameters(self, file, study_title, doc_ref=None):
+        print(f"Updating parameters in {file}")
+        if not doc_ref:
+            doc_ref = (
+                current_app.config["DATABASE"].collection("studies").document(study_title.replace(" ", "").lower())
+            )
+        db = doc_ref.get().to_dict()
+
         pars = db["parameters"]
 
-        if role == file.split(".")[-2]:
-            pars = pars | db["personal_parameters"][db["participants"][int(role) - 1]]
+        file_number = file.split(".")[-2]
+        pars = pars | db["personal_parameters"][db["participants"][int(file_number)]]
 
-        pars["NUM_INDS_SP_1"] = db["personal_parameters"][db["participants"][0]]["NUM_INDS"]
-        pars["NUM_INDS_SP_2"] = db["personal_parameters"][db["participants"][1]]["NUM_INDS"]
+        pars["NUM_INDS_SP_1"] = db["personal_parameters"][db["participants"][1]]["NUM_INDS"]
+        pars["NUM_INDS_SP_2"] = db["personal_parameters"][db["participants"][2]]["NUM_INDS"]
         pars["NUM_INDS"] = {"value": ""}
         pars["NUM_INDS"]["value"] = str(int(pars["NUM_INDS_SP_1"]["value"]) + int(pars["NUM_INDS_SP_2"]["value"]))
+
+        # update pars with ipaddresses
+        for i in range(3):
+            pars[f"IP_ADDR_P{str(i)}"] = db["personal_parameters"][db["participants"][i]]["IP_ADDRESS"]
+        # update pars with ports
+        # pars["PORT_P0_P1"] and PORT_P0_P2 do not need to be updated as they are controlled by us (the Broad)
+        pars["PORT_P1_P2"] = {
+            "value": db["personal_parameters"][db["participants"][1]]["PORTS"]["value"].split(",")[2]
+        }
 
         for line in fileinput.input(file, inplace=True):
             key = str(line).split(" ")[0]

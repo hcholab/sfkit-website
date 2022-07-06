@@ -264,8 +264,8 @@ DEFAULT_USER_PARAMETERS = {
     },
     "PORTS": {
         "name": "Ports",
-        "description": "The ports being used (comma separated) by the VM instance that will be running the GWAS protocol.",
-        "value": "",
+        "description": "The ports (comma separated) used by the VM instance that will be running the GWAS protocol.",
+        "value": "null,8001,8002",
     },
     "index": [
         "PUBLIC_KEY",

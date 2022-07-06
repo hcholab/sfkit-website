@@ -16,8 +16,8 @@ def test_setup_networking(mocker):
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
     google_cloud_compute.setup_networking(
         {
-            "personal_parameters": {"p": {"GCP_PROJECT": {"value": "b"}}},
-            "participants": ["p"],
+            "personal_parameters": {"Broad": {"GCP_PROJECT": {"value": "b"}}, "p": {"GCP_PROJECT": {"value": "b"}}},
+            "participants": ["Broad", "p"],
         },
         "role",
     )
@@ -101,8 +101,10 @@ def test_create_instance(mocker):
     setup_mocking(mocker)
     mocker.patch(f"{patch_prefix}.wait_for_zoneOperation", return_value=None)
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
-    google_cloud_compute.create_instance("zone", constants.NETWORK_NAME, "role", "metadata", 4, 10, validate=True)
-    google_cloud_compute.create_instance("zone", constants.NETWORK_NAME, "role", "metadata", 4, 10, validate=False)
+    google_cloud_compute.create_instance(
+        "zone", constants.NETWORK_NAME, "role", "metadata", 4, 10, startup_script="validate"
+    )
+    google_cloud_compute.create_instance("zone", constants.NETWORK_NAME, "role", "metadata", 4, 10)
 
 
 def test_stop_instance(mocker):

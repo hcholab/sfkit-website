@@ -14,9 +14,9 @@ test_create_data2 = {
 }
 
 test_doc_ref_dict = {
-    "participants": ["a@a.com"],
+    "participants": ["Broad", "a@a.com"],
     "parameters": {"NUM_SNPS": {"value": "10"}},
-    "personal_parameters": {"a@a.com": {"NUM_INDS": {"value": "10"}}},
+    "personal_parameters": {"Broad": {"NUM_INDS": {"value": "10"}}, "a@a.com": {"NUM_INDS": {"value": "10"}}},
 }
 
 

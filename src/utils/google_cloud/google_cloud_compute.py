@@ -158,30 +158,41 @@ class GoogleCloudCompute:
                     project=self.project, network=constants.NETWORK_NAME, body=body
                 ).execute()
 
-    def setup_instance(self, zone: str, name: str, role: str, metadata, num_cpus=4, boot_disk_size=10, validate=False):
+    def setup_instance(
+        self,
+        zone: str,
+        name: str,
+        role: str,
+        metadata,
+        num_cpus=4,
+        boot_disk_size=10,
+        startup_script="web",
+        delete=True,
+    ):
         existing_instances = self.list_instances(constants.SERVER_ZONE)
 
-        if name in existing_instances:
+        if name in existing_instances and delete:
             self.delete_instance(name, zone)
 
-        self.create_instance(zone, name, role, metadata, num_cpus, boot_disk_size, validate=validate)
+        if name not in existing_instances:
+            self.create_instance(zone, name, role, metadata, num_cpus, boot_disk_size, startup_script=startup_script)
 
         return self.get_vm_external_ip_address(zone, name)
 
-    def create_instance(self, zone, name, role, metadata, num_cpus, boot_disk_size, validate=False):
+    def create_instance(self, zone, name, role, metadata, num_cpus, boot_disk_size, startup_script="web"):
         print("Creating VM instance with name", name)
 
-        image_response = self.compute.images().getFromFamily(project="ubuntu-os-cloud", family="ubuntu-2110").execute()
+        image_response = self.compute.images().getFromFamily(project="debian-cloud", family="debian-11").execute()
+        # image_response = self.compute.images().getFromFamily(project="ubuntu-os-cloud", family="ubuntu-2110").execute()
         source_disk_image = image_response["selfLink"]
-        machine_type = f"zones/{zone}/machineTypes/e2-highmem-{num_cpus}"
+        machine_type = f"zones/{zone}/machineTypes/e2-medium"
+        # machine_type = f"zones/{zone}/machineTypes/e2-highmem-{num_cpus}"
 
-        if validate:
-            startup_script = open(
-                os.path.join(os.path.dirname(__file__), "../../startup-script-validate.sh"),
-                "r",
-            ).read()
-        else:
-            startup_script = open(os.path.join(os.path.dirname(__file__), "../../startup-script.sh"), "r").read()
+        startup_script = open(
+            os.path.join(os.path.dirname(__file__), f"../../vm_scripts/startup-script-{startup_script}.sh"),
+            "r",
+        ).read()
+
         metadata_config = {
             "items": [
                 {"key": "startup-script", "value": startup_script},

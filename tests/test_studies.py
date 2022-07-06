@@ -36,7 +36,7 @@ def test_download_public_key(app, client, auth, mocker):
     doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
     doc_ref.set(
         {
-            "participants": ["a@a.com"],
+            "participants": ["Broad", "a@a.com"],
             "personal_parameters": {"a@a.com": {"PUBLIC_KEY": {"value": "public_key"}}},
         }
     )

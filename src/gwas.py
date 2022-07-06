@@ -26,7 +26,7 @@ def validate_data(study_title: str) -> Response:
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
-    role: str = str(doc_ref_dict["participants"].index(g.user["id"]) + 1)
+    role: str = str(doc_ref_dict["participants"].index(g.user["id"]))
     gcp_project = doc_ref_dict["personal_parameters"][g.user["id"]]["GCP_PROJECT"]["value"]
     data_path = doc_ref_dict["personal_parameters"][g.user["id"]]["DATA_PATH"]["value"]
     if not gcp_project or gcp_project == "" or not data_path or data_path == "":
@@ -50,7 +50,7 @@ def validate_data(study_title: str) -> Response:
     instance = create_instance_name(study_title, role)
     gcloudCompute.setup_networking(doc_ref_dict, role)
     gcloudCompute.setup_instance(
-        constants.SERVER_ZONE, instance, role, {"key": "data_path", "value": data_path}, validate=True
+        constants.SERVER_ZONE, instance, role, {"key": "data_path", "value": data_path}, startup_script="validate"
     )
 
     # Give instance publish access to pubsub for status updates
@@ -67,7 +67,7 @@ def start_protocol(study_title: str) -> Response:
     doc_ref = current_app.config["DATABASE"].collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict: dict = doc_ref.get().to_dict()
     user_id: str = g.user["id"]
-    role: int = doc_ref_dict["participants"].index(user_id) + 1
+    role: str = str(doc_ref_dict["participants"].index(user_id))
     gcp_project: str = doc_ref_dict["personal_parameters"][user_id]["GCP_PROJECT"]["value"]
     statuses: dict = doc_ref_dict["status"]
 
@@ -97,7 +97,7 @@ def start_protocol(study_title: str) -> Response:
         statuses[user_id] = ["Setting up your vm instance..."]
         doc_ref.set({"status": statuses}, merge=True)
         doc_ref_dict = doc_ref.get().to_dict()
-        if role == 1:
+        if role == "1":
             # start CP0 as well
             gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
             instance: str = create_instance_name(study_title, "0")
@@ -111,7 +111,7 @@ def start_protocol(study_title: str) -> Response:
                 boot_disk_size=vm_parameters["BOOT_DISK_SIZE"]["value"],
             )
         run_gwas(
-            str(role),
+            role,
             gcp_project,
             study_title,
             doc_ref_dict["personal_parameters"][user_id],

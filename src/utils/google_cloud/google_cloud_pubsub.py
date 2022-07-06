@@ -41,6 +41,11 @@ class GoogleCloudPubsub:
                     "push_config": {
                         "push_endpoint": "https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/",
                     },
+                    # exponential backoff policy
+                    "retry_policy": {
+                        "minimum_backoff": "10s",
+                        "maximum_backoff": "600s",
+                    },
                 }
             )
 

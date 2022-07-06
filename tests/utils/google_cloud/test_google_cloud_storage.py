@@ -21,7 +21,7 @@ def test_copy_parameters_to_bucket(mocker):
         f"{patch_prefix}.GoogleCloudStorage.update_parameters",
         return_value=None,
     )
-    google_cloud_storage.copy_parameters_to_bucket("study title", role="0")
+    google_cloud_storage.copy_parameters_to_bucket("study title")
 
 
 def test_update_parameters(app, mocker, auth, client):
@@ -32,11 +32,11 @@ def test_update_parameters(app, mocker, auth, client):
         data=test_create_data,
     )
     doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
-    doc_ref.set({"participants": ["a@a.com", "a@a.com"]}, merge=True)
+    doc_ref.set({"participants": ["Broad", "a@a.com", "a@a.com"]}, merge=True)
 
     with app.app_context():
-        google_cloud_storage.update_parameters("test.par.1.txt", "testtitle", "1")
-        google_cloud_storage.update_parameters("test.par.1.txt", "testtitle", "2")
+        google_cloud_storage.update_parameters("test.par.1.txt", "testtitle")
+        google_cloud_storage.update_parameters("test.par.1.txt", "testtitle")
 
 
 def test_upload_to_bucket(mocker):
