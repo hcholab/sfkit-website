@@ -68,7 +68,7 @@ def index() -> tuple[str, int]:
         elif msg.startswith("run_protocol_for_cp0"):
             _, title = msg.split("::")
             doc_ref = current_app.config["DATABASE"].collection("studies").document(title.replace(" ", "").lower())
-            thread = Thread(target=run_protocol_for_cp0, args=(msg, title, doc_ref))
+            thread = Thread(target=run_protocol_for_cp0, args=(title, doc_ref))
             thread.start()  # separate thread so can return a response right away
         else:
             process_pubsub_from_website_workflow(publishTime, msg)
@@ -122,25 +122,17 @@ def update_firestore(msg: str) -> None:
     _, parameter, title, email = msg.split("::")
     doc_ref = current_app.config["DATABASE"].collection("studies").document(title.replace(" ", "").lower())
     doc_ref_dict: dict = doc_ref.get().to_dict()
-    if parameter.startswith("public_key"):
-        public_key = parameter.split("=")[1]
-        doc_ref_dict["personal_parameters"][email]["PUBLIC_KEY"]["value"] = public_key
-    elif parameter.startswith("status"):
+
+    if parameter.startswith("status"):
         status = parameter.split("=")[1]
         doc_ref_dict["status"][email] = [status]
-    elif parameter.startswith("data_hash"):
-        data_hash = parameter.split("=")[1]
-        doc_ref_dict["personal_parameters"][email]["DATA_HASH"]["value"] = data_hash
-    elif parameter.startswith("ip_address"):
-        ip_address = parameter.split("=")[1]
-        doc_ref_dict["personal_parameters"][email]["IP_ADDRESS"]["value"] = ip_address
-    elif parameter.startswith("ports"):
-        port = parameter.split("=")[1]
-        doc_ref_dict["personal_parameters"][email]["PORTS"]["value"] = port
+    else:
+        name, value = parameter.split("=")
+        doc_ref_dict["personal_parameters"][email][name]["value"] = value
     doc_ref.set(doc_ref_dict)
 
 
-def run_protocol_for_cp0(msg: str, title, doc_ref) -> None:
+def run_protocol_for_cp0(title, doc_ref) -> None:
     doc_ref_dict = doc_ref.get().to_dict()
 
     gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
