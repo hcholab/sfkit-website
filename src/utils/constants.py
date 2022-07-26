@@ -267,6 +267,11 @@ DEFAULT_USER_PARAMETERS = {
         "description": "The ports (comma separated) used by the VM instance that will be running the GWAS protocol.",
         "value": "null,8001,8002",
     },
+    "SA_EMAIL": {
+        "name": "Service Account Email",
+        "description": "The service account email used to connect to the server in the workflow where the user uses the cli.",
+        "value": "",
+    },
     "index": [
         "PUBLIC_KEY",
         "GCP_PROJECT",
@@ -280,8 +285,16 @@ DEFAULT_USER_PARAMETERS = {
         "DATA_HASH",
         "IP_ADDRESS",
         "PORTS",
+        "SA_EMAIL",
     ],
 }
+
+
+def broad_user_parameters() -> dict:
+    parameters = DEFAULT_USER_PARAMETERS
+    parameters["GCP_PROJECT"]["value"] = SERVER_GCP_PROJECT
+    return parameters
+
 
 BROAD_VM_SOURCE_IP_RANGES = [
     "69.173.112.0/21",

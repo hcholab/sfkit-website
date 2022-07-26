@@ -81,7 +81,7 @@ def register() -> Response:
     try:
         firebase_auth.create_user(email=email, password=password)
         gcloudIAM = GoogleCloudIAM()
-        gcloudIAM.give_user_minimal_required_gcp_permissions(email)
+        gcloudIAM.give_minimal_required_gcp_permissions(email)
 
         return update_user(email, password)
     except Exception as e:
@@ -158,6 +158,6 @@ def login_with_google_callback() -> Response:
             password=rand_temp_password,
         )
         gcloudIAM = GoogleCloudIAM()
-        gcloudIAM.give_user_minimal_required_gcp_permissions(decoded_jwt_token["email"])
+        gcloudIAM.give_minimal_required_gcp_permissions(decoded_jwt_token["email"])
 
     return update_user(decoded_jwt_token["email"], rand_temp_password)

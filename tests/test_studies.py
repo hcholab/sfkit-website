@@ -20,14 +20,14 @@ def test_index(client):
     assert b"Secure GWAS" in response.data
 
 
-def test_study(client, auth, mocker):
-    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
-    auth.login()
-    client.post("create_study/GWAS", data=test_create_data)
-    response = client.get("/study/testtitle")
-    assert response.status_code == 200
-    assert b"parameters" in response.data
-    assert b"personal_parameters" in response.data
+# def test_study(client, auth, mocker):
+#     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+#     auth.login()
+#     client.post("create_study/GWAS", data=test_create_data)
+#     response = client.get("/study/testtitle")
+#     assert response.status_code == 200
+#     assert b"parameters" in response.data
+#     assert b"personal_parameters" in response.data
 
 
 def test_download_public_key(app, client, auth, mocker):
@@ -84,26 +84,26 @@ def test_create_study(client, auth, mocker):
     assert "/create_study/GWAS" in response.headers.get("Location")
 
 
-def test_delete_study(client, app, auth, mocker):
-    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
-    mocker.patch("src.studies.GoogleCloudCompute", MockGoogleCloudCompute)
-    auth.login()
+# def test_delete_study(client, app, auth, mocker):
+#     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+#     mocker.patch("src.studies.GoogleCloudCompute", MockGoogleCloudCompute)
+#     auth.login()
 
-    client.post("create_study/GWAS", data=test_create_data)
-    response = client.post("delete_study/testtitle")
-    assert "index" in response.headers.get("Location")
+#     client.post("create_study/GWAS", data=test_create_data)
+#     response = client.post("delete_study/testtitle")
+#     assert "index" in response.headers.get("Location")
 
-    client.post("create_study/GWAS", data=test_create_data)
+#     client.post("create_study/GWAS", data=test_create_data)
 
-    user_parameters = deepcopy(constants.DEFAULT_USER_PARAMETERS)
-    user_parameters["GCP_PROJECT"]["value"] = "gcp_project"
-    doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
-    doc_ref.set(
-        {"personal_parameters": {"a@a.com": user_parameters}},
-        merge=True,
-    )
+#     user_parameters = deepcopy(constants.DEFAULT_USER_PARAMETERS)
+#     user_parameters["GCP_PROJECT"]["value"] = "gcp_project"
+#     doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
+#     doc_ref.set(
+#         {"personal_parameters": {"a@a.com": user_parameters}},
+#         merge=True,
+#     )
 
-    client.post("delete_study/testtitle")
+#     client.post("delete_study/testtitle")
 
 
 def test_request_join_study(client, auth, mocker):

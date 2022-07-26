@@ -5,7 +5,7 @@ from google.cloud.pubsub_v1.subscriber.client import subscriber_client
 
 
 class GoogleCloudPubsub:
-    def __init__(self, project, role, study_title) -> None:
+    def __init__(self, project: str, role: str, study_title: str) -> None:
         self.project = project
         self.publisher = publisher_client.PublisherClient()
         self.subscriber = subscriber_client.SubscriberClient()
@@ -41,13 +41,17 @@ class GoogleCloudPubsub:
                     "push_config": {
                         "push_endpoint": "https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/",
                     },
-                    # exponential backoff policy
-                    "retry_policy": {
-                        "minimum_backoff": "10s",
-                        "maximum_backoff": "600s",
-                    },
                 }
             )
+
+    def delete_topics_and_subscriptions(self) -> None:
+        try:
+            print(f"Deleting topic {self.topic_path}")
+            self.publisher.delete_topic(request={"topic": self.topic_path})
+            print(f"Deleting subscription {self.subscription_path}")
+            self.subscriber.delete_subscription(request={"subscription": self.subscription_path})
+        except publisher_client.core_exceptions.NotFound:  # type: ignore
+            print(f"Topic or subscription {self.topic_id} does not exist to delete")
 
     def add_pub_iam_member(self, role: str, member: str) -> None:
         policy = self.publisher.get_iam_policy(request={"resource": self.topic_path})  # type: ignore

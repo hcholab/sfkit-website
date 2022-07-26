@@ -5,7 +5,7 @@
         <h5 class="modal-title" id="configure_study_gcp_setup_mode_modal_label">GCP Project Setup</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <form method="post" action="{{url_for('studies.personal_parameters', study_title=study['title'])}}">
+      <form method="post" action="{{url_for('studies.choose_workflow', study_title=study['title'])}}">
         <div class="modal-body text-start">
           <p>
             How do you want to have your GCP project configured?

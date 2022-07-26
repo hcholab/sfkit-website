@@ -9,6 +9,7 @@ from src.utils import constants
 from src.utils.generic_functions import add_notification, redirect_with_flash
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
 from src.utils.google_cloud.google_cloud_pubsub import GoogleCloudPubsub
+from src.utils.google_cloud.google_cloud_service_accounts import delete_service_account, setup_service_account_and_key
 from src.utils.gwas_functions import valid_study_title
 
 bp = Blueprint("studies", __name__)
@@ -115,7 +116,7 @@ def create_study(type: str) -> Response:
             "status": {g.user["id"]: [""]},
             "parameters": constants.get_shared_parameters(type),
             "personal_parameters": {
-                "Broad": constants.DEFAULT_USER_PARAMETERS,
+                "Broad": constants.broad_user_parameters(),
                 g.user["id"]: constants.DEFAULT_USER_PARAMETERS,
             },
             "requested_participants": [],
@@ -137,13 +138,21 @@ def delete_study(study_title: str) -> Response:
     doc_ref_dict = doc_ref.get().to_dict()
 
     # delete vms that may still exist
-    google_cloud_compute = GoogleCloudCompute("")  # TODO: delete the server's VM as well
+    google_cloud_compute = GoogleCloudCompute("")
     for participant in doc_ref_dict["personal_parameters"].values():
         if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
             google_cloud_compute.project = gcp_project
             for instance in google_cloud_compute.list_instances():
                 if constants.INSTANCE_NAME_ROOT in instance:
                     google_cloud_compute.delete_instance(instance)
+
+    # delete pubsub topics, subscriptions and service accounts
+    for role, user_email in enumerate(doc_ref_dict["participants"]):
+        google_cloud_pubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, str(role), study_title)
+        google_cloud_pubsub.delete_topics_and_subscriptions()
+
+        if sa_email := doc_ref_dict["personal_parameters"][user_email]["SA_EMAIL"]["value"]:
+            delete_service_account(constants.SERVER_GCP_PROJECT, sa_email)
 
     doc_ref.delete()
     return redirect(url_for("studies.index"))
@@ -232,4 +241,27 @@ def personal_parameters(study_title):
         if p in request.form:
             parameters[g.user["id"]][p]["value"] = request.form.get(p)
     doc_ref.set({"personal_parameters": parameters}, merge=True)
+    return redirect(url_for("studies.study", study_title=study_title))
+
+
+@bp.route("/study/<study_title>/choose_workflow", methods=("POST",))
+@login_required
+def choose_workflow(study_title: str) -> Response:
+    workflow = request.form.get("CONFIGURE_STUDY_GCP_SETUP_MODE")
+    db = current_app.config["DATABASE"]
+    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref_dict = doc_ref.get().to_dict()
+    doc_ref_dict["personal_parameters"][g.user["id"]]["CONFIGURE_STUDY_GCP_SETUP_MODE"]["value"] = workflow
+    if workflow == "user":
+        sa_email, json_sa_key = setup_service_account_and_key(study_title, g.user["id"])
+        doc_ref_dict["personal_parameters"][g.user["id"]]["SA_EMAIL"]["value"] = sa_email
+        doc_ref.set(doc_ref_dict)
+        key_file = io.BytesIO(json_sa_key.encode("utf-8"))
+        return send_file(
+            key_file,
+            download_name="service-account-key.json",
+            mimetype="text/plain",
+            as_attachment=True,
+        )
+    doc_ref.set(doc_ref_dict)
     return redirect(url_for("studies.study", study_title=study_title))

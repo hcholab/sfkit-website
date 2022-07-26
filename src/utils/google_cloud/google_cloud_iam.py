@@ -39,14 +39,15 @@ class GoogleCloudIAM:
         policy = self.service.projects().setIamPolicy(resource=self.project, body={"policy": policy}).execute()
         return policy
 
-    def give_user_minimal_required_gcp_permissions(self, user):
+    def give_minimal_required_gcp_permissions(self, user, member_type: str = "user"):
         """Gives Cloud Build Viewer permissions to a user."""
         print(f"Giving Cloud Build Viewer permissions to user: {user}")
 
         policy = self.get_policy()
-        policy = self.modify_policy_add_member(policy, "roles/cloudbuild.builds.viewer", f"user:{user}")
-        policy = self.modify_policy_add_member(policy, "roles/logging.viewer", f"user:{user}")
-        policy = self.modify_policy_add_member(policy, "roles/pubsub.publisher", f"user:{user}")
+        policy = self.modify_policy_add_member(policy, "roles/cloudbuild.builds.viewer", f"{member_type}:{user}")
+        policy = self.modify_policy_add_member(policy, "roles/logging.viewer", f"{member_type}:{user}")
+        policy = self.modify_policy_add_member(policy, "roles/pubsub.publisher", f"{member_type}:{user}")
+        policy = self.modify_policy_add_member(policy, "roles/firebase.viewer", f"{member_type}:{user}")
         self.set_policy(policy)
 
     def test_permissions(self, project_id) -> bool:
