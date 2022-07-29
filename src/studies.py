@@ -114,10 +114,10 @@ def create_study(type: str) -> Response:
             "created": datetime.now(),
             "participants": ["Broad", g.user["id"]],
             "status": {g.user["id"]: [""]},
-            "parameters": constants.get_shared_parameters(type),
+            "parameters": constants.SHARED_PARAMETERS[type],
             "personal_parameters": {
                 "Broad": constants.broad_user_parameters(),
-                g.user["id"]: constants.DEFAULT_USER_PARAMETERS,
+                g.user["id"]: constants.default_user_parameters(type),
             },
             "requested_participants": [],
         }
@@ -183,7 +183,8 @@ def approve_join_study(study_title: str, user_id: str) -> Response:
         {
             "requested_participants": doc_ref_dict["requested_participants"].remove(user_id),
             "participants": doc_ref_dict["participants"] + [user_id],
-            "personal_parameters": doc_ref_dict["personal_parameters"] | {user_id: constants.DEFAULT_USER_PARAMETERS},
+            "personal_parameters": doc_ref_dict["personal_parameters"]
+            | {user_id: constants.default_user_parameters(doc_ref_dict["type"])},
             "status": doc_ref_dict["status"] | {user_id: [""]},
         },
         merge=True,

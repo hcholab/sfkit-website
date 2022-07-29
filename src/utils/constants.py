@@ -195,12 +195,10 @@ PCA_SHARED_PARAMETERS = {
     ],
 }
 
-
-def get_shared_parameters(type):
-    if type == "PCA":
-        return PCA_SHARED_PARAMETERS
-    elif type == "GWAS":
-        return GWAS_SHARED_PARAMETERS
+SHARED_PARAMETERS = {
+    "GWAS": GWAS_SHARED_PARAMETERS,
+    "PCA": PCA_SHARED_PARAMETERS,
+}
 
 
 DEFAULT_USER_PARAMETERS = {
@@ -288,6 +286,17 @@ DEFAULT_USER_PARAMETERS = {
         "SA_EMAIL",
     ],
 }
+
+
+def default_user_parameters(study_type: str) -> dict:
+    if study_type == "GWAS":
+        return DEFAULT_USER_PARAMETERS
+    elif study_type == "PCA":
+        pars = DEFAULT_USER_PARAMETERS.copy()
+        pars["PORTS"]["value"] = "null,8020,8040"
+        return pars
+    else:
+        raise ValueError(f"Unknown study type: {study_type}")
 
 
 def broad_user_parameters() -> dict:
