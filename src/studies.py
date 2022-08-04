@@ -113,7 +113,7 @@ def create_study(type: str) -> Response:
             "owner": g.user["id"],
             "created": datetime.now(),
             "participants": ["Broad", g.user["id"]],
-            "status": {g.user["id"]: [""]},
+            "status": {"Broad": ["not ready"], g.user["id"]: [""]},
             "parameters": constants.SHARED_PARAMETERS[type],
             "personal_parameters": {
                 "Broad": constants.broad_user_parameters(),

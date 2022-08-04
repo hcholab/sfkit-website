@@ -7,7 +7,7 @@ from werkzeug import Response
 from src.auth import login_required
 from src.utils import constants
 from src.utils.generic_functions import add_notification, remove_notification
-from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
+from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, run_command
 from src.utils.google_cloud.google_cloud_storage import GoogleCloudStorage
 from src.utils.gwas_functions import create_instance_name, data_has_valid_files, data_has_valid_size
 
@@ -135,22 +135,36 @@ def update_firestore(msg: str) -> None:
 def run_protocol_for_cp0(title, doc_ref) -> None:
     doc_ref_dict = doc_ref.get().to_dict()
 
-    gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
-    instance_name: str = create_instance_name(title, "0")
-    cp0_ip_address = gcloudCompute.setup_instance(
-        constants.SERVER_ZONE,
-        instance_name,
-        "0",
-        {"key": "data_path", "value": "secure-gwas-data0"},
-        startup_script="cli",
-        delete=False,
-    )
-    doc_ref_dict["personal_parameters"]["Broad"]["IP_ADDRESS"]["value"] = cp0_ip_address
-    doc_ref.set(doc_ref_dict)
+    if doc_ref_dict["type"] == "gwas":
+        gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
+        instance_name: str = create_instance_name(title, "0")
+        cp0_ip_address = gcloudCompute.setup_instance(
+            constants.SERVER_ZONE,
+            instance_name,
+            "0",
+            {"key": "data_path", "value": "secure-gwas-data0"},
+            startup_script="cli",
+            delete=False,
+        )
+        doc_ref_dict["personal_parameters"]["Broad"]["IP_ADDRESS"]["value"] = cp0_ip_address
+        doc_ref.set(doc_ref_dict)
 
-    gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
-    # copy parameters to parameter files
-    gcloudStorage.copy_parameters_to_bucket(title, doc_ref=doc_ref)
+        gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
+        # copy parameters to parameter files
+        gcloudStorage.copy_parameters_to_bucket(title, doc_ref=doc_ref)
+    elif doc_ref_dict["type"] == "pca":
+        gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
+        instance_name: str = create_instance_name(title, "0")
+
+        cp0_ip_address = gcloudCompute.setup_sfgwas_instance(instance_name)
+        doc_ref_dict["personal_parameters"]["Broad"]["IP_ADDRESS"]["value"] = cp0_ip_address
+        doc_ref.set(doc_ref_dict)
+
+        cmd = "sudo apt-get install python3-pip -y && pip install sfkit && PATH=$PATH:~/.local/bin"
+        run_command(instance_name, cmd)
+
+        cmd = f"sfkit run_protocol --study_title {title}"
+        run_command(instance_name, cmd)
 
 
 def fail() -> tuple[str, int]:

@@ -1,4 +1,5 @@
 import os
+import subprocess
 from time import sleep
 
 import googleapiclient.discovery as googleapi
@@ -158,6 +159,12 @@ class GoogleCloudCompute:
                     project=self.project, network=constants.NETWORK_NAME, body=body
                 ).execute()
 
+    def setup_sfgwas_instance(self, instance_name):
+        print("Setting up SFGWAS instance")
+        if instance_name not in self.list_instances():
+            self.create_instance(instance_name, "0")
+        return self.get_vm_external_ip_address(instance_name)
+
     def setup_instance(
         self,
         zone: str,
@@ -169,17 +176,26 @@ class GoogleCloudCompute:
         startup_script="web",
         delete=True,
     ):
-        existing_instances = self.list_instances(constants.SERVER_ZONE)
+        existing_instances = self.list_instances(zone=zone)
 
         if name in existing_instances and delete:
             self.delete_instance(name, zone)
 
         if name not in existing_instances:
-            self.create_instance(zone, name, role, metadata, num_cpus, boot_disk_size, startup_script=startup_script)
+            self.create_instance(name, role, zone, num_cpus, boot_disk_size, metadata, startup_script=startup_script)
 
-        return self.get_vm_external_ip_address(zone, name)
+        return self.get_vm_external_ip_address(name, zone)
 
-    def create_instance(self, zone, name, role, metadata, num_cpus, boot_disk_size, startup_script="web"):
+    def create_instance(
+        self,
+        name,
+        role,
+        zone=constants.SERVER_ZONE,
+        num_cpus=4,
+        boot_disk_size=10,
+        metadata=None,
+        startup_script="web",
+    ):
         print("Creating VM instance with name", name)
 
         image_response = self.compute.images().getFromFamily(project="debian-cloud", family="debian-11").execute()
@@ -187,19 +203,6 @@ class GoogleCloudCompute:
         source_disk_image = image_response["selfLink"]
         machine_type = f"zones/{zone}/machineTypes/e2-medium"
         # machine_type = f"zones/{zone}/machineTypes/e2-highmem-{num_cpus}"
-
-        startup_script = open(
-            os.path.join(os.path.dirname(__file__), f"../../vm_scripts/startup-script-{startup_script}.sh"),
-            "r",
-        ).read()
-
-        metadata_config = {
-            "items": [
-                {"key": "startup-script", "value": startup_script},
-                {"key": "enable-oslogin", "value": True},
-                metadata,
-            ]
-        }
 
         instance_body = {
             "name": name,
@@ -236,9 +239,23 @@ class GoogleCloudCompute:
                     ],
                 }
             ],
-            "metadata": metadata_config,
             "tags": {"items": [constants.INSTANCE_NAME_ROOT]},
         }
+
+        if metadata:
+            startup_script = open(
+                os.path.join(os.path.dirname(__file__), f"../../vm_scripts/startup-script-{startup_script}.sh"),
+                "r",
+            ).read()
+
+            metadata_config = {
+                "items": [
+                    {"key": "startup-script", "value": startup_script},
+                    {"key": "enable-oslogin", "value": True},
+                    metadata,
+                ]
+            }
+            instance_body["metadata"] = metadata_config
 
         operation = self.compute.instances().insert(project=self.project, zone=zone, body=instance_body).execute()
         self.wait_for_zoneOperation(zone, operation["name"])
@@ -301,7 +318,7 @@ class GoogleCloudCompute:
             raise RuntimeError(result["error"])
         return result
 
-    def get_vm_external_ip_address(self, zone, instance):
+    def get_vm_external_ip_address(self, instance, zone=constants.SERVER_ZONE):
         print("Getting the IP address for VM instance", instance)
         response = self.compute.instances().get(project=self.project, zone=zone, instance=instance).execute()
         return response["networkInterfaces"][0]["accessConfigs"][0]["natIP"]
@@ -310,3 +327,10 @@ class GoogleCloudCompute:
         print("Getting the service account for VM instance", instance)
         response = self.compute.instances().get(project=self.project, zone=zone, instance=instance).execute()
         return response["serviceAccounts"][0]["email"]
+
+
+def run_command(instance_name, cmd):
+    command = f"gcloud compute ssh {instance_name} --project {constants.SERVER_GCP_PROJECT} --zone={constants.SERVER_ZONE} --command '{cmd}'"
+    if subprocess.run(command, shell=True).returncode != 0:
+        print(f"Failed to perform command {command}")
+        exit(1)

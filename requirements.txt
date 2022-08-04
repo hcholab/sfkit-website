@@ -15,5 +15,6 @@ pytest
 pytest-mock
 requests
 tenacity
+toml
 waitress
 Werkzeug
