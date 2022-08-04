@@ -195,10 +195,7 @@ PCA_SHARED_PARAMETERS = {
     ],
 }
 
-SHARED_PARAMETERS = {
-    "GWAS": GWAS_SHARED_PARAMETERS,
-    "PCA": PCA_SHARED_PARAMETERS,
-}
+SHARED_PARAMETERS = {"GWAS": GWAS_SHARED_PARAMETERS, "PCA": PCA_SHARED_PARAMETERS, "SFGWAS": PCA_SHARED_PARAMETERS}
 
 
 DEFAULT_USER_PARAMETERS = {
@@ -291,7 +288,7 @@ DEFAULT_USER_PARAMETERS = {
 def default_user_parameters(study_type: str) -> dict:
     if study_type == "GWAS":
         return DEFAULT_USER_PARAMETERS
-    elif study_type == "PCA":
+    elif study_type in {"PCA", "SFGWAS"}:
         pars = DEFAULT_USER_PARAMETERS.copy()
         pars["PORTS"]["value"] = "null,8020,8040"
         return pars

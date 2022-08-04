@@ -43,8 +43,6 @@ def list_service_accounts(project_id: str) -> list:
 
     service = googleapiclient.discovery.build("iam", "v1")
     response = service.projects().serviceAccounts().list(name=f"projects/{project_id}").execute()
-    for account in response["accounts"]:
-        print(account["name"])
     return response["accounts"]
 
 

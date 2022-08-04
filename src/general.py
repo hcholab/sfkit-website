@@ -152,7 +152,7 @@ def run_protocol_for_cp0(title, doc_ref) -> None:
         gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
         # copy parameters to parameter files
         gcloudStorage.copy_parameters_to_bucket(title, doc_ref=doc_ref)
-    elif doc_ref_dict["type"] == "pca":
+    elif doc_ref_dict["type"] == "sfgwas":
         gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
         instance_name: str = create_instance_name(title, "0")
 

@@ -48,7 +48,7 @@
               {% if parameters['CONFIGURE_STUDY_GCP_SETUP_MODE']['value'] == "" %}
                 <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#configure_study_gcp_setup_mode_modal">Configure Study</button>
                 {% include 'studies/utils/configure_study_gcp_setup_mode.html' %}
-              {% else %}
+              {% elif parameters['CONFIGURE_STUDY_GCP_SETUP_MODE']['value'] == "website" %}
                 <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#configure_study_modal">Configure Study</button>
 
                 <div class="modal fade" id="configure_study_modal" tabindex="-1">
@@ -69,9 +69,14 @@
                     </div>
                   </div>
                 </div>
+              {% else %}
+                <h5>You have chosen to run the study yourself. To proceed, please download the CLI tool with
+                  <i>`pip install sfkit`</i>. For more details, see the coresponding github repo
+                  <a class="text-decoration-none" href="https://github.com/simonjmendelsohn/sfkit">here</a>.</h5>
               {% endif %}
             </div>
-            {% if study["status"][g.user["id"]] == [""] or study["status"][g.user["id"]] == ["validating"] %}
+            {% if parameters['CONFIGURE_STUDY_GCP_SETUP_MODE']['value'] == "user" %}
+            {% elif study["status"][g.user["id"]] == [""] or study["status"][g.user["id"]] == ["validating"] %}
               <button type="button" class="mt-2 btn btn-success" data-bs-toggle="modal" data-bs-target="#vmConfig" disabled="disabled">
                 Begin
                 {{ type }}
