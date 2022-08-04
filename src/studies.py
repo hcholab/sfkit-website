@@ -253,16 +253,24 @@ def choose_workflow(study_title: str) -> Response:
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
     doc_ref_dict["personal_parameters"][g.user["id"]]["CONFIGURE_STUDY_GCP_SETUP_MODE"]["value"] = workflow
-    if workflow == "user":
-        sa_email, json_sa_key = setup_service_account_and_key(study_title, g.user["id"])
-        doc_ref_dict["personal_parameters"][g.user["id"]]["SA_EMAIL"]["value"] = sa_email
-        doc_ref.set(doc_ref_dict)
-        key_file = io.BytesIO(json_sa_key.encode("utf-8"))
-        return send_file(
-            key_file,
-            download_name="service-account-key.json",
-            mimetype="text/plain",
-            as_attachment=True,
-        )
     doc_ref.set(doc_ref_dict)
     return redirect(url_for("studies.study", study_title=study_title))
+
+
+@bp.route("/study/<study_title>/download_sa_key_file", methods=("GET",))
+@login_required
+def download_sa_key_file(study_title: str) -> Response:
+    db = current_app.config["DATABASE"]
+    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref_dict = doc_ref.get().to_dict()
+
+    sa_email, json_sa_key = setup_service_account_and_key(study_title, g.user["id"])
+    doc_ref_dict["personal_parameters"][g.user["id"]]["SA_EMAIL"]["value"] = sa_email
+    doc_ref.set(doc_ref_dict)
+    key_file = io.BytesIO(json_sa_key.encode("utf-8"))
+    return send_file(
+        key_file,
+        download_name="service-account-key.json",
+        mimetype="text/plain",
+        as_attachment=True,
+    )
