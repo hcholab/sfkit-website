@@ -334,3 +334,10 @@ def run_command(instance_name, cmd):
     if subprocess.run(command, shell=True).returncode != 0:
         print(f"Failed to perform command {command}")
         exit(1)
+
+
+def run_ssh_command(ip_address, cmd):
+    command = f"ssh -o StrictHostKeyChecking=accept-new smendels@{ip_address} -t '{cmd}'"
+    if subprocess.run(command, shell=True).returncode != 0:
+        print(f"Failed to perform command {command}")
+        exit(1)
