@@ -159,10 +159,10 @@ class GoogleCloudCompute:
                     project=self.project, network=constants.NETWORK_NAME, body=body
                 ).execute()
 
-    def setup_sfgwas_instance(self, instance_name):
+    def setup_sfgwas_instance(self, instance_name: str, metadata=None) -> None:
         print("Setting up SFGWAS instance")
         if instance_name not in self.list_instances():
-            self.create_instance(instance_name, "0")
+            self.create_instance(instance_name, "0", metadata=metadata, startup_script="sfgwas")
         return self.get_vm_external_ip_address(instance_name)
 
     def setup_instance(
@@ -236,13 +236,14 @@ class GoogleCloudCompute:
                         "https://www.googleapis.com/auth/devstorage.read_write",
                         "https://www.googleapis.com/auth/logging.write",
                         "https://www.googleapis.com/auth/pubsub",
+                        "https://www.googleapis.com/auth/datastore",
                     ],
                 }
             ],
             "tags": {"items": [constants.INSTANCE_NAME_ROOT]},
         }
 
-        if metadata:
+        if startup_script:
             startup_script = open(
                 os.path.join(os.path.dirname(__file__), f"../../vm_scripts/startup-script-{startup_script}.sh"),
                 "r",
@@ -252,9 +253,10 @@ class GoogleCloudCompute:
                 "items": [
                     {"key": "startup-script", "value": startup_script},
                     {"key": "enable-oslogin", "value": True},
-                    metadata,
                 ]
             }
+            if metadata:
+                metadata_config["items"].append(metadata)
             instance_body["metadata"] = metadata_config
 
         operation = self.compute.instances().insert(project=self.project, zone=zone, body=instance_body).execute()

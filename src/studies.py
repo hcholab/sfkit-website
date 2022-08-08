@@ -123,7 +123,9 @@ def create_study(type: str) -> Response:
         }
     )
 
-    # add pubsub topic for this user for this study
+    # add pubsub topic for this user and for cp0
+    gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, "0", title)
+    gcloudPubsub.create_topic_and_subscribe()
     gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, "1", title)
     gcloudPubsub.create_topic_and_subscribe()
 

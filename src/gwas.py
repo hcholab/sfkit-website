@@ -106,8 +106,8 @@ def start_protocol(study_title: str) -> Response:
                 constants.SERVER_ZONE,
                 instance,
                 "0",
-                {"key": "data_path", "value": "secure-gwas-data0"},
-                vm_parameters["NUM_CPUS"]["value"],
+                metadata={"key": "data_path", "value": "secure-gwas-data0"},
+                num_cpus=vm_parameters["NUM_CPUS"]["value"],
                 boot_disk_size=vm_parameters["BOOT_DISK_SIZE"]["value"],
             )
         run_gwas(

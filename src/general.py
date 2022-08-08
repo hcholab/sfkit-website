@@ -7,7 +7,7 @@ from werkzeug import Response
 from src.auth import login_required
 from src.utils import constants
 from src.utils.generic_functions import add_notification, remove_notification
-from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, run_command, run_ssh_command
+from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute  # , run_command, run_ssh_command
 from src.utils.google_cloud.google_cloud_storage import GoogleCloudStorage
 from src.utils.gwas_functions import create_instance_name, data_has_valid_files, data_has_valid_size
 
@@ -156,16 +156,18 @@ def run_protocol_for_cp0(title, doc_ref) -> None:
         gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
         instance_name: str = create_instance_name(title, "0")
 
-        cp0_ip_address = gcloudCompute.setup_sfgwas_instance(instance_name)
+        cp0_ip_address = gcloudCompute.setup_sfgwas_instance(
+            instance_name, metadata={"key": "study_title", "value": f"{title}"}
+        )
         doc_ref_dict["personal_parameters"]["Broad"]["IP_ADDRESS"]["value"] = cp0_ip_address
         doc_ref.set(doc_ref_dict)
 
-        cmd = "sudo apt-get install python3-pip -y && pip install sfkit && PATH=$PATH:~/.local/bin"
-        run_ssh_command(cp0_ip_address, cmd)
-        # run_command(instance_name, cmd)
+        # cmd = "sudo apt-get install python3-pip -y && pip install sfkit && PATH=$PATH:~/.local/bin"
+        # run_ssh_command(cp0_ip_address, cmd)
+        # # run_command(instance_name, cmd)
 
-        cmd = f"sfkit run_protocol --study_title {title}"
-        run_ssh_command(cp0_ip_address, cmd)
+        # cmd = f"sfkit run_protocol --study_title {title}"
+        # run_ssh_command(cp0_ip_address, cmd)
         # run_command(instance_name, cmd)
 
 
