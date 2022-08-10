@@ -299,6 +299,7 @@ def default_user_parameters(study_type: str) -> dict:
 def broad_user_parameters() -> dict:
     parameters = DEFAULT_USER_PARAMETERS
     parameters["GCP_PROJECT"]["value"] = SERVER_GCP_PROJECT
+    parameters["NUM_INDS"]["value"] = "0"
     return parameters
 
 

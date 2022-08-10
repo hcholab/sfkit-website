@@ -162,7 +162,9 @@ class GoogleCloudCompute:
     def setup_sfgwas_instance(self, instance_name: str, metadata=None) -> None:
         print("Setting up SFGWAS instance")
         if instance_name not in self.list_instances():
-            self.create_instance(instance_name, "0", metadata=metadata, startup_script="sfgwas")
+            self.create_instance(
+                instance_name, "0", metadata=metadata, startup_script="sfgwas", num_cpus=8, boot_disk_size=50
+            )
         return self.get_vm_external_ip_address(instance_name)
 
     def setup_instance(
@@ -191,7 +193,7 @@ class GoogleCloudCompute:
         name,
         role,
         zone=constants.SERVER_ZONE,
-        num_cpus=4,
+        num_cpus=None,
         boot_disk_size=10,
         metadata=None,
         startup_script="web",
@@ -202,7 +204,8 @@ class GoogleCloudCompute:
         # image_response = self.compute.images().getFromFamily(project="ubuntu-os-cloud", family="ubuntu-2110").execute()
         source_disk_image = image_response["selfLink"]
         machine_type = f"zones/{zone}/machineTypes/e2-medium"
-        # machine_type = f"zones/{zone}/machineTypes/e2-highmem-{num_cpus}"
+        if num_cpus:
+            machine_type = f"zones/{zone}/machineTypes/e2-highmem-{num_cpus}"
 
         instance_body = {
             "name": name,
