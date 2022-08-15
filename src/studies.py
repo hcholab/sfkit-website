@@ -272,7 +272,7 @@ def download_sa_key_file(study_title: str) -> Response:
     key_file = io.BytesIO(json_sa_key.encode("utf-8"))
     return send_file(
         key_file,
-        download_name="service-account-key.json",
+        download_name="sa_key.json",
         mimetype="text/plain",
         as_attachment=True,
     )

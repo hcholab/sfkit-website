@@ -10,4 +10,5 @@ apt-get --assume-yes install build-essential
 apt-get install python3-pip -y 
 pip install sfkit 
 PATH=$PATH:~/.local/bin
+sfkit generate_personal_keys --study_title ${study_title}
 sfkit run_protocol --study_title ${study_title}

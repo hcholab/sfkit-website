@@ -64,5 +64,10 @@ def delete_service_account(project_id: str, sa_email: str) -> None:
     """Deletes a service account."""
 
     service = googleapiclient.discovery.build("iam", "v1")
-    service.projects().serviceAccounts().delete(name=f"projects/{project_id}/serviceAccounts/{sa_email}").execute()
-    print(f"Deleted service account: {sa_email}")
+    try:
+        service.projects().serviceAccounts().delete(name=f"projects/{project_id}/serviceAccounts/{sa_email}").execute()
+    except googleapiclient.errors.HttpError as e:  # type: ignore
+        print(e)
+        print(f"Could not delete service account {sa_email}")
+    else:
+        print(f"Deleted service account: {sa_email}")
