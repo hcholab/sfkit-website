@@ -10,7 +10,7 @@ from src.utils.generic_functions import add_notification, redirect_with_flash
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
 from src.utils.google_cloud.google_cloud_pubsub import GoogleCloudPubsub
 from src.utils.google_cloud.google_cloud_service_accounts import delete_service_account, setup_service_account_and_key
-from src.utils.gwas_functions import valid_study_title
+from src.utils.gwas_functions import create_instance_name, valid_study_title
 
 bp = Blueprint("studies", __name__)
 
@@ -145,7 +145,7 @@ def delete_study(study_title: str) -> Response:
         if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
             google_cloud_compute.project = gcp_project
             for instance in google_cloud_compute.list_instances():
-                if constants.INSTANCE_NAME_ROOT in instance:
+                if constants.INSTANCE_NAME_ROOT in instance and study_title in instance:
                     google_cloud_compute.delete_instance(instance)
 
     # delete pubsub topics, subscriptions and service accounts
@@ -153,8 +153,8 @@ def delete_study(study_title: str) -> Response:
         google_cloud_pubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, str(role), study_title)
         google_cloud_pubsub.delete_topics_and_subscriptions()
 
-        if sa_email := doc_ref_dict["personal_parameters"][user_email]["SA_EMAIL"]["value"]:
-            delete_service_account(constants.SERVER_GCP_PROJECT, sa_email)
+        # if sa_email := doc_ref_dict["personal_parameters"][user_email]["SA_EMAIL"]["value"]:
+        #     delete_service_account(constants.SERVER_GCP_PROJECT, sa_email)
 
     doc_ref.delete()
     return redirect(url_for("studies.index"))
