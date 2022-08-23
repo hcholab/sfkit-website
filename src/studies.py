@@ -149,12 +149,9 @@ def delete_study(study_title: str) -> Response:
                     google_cloud_compute.delete_instance(instance)
 
     # delete pubsub topics, subscriptions and service accounts
-    for role, user_email in enumerate(doc_ref_dict["participants"]):
+    for role, _ in enumerate(doc_ref_dict["participants"]):
         google_cloud_pubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, str(role), study_title)
         google_cloud_pubsub.delete_topics_and_subscriptions()
-
-        # if sa_email := doc_ref_dict["personal_parameters"][user_email]["SA_EMAIL"]["value"]:
-        #     delete_service_account(constants.SERVER_GCP_PROJECT, sa_email)
 
     doc_ref.delete()
     return redirect(url_for("studies.index"))
@@ -250,29 +247,31 @@ def personal_parameters(study_title):
 @bp.route("/study/<study_title>/choose_workflow", methods=("POST",))
 @login_required
 def choose_workflow(study_title: str) -> Response:
-    workflow = request.form.get("CONFIGURE_STUDY_GCP_SETUP_MODE")
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
-    doc_ref_dict["personal_parameters"][g.user["id"]]["CONFIGURE_STUDY_GCP_SETUP_MODE"]["value"] = workflow
+    doc_ref_dict["personal_parameters"][g.user["id"]]["CONFIGURE_STUDY_GCP_SETUP_MODE"]["value"] = request.form.get(
+        "CONFIGURE_STUDY_GCP_SETUP_MODE"
+    )
+    doc_ref_dict["personal_parameters"][g.user["id"]]["SA_EMAIL"]["value"] = request.form.get("SA_EMAIL")
     doc_ref.set(doc_ref_dict)
     return redirect(url_for("studies.study", study_title=study_title))
 
 
-@bp.route("/study/<study_title>/download_sa_key_file", methods=("GET",))
-@login_required
-def download_sa_key_file(study_title: str) -> Response:
-    db = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
-    doc_ref_dict = doc_ref.get().to_dict()
+# @bp.route("/study/<study_title>/download_sa_key_file", methods=("GET",))
+# @login_required
+# def download_sa_key_file(study_title: str) -> Response:
+#     db = current_app.config["DATABASE"]
+#     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+#     doc_ref_dict = doc_ref.get().to_dict()
 
-    sa_email, json_sa_key = setup_service_account_and_key(study_title, g.user["id"])
-    doc_ref_dict["personal_parameters"][g.user["id"]]["SA_EMAIL"]["value"] = sa_email
-    doc_ref.set(doc_ref_dict)
-    key_file = io.BytesIO(json_sa_key.encode("utf-8"))
-    return send_file(
-        key_file,
-        download_name="sa_key.json",
-        mimetype="text/plain",
-        as_attachment=True,
-    )
+#     sa_email, json_sa_key = setup_service_account_and_key(study_title, g.user["id"])
+#     doc_ref_dict["personal_parameters"][g.user["id"]]["SA_EMAIL"]["value"] = sa_email
+#     doc_ref.set(doc_ref_dict)
+#     key_file = io.BytesIO(json_sa_key.encode("utf-8"))
+#     return send_file(
+#         key_file,
+#         download_name="sa_key.json",
+#         mimetype="text/plain",
+#         as_attachment=True,
+#     )

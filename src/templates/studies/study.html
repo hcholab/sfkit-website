@@ -70,7 +70,7 @@
                   </div>
                 </div>
               {% else %}
-                <h5>Your service account key file should download. Once you have that, you can proceed with the CLI tool with
+                <h5>Please proceed with the CLI tool with
                   <i>`pip install sfkit`</i>. For more details, see the coresponding github repo
                   <a class="text-decoration-none" href="https://github.com/simonjmendelsohn/sfkit">here</a>.</h5>
               {% endif %}
@@ -191,9 +191,9 @@
 
   <script type="module" src="{{ url_for('static', filename='javascript/copy_button.js') }}"></script>
 
-  {% if parameters['CONFIGURE_STUDY_GCP_SETUP_MODE']['value'] == "user" and parameters['SA_EMAIL']['value'] == "" and study['type'] == "SFGWAS" %}
+  {# {% if parameters['CONFIGURE_STUDY_GCP_SETUP_MODE']['value'] == "user" and parameters['SA_EMAIL']['value'] == "" and study['type'] == "SFGWAS" %}
     <script>
       window.location.href = "{{ url_for('studies.download_sa_key_file', study_title=study['title']) }}";
     </script>
-  {% endif %}
+  {% endif %} #}
 {% endblock %}
