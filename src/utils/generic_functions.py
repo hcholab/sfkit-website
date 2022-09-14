@@ -2,13 +2,13 @@ from flask import current_app, g, redirect, url_for
 from werkzeug import Response
 
 
-def redirect_with_flash(url="", location: str = "", message: str = "", error: str = "") -> Response:
+def redirect_with_flash(url: str = "", location: str = "", message: str = "", error: str = "") -> Response:
     if location:
         url = url_for(location)
-    r = redirect(url)
+    dest = redirect(url)
     print(f"{message}: {error}") if error else print(message)
-    flash(r, message)
-    return r
+    flash(dest, message)
+    return dest
 
 
 def flash(response: Response, message: str) -> Response:

@@ -13,7 +13,7 @@ from src.utils.gwas_functions import create_instance_name
 bp = Blueprint("gwas", __name__, url_prefix="/gwas")
 
 
-def validate_data_for_cp0(study_title, doc_ref_dict):
+def validate_data_for_cp0(study_title: str, doc_ref_dict: dict) -> None:
     gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
     gcloudCompute.setup_networking(doc_ref_dict, "0")
     gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, "0", study_title)

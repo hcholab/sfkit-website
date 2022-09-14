@@ -225,7 +225,7 @@ def parameters(study_title: str) -> Response:
 
 
 @bp.route("/personal_parameters/<study_title>", methods=("GET", "POST"))
-def personal_parameters(study_title):
+def personal_parameters(study_title: str) -> Response:
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     parameters = doc_ref.get().to_dict().get("personal_parameters")

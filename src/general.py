@@ -80,7 +80,7 @@ def index() -> tuple[str, int]:
         return ("", 204)
 
 
-def process_pubsub_from_website_workflow(publishTime: str, msg: str) -> None:
+def process_pubsub_from_website_workflow(publish_time: str, msg: str) -> None:
     [study_title, rest] = msg.split("-secure-gwas", maxsplit=1)
     [role, content] = rest.split("-", maxsplit=1)
 
@@ -95,14 +95,13 @@ def process_pubsub_from_website_workflow(publishTime: str, msg: str) -> None:
 
         if "validate" in content:
             [_, size, files] = content.split("|", maxsplit=2)
-            statuses[user_id] = (  # type: ignore
-                ["not ready"]
-                if data_has_valid_size(int(size), doc_ref_dict, int(role)) and data_has_valid_files(files)
-                else ["invalid data"]
-            )
+            if data_has_valid_size(int(size), doc_ref_dict, int(role)) and data_has_valid_files(files):
+                statuses[user_id] = ["not ready"]
+            else:
+                statuses[user_id] = ["invalid data"]
 
         elif content not in str(statuses.get(user_id, [])):  # type: ignore
-            statuses.get(user_id).append(f"{content} - {publishTime}")  # type: ignore
+            statuses.get(user_id).append(f"{content} - {publish_time}")  # type: ignore
         doc_ref.set({"status": statuses}, merge=True)
 
         if "validate" in content or "GWAS Completed!" in content:
@@ -132,7 +131,7 @@ def update_firestore(msg: str) -> None:
     doc_ref.set(doc_ref_dict)
 
 
-def run_protocol_for_cp0(title, doc_ref) -> None:
+def run_protocol_for_cp0(title: str, doc_ref) -> None:
     doc_ref_dict = doc_ref.get().to_dict()
 
     if doc_ref_dict["type"] in ["gwas", "GWAS"]:

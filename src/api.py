@@ -1,3 +1,4 @@
+from typing import Tuple
 import google.auth.transport.requests
 from flask import Blueprint, current_app, request
 from google.oauth2 import id_token
@@ -48,22 +49,19 @@ def update_firestore():
         doc_ref_dict["status"][email] = [status]
     else:
         name, value = parameter.split("=")
-        doc_ref_dict["personal_parameters"][email][name]["value"] = value
+        if name in doc_ref_dict["personal_parameters"][email]:
+            doc_ref_dict["personal_parameters"][email][name]["value"] = value
+        elif name in doc_ref_dict["parameters"]:
+            doc_ref_dict["parameters"][name]["value"] = value
+        else:
+            print(f"parameter {name} not found in {title}")
+            return {"error": f"parameter {name} not found in {title}"}, 400
     doc_ref.set(doc_ref_dict)
 
     return Response("", status=200)
 
 
-@bp.route("/get_github_token", methods=["GET"])
-def get_github_token():
-    if not verify_authorization_header(request):
-        return {"error": "unauthorized"}, 401
-
-    doc_ref = current_app.config["DATABASE"].collection("meta").document("token")
-    return doc_ref.get().to_dict() or {}
-
-
-def verify_authorization_header(request, authenticate_user=True) -> dict:
+def verify_authorization_header(request, authenticate_user: bool = True) -> dict:
     print("verifying authorization token")
 
     study_title = request.args.get("study_title")
