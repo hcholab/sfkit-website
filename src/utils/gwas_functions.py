@@ -29,7 +29,7 @@ def valid_study_title(study_title: str, type: str) -> tuple[bool, Response]:
                 ),
             )
 
-    if type != "SFGWAS":
+    if type == "GWAS":
         return (True, redirect(url_for("studies.parameters", study_title=study_title)))
     else:
         return (True, redirect(url_for("studies.study", study_title=study_title)))
