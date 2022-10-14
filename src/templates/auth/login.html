@@ -14,6 +14,7 @@
               <input class="form-control mb-2" name="email" type="email" placeholder="E-mail address" autocomplete="off" required="required">
               <input class="form-control mb-2" name="password" type="password" placeholder="Password" autocomplete="off" required="required">
               <button class="btn btn-primary py-2 w-100 mb-2" type="submit">Log In</button>
+              <input type="hidden" value="{{ request.args.get('next', '') }}"/>
             </form>
             <script src="https://accounts.google.com/gsi/client" async="async" defer="defer"></script>
             <div id="g_id_onload" data-client_id="419003787216-rcif34r976a9qm3818qgeqed7c582od6.apps.googleusercontent.com" data-context="signin" data-ux_mode="redirect" data-login_uri="{{ url_for('auth.login_with_google_callback') }}" data-auto_prompt="false"></div>

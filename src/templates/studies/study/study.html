@@ -10,44 +10,27 @@
       <div class="row">
         <div class="col-lg-7 mx-auto">
           <div class="p-5 bg-light rounded text-center">
-            <span>
-              <small class="text-muted">
-                Created by
-                {{ study['owner'] }}
-                on
-                {{ study['created'].strftime('%m-%d-%Y') }}
-              </small>
-            </span>
-            <h2 class="mt-2 fw-bold">{{ study['title'] }}</h2>
-            <p class="lead text-muted mb-1">{{ study['description'] }}</p>
-            <div class="mb-2">
-              {% include 'studies/utils/study_information.html'%}
+
+            <div class="mt-0 mb-3">
+              <span>
+                <small class="text-muted">
+                  Created by
+                  {{ study['owner'] }}
+                  on
+                  {{ study['created'].strftime('%m-%d-%Y') }}
+                </small>
+              </span>
+              <h2 class="fw-bold mb-0">{{ study['title'] }}</h2>
+              <p class="lead text-muted mb-1">{{ study['description'] }}</p>
+              {% include 'studies/study/study_information.html'%}
             </div>
-            <div class="mb-3">
-              <div>
-                <p class="fw-bold mb-0">Study Participants:</p>
-                {% for i in range(study['participants'] | length) %}
-                  {{study['participants'][i]}}
-                  <br>
-                {% endfor %}
-              </div>
-            </div>
-            {% if study['requested_participants'] %}
-              <div class=" mb-3">
-                Requested Participants:
-                {% for participant in study['requested_participants'] %}
-                  <br>
-                  <small class="text-muted ms-2 me-2">
-                    {{ participant }}
-                    <a href="{{ url_for('studies.approve_join_study', study_title=study['title'], user_id=participant) }}" type="button" class="btn btn-sm btn-info">Approve Request</a>
-                  </small>
-                {% endfor %}
-              </div>
-            {% endif %}
-            <div class="mb-3" id="instructions">
+
+            {% include 'studies/study/participants.html'%}
+
+            <div class="my-3" id="instructions">
               {% if parameters['CONFIGURE_STUDY_GCP_SETUP_MODE']['value'] == "" %}
                 <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#configure_study_gcp_setup_mode_modal">Configure Study</button>
-                {% include 'studies/utils/configure_study_gcp_setup_mode.html' %}
+                {% include 'studies/study/configure_study_gcp_setup_mode.html' %}
               {% elif parameters['CONFIGURE_STUDY_GCP_SETUP_MODE']['value'] == "website" %}
                 <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#configure_study_modal">Configure Study</button>
 
@@ -61,7 +44,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                       </div>
                       <div class="modal-body">
-                        {% include 'studies/utils/instructions.html' %}
+                        {% include 'studies/study/instructions.html' %}
                       </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -71,7 +54,7 @@
                 </div>
               {% else %}
                 <h5>Please proceed with the CLI tool with
-                  <i>`pip install sfkit`</i>. For more details, see the coresponding github repo
+                  <i>`pip install sfkit`</i>. For more details, see the corresponding github repo
                   <a class="text-decoration-none" href="https://github.com/simonjmendelsohn/sfkit">here</a>.</h5>
               {% endif %}
             </div>
@@ -190,10 +173,4 @@
   <script type="module" src="{{ url_for('static', filename='javascript/save_page_state.js') }}"></script>
 
   <script type="module" src="{{ url_for('static', filename='javascript/copy_button.js') }}"></script>
-
-  {# {% if parameters['CONFIGURE_STUDY_GCP_SETUP_MODE']['value'] == "user" and parameters['SA_EMAIL']['value'] == "" and study['type'] == "SFGWAS" %}
-    <script>
-      window.location.href = "{{ url_for('studies.download_sa_key_file', study_title=study['title']) }}";
-    </script>
-  {% endif %} #}
 {% endblock %}

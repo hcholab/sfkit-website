@@ -9,12 +9,12 @@ from werkzeug import Response
 from requests.exceptions import HTTPError
 
 
-def update_user(email: str, password: str) -> Response:
+def update_user(email: str, password: str, redirect_url: str = "") -> Response:
     expires_in = datetime.timedelta(days=1)
 
     user = sign_in_with_email_and_password(email, password)
     session_cookie = firebase_auth.create_session_cookie(user["idToken"], expires_in=expires_in)
-    response = redirect(url_for("studies.index"))
+    response = redirect(redirect_url or url_for("studies.index"))
     response.set_cookie(
         "session",
         session_cookie,

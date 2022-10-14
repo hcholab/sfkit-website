@@ -2,6 +2,9 @@ import io
 from datetime import datetime
 
 from flask import Blueprint, current_app, g, make_response, redirect, render_template, request, send_file, url_for
+from python_http_client.exceptions import HTTPError
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Email, Mail
 from werkzeug import Response
 
 from src.auth import login_required
@@ -9,8 +12,7 @@ from src.utils import constants
 from src.utils.generic_functions import add_notification, redirect_with_flash
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
 from src.utils.google_cloud.google_cloud_pubsub import GoogleCloudPubsub
-from src.utils.google_cloud.google_cloud_service_accounts import delete_service_account, setup_service_account_and_key
-from src.utils.gwas_functions import create_instance_name, valid_study_title
+from src.utils.gwas_functions import valid_study_title
 
 bp = Blueprint("studies", __name__)
 
@@ -37,7 +39,7 @@ def study(study_title: str) -> Response:
 
     return make_response(
         render_template(
-            "studies/study.html",
+            "studies/study/study.html",
             study=doc_ref_dict,
             public_keys=public_keys,
             role=role,
@@ -120,6 +122,7 @@ def create_study(type: str) -> Response:
                 g.user["id"]: constants.default_user_parameters(type),
             },
             "requested_participants": [],
+            "invited_participants": [],
         }
     )
 
@@ -163,12 +166,55 @@ def request_join_study(study_title: str) -> Response:
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
-    doc_ref_dict["requested_participants"] = [g.user["id"]]
+    doc_ref_dict["requested_participants"].append(g.user["id"])
     doc_ref.set(
         {"requested_participants": doc_ref_dict["requested_participants"]},
         merge=True,
     )
     return redirect(url_for("studies.index"))
+
+
+@bp.route("/invite_participant/<study_title>", methods=["POST"])
+@login_required
+def invite_participant(study_title: str) -> Response:
+    invitee: str = request.form["invite_participant_email"]
+    email(invitee, study_title)
+
+    db = current_app.config["DATABASE"]
+    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref_dict = doc_ref.get().to_dict()
+    doc_ref_dict["invited_participants"].append(invitee)
+    doc_ref.set(
+        {"invited_participants": doc_ref_dict["invited_participants"]},
+        merge=True,
+    )
+    return redirect(url_for("studies.study", study_title=study_title))
+
+
+def email(recipient: str, study_title: str) -> str:
+    doc_ref_dict: dict = current_app.config["DATABASE"].collection("meta").document("sendgrid").get().to_dict()
+
+    sg = SendGridAPIClient(api_key=doc_ref_dict["api_key"])
+
+    html_content = f"<p>Hello!<br>You have been invited to join the {study_title} study on the Secure GWAS website.  Click <a href='https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/accept_invitation/{study_title.replace(' ', '').lower()}'>here</a> to accept the invitation.</p>"
+
+    message = Mail(
+        to_emails=recipient,
+        from_email=Email(doc_ref_dict["from_email"], doc_ref_dict["from_user"]),
+        subject=f"sfkit: Invitation to join {study_title} study",
+        html_content=html_content,
+    )
+    message.add_bcc(doc_ref_dict["from_email"])
+
+    try:
+        response = sg.send(message)
+        print("Email sent")
+        return f"email.status_code={response.status_code}"
+        # expected 202 Accepted
+
+    except HTTPError as e:
+        print("Email failed to send", e)
+        return f"email.status_code={e.status_code}"
 
 
 @bp.route("/approve_join_study/<study_title>/<user_id>")
@@ -191,9 +237,35 @@ def approve_join_study(study_title: str, user_id: str) -> Response:
 
     add_notification(f"You have been accepted to {study_title}", user_id=user_id)
 
+    # TODO: when do we need this pubsub?
     # add pubsub topic for this user for this study
     gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, "2", study_title)
     gcloudPubsub.create_topic_and_subscribe()
+
+    return redirect(url_for("studies.study", study_title=study_title))
+
+
+@bp.route("/accept_invitation/<study_title>", methods=["GET", "POST"])
+@login_required
+def accept_invitation(study_title: str) -> Response:
+    db = current_app.config["DATABASE"]
+    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref_dict = doc_ref.get().to_dict()
+
+    doc_ref.set(
+        {
+            "invited_participants": doc_ref_dict["invited_participants"].remove(g.user["id"]),
+            "participants": doc_ref_dict["participants"] + [g.user["id"]],
+            "personal_parameters": doc_ref_dict["personal_parameters"]
+            | {g.user["id"]: constants.default_user_parameters(doc_ref_dict["type"])},
+            "status": doc_ref_dict["status"] | {g.user["id"]: [""]},
+        },
+        merge=True,
+    )
+
+    # add pubsub topic for this user for this study
+    # gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, "2", study_title)
+    # gcloudPubsub.create_topic_and_subscribe()
 
     return redirect(url_for("studies.study", study_title=study_title))
 

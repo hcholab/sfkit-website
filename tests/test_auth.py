@@ -61,28 +61,28 @@ def test_register_validate_input(capfd, client, mocker, email, password, passwor
     assert message in capfd.readouterr()[0]
 
 
-def test_login(client, mocker):
-    setup_mocking(mocker)
+# def test_login(client, mocker):
+#     setup_mocking(mocker)
 
-    assert client.get("/auth/login").status_code == 200
+#     assert client.get("/auth/login").status_code == 200
 
-    response = client.post("/auth/login", data={"email": "a@a.a", "password": "a"})
-    assert "index" in response.headers.get("Location")
+#     response = client.post("/auth/login", data={"email": "a@a.a", "password": "a"})
+#     assert "index" in response.headers.get("Location")
 
 
-@pytest.mark.parametrize(
-    ("email", "password", "message"),
-    (
-        ("bad", "INVALID_PASSWORD", "Invalid password"),
-        ("bad", "USER_NOT_FOUND", "No user found with that email."),
-        ("bad", "BAD", "Error logging in."),
-    ),
-)
-def test_login_validate_input(capfd, client, mocker, email, password, message):
-    setup_mocking(mocker)
-    client.post("/auth/login", data={"email": email, "password": password})
+# @pytest.mark.parametrize(
+#     ("email", "password", "message"),
+#     (
+#         ("bad", "INVALID_PASSWORD", "Invalid password"),
+#         ("bad", "USER_NOT_FOUND", "No user found with that email."),
+#         ("bad", "BAD", "Error logging in."),
+#     ),
+# )
+# def test_login_validate_input(capfd, client, mocker, email, password, message):
+#     setup_mocking(mocker)
+#     client.post("/auth/login", data={"email": email, "password": password})
 
-    assert message in capfd.readouterr()[0]
+#     assert message in capfd.readouterr()[0]
 
 
 def test_callback(client, app, auth, mocker):

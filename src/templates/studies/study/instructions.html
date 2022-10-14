@@ -247,7 +247,7 @@
   {% if parameters['CONFIGURE_STUDY_GCP_SETUP_MODE']['value'] == "website" %}
     {% call instruction_step(i.value, "Give Permissions") %}
     {% set i.value = i.value + 1 %}
-    {% include 'studies/utils/permissions.html' %}
+    {% include 'studies/study/permissions.html' %}
     {% endcall %}
     {% call instruction_step(i.value, "Validate Data") %}
     <div>

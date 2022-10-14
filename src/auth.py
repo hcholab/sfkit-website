@@ -1,18 +1,11 @@
 import functools
 import secrets
 import string
+import typing
 
 import flask
 from firebase_admin import auth as firebase_auth
-from flask import (
-    Blueprint,
-    g,
-    make_response,
-    redirect,
-    render_template,
-    request,
-    url_for,
-)
+from flask import Blueprint, g, make_response, redirect, render_template, request, url_for
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from werkzeug import Response
@@ -56,10 +49,10 @@ def remove_old_flash_messages(response: flask.Response) -> flask.Response:
     return response
 
 
-def login_required(view):
+def login_required(view: typing.Callable) -> typing.Callable:
     @functools.wraps(view)
-    def wrapped_view(**kwargs):
-        return view(**kwargs) if g.user else redirect(url_for("auth.login"))
+    def wrapped_view(**kwargs) -> typing.Callable:
+        return view(**kwargs) if g.user else redirect(url_for("auth.login", next=request.url))
 
     return wrapped_view
 
@@ -107,7 +100,7 @@ def login() -> Response:
     password = request.form["password"]
 
     try:
-        return update_user(email, password)
+        return update_user(email, password, redirect_url=request.form.get("next", ""))
     except Exception as e:
         if ("INVALID_PASSWORD") in str(e):
             return redirect_with_flash(location="auth.login", message="Invalid password. Please try again.")

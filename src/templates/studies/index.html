@@ -38,14 +38,14 @@
       <div class="row p-5 bg-light rounded text-center">
         <ul class="col-12 nav nav-tabs mb-3" role="tablist">
           <li class="nav-item">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#mine" type="button">My Studies</button>
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#mine" type="button">My Studies</button>
           </li>
           <li class="nav-item">
-            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#others" type="button">Other Studies</button>
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#others" type="button">Public Studies</button>
           </li>
         </ul>
         <div class="row tab-content">
-          <div class="container tab-pane fade" id="mine">
+          <div class="container tab-pane fade show active" id="mine">
             <div class="row">
               {% for study in studies %}
                 {% if g.user['id'] in study['participants'] %}
@@ -54,7 +54,7 @@
               {% endfor %}
             </div>
           </div>
-          <div class="container tab-pane fade show active" id="others">
+          <div class="container tab-pane fade" id="others">
             <div class="row">
               {% for study in studies %}
                 {% if g.user['id'] not in study['participants'] %}
