@@ -5,6 +5,10 @@ from google.cloud.pubsub_v1.subscriber.client import subscriber_client
 
 
 class GoogleCloudPubsub:
+    """
+    Class to handle interactions with Google Cloud Pub/Sub
+    """
+
     def __init__(self, project: str, role: str, study_title: str) -> None:
         self.project = project
         self.publisher = publisher_client.PublisherClient()
@@ -21,13 +25,14 @@ class GoogleCloudPubsub:
             self.topic_path = self.publisher.topic_path(self.project, topic_name)
 
         topic_list = self.publisher.list_topics(request={"project": self.project_path})
-        topic_list = list(map(lambda topic: str(topic).split('"')[1], topic_list))
+        topic_list = [str(topic).split('"')[1] for topic in topic_list]
         if self.topic_path not in topic_list:
             print(f"Creating topic {self.topic_path}")
             self.publisher.create_topic(name=self.topic_path)
 
         subscription_list = self.subscriber.list_subscriptions(request={"project": self.project_path})
-        subscription_list = list(map(lambda topic: str(topic).split('"')[1], subscription_list))
+        subscription_list = [str(topic).split('"')[1] for topic in subscription_list]
+
         if self.subscription_path in subscription_list:
             print(f"Subscription {self.subscription_path} already exists")
         else:

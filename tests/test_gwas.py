@@ -20,7 +20,7 @@ def test_validate_data(client, app, auth, mocker):
     mocker.patch("src.gwas.GoogleCloudPubsub", MockGoogleCloudPubsub)
 
     auth.login()
-    client.post("create_study/GWAS", data=test_create_data)
+    client.post("create_study/MPCGWAS", data=test_create_data)
     assert client.get("gwas/validate_data/testtitle").status_code == 302
 
     user_parameters = deepcopy(constants.DEFAULT_USER_PARAMETERS)
@@ -122,7 +122,7 @@ class MockGoogleCloudStorage:
     def __init__(self, project):
         pass
 
-    def copy_parameters_to_bucket(self, study_title, role):
+    def copy_parameters_to_bucket(self, study_title):
         pass
 
     def upload_to_bucket(self, file, filename):

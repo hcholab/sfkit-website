@@ -29,7 +29,7 @@ def test_update_parameters(app, mocker, auth, client):
     google_cloud_storage = setup_mocking_and_get_storage(mocker)
     auth.login()
     client.post(
-        "create_study/GWAS",
+        "create_study/MPCGWAS",
         data=test_create_data,
     )
     doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")

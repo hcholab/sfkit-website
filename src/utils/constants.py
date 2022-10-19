@@ -11,7 +11,7 @@ BASE_P = "1461501637330902918203684832716283019655932542929"
 DATA_VALIDATION_CONSTANT = 4 * len(BASE_P)
 DATA_VALIDATION_FILES = ["g.bin", "m.bin", "p.bin", "other_shared_key.bin", "pos.txt"]
 
-GWAS_SHARED_PARAMETERS = {
+MPCGWAS_SHARED_PARAMETERS = {
     "NUM_SNPS": {
         "name": "Number of SNPs",
         "description": "The number of SNPs (Single Nucleotide Polymorphisms) in the dataset.",
@@ -195,7 +195,11 @@ PCA_SHARED_PARAMETERS = {
     ],
 }
 
-SHARED_PARAMETERS = {"GWAS": GWAS_SHARED_PARAMETERS, "PCA": PCA_SHARED_PARAMETERS, "SFGWAS": PCA_SHARED_PARAMETERS}
+SHARED_PARAMETERS = {
+    "MPCGWAS": MPCGWAS_SHARED_PARAMETERS,
+    "PCA": PCA_SHARED_PARAMETERS,
+    "SFGWAS": PCA_SHARED_PARAMETERS,
+}
 
 
 DEFAULT_USER_PARAMETERS = {
@@ -286,7 +290,7 @@ DEFAULT_USER_PARAMETERS = {
 
 
 def default_user_parameters(study_type: str) -> dict:
-    if study_type == "GWAS":
+    if study_type == "MPCGWAS":
         return DEFAULT_USER_PARAMETERS
     elif study_type in {"PCA", "SFGWAS"}:
         pars = DEFAULT_USER_PARAMETERS.copy()

@@ -43,7 +43,7 @@ def study(study_title: str) -> Response:
             study=doc_ref_dict,
             public_keys=public_keys,
             role=role,
-            type=doc_ref_dict["type"],
+            study_type=doc_ref_dict["study_type"],
             parameters=doc_ref_dict["personal_parameters"][user_id],
         )
     )
@@ -90,18 +90,25 @@ def upload_public_key(study_title: str) -> Response:
         )
 
 
-@bp.route("/create_study/<type>", methods=("GET", "POST"))
+@bp.route("/choose_study_type", methods=["POST"])
 @login_required
-def create_study(type: str) -> Response:
+def choose_study_type() -> Response:
+    study_type = request.form["CHOOSE_STUDY_TYPE"]
+    return redirect(url_for("studies.create_study", study_type=study_type))
+
+
+@bp.route("/create_study/<study_type>", methods=("GET", "POST"))
+@login_required
+def create_study(study_type: str) -> Response:
     if request.method == "GET":
-        return make_response(render_template("studies/create_study.html", type=type))
+        return make_response(render_template("studies/create_study.html", study_type=study_type))
 
     db = current_app.config["DATABASE"]
     title = request.form["title"]
     description = request.form["description"]
     study_information = request.form["study_information"]
 
-    (valid, response) = valid_study_title(title, type)
+    (valid, response) = valid_study_title(title, study_type)
     if not valid:
         return response
 
@@ -109,18 +116,18 @@ def create_study(type: str) -> Response:
     doc_ref.set(
         {
             "title": title,
-            "type": type,
-            "private": request.form["private_study"] == "on",
+            "study_type": study_type,
+            "private": request.form.get("private_study") == "on",
             "description": description,
             "study_information": study_information,
             "owner": g.user["id"],
             "created": datetime.now(),
             "participants": ["Broad", g.user["id"]],
             "status": {"Broad": ["ready"], g.user["id"]: [""]},
-            "parameters": constants.SHARED_PARAMETERS[type],
+            "parameters": constants.SHARED_PARAMETERS[study_type],
             "personal_parameters": {
                 "Broad": constants.broad_user_parameters(),
-                g.user["id"]: constants.default_user_parameters(type),
+                g.user["id"]: constants.default_user_parameters(study_type),
             },
             "requested_participants": [],
             "invited_participants": [],
@@ -230,7 +237,7 @@ def approve_join_study(study_title: str, user_id: str) -> Response:
             "requested_participants": doc_ref_dict["requested_participants"].remove(user_id),
             "participants": doc_ref_dict["participants"] + [user_id],
             "personal_parameters": doc_ref_dict["personal_parameters"]
-            | {user_id: constants.default_user_parameters(doc_ref_dict["type"])},
+            | {user_id: constants.default_user_parameters(doc_ref_dict["study_type"])},
             "status": doc_ref_dict["status"] | {user_id: [""]},
         },
         merge=True,
@@ -258,7 +265,7 @@ def accept_invitation(study_title: str) -> Response:
             "invited_participants": doc_ref_dict["invited_participants"].remove(g.user["id"]),
             "participants": doc_ref_dict["participants"] + [g.user["id"]],
             "personal_parameters": doc_ref_dict["personal_parameters"]
-            | {g.user["id"]: constants.default_user_parameters(doc_ref_dict["type"])},
+            | {g.user["id"]: constants.default_user_parameters(doc_ref_dict["study_type"])},
             "status": doc_ref_dict["status"] | {g.user["id"]: [""]},
         },
         merge=True,
@@ -326,6 +333,16 @@ def choose_workflow(study_title: str) -> Response:
     doc_ref_dict["personal_parameters"][g.user["id"]]["CONFIGURE_STUDY_GCP_SETUP_MODE"]["value"] = request.form.get(
         "CONFIGURE_STUDY_GCP_SETUP_MODE"
     )
+    doc_ref.set(doc_ref_dict)
+    return redirect(url_for("studies.study", study_title=study_title))
+
+
+@bp.route("/study/<study_title>/set_sa_email", methods=("POST",))
+@login_required
+def set_sa_email(study_title: str) -> Response:
+    db = current_app.config["DATABASE"]
+    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref_dict = doc_ref.get().to_dict()
     doc_ref_dict["personal_parameters"][g.user["id"]]["SA_EMAIL"]["value"] = request.form.get("SA_EMAIL")
     doc_ref.set(doc_ref_dict)
     return redirect(url_for("studies.study", study_title=study_title))

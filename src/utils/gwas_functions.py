@@ -6,12 +6,12 @@ from src.utils.generic_functions import redirect_with_flash
 from werkzeug import Response
 
 
-def valid_study_title(study_title: str, type: str) -> tuple[bool, Response]:
+def valid_study_title(study_title: str, study_type: str) -> tuple[bool, Response]:
     if not re.match(r"^[a-zA-Z][ a-zA-Z0-9-]*$", study_title):
         return (
             False,
             redirect_with_flash(
-                url=url_for("studies.create_study", type=type),
+                url=url_for("studies.create_study", study_type=study_type),
                 message="Title can include only letters, numbers, spaces, and dashes, and must start with a letter.",
             ),
         )
@@ -19,17 +19,17 @@ def valid_study_title(study_title: str, type: str) -> tuple[bool, Response]:
     # validate that title is unique
     db = current_app.config["DATABASE"]
     studies = db.collection("studies").stream()
-    for study in studies:  # sourcery skip: use-next
+    for study in studies:
         if study.to_dict()["title"].replace(" ", "").lower() == study_title.replace(" ", "").lower():
             return (
                 False,
                 redirect_with_flash(
-                    url=url_for("studies.create_study", type=type),
+                    url=url_for("studies.create_study", study_type=study_type),
                     message="Title already exists.",
                 ),
             )
 
-    if type == "GWAS":
+    if study_type == "GWAS":
         return (True, redirect(url_for("studies.parameters", study_title=study_title)))
     else:
         return (True, redirect(url_for("studies.study", study_title=study_title)))

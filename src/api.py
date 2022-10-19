@@ -1,26 +1,25 @@
-from typing import Tuple
 import google.auth.transport.requests
 from flask import Blueprint, current_app, request
 from google.oauth2 import id_token
-from werkzeug import Response
+from werkzeug import Request, Response
 
 bp = Blueprint("api", __name__)
 
 
 @bp.route("/get_doc_ref_dict", methods=["GET"])
-def get_doc_ref_dict():
+def get_doc_ref_dict() -> Response:
     if not verify_authorization_header(request):
-        return {"error": "unauthorized"}, 401
+        return Response({"error": "unauthorized"}, 401)
 
     study_title: str = str(request.args.get("study_title"))
-    return current_app.config["DATABASE"].collection("studies").document(study_title).get().to_dict() or {}
+    return Response(current_app.config["DATABASE"].collection("studies").document(study_title).get().to_dict() or {})
 
 
 @bp.route("/get_study_options", methods=["GET"])
-def get_study_options():
+def get_study_options() -> Response:
     token: dict = verify_authorization_header(request, authenticate_user=False)
     if not token:
-        return {"error": "unauthorized"}, 401
+        return Response({"error": "unauthorized"}, 401)
 
     options: list = []
     sa_email: str = str(token.get("email"))
@@ -31,13 +30,13 @@ def get_study_options():
             for user in doc_ref_dict["participants"]
             if doc_ref_dict["personal_parameters"][user]["SA_EMAIL"]["value"] == sa_email
         )
-    return {"options": options}
+    return Response({"options": options})
 
 
 @bp.route("/update_firestore", methods=["GET"])
-def update_firestore():
+def update_firestore() -> Response:
     if not verify_authorization_header(request):
-        return {"error": "unauthorized"}, 401
+        return Response({"error": "unauthorized"}, 401)
 
     msg: str = str(request.args.get("msg"))
     _, parameter, title, email = msg.split("::")
@@ -55,13 +54,13 @@ def update_firestore():
             doc_ref_dict["parameters"][name]["value"] = value
         else:
             print(f"parameter {name} not found in {title}")
-            return {"error": f"parameter {name} not found in {title}"}, 400
+            return Response({"error": f"parameter {name} not found in {title}"}, 400)
     doc_ref.set(doc_ref_dict)
 
     return Response("", status=200)
 
 
-def verify_authorization_header(request, authenticate_user: bool = True) -> dict:
+def verify_authorization_header(request: Request, authenticate_user: bool = True) -> dict:
     print("verifying authorization token")
 
     study_title = request.args.get("study_title")

@@ -74,15 +74,15 @@ def test_upload_public_key(app, client, auth, mocker):
     assert doc_ref.get().to_dict()["personal_parameters"]["a@a.com"]["PUBLIC_KEY"]["value"] == "new_public_key"
 
 
-def test_create_study(client, auth, mocker):
-    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
-    mocker.patch("src.studies.GoogleCloudPubsub", MockGoogleCloudPubsub)
-    auth.login()
-    assert client.get("create_study/GWAS").status_code == 200
-    response = client.post("create_study/GWAS", data=test_create_data)
-    assert "/parameters/testtitle" in response.headers.get("Location")
-    response = client.post("create_study/GWAS", data=test_create_data)
-    assert "/create_study/GWAS" in response.headers.get("Location")
+# def test_create_study(client, auth, mocker):
+#     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+#     mocker.patch("src.studies.GoogleCloudPubsub", MockGoogleCloudPubsub)
+#     auth.login()
+#     assert client.get("create_study/MPCGWAS").status_code == 200
+#     response = client.post("create_study/MPCGWAS", data=test_create_data)
+#     assert "/parameters/testtitle" in response.headers.get("Location")
+#     response = client.post("create_study/MPCGWAS", data=test_create_data)
+#     assert "/create_study/MPCGWAS" in response.headers.get("Location")
 
 
 # def test_delete_study(client, app, auth, mocker):
@@ -110,7 +110,7 @@ def test_create_study(client, auth, mocker):
 def test_request_join_study(client, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     auth.login()
-    client.post("create_study/GWAS", data=test_create_data)
+    client.post("create_study/MPCGWAS", data=test_create_data)
     response = client.get("request_join_study/testtitle")
     assert "index" in response.headers.get("Location")
 
@@ -119,7 +119,7 @@ def test_approve_join_study(client, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     mocker.patch("src.studies.GoogleCloudPubsub", MockGoogleCloudPubsub)
     auth.login()
-    client.post("create_study/GWAS", data=test_create_data)
+    client.post("create_study/MPCGWAS", data=test_create_data)
 
     auth.logout()
     auth.login("b@b.com", "b")
@@ -134,7 +134,7 @@ def test_approve_join_study(client, auth, mocker):
 def test_parameters(client, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     auth.login()
-    client.post("create_study/GWAS", data=test_create_data)
+    client.post("create_study/MPCGWAS", data=test_create_data)
     assert client.get("parameters/testtitle").status_code == 200
 
     response = client.post("parameters/testtitle", data={"save": "save"})
@@ -174,7 +174,7 @@ def test_parameters(client, auth, mocker):
 def test_personal_parameters(client, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     auth.login()
-    client.post("create_study/GWAS", data=test_create_data)
+    client.post("create_study/MPCGWAS", data=test_create_data)
     # assert client.get("personal_parameters/testtitle").status_code == 200
 
     client.post("personal_parameters/testtitle", data={"NUM_INDS": "NUM_INDS"})

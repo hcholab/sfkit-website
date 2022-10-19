@@ -258,7 +258,7 @@
         button:
         {% if study['status'][g.user['id']] == [''] %}
           <p>
-            <a href="{{ url_for(type.lower() + '.validate_data', study_title=study['title']) }}" class="mt-2 btn btn-success" onclick="loading();">
+            <a href="{{ url_for('gwas.validate_data', study_title=study['title']) }}" class="mt-2 btn btn-success" onclick="loading();">
               <span class="normal-content">
                 Validate Data
               </span>

@@ -33,7 +33,6 @@
                 {% include 'studies/study/configure_study_gcp_setup_mode.html' %}
               {% elif parameters['CONFIGURE_STUDY_GCP_SETUP_MODE']['value'] == "website" %}
                 <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#configure_study_modal">Configure Study</button>
-
                 <div class="modal fade" id="configure_study_modal" tabindex="-1">
                   <div class="modal-dialog modal-xl">
                     <div class="modal-content">
@@ -52,88 +51,53 @@
                     </div>
                   </div>
                 </div>
+                {% if study["status"][g.user["id"]] == [""] or study["status"][g.user["id"]] == ["validating"] %}
+                  <div class="mt-2">
+                    <button type="button" class="mt-2 btn btn-success" data-bs-toggle="modal" data-bs-target="#vmConfig" disabled="disabled">
+                      Begin
+                      {{ type }}
+                      Workflow
+                    </button>
+                    <p>You must finish configuring your study before you can begin the
+                      {{ type }}
+                      workflow</p>
+                  </div>
+                {% elif study["status"][g.user["id"]] == ["not ready"] %}
+                  {% include 'studies/study/begin_workflow.html' %}
+                {% else %}
+                  <br>
+                  Status:
+                  {% if ((["not ready"] in study["status"].values())or([""] in study["status"].values())or(["invalid data"] in study["status"].values())or(["validating"] in study["status"].values())) %}
+                    Waiting for others to be ready...
+                  {% else %}
+                    <div class="status text-start"></div>
+                  {% endif %}
+                  <br>
+                  <form action="{{ url_for(type.lower() + '.start_protocol', study_title=study['title']) }}" method="post">
+                    <button type="submit" class="btn btn-secondary">Check for update</button>
+                  </form>
+                {% endif %}
               {% else %}
-                <h5>Please proceed with the CLI tool with
-                  <i>`pip install sfkit`</i>. For more details, see the corresponding github repo
-                  <a class="text-decoration-none" href="https://github.com/simonjmendelsohn/sfkit">here</a>.</h5>
+                {% if parameters['SA_EMAIL']['value'] == "" %}
+                  <form class="mt-5 mb-2" method="post" action="{{url_for('studies.set_sa_email', study_title=study['title'])}}">
+                    <p class="float-start text-start mb-0">Please enter the service account email for your GCP VM:</p>
+                    <p>
+                      <small class="text-muted float-start text-start">(This can be obtained with the
+                        <code>gcloud auth list</code>
+                        command in your VM)</small>
+                    </p>
+                    <input class="form-control mb-2" name="SA_EMAIL" type="email" placeholder="Service Account Email" autocomplete="off">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                  </form>
+                  <small class="float-start text-start text-muted">Note: If you are deciding what VM size you want/need, we generally recommend using the e2-highmem-16 (16 vCPUs, 128 GB memory) as a reasonable default (estimated cost of ~$20). This size has worked well for us on datasets with &lt;30,000 samples and &lt;700,000 SNPs for SFGWAS. If you are running a larger dataset, you may need to increase the size of the VM. On a dataset with ~10 million SNPs, we have used the larger n2-highmem-64 or n2-highmem-128. If you are running a smaller dataset, you may be able to get away with a smaller VM. Feel free to reach out if you have further questions or concerns.</small>
+                {% else %}
+                  <h5>Please proceed with the CLI tool with
+                    <i>`pip install sfkit`</i>
+                    on your GCP VM. For more details, see the tutorial
+                    <a class="text-decoration-none" href="https://sfkit.readthedocs.io/en/latest/tutorial.html#cli">here</a>.</h5>
+                {% endif %}
               {% endif %}
             </div>
-            {% if parameters['CONFIGURE_STUDY_GCP_SETUP_MODE']['value'] == "user" %}
-            {% elif study["status"][g.user["id"]] == [""] or study["status"][g.user["id"]] == ["validating"] %}
-              <button type="button" class="mt-2 btn btn-success" data-bs-toggle="modal" data-bs-target="#vmConfig" disabled="disabled">
-                Begin
-                {{ type }}
-                Workflow
-              </button>
-              <p>You must finish configuring your study before you can begin the
-                {{ type }}
-                workflow</p>
-            {% elif study["status"][g.user["id"]] == ["not ready"] %}
-              <button type="button" class="mt-2 btn btn-success" data-bs-toggle="modal" data-bs-target="#vmConfig">
-                Begin
-                {{ type }}
-                Workflow
-              </button>
-              <div class="modal fade" id="vmConfig" tabindex="-1">
-                <div class="modal-dialog modal-lg">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h5 class="modal-title" id="vmConfigLabel">Choose Virtual Machine Configuration</h5>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body container">
-                      <form action="{{ url_for(type.lower() + '.start_protocol', study_title=study['title']) }}" method="post">
-                        <div class="text-start row">
-                          <label for="BOOT_DISK_SIZE" class="col-sm-3 col-form-label">{{parameters['BOOT_DISK_SIZE']['name']}}</label>
-                          <div class="col-sm-9">
-                            <input type="number" class="form-control" id="BOOT_DISK_SIZE" name="BOOT_DISK_SIZE" min="10" value="{{request.form['BOOT_DISK_SIZE'] or parameters['BOOT_DISK_SIZE']['value']}}">
-                          </div>
-                        </div>
-                        <p class="mt-3 text-start text-muted">
-                          {{parameters['BOOT_DISK_SIZE']['description']}}
-                        </p>
-                        <div class="text-start row">
-                          <label for="NUM_CPUS" class="col-sm-3 col-form-label">
-                            {{parameters['NUM_CPUS']['name']}}
-                          </label>
-                          <div class="col-sm-9">
-                            <select class="form-select" name="NUM_CPUS" id="NUM_CPUS" value="{{ request.form['NUM_CPUS'] or parameters['NUM_CPUS']['value'] }}">
-                              <option value="4">4</option>
-                              <option value="8">8</option>
-                              <option value="16">16</option>
-                            </select>
-                          </div>
-                        </div>
-                        <p class="mt-3 text-start text-muted">
-                          {{parameters['NUM_CPUS']['description']}}
-                        </p>
-                        <button class="mt-2 btn btn-primary" type="submit" onclick="loading();">
-                          <div class="loading" style="display:none">
-                            <span class="spinner-grow spinner-grow-sm" role="status"></span>
-                            Loading...
-                          </div>
-                          <div class="normal-content">
-                            Confirm Virtual Machine Configuration
-                          </div>
-                        </button>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            {% else %}
-              <br>
-              Status:
-              {% if ((["not ready"] in study["status"].values())or([""] in study["status"].values())or(["invalid data"] in study["status"].values())or(["validating"] in study["status"].values())) %}
-                Waiting for others to be ready...
-              {% else %}
-                <div class="status text-start"></div>
-              {% endif %}
-              <br>
-              <form action="{{ url_for(type.lower() + '.start_protocol', study_title=study['title']) }}" method="post">
-                <button type="submit" class="btn btn-secondary">Check for update</button>
-              </form>
-            {% endif %}
           </div>
         </div>
       </div>
@@ -171,6 +135,5 @@
 
   <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
   <script type="module" src="{{ url_for('static', filename='javascript/save_page_state.js') }}"></script>
-
   <script type="module" src="{{ url_for('static', filename='javascript/copy_button.js') }}"></script>
 {% endblock %}

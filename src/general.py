@@ -134,7 +134,7 @@ def update_firestore(msg: str) -> None:
 def run_protocol_for_cp0(title: str, doc_ref) -> None:
     doc_ref_dict = doc_ref.get().to_dict()
 
-    if doc_ref_dict["type"] in ["gwas", "GWAS"]:
+    if doc_ref_dict["study_type"] in ["gwas", "GWAS"]:
         gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
         instance_name: str = create_instance_name(title, "0")
         cp0_ip_address = gcloudCompute.setup_instance(
@@ -150,8 +150,8 @@ def run_protocol_for_cp0(title: str, doc_ref) -> None:
 
         gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
         # copy parameters to parameter files
-        gcloudStorage.copy_parameters_to_bucket(title, doc_ref=doc_ref)
-    elif doc_ref_dict["type"] in ["sfgwas", "SFGWAS"]:
+        gcloudStorage.copy_parameters_to_bucket(title)
+    elif doc_ref_dict["study_type"] in ["sfgwas", "SFGWAS"]:
         gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
         instance_name: str = create_instance_name(title, "0")
 

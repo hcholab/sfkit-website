@@ -126,7 +126,7 @@ def run_gwas(role: str, gcp_project: str, study_title: str, vm_parameters: dict)
     gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
 
     # copy parameters to parameter files
-    gcloudStorage.copy_parameters_to_bucket(study_title, role)
+    gcloudStorage.copy_parameters_to_bucket(study_title)
 
     instance: str = create_instance_name(study_title, role)
     gcloudCompute.setup_instance(

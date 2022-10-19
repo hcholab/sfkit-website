@@ -1,3 +1,4 @@
+# sourcery skip: do-not-use-staticmethod, snake-case-functions
 import pytest
 from src.utils import constants
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
@@ -91,25 +92,23 @@ def test_setup_instance(mocker):
     mocker.patch(f"{patch_prefix}.get_vm_external_ip_address", return_value=None)
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
 
-    google_cloud_compute.setup_instance("zone", "name", "role", "metadata")
+    google_cloud_compute.setup_instance("zone", "name", "role", {})
 
     mocker.patch(f"{patch_prefix}.list_instances", return_value=["name"])
-    google_cloud_compute.setup_instance("zone", "name", "role", "metadata")
+    google_cloud_compute.setup_instance("zone", "name", "role", {})
 
 
 def test_create_instance(mocker):
     setup_mocking(mocker)
-    mocker.patch(f"{patch_prefix}.wait_for_zoneOperation", return_value=None)
+    mocker.patch(f"{patch_prefix}.wait_for_zone_operation", return_value=None)
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
-    google_cloud_compute.create_instance(
-        "zone", constants.NETWORK_NAME, "role", "metadata", 4, 10, startup_script="validate"
-    )
-    google_cloud_compute.create_instance("zone", constants.NETWORK_NAME, "role", "metadata", 4, 10)
+    google_cloud_compute.create_instance("zone", constants.NETWORK_NAME, "role", 10, 4, {}, startup_script="validate")
+    google_cloud_compute.create_instance("zone", constants.NETWORK_NAME, "role", 10, 4, {})
 
 
 def test_stop_instance(mocker):
     setup_mocking(mocker)
-    mocker.patch(f"{patch_prefix}.wait_for_zoneOperation", return_value=None)
+    mocker.patch(f"{patch_prefix}.wait_for_zone_operation", return_value=None)
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
     google_cloud_compute.stop_instance(zone=constants.SERVER_ZONE, instance="name")
 
@@ -140,23 +139,23 @@ def test_wait_for_operation(mocker):
 def test_wait_for_zoneOperation(mocker):
     setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
-    google_cloud_compute.wait_for_zoneOperation(zone="zone", operation="operation")
+    google_cloud_compute.wait_for_zone_operation(zone="zone", operation="operation")
 
     MockExecutable.error = "fake error"
 
     with pytest.raises(Exception) as _:
-        google_cloud_compute.wait_for_zoneOperation(zone="zone", operation="operation")
+        google_cloud_compute.wait_for_zone_operation(zone="zone", operation="operation")
 
 
 def test_wait_for_regionOperation(mocker):
     setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
-    google_cloud_compute.wait_for_regionOperation(region="region", operation="operation")
+    google_cloud_compute.wait_for_region_operation(region="region", operation="operation")
 
     MockExecutable.error = "fake error"
 
     with pytest.raises(Exception) as _:
-        google_cloud_compute.wait_for_regionOperation("region", "operation")
+        google_cloud_compute.wait_for_region_operation("region", "operation")
 
 
 def test_vm_external_ip_address(mocker):

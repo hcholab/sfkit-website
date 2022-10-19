@@ -3,11 +3,15 @@ import googleapiclient.discovery as googleapi
 
 
 class GoogleCloudIAM:
+    """
+    Class to handle interactions with the Google Cloud IAM API.
+    """
+
     def __init__(self) -> None:
         self.service = googleapi.build("cloudresourcemanager", "v1")
         self.project = constants.SERVER_GCP_PROJECT
 
-    def get_policy(self, version: int = 1):
+    def get_policy(self, version: int = 1) -> dict:
         """Gets IAM policy for a project."""
 
         return (
@@ -19,7 +23,7 @@ class GoogleCloudIAM:
             .execute()
         )
 
-    def modify_policy_add_member(self, policy, role, member):
+    def modify_policy_add_member(self, policy: dict, role: str, member: str) -> dict:
         """Adds a new member to a role binding."""
 
         no_role = True
@@ -33,13 +37,13 @@ class GoogleCloudIAM:
             policy["bindings"].append(binding)
         return policy
 
-    def set_policy(self, policy):
+    def set_policy(self, policy: dict) -> dict:
         """Sets IAM policy for a project."""
 
         policy = self.service.projects().setIamPolicy(resource=self.project, body={"policy": policy}).execute()
         return policy
 
-    def give_minimal_required_gcp_permissions(self, user, member_type: str = "user"):
+    def give_minimal_required_gcp_permissions(self, user: str, member_type: str = "user") -> None:
         """Gives Cloud Build Viewer permissions to a user."""
         print(f"Giving Cloud Build Viewer permissions to user: {user}")
 
@@ -50,7 +54,7 @@ class GoogleCloudIAM:
         policy = self.modify_policy_add_member(policy, "roles/firebase.viewer", f"{member_type}:{user}")
         self.set_policy(policy)
 
-    def test_permissions(self, project_id) -> bool:
+    def test_permissions(self, project_id: str) -> bool:
         """Tests IAM permissions of the caller"""
         print(f"Testing IAM permissions for project: {project_id}")
 

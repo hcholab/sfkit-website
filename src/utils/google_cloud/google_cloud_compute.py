@@ -11,6 +11,10 @@ from tenacity.wait import wait_fixed
 
 
 class GoogleCloudCompute:
+    """
+    Class to handle interactions with Google Cloud Compute Engine
+    """
+
     def __init__(self, project: str) -> None:
         self.project: str = project
         self.compute = googleapi.build("compute", "v1")
@@ -136,7 +140,7 @@ class GoogleCloudCompute:
                 "ipCidrRange": f"10.0.{role}.0/24",
             }
             operation = self.compute.subnetworks().insert(project=self.project, region=region, body=req_body).execute()
-            self.wait_for_regionOperation(region, operation["name"])
+            self.wait_for_region_operation(region, operation["name"])
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(30))
     def create_peerings(self, gcp_projects: list) -> None:
@@ -159,7 +163,7 @@ class GoogleCloudCompute:
                     project=self.project, network=constants.NETWORK_NAME, body=body
                 ).execute()
 
-    def setup_sfgwas_instance(self, instance_name: str, metadata=None) -> None:
+    def setup_sfgwas_instance(self, instance_name: str, metadata: dict = dict()) -> str:
         print("Setting up SFGWAS instance")
         if instance_name not in self.list_instances():
             self.create_instance(
@@ -172,12 +176,12 @@ class GoogleCloudCompute:
         zone: str,
         name: str,
         role: str,
-        metadata,
-        num_cpus=4,
-        boot_disk_size=10,
-        startup_script="web",
-        delete=True,
-    ):
+        metadata: dict,
+        num_cpus: int = 4,
+        boot_disk_size: int = 10,
+        startup_script: str = "web",
+        delete: bool = True,
+    ) -> str:
         existing_instances = self.list_instances(zone=zone)
 
         if name in existing_instances and delete:
@@ -190,14 +194,14 @@ class GoogleCloudCompute:
 
     def create_instance(
         self,
-        name,
-        role,
-        zone=constants.SERVER_ZONE,
-        num_cpus=None,
-        boot_disk_size=10,
-        metadata=None,
-        startup_script="web",
-    ):
+        name: str,
+        role: str,
+        zone: str = constants.SERVER_ZONE,
+        num_cpus: int = 0,
+        boot_disk_size: int = 10,
+        metadata: dict = dict(),
+        startup_script: str = "web",
+    ) -> None:
         print("Creating VM instance with name", name)
 
         image_response = self.compute.images().getFromFamily(project="debian-cloud", family="debian-11").execute()
@@ -263,32 +267,28 @@ class GoogleCloudCompute:
             instance_body["metadata"] = metadata_config
 
         operation = self.compute.instances().insert(project=self.project, zone=zone, body=instance_body).execute()
-        self.wait_for_zoneOperation(zone, operation["name"])
+        self.wait_for_zone_operation(zone, operation["name"])
 
     def stop_instance(self, zone: str, instance: str) -> None:
         print("Stopping VM instance with name ", instance)
 
         operation = self.compute.instances().stop(project=self.project, zone=zone, instance=instance).execute()
-        self.wait_for_zoneOperation(zone, operation["name"])
+        self.wait_for_zone_operation(zone, operation["name"])
 
     def list_instances(self, zone: str = constants.SERVER_ZONE, subnetwork: str = "") -> list[str]:
         result = self.compute.instances().list(project=self.project, zone=zone).execute()
-        return (
-            [
-                instance["name"]
-                for instance in result["items"]
-                if subnetwork in instance["networkInterfaces"][0]["subnetwork"]
-            ]
-            if "items" in result
-            else []
-        )
+        return [
+            instance["name"]
+            for instance in result.get("items", [])
+            if subnetwork in instance["networkInterfaces"][0]["subnetwork"]
+        ]
 
-    def delete_instance(self, name: str, zone: str = constants.SERVER_ZONE):
+    def delete_instance(self, name: str, zone: str = constants.SERVER_ZONE) -> None:
         print("Deleting VM instance with name ", name)
         operation = self.compute.instances().delete(project=self.project, zone=zone, instance=name).execute()
-        self.wait_for_zoneOperation(zone, operation["name"])
+        self.wait_for_zone_operation(zone, operation["name"])
 
-    def wait_for_operation(self, operation):
+    def wait_for_operation(self, operation: str) -> dict[str, str]:
         print("Waiting for operation to finish...", end="")
         while True:
             result = self.compute.globalOperations().get(project=self.project, operation=operation).execute()
@@ -297,7 +297,7 @@ class GoogleCloudCompute:
                 return self.return_result_or_error(result)
             sleep(1)
 
-    def wait_for_zoneOperation(self, zone, operation):
+    def wait_for_zone_operation(self, zone: str, operation: str) -> dict[str, str]:
         print("Waiting for operation to finish...", end="")
         while True:
             result = self.compute.zoneOperations().get(project=self.project, zone=zone, operation=operation).execute()
@@ -306,7 +306,7 @@ class GoogleCloudCompute:
                 return self.return_result_or_error(result)
             sleep(1)
 
-    def wait_for_regionOperation(self, region: str, operation: str) -> dict[str, str]:
+    def wait_for_region_operation(self, region: str, operation: str) -> dict[str, str]:
         print("Waiting for operation to finish...", end="")
         while True:
             result: dict[str, str] = (
@@ -323,25 +323,25 @@ class GoogleCloudCompute:
             raise RuntimeError(result["error"])
         return result
 
-    def get_vm_external_ip_address(self, instance, zone=constants.SERVER_ZONE):
+    def get_vm_external_ip_address(self, instance: str, zone: str = constants.SERVER_ZONE) -> str:
         print("Getting the IP address for VM instance", instance)
         response = self.compute.instances().get(project=self.project, zone=zone, instance=instance).execute()
         return response["networkInterfaces"][0]["accessConfigs"][0]["natIP"]
 
-    def get_service_account_for_vm(self, zone, instance) -> str:
+    def get_service_account_for_vm(self, zone: str, instance: str) -> str:
         print("Getting the service account for VM instance", instance)
         response = self.compute.instances().get(project=self.project, zone=zone, instance=instance).execute()
         return response["serviceAccounts"][0]["email"]
 
 
-def run_command(instance_name, cmd):
+def run_command(instance_name: str, cmd: str) -> None:
     command = f"gcloud compute ssh {instance_name} --project {constants.SERVER_GCP_PROJECT} --zone={constants.SERVER_ZONE} --command '{cmd}'"
     if subprocess.run(command, shell=True).returncode != 0:
         print(f"Failed to perform command {command}")
         exit(1)
 
 
-def run_ssh_command(ip_address, cmd):
+def run_ssh_command(ip_address: str, cmd: str) -> None:
     command = f"ssh -o StrictHostKeyChecking=accept-new smendels@{ip_address} -t '{cmd}'"
     if subprocess.run(command, shell=True).returncode != 0:
         print(f"Failed to perform command {command}")

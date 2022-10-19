@@ -25,14 +25,14 @@ test_doc_ref_dict = {
 def test_valid_study_title(client, app, auth, mocker):
     setup_mocking(mocker)
     with app.app_context():
-        assert gwas_functions.valid_study_title("testtitle", "GWAS")[0] == True
-        assert gwas_functions.valid_study_title("test_title", "GWAS")[0] == False
+        assert gwas_functions.valid_study_title("testtitle", "MPCGWAS")[0] == True
+        assert gwas_functions.valid_study_title("test_title", "MPCGWAS")[0] == False
 
         auth.login()
-        client.post("create_study/GWAS", data=test_create_data)
-        client.post("create_study/GWAS", data=test_create_data2)
+        client.post("create_study/MPCGWAS", data=test_create_data)
+        client.post("create_study/MPCGWAS", data=test_create_data2)
 
-        assert gwas_functions.valid_study_title("testtitle2", "GWAS")[0] == False
+        assert gwas_functions.valid_study_title("testtitle2", "MPCGWAS")[0] == False
 
 
 def test_create_instance_name():
@@ -65,5 +65,5 @@ def mock_redirect(url):
     return url
 
 
-def mock_url_for(endpoint, study_title="", type=""):
+def mock_url_for(endpoint, study_title="", study_type=""):
     return endpoint
