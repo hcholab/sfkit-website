@@ -110,6 +110,7 @@ def create_study(type: str) -> Response:
         {
             "title": title,
             "type": type,
+            "private": request.form["private_study"] == "on",
             "description": description,
             "study_information": study_information,
             "owner": g.user["id"],

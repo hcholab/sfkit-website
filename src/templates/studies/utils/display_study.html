@@ -4,6 +4,9 @@
     {{ study['owner'] }}
     on
     {{ study['created'].strftime('%m-%d-%Y') }}
+    {% if study["private"] %}
+      (private)
+    {% endif %}
   </small>
   {% if g.user['id'] in study['participants'] %}
     <a class="text-decoration-none" href="{{ url_for('studies.study', study_title=study['title']) }}">

@@ -5,6 +5,7 @@ test_create_data = {
     "title": "testtitle",
     "description": "test description",
     "study_information": "hi",
+    "private_study": "on",
 }
 
 patch_prefix = "src.utils.google_cloud.google_cloud_storage"

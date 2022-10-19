@@ -5,12 +5,14 @@ test_create_data = {
     "title": "testtitle",
     "description": "test description",
     "study_information": "hi",
+    "private_study": "on",
 }
 
 test_create_data2 = {
     "title": "testtitle2",
     "description": "test description2",
     "study_information": "hi",
+    "private_study": "on",
 }
 
 test_doc_ref_dict = {

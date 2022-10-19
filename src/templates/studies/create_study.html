@@ -17,6 +17,12 @@
               <input class="form-control mt-4" name="title" id="title" value="{{ request.form['title'] }}" maxlength="50" required="required" placeholder="An Awesome Study Title">
               <input class="form-control mt-3" name="description" id="description" value="{{ request.form['description'] }}" required="required" placeholder="A one-line description of your study.">
               <textarea class="form-control mt-3" name="study_information" id="study_information" value="{{ request.form['study_information'] }}" rows="4" required="required" placeholder="Study Information: here's where you write all the juicy details that people should know about your study. This can include things like Motivation, Goals, and Data Sources."></textarea>
+              <div class="mt-2 form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" name="private_study" id="private_study">
+                <label class="form-check-label float-start" for="private_study">Private Study
+                  <small class="text-muted">(non-discoverable to parties outside the study)</small>
+                </label>
+              </div>
               <div class="mt-3">
                 <a href="{{ url_for('studies.index') }}" class="btn btn-outline-secondary me-2">Cancel</a>
                 <input type="submit" value="Confirm" class="btn btn-primary me-2">

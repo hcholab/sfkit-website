@@ -153,4 +153,4 @@ def login_with_google_callback() -> Response:
         gcloudIAM = GoogleCloudIAM()
         gcloudIAM.give_minimal_required_gcp_permissions(decoded_jwt_token["email"])
 
-    return update_user(decoded_jwt_token["email"], rand_temp_password)
+    return update_user(decoded_jwt_token["email"], rand_temp_password, redirect_url=request.form.get("next", ""))

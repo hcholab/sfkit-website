@@ -48,7 +48,7 @@
           <div class="container tab-pane fade show active" id="mine">
             <div class="row">
               {% for study in studies %}
-                {% if g.user['id'] in study['participants'] %}
+                {% if g.user['id'] in study['participants'] or(study["invited_participants"] and g.user['id'] in study["invited_participants"]) %}
                   {% include 'studies/utils/display_study.html' %}
                 {% endif %}
               {% endfor %}
@@ -57,7 +57,7 @@
           <div class="container tab-pane fade" id="others">
             <div class="row">
               {% for study in studies %}
-                {% if g.user['id'] not in study['participants'] %}
+                {% if g.user['id'] not in study['participants'] and not study["private"] %}
                   {% include 'studies/utils/display_study.html' %}
                 {% endif %}
               {% endfor %}
