@@ -117,7 +117,6 @@ def test_request_join_study(client, auth, mocker):
 
 def test_approve_join_study(client, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
-    mocker.patch("src.studies.GoogleCloudPubsub", MockGoogleCloudPubsub)
     auth.login()
     client.post("create_study/MPCGWAS", data=test_create_data)
 
@@ -222,11 +221,3 @@ class MockGoogleCloudStorage:
 
     def check_file_exists(self, filename):
         return MockGoogleCloudStorage.return_value
-
-
-class MockGoogleCloudPubsub:
-    def __init__(self, project, role, title):
-        pass
-
-    def create_topic_and_subscribe(self):
-        pass

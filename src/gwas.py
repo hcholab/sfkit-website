@@ -6,7 +6,6 @@ from src.utils import constants
 from src.utils.generic_functions import redirect_with_flash
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
-from src.utils.google_cloud.google_cloud_pubsub import GoogleCloudPubsub
 from src.utils.google_cloud.google_cloud_storage import GoogleCloudStorage
 from src.utils.gwas_functions import create_instance_name
 
@@ -16,8 +15,6 @@ bp = Blueprint("gwas", __name__, url_prefix="/gwas")
 def validate_data_for_cp0(study_title: str, doc_ref_dict: dict) -> None:
     gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
     gcloudCompute.setup_networking(doc_ref_dict, "0")
-    gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, "0", study_title)
-    gcloudPubsub.create_topic_and_subscribe()
 
 
 @bp.route("/validate_data/<study_title>")
@@ -40,23 +37,16 @@ def validate_data(study_title: str) -> Response:
     doc_ref.set({"status": statuses}, merge=True)
 
     if role == "1":
-        # setup networking and pubsub for CP0 as well
+        # setup networking for CP0 as well
         validate_data_for_cp0(study_title, doc_ref_dict)
 
     gcloudCompute = GoogleCloudCompute(gcp_project)
-    gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
 
-    # gcloudPubsub.create_topic_and_subscribe() # moved to when I create or join a study
     instance = create_instance_name(study_title, role)
     gcloudCompute.setup_networking(doc_ref_dict, role)
     gcloudCompute.setup_instance(
         constants.SERVER_ZONE, instance, role, {"key": "data_path", "value": data_path}, startup_script="validate"
     )
-
-    # Give instance publish access to pubsub for status updates
-    member = f"serviceAccount:{gcloudCompute.get_service_account_for_vm(constants.SERVER_ZONE, instance)}"
-
-    gcloudPubsub.add_pub_iam_member("roles/pubsub.publisher", member)
 
     return redirect(url_for("studies.study", study_title=study_title))
 
@@ -123,7 +113,6 @@ def start_protocol(study_title: str) -> Response:
 def run_gwas(role: str, gcp_project: str, study_title: str, vm_parameters: dict) -> None:
     gcloudCompute = GoogleCloudCompute(gcp_project)
     gcloudStorage = GoogleCloudStorage(constants.SERVER_GCP_PROJECT)
-    gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, role, study_title)
 
     # copy parameters to parameter files
     gcloudStorage.copy_parameters_to_bucket(study_title)
@@ -138,11 +127,7 @@ def run_gwas(role: str, gcp_project: str, study_title: str, vm_parameters: dict)
         boot_disk_size=vm_parameters["BOOT_DISK_SIZE"]["value"],
     )
 
-    # Give instance publish access to pubsub for status updates
     member: str = f"serviceAccount:{gcloudCompute.get_service_account_for_vm(constants.SERVER_ZONE, instance)}"
-
-    gcloudPubsub.add_pub_iam_member("roles/pubsub.publisher", member)
-
     # give instance read access to storage buckets for parameter files
     gcloudStorage.add_bucket_iam_member(constants.PARAMETER_BUCKET, "roles/storage.objectViewer", member)
 

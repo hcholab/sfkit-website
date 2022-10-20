@@ -1,25 +1,26 @@
+from typing import Tuple
 import google.auth.transport.requests
 from flask import Blueprint, current_app, request
 from google.oauth2 import id_token
-from werkzeug import Request, Response
+from werkzeug import Request
 
 bp = Blueprint("api", __name__)
 
 
 @bp.route("/get_doc_ref_dict", methods=["GET"])
-def get_doc_ref_dict() -> Response:
+def get_doc_ref_dict() -> Tuple[dict, int]:
     if not verify_authorization_header(request):
-        return Response({"error": "unauthorized"}, 401)
+        return {"error": "unauthorized"}, 401
 
     study_title: str = str(request.args.get("study_title"))
-    return Response(current_app.config["DATABASE"].collection("studies").document(study_title).get().to_dict() or {})
+    return current_app.config["DATABASE"].collection("studies").document(study_title).get().to_dict() or {}, 200
 
 
 @bp.route("/get_study_options", methods=["GET"])
-def get_study_options() -> Response:
+def get_study_options() -> Tuple[dict, int]:
     token: dict = verify_authorization_header(request, authenticate_user=False)
     if not token:
-        return Response({"error": "unauthorized"}, 401)
+        return {"error": "unauthorized"}, 401
 
     options: list = []
     sa_email: str = str(token.get("email"))
@@ -30,13 +31,13 @@ def get_study_options() -> Response:
             for user in doc_ref_dict["participants"]
             if doc_ref_dict["personal_parameters"][user]["SA_EMAIL"]["value"] == sa_email
         )
-    return Response({"options": options})
+    return {"options": options}, 200
 
 
 @bp.route("/update_firestore", methods=["GET"])
-def update_firestore() -> Response:
+def update_firestore() -> Tuple:
     if not verify_authorization_header(request):
-        return Response({"error": "unauthorized"}, 401)
+        return {"error": "unauthorized"}, 401
 
     msg: str = str(request.args.get("msg"))
     _, parameter, title, email = msg.split("::")
@@ -54,10 +55,10 @@ def update_firestore() -> Response:
             doc_ref_dict["parameters"][name]["value"] = value
         else:
             print(f"parameter {name} not found in {title}")
-            return Response({"error": f"parameter {name} not found in {title}"}, 400)
+            return {"error": f"parameter {name} not found in {title}"}, 400
     doc_ref.set(doc_ref_dict)
 
-    return Response("", status=200)
+    return "", 200
 
 
 def verify_authorization_header(request: Request, authenticate_user: bool = True) -> dict:

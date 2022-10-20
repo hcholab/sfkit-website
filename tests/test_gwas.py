@@ -17,7 +17,6 @@ def test_validate_data(client, app, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     mocker.patch("src.gwas.GoogleCloudCompute", MockGoogleCloudCompute)
     mocker.patch("src.gwas.GoogleCloudStorage", MockGoogleCloudStorage)
-    mocker.patch("src.gwas.GoogleCloudPubsub", MockGoogleCloudPubsub)
 
     auth.login()
     client.post("create_study/MPCGWAS", data=test_create_data)
@@ -39,7 +38,6 @@ def test_start_protocol(client, app, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     mocker.patch("src.gwas.GoogleCloudCompute", MockGoogleCloudCompute)
     mocker.patch("src.gwas.GoogleCloudStorage", MockGoogleCloudStorage)
-    mocker.patch("src.gwas.GoogleCloudPubsub", MockGoogleCloudPubsub)
     mocker.patch("src.gwas.GoogleCloudIAM", MockGoogleCloudIAM)
 
     auth.login()
@@ -69,7 +67,6 @@ def test_start_protocol(client, app, auth, mocker):
 
 
 def test_run_gwas(mocker):
-    mocker.patch("src.gwas.GoogleCloudPubsub", MockGoogleCloudPubsub)
     mocker.patch("src.gwas.GoogleCloudCompute", MockGoogleCloudCompute)
     mocker.patch("src.gwas.GoogleCloudStorage", MockGoogleCloudStorage)
 
@@ -133,24 +130,6 @@ class MockGoogleCloudStorage:
 
     def check_file_exists(self, filename):
         return MockGoogleCloudStorage.return_value
-
-
-# class to mock GoogleCloudPubsub
-class MockGoogleCloudPubsub:
-    def __init__(self, project, role, study_title):
-        pass
-
-    def create_topic_and_subscribe(self):
-        pass
-
-    def delete_topic(self):
-        pass
-
-    def add_pub_iam_member(self, role, member):
-        pass
-
-    def listen_to_startup_script(self, status):
-        return "GWAS Completed!" if status == "finished" else status
 
 
 # class to mock GoogleCloudIAM

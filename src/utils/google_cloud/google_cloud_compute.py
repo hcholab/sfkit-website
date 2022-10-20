@@ -242,7 +242,6 @@ class GoogleCloudCompute:
                     "scopes": [
                         "https://www.googleapis.com/auth/devstorage.read_write",
                         "https://www.googleapis.com/auth/logging.write",
-                        "https://www.googleapis.com/auth/pubsub",
                         "https://www.googleapis.com/auth/datastore",
                     ],
                 }

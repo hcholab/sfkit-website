@@ -5,7 +5,6 @@ Flask
 Flask_Bootstrap
 google-cloud-firestore
 google-cloud-iam
-google-cloud-pubsub
 google-cloud-storage
 ipaddr
 mock-firestore

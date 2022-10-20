@@ -11,7 +11,6 @@ from src.auth import login_required
 from src.utils import constants
 from src.utils.generic_functions import add_notification, redirect_with_flash
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
-from src.utils.google_cloud.google_cloud_pubsub import GoogleCloudPubsub
 from src.utils.gwas_functions import valid_study_title
 
 bp = Blueprint("studies", __name__)
@@ -134,12 +133,6 @@ def create_study(study_type: str) -> Response:
         }
     )
 
-    # add pubsub topic for this user and for cp0
-    # gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, "0", title)
-    # gcloudPubsub.create_topic_and_subscribe()
-    # gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, "1", title)
-    # gcloudPubsub.create_topic_and_subscribe()
-
     return response
 
 
@@ -158,11 +151,6 @@ def delete_study(study_title: str) -> Response:
             for instance in google_cloud_compute.list_instances():
                 if constants.INSTANCE_NAME_ROOT in instance and study_title in instance:
                     google_cloud_compute.delete_instance(instance)
-
-    # delete pubsub topics, subscriptions and service accounts
-    for role, _ in enumerate(doc_ref_dict["participants"]):
-        google_cloud_pubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, str(role), study_title)
-        google_cloud_pubsub.delete_topics_and_subscriptions()
 
     doc_ref.delete()
     return redirect(url_for("studies.index"))
@@ -244,12 +232,6 @@ def approve_join_study(study_title: str, user_id: str) -> Response:
     )
 
     add_notification(f"You have been accepted to {study_title}", user_id=user_id)
-
-    # TODO: when do we need this pubsub?
-    # add pubsub topic for this user for this study
-    gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, "2", study_title)
-    gcloudPubsub.create_topic_and_subscribe()
-
     return redirect(url_for("studies.study", study_title=study_title))
 
 
@@ -270,10 +252,6 @@ def accept_invitation(study_title: str) -> Response:
         },
         merge=True,
     )
-
-    # add pubsub topic for this user for this study
-    # gcloudPubsub = GoogleCloudPubsub(constants.SERVER_GCP_PROJECT, "2", study_title)
-    # gcloudPubsub.create_topic_and_subscribe()
 
     return redirect(url_for("studies.study", study_title=study_title))
 

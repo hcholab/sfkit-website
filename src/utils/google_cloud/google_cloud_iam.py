@@ -50,7 +50,6 @@ class GoogleCloudIAM:
         policy = self.get_policy()
         policy = self.modify_policy_add_member(policy, "roles/cloudbuild.builds.viewer", f"{member_type}:{user}")
         policy = self.modify_policy_add_member(policy, "roles/logging.viewer", f"{member_type}:{user}")
-        policy = self.modify_policy_add_member(policy, "roles/pubsub.publisher", f"{member_type}:{user}")
         policy = self.modify_policy_add_member(policy, "roles/firebase.viewer", f"{member_type}:{user}")
         self.set_policy(policy)
 
