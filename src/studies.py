@@ -171,8 +171,10 @@ def request_join_study(study_title: str) -> Response:
 @bp.route("/invite_participant/<study_title>", methods=["POST"])
 @login_required
 def invite_participant(study_title: str) -> Response:
+    inviter: str = g.user["id"]
     invitee: str = request.form["invite_participant_email"]
-    email(invitee, study_title)
+    message: str = request.form.get("invite_participant_message", "")
+    email(inviter, invitee, message, study_title)
 
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
@@ -185,12 +187,15 @@ def invite_participant(study_title: str) -> Response:
     return redirect(url_for("studies.study", study_title=study_title))
 
 
-def email(recipient: str, study_title: str) -> str:
+def email(inviter: str, recipient: str, invitation_message: str, study_title: str) -> str:
     doc_ref_dict: dict = current_app.config["DATABASE"].collection("meta").document("sendgrid").get().to_dict()
-
     sg = SendGridAPIClient(api_key=doc_ref_dict["api_key"])
 
-    html_content = f"<p>Hello!<br>You have been invited to join the {study_title} study on the Secure GWAS website.  Click <a href='https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/accept_invitation/{study_title.replace(' ', '').lower()}'>here</a> to accept the invitation.</p>"
+    html_content = f"<p>Hello!<br>{inviter} has invited you to join the {study_title} study on the Secure GWAS website.  Click <a href='https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/accept_invitation/{study_title.replace(' ', '').lower()}'>here</a> to accept the invitation."
+
+    if invitation_message:
+        html_content += f"<br><br>Here is a message from {inviter}:<br>{invitation_message}</p>"
+    html_content += "</p>"
 
     message = Mail(
         to_emails=recipient,
