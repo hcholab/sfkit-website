@@ -11,7 +11,8 @@ from src.auth import login_required
 from src.utils import constants
 from src.utils.generic_functions import add_notification, redirect_with_flash
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
-from src.utils.gwas_functions import valid_study_title
+from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
+from src.utils.gwas_functions import create_instance_name, valid_study_title
 
 bp = Blueprint("studies", __name__)
 
@@ -30,9 +31,6 @@ def study(study_title: str) -> Response:
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
-    public_keys = [
-        doc_ref_dict["personal_parameters"][user]["PUBLIC_KEY"]["value"] for user in doc_ref_dict["participants"]
-    ]
     user_id = g.user["id"]
     role: int = doc_ref_dict["participants"].index(user_id)
 
@@ -40,7 +38,6 @@ def study(study_title: str) -> Response:
         render_template(
             "studies/study/study.html",
             study=doc_ref_dict,
-            public_keys=public_keys,
             role=role,
             study_type=doc_ref_dict["study_type"],
             parameters=doc_ref_dict["personal_parameters"][user_id],
@@ -122,7 +119,7 @@ def create_study(study_type: str) -> Response:
             "owner": g.user["id"],
             "created": datetime.now(),
             "participants": ["Broad", g.user["id"]],
-            "status": {"Broad": ["ready"], g.user["id"]: [""]},
+            "status": {"Broad": [""], g.user["id"]: [""]},
             "parameters": constants.SHARED_PARAMETERS[study_type],
             "personal_parameters": {
                 "Broad": constants.broad_user_parameters(),
@@ -205,8 +202,7 @@ def email(recipient: str, study_title: str) -> str:
     try:
         response = sg.send(message)
         print("Email sent")
-        return f"email.status_code={response.status_code}"
-        # expected 202 Accepted
+        return f"email.status_code={response.status_code}"  # expected 202 Accepted
 
     except HTTPError as e:
         print("Email failed to send", e)
@@ -288,13 +284,6 @@ def personal_parameters(study_title: str) -> Response:
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     parameters = doc_ref.get().to_dict().get("personal_parameters")
 
-    # if request.method == "GET":
-    #     return render_template(
-    #         "studies/personal_parameters.html",
-    #         study_title=study_title,
-    #         parameters=parameters[g.user["id"]],
-    #     )
-
     for p in parameters[g.user["id"]]["index"]:
         if p in request.form:
             parameters[g.user["id"]][p]["value"] = request.form.get(p)
@@ -343,3 +332,91 @@ def set_sa_email(study_title: str) -> Response:
 #         mimetype="text/plain",
 #         as_attachment=True,
 #     )
+
+
+@bp.route("/study/<study_title>/start_protocol", methods=["POST"])
+@login_required
+def start_protocol(study_title: str) -> Response:
+    user_id: str = g.user["id"]
+    doc_ref = current_app.config["DATABASE"].collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref_dict: dict = doc_ref.get().to_dict()
+    role: str = str(doc_ref_dict["participants"].index(user_id))
+    gcp_project: str = doc_ref_dict["personal_parameters"][user_id]["GCP_PROJECT"]["value"]
+    data_path: str = doc_ref_dict["personal_parameters"][user_id]["DATA_PATH"]["value"]
+    statuses: dict = doc_ref_dict["status"]
+
+    if statuses[user_id] == [""]:
+        if not gcp_project:
+            return redirect_with_flash(
+                url=url_for("studies.study", study_title=study_title),
+                message="Your GCP project ID is not set.  Please follow the instructions in the 'Configure Study' button before running the protocol.",
+            )
+        if not data_path:
+            return redirect_with_flash(
+                url=url_for("studies.study", study_title=study_title),
+                message="Your data path is not set.  Please follow the instructions in the 'Configure Study' button before running the protocol.",
+            )
+        if not GoogleCloudIAM().test_permissions(gcp_project):
+            return redirect_with_flash(
+                location="general.permissions",
+                message="Please give the service appropriate permissions first.",
+            )
+
+        statuses[user_id] = ["ready"]
+        personal_parameters = doc_ref_dict["personal_parameters"]
+        personal_parameters[user_id]["NUM_CPUS"]["value"] = request.form["NUM_CPUS"]
+        personal_parameters[user_id]["NUM_THREADS"]["value"] = request.form["NUM_CPUS"]
+        personal_parameters[user_id]["BOOT_DISK_SIZE"]["value"] = request.form["BOOT_DISK_SIZE"]
+        doc_ref.set(
+            {
+                "status": statuses,
+                "personal_parameters": personal_parameters,
+            },
+            merge=True,
+        )
+
+    if [""] in statuses.values():
+        print("Not all participants are ready.")
+    elif statuses[user_id] == ["ready"]:
+        statuses[user_id] = ["Setting up your vm instance..."]
+        doc_ref.set({"status": statuses}, merge=True)
+        doc_ref_dict = doc_ref.get().to_dict()
+
+        gcloudCompute = GoogleCloudCompute(gcp_project)
+        vm_parameters = doc_ref_dict["personal_parameters"][user_id]
+
+        gcloudCompute.setup_networking(doc_ref_dict, role)
+        gcloudCompute.setup_instance(
+            name=create_instance_name(study_title, role),
+            role=role,
+            metadata=[
+                {"key": "data_path", "value": vm_parameters["DATA_PATH"]["value"]},
+                {"key": "geno_binary_file_prefix", "value": vm_parameters["GENO_BINARY_FILE_PREFIX"]["value"]},
+                {"key": "ports", "value": vm_parameters["PORTS"]["value"]},
+            ],
+            num_cpus=vm_parameters["NUM_CPUS"]["value"],
+            boot_disk_size=vm_parameters["BOOT_DISK_SIZE"]["value"],
+        )
+        # update service account in firestore
+        doc_ref_dict["personal_parameters"][user_id]["SA_EMAIL"]["value"] = gcloudCompute.get_service_account_for_vm(
+            create_instance_name(study_title, role)
+        )
+        doc_ref.set({"personal_parameters": doc_ref_dict["personal_parameters"]}, merge=True)
+
+        if role == "1":
+            # start CP0 as well
+            gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
+            gcloudCompute.setup_networking(doc_ref_dict, "0")
+            gcloudCompute.setup_instance(
+                name=create_instance_name(study_title, "0"),
+                role="0",
+                metadata=[
+                    {"key": "data_path", "value": vm_parameters["DATA_PATH"]["value"]},
+                    {"key": "geno_binary_file_prefix", "value": vm_parameters["GENO_BINARY_FILE_PREFIX"]["value"]},
+                    {"key": "ports", "value": vm_parameters["PORTS"]["value"]},
+                ],
+                num_cpus=vm_parameters["NUM_CPUS"]["value"],
+                boot_disk_size=vm_parameters["BOOT_DISK_SIZE"]["value"],
+            )
+
+    return redirect(url_for("studies.study", study_title=study_title))

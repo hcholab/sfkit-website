@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 SERVER_GCP_PROJECT = "broad-cho-priv1"
 SERVER_REGION = "us-central1"
 SERVER_ZONE = f"{SERVER_REGION}-a"
@@ -216,8 +218,13 @@ DEFAULT_USER_PARAMETERS = {
     },
     "DATA_PATH": {
         "name": "GCP Path to Data",
-        "description": "The path to your encrypted data in the GCP bucket.  For example, if I put the 'encrypted_data' folder in a bucket called 'secure-gwas-data', \
-            the the path would be 'secure-gwas-data/encrypted_data'.",
+        "description": "The path to your data in the GCP bucket.  For example, if I put the 'for_gwas' folder in a bucket called 'secure-gwas-data', \
+            the the path would be 'secure-gwas-data/for_gwas'.",
+        "value": "",
+    },
+    "GENO_BINARY_FILE_PREFIX": {
+        "name": "Genotype Binary File Prefix",
+        "description": "Path to the genotype binary file prefix (e.g. 'for_sfgwas/lung/pgen_converted/party1/geno/lung_party1_chr%d').",
         "value": "",
     },
     "NUM_INDS": {
@@ -234,7 +241,7 @@ DEFAULT_USER_PARAMETERS = {
         "name": "Number of CPUs",
         "description": "The number of CPUs to allocate to the VM instance that will be running the GWAS protocol in your GCP account.  \
         The number of GB of memory will automatically be set to 8x this number, as we are using Google's E2 high-memory VM instance.",
-        "value": "4",
+        "value": "16",
     },
     "ZONE": {
         "name": "Zone",
@@ -275,6 +282,7 @@ DEFAULT_USER_PARAMETERS = {
         "PUBLIC_KEY",
         "GCP_PROJECT",
         "DATA_PATH",
+        "GENO_BINARY_FILE_PREFIX",
         "NUM_INDS",
         "NUM_THREADS",
         "NUM_CPUS",
@@ -291,9 +299,9 @@ DEFAULT_USER_PARAMETERS = {
 
 def default_user_parameters(study_type: str) -> dict:
     if study_type == "MPCGWAS":
-        return DEFAULT_USER_PARAMETERS
+        return deepcopy(DEFAULT_USER_PARAMETERS)
     elif study_type in {"PCA", "SFGWAS"}:
-        pars = DEFAULT_USER_PARAMETERS.copy()
+        pars = deepcopy(DEFAULT_USER_PARAMETERS)
         pars["PORTS"]["value"] = "null,8020,8040"
         return pars
     else:
@@ -301,7 +309,7 @@ def default_user_parameters(study_type: str) -> dict:
 
 
 def broad_user_parameters() -> dict:
-    parameters = DEFAULT_USER_PARAMETERS
+    parameters = deepcopy(DEFAULT_USER_PARAMETERS)
     parameters["GCP_PROJECT"]["value"] = SERVER_GCP_PROJECT
     parameters["NUM_INDS"]["value"] = "0"
     return parameters

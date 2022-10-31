@@ -84,26 +84,26 @@ def test_create_peerings(mocker):
     google_cloud_compute.create_peerings(gcp_projects=["broad-cho-priv1", "peeringproject2", "project3"])
 
 
-def test_setup_instance(mocker):
-    setup_mocking(mocker)
-    mocker.patch(f"{patch_prefix}.list_instances", return_value=[])
-    mocker.patch(f"{patch_prefix}.delete_instance", return_value=None)
-    mocker.patch(f"{patch_prefix}.create_instance", return_value=None)
-    mocker.patch(f"{patch_prefix}.get_vm_external_ip_address", return_value=None)
-    google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
+# def test_setup_instance(mocker):
+#     setup_mocking(mocker)
+#     mocker.patch(f"{patch_prefix}.list_instances", return_value=[])
+#     mocker.patch(f"{patch_prefix}.delete_instance", return_value=None)
+#     mocker.patch(f"{patch_prefix}.create_instance", return_value=None)
+#     mocker.patch(f"{patch_prefix}.get_vm_external_ip_address", return_value=None)
+#     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
 
-    google_cloud_compute.setup_instance("zone", "name", "role", {})
+#     google_cloud_compute.setup_instance("zone", "name", "role", {})
 
-    mocker.patch(f"{patch_prefix}.list_instances", return_value=["name"])
-    google_cloud_compute.setup_instance("zone", "name", "role", {})
+#     mocker.patch(f"{patch_prefix}.list_instances", return_value=["name"])
+#     google_cloud_compute.setup_instance("zone", "name", "role", {})
 
 
-def test_create_instance(mocker):
-    setup_mocking(mocker)
-    mocker.patch(f"{patch_prefix}.wait_for_zone_operation", return_value=None)
-    google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
-    google_cloud_compute.create_instance("zone", constants.NETWORK_NAME, "role", 10, 4, {}, startup_script="validate")
-    google_cloud_compute.create_instance("zone", constants.NETWORK_NAME, "role", 10, 4, {})
+# def test_create_instance(mocker):
+#     setup_mocking(mocker)
+#     mocker.patch(f"{patch_prefix}.wait_for_zone_operation", return_value=None)
+#     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
+#     google_cloud_compute.create_instance("zone", constants.NETWORK_NAME, "role", 10, 4, {}, startup_script="validate")
+#     google_cloud_compute.create_instance("zone", constants.NETWORK_NAME, "role", 10, 4, {})
 
 
 def test_stop_instance(mocker):

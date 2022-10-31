@@ -1,51 +1,53 @@
-<button type="button" class="mt-2 btn btn-success" data-bs-toggle="modal" data-bs-target="#vmConfig">
-  Begin
-  {{ type }}
-  Workflow
-</button>
-<div class="modal fade" id="vmConfig" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="vmConfigLabel">Choose Virtual Machine Configuration</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body container">
-        <form action="{{ url_for(type.lower() + '.start_protocol', study_title=study['title']) }}" method="post">
-          <div class="text-start row">
-            <label for="BOOT_DISK_SIZE" class="col-sm-3 col-form-label">{{parameters['BOOT_DISK_SIZE']['name']}}</label>
-            <div class="col-sm-9">
-              <input type="number" class="form-control" id="BOOT_DISK_SIZE" name="BOOT_DISK_SIZE" min="10" value="{{request.form['BOOT_DISK_SIZE'] or parameters['BOOT_DISK_SIZE']['value']}}">
+<div class="mt-2">
+  <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#vmConfig">
+    Begin
+    {{ study_type }}
+    Workflow
+  </button>
+  <div class="modal fade" id="vmConfig" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="vmConfigLabel">Choose Virtual Machine Configuration</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body container">
+          <form action="{{ url_for('studies.start_protocol', study_title=study['title']) }}" method="POST">
+            <div class="text-start row">
+              <label for="BOOT_DISK_SIZE" class="col-sm-3 col-form-label">{{parameters['BOOT_DISK_SIZE']['name']}}</label>
+              <div class="col-sm-9">
+                <input type="number" class="form-control" id="BOOT_DISK_SIZE" name="BOOT_DISK_SIZE" min="10" value="{{request.form['BOOT_DISK_SIZE'] or parameters['BOOT_DISK_SIZE']['value']}}">
+              </div>
             </div>
-          </div>
-          <p class="mt-3 text-start text-muted">
-            {{parameters['BOOT_DISK_SIZE']['description']}}
-          </p>
-          <div class="text-start row">
-            <label for="NUM_CPUS" class="col-sm-3 col-form-label">
-              {{parameters['NUM_CPUS']['name']}}
-            </label>
-            <div class="col-sm-9">
-              <select class="form-select" name="NUM_CPUS" id="NUM_CPUS" value="{{ request.form['NUM_CPUS'] or parameters['NUM_CPUS']['value'] }}">
-                <option value="4">4</option>
-                <option value="8">8</option>
-                <option value="16">16</option>
-              </select>
+            <p class="mt-3 text-start text-muted">
+              {{parameters['BOOT_DISK_SIZE']['description']}}
+            </p>
+            <div class="text-start row">
+              <label for="NUM_CPUS" class="col-sm-3 col-form-label">
+                {{parameters['NUM_CPUS']['name']}}
+              </label>
+              <div class="col-sm-9">
+                <select class="form-select" name="NUM_CPUS" id="NUM_CPUS" value="{{ request.form['NUM_CPUS'] or parameters['NUM_CPUS']['value'] }}">
+                  <option value="4">4</option>
+                  <option value="8">8</option>
+                  <option value="16">16</option>
+                </select>
+              </div>
             </div>
-          </div>
-          <p class="mt-3 text-start text-muted">
-            {{parameters['NUM_CPUS']['description']}}
-          </p>
-          <button class="mt-2 btn btn-primary" type="submit" onclick="loading();">
-            <div class="loading" style="display:none">
-              <span class="spinner-grow spinner-grow-sm" role="status"></span>
-              Loading...
-            </div>
-            <div class="normal-content">
-              Confirm Virtual Machine Configuration
-            </div>
-          </button>
-        </form>
+            <p class="mt-3 text-start text-muted">
+              {{parameters['NUM_CPUS']['description']}}
+            </p>
+            <button class="mt-2 btn btn-primary" type="submit" onclick="loading();">
+              <div class="loading" style="display:none">
+                <span class="spinner-grow spinner-grow-sm" role="status"></span>
+                Loading...
+              </div>
+              <div class="normal-content">
+                Confirm Virtual Machine Configuration
+              </div>
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   </div>

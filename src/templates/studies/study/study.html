@@ -32,52 +32,56 @@
                 <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#configure_study_gcp_setup_mode_modal">Configure Study</button>
                 {% include 'studies/study/configure_study_gcp_setup_mode.html' %}
               {% elif parameters['CONFIGURE_STUDY_GCP_SETUP_MODE']['value'] == "website" %}
-                <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#configure_study_modal">Configure Study</button>
-                <div class="modal fade" id="configure_study_modal" tabindex="-1">
-                  <div class="modal-dialog modal-xl">
-                    <div class="modal-content">
-                      <div class="modal-header">
-                        <h5 class="modal-title" id="configure_study_modal_label">Configure your
-                          {{ type }}
-                          Study</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                      </div>
-                      <div class="modal-body">
-                        {% include 'studies/study/instructions.html' %}
-                      </div>
-                      <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {% if study["status"][g.user["id"]] == [""] or study["status"][g.user["id"]] == ["validating"] %}
+                {# {% if study["status"][g.user["id"]] == [""] or study["status"][g.user["id"]] == ["validating"] %}
                   <div class="mt-2">
                     <button type="button" class="mt-2 btn btn-success" data-bs-toggle="modal" data-bs-target="#vmConfig" disabled="disabled">
                       Begin
-                      {{ type }}
+                      {{ study_type }}
                       Workflow
                     </button>
                     <p>You must finish configuring your study before you can begin the
-                      {{ type }}
+                      {{ study_type }}
                       workflow</p>
+                  </div> #}
+                {% if study["status"][g.user["id"]] == ["not ready"] or study["status"][g.user["id"]] == [""] %}
+                  <div>
+                    <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#configure_study_modal">Configure Study</button>
+                    <div class="modal fade" id="configure_study_modal" tabindex="-1">
+                      <div class="modal-dialog modal-xl">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="configure_study_modal_label">Configure your
+                              {{ study_type }}
+                              Study</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                          </div>
+                          <div class="modal-body">
+                            {% include 'studies/study/instructions.html' %}
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                {% elif study["status"][g.user["id"]] == ["not ready"] %}
                   {% include 'studies/study/begin_workflow.html' %}
                 {% else %}
-                  <br>
-                  Status:
-                  {% if ((["not ready"] in study["status"].values())or([""] in study["status"].values())or(["invalid data"] in study["status"].values())or(["validating"] in study["status"].values())) %}
-                    Waiting for others to be ready...
-                  {% else %}
-                    <div class="status text-start"></div>
-                  {% endif %}
-                  <br>
-                  <form action="{{ url_for(type.lower() + '.start_protocol', study_title=study['title']) }}" method="post">
-                    <button type="submit" class="btn btn-secondary">Check for update</button>
-                  </form>
+                  <div>
+                    <p class="text-start">
+                      <b>Status of study:</b>
+                    </p>
+                    {% if ((["not ready"] in study["status"].values())or([""] in study["status"].values())or(["invalid data"] in study["status"].values())or(["validating"] in study["status"].values())) %}
+                      <p>Waiting for others to be ready...</p>
+                    {% else %}
+                      <div class="status text-start"></div>
+                    {% endif %}
+                    <form action="{{ url_for('studies.start_protocol', study_title=study['title']) }}" method="POST">
+                      <button type="submit" class="btn btn-secondary">Check for update</button>
+                    </form>
+                  </div>
                 {% endif %}
-              {% else %}
+                {# {% else %}
                 {% if parameters['SA_EMAIL']['value'] == "" %}
                   <form class="mt-5 mb-2" method="post" action="{{url_for('studies.set_sa_email', study_title=study['title'])}}">
                     <p class="float-start text-start mb-0">Please enter the service account email for your GCP VM:</p>
@@ -95,7 +99,7 @@
                     <i>`pip install sfkit`</i>
                     on your GCP VM. For more details, see the tutorial
                     <a class="text-decoration-none" href="https://sfkit.readthedocs.io/en/latest/tutorial.html#cli">here</a>.</h5>
-                {% endif %}
+                {% endif %} #}
               {% endif %}
             </div>
           </div>

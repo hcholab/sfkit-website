@@ -30,7 +30,7 @@
   {% call instruction_step(i.value, "Prerequisites", collapsed = "", show = "show") %}
   <div>
     {% set i.value = i.value + 1 %}
-    {% if type == GWAS %}
+    {% if study_type == "MPCGWAS" %}
       <p>0. If you don't already have them, you will need to install
         <a class="text-decoration-none" href="https://git-scm.com/book/en/v2/Getting-Started-Installing-Git">Git</a>
         and
@@ -54,7 +54,7 @@
   </div>
   {% endcall %}
 
-  {% if type == "GWAS" %}
+  {# {% if study_type == "MPCGWAS" %}
     {% call instruction_step(i.value, "Generate Keys") %}
     <div>
       {% set i.value = i.value + 1 %}
@@ -189,40 +189,50 @@
       </div>
     </div>
     {% endcall %}
-  {% endif %}
+  {% endif %} #}
 
-  {% if type == "SFGWAS" %}
-    {% call instruction_step(i.value, "Upload Data") %}
-    <div>
-      {% set i.value = i.value + 1 %}
-      <p>
-        3. Upload your data to a google cloud storage bucket in your GCP (Google Cloud Platform) project. If you are unfamiliar with Google Cloud Storage, see the google documentation
-        <a class="text-decoration-none" href="https://cloud.google.com/storage/docs/quickstart-console">here</a>
-        (The default configuration/settings for the bucket are fine. If you would like to choose a specific region, it is recommended that you choose us-central1 (Iowa), as the default.).
-      </p>
-      <p>
-        4. Please set the following user-specific parameters:
-        <form method="post" action="{{url_for('studies.personal_parameters', study_title=study['title'])}}">
-          <div class="row mb-3 p-3 bg-light">
-            <label for="GCP_PROJECT" class="col-sm-3 col-form-label text-start">
-              {{parameters['GCP_PROJECT']['name']}}
+  {% call instruction_step(i.value, "Upload Data") %}
+  <div>
+    {% set i.value = i.value + 1 %}
+    <p>
+      1. Upload your data to a google cloud storage bucket in your GCP (Google Cloud Platform) project. If you are unfamiliar with Google Cloud Storage, see the google documentation
+      <a class="text-decoration-none" href="https://cloud.google.com/storage/docs/quickstart-console">here</a>
+      (The default configuration/settings for the bucket are fine. If you would like to choose a specific region, it is recommended that you choose us-central1 (Iowa), as the default.).
+    </p>
+    <p>
+      2. Please set the following user-specific parameters:
+      <form method="post" action="{{url_for('studies.personal_parameters', study_title=study['title'])}}">
+        <div class="row mb-3 p-3 bg-light">
+          <label for="GCP_PROJECT" class="col-sm-3 col-form-label text-start">
+            {{parameters['GCP_PROJECT']['name']}}
+          </label>
+          <div class="col-sm-9">
+            <input type="text" class="form-control" name="GCP_PROJECT" id="GCP_PROJECT" value="{{ request.form['GCP_PROJECT'] or parameters['GCP_PROJECT']['value'] }}">
+          </div>
+          <p class="mt-3 text-start text-muted">
+            {{parameters['GCP_PROJECT']['description']}}
+          </p>
+          <label for="DATA_PATH" class="col-sm-3 col-form-label text-start">
+            {{parameters['DATA_PATH']['name']}}
+          </label>
+          <div class="col-sm-9">
+            <input type="text" class="form-control" name="DATA_PATH" id="DATA_PATH" value="{{ request.form['DATA_PATH'] or parameters['DATA_PATH']['value'] }}">
+          </div>
+          <p class="mt-3 text-start text-muted">
+            {{parameters['DATA_PATH']['description']}}
+          </p>
+          {% if study_type == "SFGWAS" %}
+            <label for="GENO_BINARY_FILE_PREFIX" class="col-sm-3 col-form-label text-start">
+              {{parameters['GENO_BINARY_FILE_PREFIX']['name']}}
             </label>
             <div class="col-sm-9">
-              <input type="text" class="form-control" name="GCP_PROJECT" id="GCP_PROJECT" value="{{ request.form['GCP_PROJECT'] or parameters['GCP_PROJECT']['value'] }}">
+              <input type="text" class="form-control" name="GENO_BINARY_FILE_PREFIX" id="GENO_BINARY_FILE_PREFIX" value="{{ request.form['GENO_BINARY_FILE_PREFIX'] or parameters['GENO_BINARY_FILE_PREFIX']['value'] }}">
             </div>
             <p class="mt-3 text-start text-muted">
-              {{parameters['GCP_PROJECT']['description']}}
+              {{parameters['GENO_BINARY_FILE_PREFIX']['description']}}
             </p>
-            <label for="DATA_PATH" class="col-sm-3 col-form-label text-start">
-              {{parameters['DATA_PATH']['name']}}
-            </label>
-            <div class="col-sm-9">
-              <input type="text" class="form-control" name="DATA_PATH" id="DATA_PATH" value="{{ request.form['DATA_PATH'] or parameters['DATA_PATH']['value'] }}">
-            </div>
-            <p class="mt-3 text-start text-muted">
-              {{parameters['DATA_PATH']['description']}}
-            </p>
-            <label for="NUM_INDS" class="col-sm-3 col-form-label text-start">
+          {% endif %}
+          {# <label for="NUM_INDS" class="col-sm-3 col-form-label text-start">
               {{parameters['NUM_INDS']['name']}}
             </label>
             <div class="col-sm-9">
@@ -230,80 +240,81 @@
             </div>
             <p class="mt-3 text-start text-muted">
               {{parameters['NUM_INDS']['description']}}
-            </p>
-            <div class="d-flex flex-wrap justify-content-center">
-              <input type="submit" name="save" value="Save" class="btn btn-primary me-2 mb-2 mb-sm-0">
-            </div>
+            </p> #}
+          <div class="d-flex flex-wrap justify-content-center">
+            <input type="submit" name="save" value="Save" class="btn btn-primary me-2 mb-2 mb-sm-0">
           </div>
-        </form>
-      </p>
-    </div>
-    {% endcall %}
-  {% endif %}
+        </div>
+      </form>
+    </p>
+  </div>
+  {% endcall %}
 
-  {% if parameters['CONFIGURE_STUDY_GCP_SETUP_MODE']['value'] == "website" %}
-    {% call instruction_step(i.value, "Give Permissions") %}
+  {% call instruction_step(i.value, "Give Permissions") %}
+  {% set i.value = i.value + 1 %}
+  {% include 'studies/study/permissions.html' %}
+  {% endcall %}
+
+  {# {% call instruction_step(i.value, "Validate Data") %}
+  <div>
     {% set i.value = i.value + 1 %}
-    {% include 'studies/study/permissions.html' %}
-    {% endcall %}
-    {% call instruction_step(i.value, "Validate Data") %}
-    <div>
-      {% set i.value = i.value + 1 %}
-      <p>
-        1. When you are ready, click on the
-        <span class="text-success">Validate Data</span>
-        button:
-        {% if study['status'][g.user['id']] == [''] %}
-          <p>
-            <a href="{{ url_for('gwas.validate_data', study_title=study['title']) }}" class="mt-2 btn btn-success" onclick="loading();">
-              <span class="normal-content">
-                Validate Data
-              </span>
-              <span class="loading" style="display:none">
-                <span class="spinner-grow spinner-grow-sm"></span>
-                Loading...
-              </span>
-            </a>
-          </p>
-        {% elif study["status"][g.user["id"]] == ["validating"] %}
-          <p>
-            Validating Data...
-            <br>
-            <a href="{{ url_for('studies.study', study_title=study['title']) }}" class="btn btn-secondary">Check for update</a>
-          </p>
-        {% elif study["status"][g.user["id"]] == ["invalid data"] %}
-          <p>
-            <strong>Your data validation has failed! Please double check that you uploaded your data correctly and set the correct path in the previous step.</strong>
-            <a href="{{ url_for('gwas.validate_data', study_title=study['title']) }}" class="mt-2 btn btn-success">Retry Data Validation</a>
-          </p>
-        {% else %}
-          <p>
-            <a href="{{ url_for('gwas.validate_data', study_title=study['title']) }}" class="mt-2 btn btn-success disabled">Validate Data</a>
-            <strong>You have successfully validated your data!</strong>
-          </p>
-        {% endif %}
-        This button validates that we are able to create a VM that can access your encrypted data that you uploaded in step 2.
-        <br>It will also validate that your data is in the right format and approximately the correct size, insofar as we can do this on encrypted data.
-      </p>
-    </div>
-    {% endcall %}
-    {% call instruction_step(i.value, "Begin Workflow") %}
-    <div>
-      {% set i.value = i.value + 1 %}
-      <p>
-        When the validation has finished, and you are ready, click on the
-        <span class="text-success">Begin
-          {{ type }}
-          Workflow</span>
-        button. For the virtual machine configuration, the default should be fine unless you have a particularly large dataset.
-      </p>
-      <p>Once all participants have done so, the protocol will begin.</p>
-      <p class="text-muted">(Optional) While the protocol is running, if you want a more detailed view into what the VM is doing, you can ssh into your VM and run the command
-        <code>sudo journalctl -u google-startup-scripts.service</code>
-        to see detailed logs.</p>
-    </div>
-    {% endcall %}
-  {% else %}
+    <p>
+      1. When you are ready, click on the
+      <span class="text-success">Validate Data</span>
+      button:
+      {% if study['status'][g.user['id']] == [''] %}
+        <p>
+          <a href="{{ url_for('gwas.validate_data', study_title=study['title']) }}" class="mt-2 btn btn-success" onclick="loading();">
+            <span class="normal-content">
+              Validate Data
+            </span>
+            <span class="loading" style="display:none">
+              <span class="spinner-grow spinner-grow-sm"></span>
+              Loading...
+            </span>
+          </a>
+        </p>
+      {% elif study["status"][g.user["id"]] == ["validating"] %}
+        <p>
+          Validating Data...
+          <br>
+          <a href="{{ url_for('studies.study', study_title=study['title']) }}" class="btn btn-secondary">Check for update</a>
+        </p>
+      {% elif study["status"][g.user["id"]] == ["invalid data"] %}
+        <p>
+          <strong>Your data validation has failed! Please double check that you uploaded your data correctly and set the correct path in the previous step.</strong>
+          <a href="{{ url_for('gwas.validate_data', study_title=study['title']) }}" class="mt-2 btn btn-success">Retry Data Validation</a>
+        </p>
+      {% else %}
+        <p>
+          <a href="{{ url_for('gwas.validate_data', study_title=study['title']) }}" class="mt-2 btn btn-success disabled">Validate Data</a>
+          <strong>You have successfully validated your data!</strong>
+        </p>
+      {% endif %}
+      This button validates that we are able to create a VM that can access your encrypted data that you uploaded in step 2.
+      <br>It will also validate that your data is in the right format and approximately the correct size, insofar as we can do this on encrypted data.
+    </p>
+  </div>
+  {% endcall %} #}
+
+  {% call instruction_step(i.value, "Begin Workflow") %}
+  <div>
+    {% set i.value = i.value + 1 %}
+    <p>
+      When you have completed the above steps and you are ready, click on the
+      <span class="text-success">Begin
+        {{ study_type }}
+        Workflow</span>
+      button. For the virtual machine configuration, the default should be fine unless you have a particularly large dataset.
+    </p>
+    <p>Once all participants have done so, the protocol will begin.</p>
+    <p class="text-muted">(Optional) While the protocol is running, if you want a more detailed view into what the VM is doing, you can ssh into your VM and run the command
+      <code>sudo journalctl -u google-startup-scripts.service</code>
+      to see detailed logs.</p>
+  </div>
+  {% endcall %}
+
+  {# {% else %}
     {% call instruction_step(i.value, "Validate Data") %}
     <div>
       {% set i.value = i.value + 1 %}
@@ -349,12 +360,13 @@
         to see detailed logs.</p>
     </div>
     {% endcall %}
-  {% endif %}
+  {% endif %} #}
+
   {% call instruction_step(i.value, "Enjoy the Results") %}
   <div>
     {% set i.value = i.value + 1 %}
     <p>
-      Once the protocol is complete, the study page will indicate this with a "{{ type }}
+      Once the protocol is complete, the study page will indicate this with a "{{ study_type }}
       Completed!" status.
       <br>You can then download the results (from your storage bucket in your GCP project) to share and analyze at your leisure.
     </p>

@@ -89,6 +89,4 @@ class GoogleCloudIAM:
             self.service.projects().testIamPermissions(resource=project_id, body=permissions).execute()
         )
 
-        print(f'Returned permissions: {returnedPermissions.get("permissions")}')
-
         return returnedPermissions.get("permissions") == desired_permissions

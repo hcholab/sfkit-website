@@ -23,25 +23,27 @@
   {% endif %}
 
   {% if study["participants"] | length < 3%}
-    <button class="btn btn-secondary mb-1" type="button" data-bs-toggle="modal" data-bs-target="#invite_participant_modal">Invite New Study Participant</button>
-    <div class="modal fade" id="invite_participant_modal" tabindex="-1">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="invite_participant_modal_label">Invite New Study Participant</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <form action="{{ url_for('studies.invite_participant', study_title=study['title']) }}" method="POST">
-              <div class="mb-3">
-                <label for="invite_participant_email" class="form-label">Email</label>
-                <input type="email" class="form-control" id="invite_participant_email" name="invite_participant_email" required="required">
-              </div>
-              <button type="submit" class="btn btn-primary">Invite</button>
-            </form>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+    <div>
+      <button class="btn btn-secondary" type="button" data-bs-toggle="modal" data-bs-target="#invite_participant_modal">Invite New Study Participant</button>
+      <div class="modal fade" id="invite_participant_modal" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="invite_participant_modal_label">Invite New Study Participant</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <form action="{{ url_for('studies.invite_participant', study_title=study['title']) }}" method="POST">
+                <div class="mb-3">
+                  <label for="invite_participant_email" class="form-label">Email</label>
+                  <input type="email" class="form-control" id="invite_participant_email" name="invite_participant_email" required="required">
+                </div>
+                <button type="submit" class="btn btn-primary">Invite</button>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
           </div>
         </div>
       </div>

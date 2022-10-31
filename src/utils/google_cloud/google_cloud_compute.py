@@ -20,6 +20,7 @@ class GoogleCloudCompute:
         self.compute = googleapi.build("compute", "v1")
 
     def setup_networking(self, doc_ref_dict: dict, role: str) -> None:
+        print(f"Setting up networking for role {role}...")
         gcp_projects: list = [constants.SERVER_GCP_PROJECT]
         gcp_projects.extend(
             doc_ref_dict["personal_parameters"][participant]["GCP_PROJECT"]["value"]
@@ -47,6 +48,8 @@ class GoogleCloudCompute:
             self.wait_for_operation(operation["name"])
 
             self.create_firewall(network_name)
+        else:
+            print(f"Network {network_name} already exists")
 
     def create_firewall(self, network_name: str = constants.NETWORK_NAME) -> None:
         print(f"Creating new firewalls for network {network_name}")
@@ -163,53 +166,47 @@ class GoogleCloudCompute:
                     project=self.project, network=constants.NETWORK_NAME, body=body
                 ).execute()
 
-    def setup_sfgwas_instance(self, instance_name: str, metadata: dict = dict()) -> str:
-        print("Setting up SFGWAS instance")
-        if instance_name not in self.list_instances():
-            self.create_instance(
-                instance_name, "0", metadata=metadata, startup_script="sfgwas", num_cpus=8, boot_disk_size=50
-            )
-        return self.get_vm_external_ip_address(instance_name)
-
     def setup_instance(
         self,
-        zone: str,
         name: str,
         role: str,
-        metadata: dict,
-        num_cpus: int = 4,
+        metadata: list,
+        num_cpus: int = 16,
         boot_disk_size: int = 10,
-        startup_script: str = "web",
         delete: bool = True,
     ) -> str:
-        existing_instances = self.list_instances(zone=zone)
+        if name in self.list_instances() and delete:
+            self.delete_instance(name)
+            print("Waiting for instance to be deleted...")
+            while name in self.list_instances():
+                sleep(2)
 
-        if name in existing_instances and delete:
-            self.delete_instance(name, zone)
+        if name not in self.list_instances():
+            self.create_instance(
+                name=name,
+                role=role,
+                num_cpus=num_cpus,
+                boot_disk_size=boot_disk_size,
+                metadata=metadata,
+            )
 
-        if name not in existing_instances:
-            self.create_instance(name, role, zone, num_cpus, boot_disk_size, metadata, startup_script=startup_script)
-
-        return self.get_vm_external_ip_address(name, zone)
+        return self.get_vm_external_ip_address(name)
 
     def create_instance(
         self,
         name: str,
         role: str,
         zone: str = constants.SERVER_ZONE,
-        num_cpus: int = 0,
+        num_cpus: int = 16,
         boot_disk_size: int = 10,
-        metadata: dict = dict(),
-        startup_script: str = "web",
+        metadata: list = list(),
     ) -> None:
         print("Creating VM instance with name", name)
 
         image_response = self.compute.images().getFromFamily(project="debian-cloud", family="debian-11").execute()
         # image_response = self.compute.images().getFromFamily(project="ubuntu-os-cloud", family="ubuntu-2110").execute()
         source_disk_image = image_response["selfLink"]
-        machine_type = f"zones/{zone}/machineTypes/e2-medium"
-        if num_cpus:
-            machine_type = f"zones/{zone}/machineTypes/e2-highmem-{num_cpus}"
+        machine_type = f"zones/{zone}/machineTypes/e2-highmem-{num_cpus}"
 
         instance_body = {
             "name": name,
@@ -249,21 +246,20 @@ class GoogleCloudCompute:
             "tags": {"items": [constants.INSTANCE_NAME_ROOT]},
         }
 
-        if startup_script:
-            startup_script = open(
-                os.path.join(os.path.dirname(__file__), f"../../vm_scripts/startup-script-{startup_script}.sh"),
-                "r",
-            ).read()
+        startup_script = open(
+            os.path.join(os.path.dirname(__file__), "../../vm_scripts/startup-script.sh"),
+            "r",
+        ).read()
 
-            metadata_config = {
-                "items": [
-                    {"key": "startup-script", "value": startup_script},
-                    {"key": "enable-oslogin", "value": True},
-                ]
-            }
-            if metadata:
-                metadata_config["items"].append(metadata)
-            instance_body["metadata"] = metadata_config
+        metadata_config = {
+            "items": [
+                {"key": "startup-script", "value": startup_script},
+                {"key": "enable-oslogin", "value": True},
+            ]
+        }
+        if metadata:
+            metadata_config["items"] += metadata
+        instance_body["metadata"] = metadata_config
 
         operation = self.compute.instances().insert(project=self.project, zone=zone, body=instance_body).execute()
         self.wait_for_zone_operation(zone, operation["name"])
@@ -283,7 +279,7 @@ class GoogleCloudCompute:
         ]
 
     def delete_instance(self, name: str, zone: str = constants.SERVER_ZONE) -> None:
-        print("Deleting VM instance with name ", name)
+        print(f"Deleting VM instance with name {name}...")
         operation = self.compute.instances().delete(project=self.project, zone=zone, instance=name).execute()
         self.wait_for_zone_operation(zone, operation["name"])
 
@@ -327,7 +323,7 @@ class GoogleCloudCompute:
         response = self.compute.instances().get(project=self.project, zone=zone, instance=instance).execute()
         return response["networkInterfaces"][0]["accessConfigs"][0]["natIP"]
 
-    def get_service_account_for_vm(self, zone: str, instance: str) -> str:
+    def get_service_account_for_vm(self, instance: str, zone: str = constants.SERVER_ZONE) -> str:
         print("Getting the service account for VM instance", instance)
         response = self.compute.instances().get(project=self.project, zone=zone, instance=instance).execute()
         return response["serviceAccounts"][0]["email"]
