@@ -16,38 +16,38 @@ def test_add_bucket_iam_member(mocker):
     google_cloud_storage.add_bucket_iam_member("bucket_name", "role", "member")
 
 
-def test_copy_parameters_to_bucket(mocker):
-    google_cloud_storage = setup_mocking_and_get_storage(mocker)
-    mocker.patch(
-        f"{patch_prefix}.GoogleCloudStorage.update_parameters",
-        return_value=None,
-    )
-    google_cloud_storage.copy_parameters_to_bucket("study title")
+# def test_copy_parameters_to_bucket(mocker):
+#     google_cloud_storage = setup_mocking_and_get_storage(mocker)
+#     mocker.patch(
+#         f"{patch_prefix}.GoogleCloudStorage.update_parameters",
+#         return_value=None,
+#     )
+#     google_cloud_storage.copy_parameters_to_bucket("study title")
 
 
-def test_update_parameters(app, mocker, auth, client):
-    google_cloud_storage = setup_mocking_and_get_storage(mocker)
-    auth.login()
-    client.post(
-        "create_study/MPCGWAS",
-        data=test_create_data,
-    )
-    doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
-    doc_ref.set({"participants": ["Broad", "a@a.com", "a@a.com"]}, merge=True)
+# def test_update_parameters(app, mocker, auth, client):
+#     google_cloud_storage = setup_mocking_and_get_storage(mocker)
+#     auth.login()
+#     client.post(
+#         "create_study/MPCGWAS",
+#         data=test_create_data,
+#     )
+#     doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
+#     doc_ref.set({"participants": ["Broad", "a@a.com", "a@a.com"]}, merge=True)
 
-    with app.app_context():
-        google_cloud_storage.update_parameters("test.par.1.txt", "testtitle")
-        google_cloud_storage.update_parameters("test.par.1.txt", "testtitle")
-
-
-def test_upload_to_bucket(mocker):
-    google_cloud_storage = setup_mocking_and_get_storage(mocker)
-    google_cloud_storage.upload_to_bucket("file", "filename")
+#     with app.app_context():
+#         google_cloud_storage.update_parameters("test.par.1.txt", "testtitle")
+#         google_cloud_storage.update_parameters("test.par.1.txt", "testtitle")
 
 
-def test_check_file_exists(mocker):
-    google_cloud_storage = setup_mocking_and_get_storage(mocker)
-    assert not google_cloud_storage.check_file_exists("filename")
+# def test_upload_to_bucket(mocker):
+#     google_cloud_storage = setup_mocking_and_get_storage(mocker)
+#     google_cloud_storage.upload_to_bucket("file", "filename")
+
+
+# def test_check_file_exists(mocker):
+#     google_cloud_storage = setup_mocking_and_get_storage(mocker)
+#     assert not google_cloud_storage.check_file_exists("filename")
 
 
 def setup_mocking_and_get_storage(mocker):

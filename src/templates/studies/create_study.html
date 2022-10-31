@@ -10,13 +10,13 @@
       <div class="row">
         <div class="col-lg-8 mx-auto">
           <div class="p-5 bg-light rounded text-center">
-            <h2 class="h2 display-7 fw-bold">Let's create a new
-              {{ type }}
-              study:</h2>
+            <h2 class="h2 display-7 fw-bold">New
+              {{ study_type }}
+              Study:</h2>
             <form method="post">
-              <input class="form-control mt-4" name="title" id="title" value="{{ request.form['title'] }}" maxlength="50" required="required" placeholder="An Awesome Study Title">
-              <input class="form-control mt-3" name="description" id="description" value="{{ request.form['description'] }}" required="required" placeholder="A one-line description of your study.">
-              <textarea class="form-control mt-3" name="study_information" id="study_information" value="{{ request.form['study_information'] }}" rows="4" required="required" placeholder="Study Information: here's where you write all the juicy details that people should know about your study. This can include things like Motivation, Goals, and Data Sources."></textarea>
+              <input class="form-control mt-4" name="title" id="title" value="{{ request.form['title'] }}" maxlength="50" required="required" placeholder="Study Title">
+              <input class="form-control mt-3" name="description" id="description" value="{{ request.form['description'] }}" placeholder="(optional) One-line Description of Your Study.">
+              <textarea class="form-control mt-3" name="study_information" id="study_information" value="{{ request.form['study_information'] }}" rows="4" placeholder="Study Information: Any additional details you want to include.  This can contain things like Motivation, Goals, and Data Sources."></textarea>
               <div class="mt-2 form-check form-switch">
                 <input class="form-check-input" type="checkbox" role="switch" name="private_study" id="private_study">
                 <label class="form-check-label float-start" for="private_study">Private Study

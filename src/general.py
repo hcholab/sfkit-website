@@ -1,15 +1,9 @@
-import base64
-from threading import Thread
-
 from flask import Blueprint, current_app, g, make_response, render_template, request
 from werkzeug import Response
 
 from src.auth import login_required
-from src.utils import constants
 from src.utils.generic_functions import add_notification, remove_notification
-from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
-from src.utils.google_cloud.google_cloud_storage import GoogleCloudStorage
-from src.utils.gwas_functions import create_instance_name, data_has_valid_files, data_has_valid_size
+
 
 bp = Blueprint("general", __name__)
 

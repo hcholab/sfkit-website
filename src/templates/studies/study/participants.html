@@ -3,8 +3,10 @@
     <div>
       <p class="fw-bold mb-0">Study Participants:</p>
       {% for participant in study['participants'] %}
-        {{participant}}
-        <br>
+        {% if participant != "Broad" %}
+          {{participant}}
+          <br>
+        {% endif %}
       {% endfor %}
     </div>
   </div>

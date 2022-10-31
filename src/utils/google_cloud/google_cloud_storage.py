@@ -27,19 +27,19 @@ class GoogleCloudStorage:
         bucket.set_iam_policy(policy)
         print(f"Added {member} with role {role} to {bucket_name}.")
 
-    def copy_parameters_to_bucket(
-        self,
-        study_title: str,
-        bucket_name: str = constants.PARAMETER_BUCKET,
-    ) -> None:
-        print(f"Copying parameters to bucket {bucket_name}")
-        bucket = self.storage_client.bucket(bucket_name)
-        for filename in constants.PARAMETER_FILES:
-            blob = bucket.blob(filename)
-            blob.download_to_filename(os.path.join(constants.TEMP_FOLDER, filename))
-            self.update_parameters(os.path.join(constants.TEMP_FOLDER, filename), study_title)
-            blob.upload_from_filename(os.path.join(constants.TEMP_FOLDER, filename))
-        print(f"Updated parameters in {constants.PARAMETER_FILES}")
+    # def copy_parameters_to_bucket(
+    #     self,
+    #     study_title: str,
+    #     bucket_name: str = constants.PARAMETER_BUCKET,
+    # ) -> None:
+    #     print(f"Copying parameters to bucket {bucket_name}")
+    #     bucket = self.storage_client.bucket(bucket_name)
+    #     for filename in constants.PARAMETER_FILES:
+    #         blob = bucket.blob(filename)
+    #         blob.download_to_filename(os.path.join(constants.TEMP_FOLDER, filename))
+    #         self.update_parameters(os.path.join(constants.TEMP_FOLDER, filename), study_title)
+    #         blob.upload_from_filename(os.path.join(constants.TEMP_FOLDER, filename))
+    #     print(f"Updated parameters in {constants.PARAMETER_FILES}")
 
     def update_parameters(self, file: str, study_title: str) -> None:
         print(f"Updating parameters in {file}")
@@ -76,13 +76,13 @@ class GoogleCloudStorage:
                 line = f"{key} " + str(pars[key]["value"]) + "\n"
             print(line, end="")
 
-    def upload_to_bucket(self, file: str, filename: str, bucket_name: str = constants.PARAMETER_BUCKET) -> None:
-        bucket = self.storage_client.bucket(bucket_name)
-        blob = bucket.blob(filename)
-        blob.upload_from_file(file)
-        print(f"Uploaded {filename} to bucket")
+    # def upload_to_bucket(self, file: str, filename: str, bucket_name: str = constants.PARAMETER_BUCKET) -> None:
+    #     bucket = self.storage_client.bucket(bucket_name)
+    #     blob = bucket.blob(filename)
+    #     blob.upload_from_file(file)
+    #     print(f"Uploaded {filename} to bucket")
 
-    def check_file_exists(self, filename: str, bucket_name: str = constants.PARAMETER_BUCKET) -> bool:
-        bucket = self.storage_client.bucket(bucket_name)
-        blob = bucket.blob(filename)
-        return blob.name in [b.name for b in bucket.list_blobs()]
+    # def check_file_exists(self, filename: str, bucket_name: str = constants.PARAMETER_BUCKET) -> bool:
+    #     bucket = self.storage_client.bucket(bucket_name)
+    #     blob = bucket.blob(filename)
+    #     return blob.name in [b.name for b in bucket.list_blobs()]

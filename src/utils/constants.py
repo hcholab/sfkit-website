@@ -6,12 +6,12 @@ SERVER_ZONE = f"{SERVER_REGION}-a"
 NETWORK_NAME = "secure-gwas"
 SUBNET_NAME = f"{NETWORK_NAME}-subnet"
 INSTANCE_NAME_ROOT = NETWORK_NAME
-PARAMETER_BUCKET = f"{NETWORK_NAME}-data"
-TEMP_FOLDER = "src/temp"
-PARAMETER_FILES = ["test.par.0.txt", "test.par.1.txt", "test.par.2.txt"]
-BASE_P = "1461501637330902918203684832716283019655932542929"
-DATA_VALIDATION_CONSTANT = 4 * len(BASE_P)
-DATA_VALIDATION_FILES = ["g.bin", "m.bin", "p.bin", "other_shared_key.bin", "pos.txt"]
+# PARAMETER_BUCKET = f"{NETWORK_NAME}-data"
+# TEMP_FOLDER = "src/temp"
+# PARAMETER_FILES = ["test.par.0.txt", "test.par.1.txt", "test.par.2.txt"]
+# BASE_P = "1461501637330902918203684832716283019655932542929"
+# DATA_VALIDATION_CONSTANT = 4 * len(BASE_P)
+# DATA_VALIDATION_FILES = ["g.bin", "m.bin", "p.bin", "other_shared_key.bin", "pos.txt"]
 
 MPCGWAS_SHARED_PARAMETERS = {
     "NUM_SNPS": {
@@ -23,11 +23,6 @@ MPCGWAS_SHARED_PARAMETERS = {
         "name": "Number of Covariates",
         "description": "The number of covariate features in the dataset.",
         "value": "10",
-    },
-    "ITER_PER_EVAL": {
-        "name": "Iterations per Evaluation",
-        "description": "The number of QR iterations per eigenvalue when performing eigendecomposition.",
-        "value": "5",
     },
     "NUM_DIM_TO_REMOVE": {
         "name": "Number of Dimensions to Remove",
@@ -92,10 +87,7 @@ MPCGWAS_SHARED_PARAMETERS = {
     "index": [
         "NUM_SNPS",
         "NUM_COVS",
-        "ITER_PER_EVAL",
         "NUM_DIM_TO_REMOVE",
-        "NUM_OVERSAMPLE",
-        "NUM_POWER_ITER",
         "SKIP_QC",
         "IMISS_UB",
         "HET_LB",
@@ -105,6 +97,53 @@ MPCGWAS_SHARED_PARAMETERS = {
         "MAF_UB",
         "HWE_UB",
         "LD_DIST_THRES",
+    ],
+}
+
+MPCGWAS_ADVANCED_PARAMETERS = {
+    "ITER_PER_EVAL": {
+        "name": "Iterations per Evaluation",
+        "description": "The number of QR iterations per eigenvalue when performing eigendecomposition.",
+        "value": "5",
+    },
+    "NUM_OVERSAMPLE": {
+        "name": "Oversampling Parameter for PCA",
+        "description": "An oversampling parameter for randomized principal component analysis: how many extra components should be extracted to improve the accuracy.",
+        "value": "5",
+    },
+    "NUM_POWER_ITER": {
+        "name": "Number of Power Iterations",
+        "description": "The number of power iterations during the randomized PCA.",
+        "value": "10",
+    },
+    "NBIT_K": {
+        "name": "NBIT_K",
+        "description": "Total number of bits used to represent data values",
+        "value": "60",
+    },
+    "NBIT_F": {
+        "name": "NBIT_F",
+        "description": "Number of bits assigned to the fractional range",
+        "value": "30",
+    },
+    "NBIT_V": {
+        "name": "NBIT_V",
+        "description": "Number of additional bits used as a buffer for statistical security",
+        "value": "64",
+    },
+    "BASE_P": {
+        "name": "BASE_P",
+        "description": "Base prime used for cryptography (default is the largest 160 bit prime)",
+        "value": "1461501637330902918203684832716283019655932542929",
+    },
+    "index": [
+        "ITER_PER_EVAL",
+        "NUM_OVERSAMPLE",
+        "NUM_POWER_ITER",
+        "NBIT_K",
+        "NBIT_F",
+        "NBIT_V",
+        "BASE_P",
     ],
 }
 
@@ -200,7 +239,13 @@ PCA_SHARED_PARAMETERS = {
 SHARED_PARAMETERS = {
     "MPCGWAS": MPCGWAS_SHARED_PARAMETERS,
     "PCA": PCA_SHARED_PARAMETERS,
-    "SFGWAS": PCA_SHARED_PARAMETERS,
+    # "SFGWAS": SFGWAS_SHARED_PARAMETERS,
+}
+
+ADVANCED_PARAMETERS = {
+    "MPCGWAS": MPCGWAS_ADVANCED_PARAMETERS,
+    # "PCA": PCA_ADVANCED_PARAMETERS,
+    # "SFGWAS": SFGWAS_ADVANCED_PARAMETERS,
 }
 
 
@@ -230,7 +275,7 @@ DEFAULT_USER_PARAMETERS = {
     "NUM_INDS": {
         "name": "Number of Individuals",
         "description": "The number of individuals in your dataset.",
-        "value": "1000",
+        "value": "",
     },
     "NUM_THREADS": {
         "name": "Number of Threads",

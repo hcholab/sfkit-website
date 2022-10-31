@@ -121,6 +121,7 @@ def create_study(study_type: str) -> Response:
             "participants": ["Broad", g.user["id"]],
             "status": {"Broad": [""], g.user["id"]: [""]},
             "parameters": constants.SHARED_PARAMETERS[study_type],
+            "advanced_parameters": constants.ADVANCED_PARAMETERS[study_type],
             "personal_parameters": {
                 "Broad": constants.broad_user_parameters(),
                 g.user["id"]: constants.default_user_parameters(study_type),
@@ -258,7 +259,6 @@ def parameters(study_title: str) -> Response:
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
-    parameters = doc_ref_dict.get("parameters")
     if request.method == "GET":
         return make_response(
             render_template(
@@ -267,9 +267,15 @@ def parameters(study_title: str) -> Response:
             )
         )
     elif "save" in request.form:
-        for p in parameters["index"]:
-            parameters[p]["value"] = request.form.get(p)
-        doc_ref.set({"parameters": parameters}, merge=True)
+        for p in request.form:
+            if p in doc_ref_dict["parameters"]["index"]:
+                doc_ref_dict["parameters"][p]["value"] = request.form.get(p)
+            elif p in doc_ref_dict["advanced_parameters"]["index"]:
+                doc_ref_dict["advanced_parameters"][p]["value"] = request.form.get(p)
+            elif "NUM_INDS" in p:
+                participant = p.split("NUM_INDS")[1]
+                doc_ref_dict["personal_parameters"][participant]["NUM_INDS"]["value"] = request.form.get(p)
+        doc_ref.set(doc_ref_dict, merge=True)
         return redirect(url_for("studies.study", study_title=study_title))
     else:
         return redirect_with_flash(

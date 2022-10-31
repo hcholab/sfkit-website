@@ -1,9 +1,24 @@
-{%set owner = (g.user['id'] == study['owner'])%}
+{% set user = g.user['id'] %}
+{% set owner = (g.user['id'] == study['owner']) %}
 
 <form method="post" action="{{ url_for('studies.parameters', study_title=study['title']) }}">
   <div class="row p-3 text-start">
+    <div class="text-start mb-2">
+      <p class="mb-1">Number of Individuals:</p>
+      {% for participant in study['participants'] %}
+        {% if participant != "Broad" %}
+          <div class="form-floating">
+            <input type="text" class="form-control" name="NUM_INDS{{participant}}" id="NUM_INDS{{participant}}" value="{{ request.form['NUM_INDS{{participant}}'] or study['personal_parameters'][participant]['NUM_INDS']['value'] }}" {% if user != participant %} disabled="disabled" {% endif %}>
+            <label for="NUM_INDS{{participant}}">NUM_INDS for
+              {{participant}}</label>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
     {% if not owner %}
-      <p>Note: Only the creator of the study can edit the Shared Study Parameters.</p>
+      <p>
+        <b>Note: Only the creator of the study can edit the Shared Study Parameters.</b>
+      </p>
     {% endif %}
     {% for parameter_name in study["parameters"]["index"] %}
       <label for="{{ parameter_name }}" class="col-sm-5 col-form-label">
@@ -16,11 +31,31 @@
         {{study["parameters"][parameter_name]['description']}}
       </p>
     {% endfor %}
-    {% if owner %}
-      <div class="d-flex flex-wrap justify-content-center">
-        <a href="{{ url_for('studies.study', study_title=study['title']) }}" class="btn btn-outline-secondary me-2 mb-2 mb-sm-0">Cancel</a>
-        <input type="submit" name="save" value="Save" class="btn btn-primary me-2">
+    <div class="accordion mb-3" id="advancedParameters">
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="advancedParametersHeading">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#advancedParametersBody">
+            Advanced Parameters
+          </button>
+        </h2>
+        <div id="advancedParametersBody" class="accordion-collapse collapse" data-bs-parent="#advancedParameters">
+          <div class="accordion-body">
+            {% for parameter_name in study["advanced_parameters"]["index"] %}
+              <div class="form-floating">
+                <input type="number" step="any" class="form-control" name="{{parameter_name}}" id="{{parameter_name}}" min="0" value="{{ request.form['{{parameter_name}}'] or study['advanced_parameters'][parameter_name]['value'] }}" {% if not owner %} disabled="disabled" {% endif %}>
+                <label for="{{ parameter_name }}">{{study["advanced_parameters"][parameter_name]['name']}}</label>
+              </div>
+              <p class="text-start text-muted">
+                {{study["advanced_parameters"][parameter_name]['description']}}
+              </p>
+            {% endfor %}
+          </div>
+        </div>
       </div>
-    {% endif %}
+    </div>
+    <div class="d-flex flex-wrap justify-content-center">
+      <a href="{{ url_for('studies.study', study_title=study['title']) }}" class="btn btn-outline-secondary me-2 mb-2 mb-sm-0">Cancel</a>
+      <input type="submit" name="save" value="Save" class="btn btn-primary me-2">
+    </div>
   </div>
 </form>
