@@ -29,8 +29,8 @@ def test_valid_study_title(client, app, auth, mocker):
         assert gwas_functions.valid_study_title("test_title", "MPCGWAS")[0] == False
 
         auth.login()
-        client.post("create_study/MPCGWAS", data=test_create_data)
-        client.post("create_study/MPCGWAS", data=test_create_data2)
+        client.post("create_study/MPCGWAS/website", data=test_create_data)
+        client.post("create_study/MPCGWAS/website", data=test_create_data2)
 
         assert gwas_functions.valid_study_title("testtitle2", "MPCGWAS")[0] == False
 

@@ -90,12 +90,13 @@ def upload_public_key(study_title: str) -> Response:
 @login_required
 def choose_study_type() -> Response:
     study_type = request.form["CHOOSE_STUDY_TYPE"]
-    return redirect(url_for("studies.create_study", study_type=study_type))
+    setup_configuration: str = request.form["SETUP_CONFIGURATION"]
+    return redirect(url_for("studies.create_study", study_type=study_type, setup_configuration=setup_configuration))
 
 
-@bp.route("/create_study/<study_type>", methods=("GET", "POST"))
+@bp.route("/create_study/<study_type>/<setup_configuration>", methods=("GET", "POST"))
 @login_required
-def create_study(study_type: str) -> Response:
+def create_study(study_type: str, setup_configuration: str) -> Response:
     if request.method == "GET":
         return make_response(render_template("studies/create_study.html", study_type=study_type))
 
@@ -113,6 +114,7 @@ def create_study(study_type: str) -> Response:
         {
             "title": title,
             "study_type": study_type,
+            "setup_configuration": setup_configuration,
             "private": request.form.get("private_study") == "on",
             "description": description,
             "study_information": study_information,
@@ -302,17 +304,17 @@ def personal_parameters(study_title: str) -> Response:
     return redirect(url_for("studies.study", study_title=study_title))
 
 
-@bp.route("/study/<study_title>/choose_workflow", methods=("POST",))
-@login_required
-def choose_workflow(study_title: str) -> Response:
-    db = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
-    doc_ref_dict = doc_ref.get().to_dict()
-    doc_ref_dict["personal_parameters"][g.user["id"]]["CONFIGURE_STUDY_GCP_SETUP_MODE"]["value"] = request.form.get(
-        "CONFIGURE_STUDY_GCP_SETUP_MODE"
-    )
-    doc_ref.set(doc_ref_dict)
-    return redirect(url_for("studies.study", study_title=study_title))
+# @bp.route("/study/<study_title>/choose_workflow", methods=("POST",))
+# @login_required
+# def choose_workflow(study_title: str) -> Response:
+#     db = current_app.config["DATABASE"]
+#     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+#     doc_ref_dict = doc_ref.get().to_dict()
+#     doc_ref_dict["personal_parameters"][g.user["id"]]["CONFIGURE_STUDY_GCP_SETUP_MODE"]["value"] = request.form.get(
+#         "CONFIGURE_STUDY_GCP_SETUP_MODE"
+#     )
+#     doc_ref.set(doc_ref_dict)
+#     return redirect(url_for("studies.study", study_title=study_title))
 
 
 @bp.route("/study/<study_title>/set_sa_email", methods=("POST",))

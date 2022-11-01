@@ -27,34 +27,56 @@
               </div>
               <form method="post" action="{{url_for('studies.choose_study_type')}}">
                 <div class="modal-body">
-                  <p>
-                    Which workflow would you like to run?
-                  </p>
-                  <div class="form-check">
-                    <input class="form-check-input" type="radio" name="CHOOSE_STUDY_TYPE" id="sfgwas" value="SFGWAS" checked="checked">
-                    <label class="form-check-label" for="sfgwas">
-                      <b>SF-GWAS</b>
-                      (default) - Secure Federated Genome-Wide Association Study
-                    </label>
+                  <div>
+                    <p>
+                      Which workflow would you like to run?
+                    </p>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="CHOOSE_STUDY_TYPE" id="sfgwas" value="SFGWAS" checked="checked">
+                      <label class="form-check-label" for="sfgwas">
+                        <b>SF-GWAS</b>
+                        (default) - Secure Federated Genome-Wide Association Study
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="CHOOSE_STUDY_TYPE" id="pca" value="PCA">
+                      <label class="form-check-label" for="pca">
+                        <b>SF-PCA</b>
+                        - Secure Federated Principal Component Analysis
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="CHOOSE_STUDY_TYPE" id="mpcgwas" value="MPCGWAS">
+                      <label class="form-check-label" for="mpcgwas">
+                        <b>MPC-GWAS</b>
+                        - Secure Multi-Party Computation Genome-Wide Association Study
+                      </label>
+                    </div>
+                    <small class="mt-2 text-muted">
+                      Note: If you are unsure which workflow to choose, you can read more about them
+                      <a class="text-decoration-none" href="https://sfkit.readthedocs.io/en/latest/workflows.html">here</a>.
+                    </small>
                   </div>
-                  <div class="form-check">
-                    <input class="form-check-input" type="radio" name="CHOOSE_STUDY_TYPE" id="pca" value="PCA">
-                    <label class="form-check-label" for="pca">
-                      <b>SF-PCA</b>
-                      - Secure Federated Principal Component Analysis
-                    </label>
+                  <hr>
+                  <div>
+                    <p>
+                      How do you want to have your GCP project configured?
+                    </p>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="SETUP_CONFIGURATION" id="website" value="website" checked="checked">
+                      <label class="form-check-label" for="website">
+                        <b>Website</b>
+                        (default) - With this setting, this website will configure the networking and setup in your GCP project for you.
+                      </label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="SETUP_CONFIGURATION" id="user" value="user">
+                      <label class="form-check-label" for="user">
+                        <b>User</b>
+                        - With this setting you will configure the networking and setup in your GCP project yourself. This is more work for you, but it means you don't need to give the website access to your GCP project.
+                      </label>
+                    </div>
                   </div>
-                  <div class="form-check">
-                    <input class="form-check-input" type="radio" name="CHOOSE_STUDY_TYPE" id="mpcgwas" value="MPCGWAS">
-                    <label class="form-check-label" for="mpcgwas">
-                      <b>MPC-GWAS</b>
-                      - Secure Multi-Party Computation Genome-Wide Association Study
-                    </label>
-                  </div>
-                  <small class="mt-2 text-muted">
-                    Note: If you are unsure which workflow to choose, you can read more about them
-                    <a class="text-decoration-none" href="https://sfkit.readthedocs.io/en/latest/workflows.html">here</a>.
-                  </small>
                 </div>
                 <div class="modal-footer">
                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>

@@ -22,7 +22,7 @@ def test_load_logged_in_user(mocker, app):
 
 @pytest.mark.parametrize(
     "path",
-    ("/create_study/GWAS", "/delete_study/1", "/study/1"),
+    ("/create_study/GWAS/website", "/delete_study/1", "/study/1"),
 )
 def test_login_required(client, path):
     response = client.post(path)
