@@ -395,21 +395,8 @@ def start_protocol(study_title: str) -> Response:
         doc_ref.set({"status": statuses}, merge=True)
         doc_ref_dict = doc_ref.get().to_dict()
 
-        gcloudCompute = GoogleCloudCompute(gcp_project)
-        vm_parameters = doc_ref_dict["personal_parameters"][user_id]
-
-        gcloudCompute.setup_networking(doc_ref_dict, role)
-        gcloudCompute.setup_instance(
-            name=create_instance_name(study_title, role),
-            role=role,
-            metadata=[
-                {"key": "data_path", "value": vm_parameters["DATA_PATH"]["value"]},
-                {"key": "geno_binary_file_prefix", "value": vm_parameters["GENO_BINARY_FILE_PREFIX"]["value"]},
-                {"key": "ports", "value": vm_parameters["PORTS"]["value"]},
-            ],
-            num_cpus=vm_parameters["NUM_CPUS"]["value"],
-            boot_disk_size=vm_parameters["BOOT_DISK_SIZE"]["value"],
-        )
+        setup_gcp(doc_ref_dict, role)
+        gcloudCompute = GoogleCloudCompute(doc_ref_dict["personal_parameters"][user_id]["GCP_PROJECT"]["value"])
         # update service account in firestore
         doc_ref_dict["personal_parameters"][user_id]["SA_EMAIL"]["value"] = gcloudCompute.get_service_account_for_vm(
             create_instance_name(study_title, role)
@@ -417,19 +404,24 @@ def start_protocol(study_title: str) -> Response:
         doc_ref.set({"personal_parameters": doc_ref_dict["personal_parameters"]}, merge=True)
 
         if role == "1":
-            # start CP0 as well
-            gcloudCompute = GoogleCloudCompute(constants.SERVER_GCP_PROJECT)
-            gcloudCompute.setup_networking(doc_ref_dict, "0")
-            gcloudCompute.setup_instance(
-                name=create_instance_name(study_title, "0"),
-                role="0",
-                metadata=[
-                    {"key": "data_path", "value": vm_parameters["DATA_PATH"]["value"]},
-                    {"key": "geno_binary_file_prefix", "value": vm_parameters["GENO_BINARY_FILE_PREFIX"]["value"]},
-                    {"key": "ports", "value": vm_parameters["PORTS"]["value"]},
-                ],
-                num_cpus=vm_parameters["NUM_CPUS"]["value"],
-                boot_disk_size=vm_parameters["BOOT_DISK_SIZE"]["value"],
-            )
+            setup_gcp(doc_ref_dict, "0")
 
     return redirect(url_for("studies.study", study_title=study_title))
+
+
+def setup_gcp(doc_ref_dict: dict, role: str) -> None:
+    user: str = doc_ref_dict["participants"][int(role)]
+    user_parameters: dict = doc_ref_dict["personal_parameters"][user]
+    gcloudCompute = GoogleCloudCompute(user_parameters["GCP_PROJECT"]["value"])
+    gcloudCompute.setup_networking(doc_ref_dict, role)
+    gcloudCompute.setup_instance(
+        name=create_instance_name(doc_ref_dict["title"], role),
+        role=role,
+        metadata=[
+            {"key": "data_path", "value": user_parameters["DATA_PATH"]["value"]},
+            {"key": "geno_binary_file_prefix", "value": user_parameters["GENO_BINARY_FILE_PREFIX"]["value"]},
+            {"key": "ports", "value": user_parameters["PORTS"]["value"]},
+        ],
+        num_cpus=user_parameters["NUM_CPUS"]["value"],
+        boot_disk_size=user_parameters["BOOT_DISK_SIZE"]["value"],
+    )

@@ -1,8 +1,11 @@
 from typing import Tuple
+
 import google.auth.transport.requests
 from flask import Blueprint, current_app, request
 from google.oauth2 import id_token
 from werkzeug import Request
+
+from src.studies import setup_gcp
 
 bp = Blueprint("api", __name__)
 
@@ -57,6 +60,23 @@ def update_firestore() -> Tuple:
             print(f"parameter {name} not found in {title}")
             return {"error": f"parameter {name} not found in {title}"}, 400
     doc_ref.set(doc_ref_dict)
+
+    return "", 200
+
+
+@bp.route("/create_cp0", methods=["GET"])
+def create_cp0() -> Tuple:
+    if not verify_authorization_header(request):
+        return {"error": "unauthorized"}, 401
+
+    study_title: str = str(request.args.get("study_title"))
+    doc_ref = current_app.config["DATABASE"].collection("studies").document(study_title)
+    doc_ref_dict: dict = doc_ref.get().to_dict()
+
+    if not doc_ref_dict:
+        return {"error": f"study {study_title} not found"}, 400
+
+    setup_gcp(doc_ref_dict, "0")
 
     return "", 200
 
