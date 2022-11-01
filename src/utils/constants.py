@@ -355,8 +355,7 @@ DEFAULT_USER_PARAMETERS = {
     },
     "NUM_CPUS": {
         "name": "Number of CPUs",
-        "description": "The number of CPUs to allocate to the VM instance that will be running the GWAS protocol in your GCP account.  \
-        The number of GB of memory will automatically be set to 8x this number, as we are using Google's E2 high-memory VM instance.",
+        "description": "The number of CPUs to allocate to the VM instance that will be running the protocol in your GCP account.",
         "value": "16",
     },
     "ZONE": {
@@ -366,7 +365,7 @@ DEFAULT_USER_PARAMETERS = {
     },
     "BOOT_DISK_SIZE": {
         "name": "Boot Disk Size",
-        "description": "The size of the boot disk for your VM instance. Must be at least 10GB.",
+        "description": "The size of the boot disk for your VM instance. Must be at least 10 (GB).",
         "value": "10",
     },
     "DATA_HASH": {

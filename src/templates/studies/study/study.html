@@ -72,6 +72,11 @@
                       <p>Waiting for others to be ready...</p>
                     {% else %}
                       <div class="status text-start"></div>
+                      <p class="text-muted text-start">
+                        (Optional) While the protocol is running, if you want a more detailed view into what the VM is doing, you can ssh into your VM and run the command
+                        <code>sudo journalctl -u google-startup-scripts.service</code>
+                        to see detailed logs.
+                      </p>
                     {% endif %}
                     <form action="{{ url_for('studies.start_protocol', study_title=study['title']) }}" method="POST">
                       <button type="submit" class="btn btn-secondary">Check for update</button>

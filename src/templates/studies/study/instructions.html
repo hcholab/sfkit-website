@@ -297,7 +297,7 @@
   </div>
   {% endcall %} #}
 
-  {% call instruction_step(i.value, "Begin Workflow") %}
+  {# {% call instruction_step(i.value, "Begin Workflow") %}
   <div>
     {% set i.value = i.value + 1 %}
     <p>
@@ -312,7 +312,7 @@
       <code>sudo journalctl -u google-startup-scripts.service</code>
       to see detailed logs.</p>
   </div>
-  {% endcall %}
+  {% endcall %} #}
 
   {# {% else %}
     {% call instruction_step(i.value, "Validate Data") %}
@@ -361,7 +361,7 @@
     </div>
     {% endcall %}
   {% endif %} #}
-
+  {# 
   {% call instruction_step(i.value, "Enjoy the Results") %}
   <div>
     {% set i.value = i.value + 1 %}
@@ -371,6 +371,6 @@
       <br>You can then download the results (from your storage bucket in your GCP project) to share and analyze at your leisure.
     </p>
   </div>
-  {% endcall %}
+  {% endcall %} #}
 
 </div>
