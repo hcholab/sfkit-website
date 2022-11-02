@@ -4,7 +4,7 @@
       <p class="fw-bold mb-0">Study Participants:</p>
       {% for participant in study['participants'] %}
         {% if participant != "Broad" %}
-          {{participant}}
+          <a class="text-decoration-none" href="{{url_for('general.profile', user_id=participant)}}">{{display_names.get(participant, participant)}}</a>
           <br>
         {% endif %}
       {% endfor %}

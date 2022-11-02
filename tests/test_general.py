@@ -33,13 +33,13 @@ def test_instructions_page(client):
     assert b"Instructions" in response.data
 
 
-def test_all_notifications(client, auth, mocker):
-    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
-    auth.login()
+# def test_all_notifications(client, auth, mocker):
+#     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+#     auth.login()
 
-    response = client.get("/all_notifications")
-    assert response.status_code == 200
-    assert b"All Notifications" in response.data
+#     response = client.get("/all_notifications")
+#     assert response.status_code == 200
+#     assert b"All Notifications" in response.data
 
 
 # def test_index_from_pubsub(client, app, mocker):

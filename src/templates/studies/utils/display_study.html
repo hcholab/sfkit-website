@@ -1,7 +1,7 @@
 <div class="col-4 my-2">
   <small class="text-muted">
     Created by
-    {{ study['owner'] }}
+    {{ display_names.get(study['owner'], study['owner']) }}
     on
     {{ study['created'].strftime('%m-%d-%Y') }}
     {% if study["private"] %}

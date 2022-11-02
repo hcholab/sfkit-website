@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+  <section class="py-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-12 col-lg-9 mx-auto">
+          <div class="p-5 bg-light rounded">
+            <h1 class="h1 text-center">Profile</h1>
+            <div class="mb-3">
+              <p>
+                <b>Display Name</b>
+                <br>
+                {{display_name}}
+                {% if g.user["id"] == user_id %}
+                  <a class="text-decoration-none" href="{{ url_for('general.edit_profile') }}">&ensp;Edit</a>
+                {% endif %}
+                <br>
+              </p>
+
+            </div>
+            <p>
+              <b>Email</b>
+              <br>
+              {{ user_id }}
+            </p>
+            {% if profile["about"] %}
+              <div class="mb-3">
+                <p>
+                  <b>About</b>
+                  <br>
+                  {{ profile["about"] }}
+                  {% if g.user["id"] == user_id %}
+                    <a class="text-decoration-none" href="{{ url_for('general.edit_profile') }}">&ensp;Edit</a>
+                  {% endif %}
+                  <br>
+                </p>
+              </div>
+            {% endif %}
+            {% if g.user["id"] == user_id %}
+              <div>
+                <p>
+                  <b>Notifications</b>
+                </p>
+                {% if profile["notifications"] | length == 0 and profile["old_notifications"] | length == 0 %}
+                  <p>You have no notifications.</p>
+                {% elif profile["notifications"] | length > 0 %}
+                  <p class="lead">New notifications:</p>
+                  {% for notification in profile["notifications"] %}
+                    <div class="alert alert-primary" role="alert">
+                      {{ notification }}
+                    </div>
+                  {% endfor %}
+                {% endif %}
+                {% if profile["old_notifications"] | length > 0 %}
+                  <p class="lead">Old notifications:</p>
+                  {% for notification in profile["old_notifications"] %}
+                    <div class="alert alert-secondary" role="alert">
+                      {{ notification }}
+                    </div>
+                  {% endfor %}
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

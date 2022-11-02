@@ -5,7 +5,7 @@ import typing
 
 import flask
 from firebase_admin import auth as firebase_auth
-from flask import Blueprint, g, make_response, redirect, render_template, request, url_for
+from flask import Blueprint, current_app, g, make_response, redirect, render_template, request, url_for
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from werkzeug import Response
@@ -25,6 +25,8 @@ def load_logged_in_user() -> None:
         session_cookie = flask.request.cookies.get("session")
         user_dict = firebase_auth.verify_session_cookie(session_cookie, check_revoked=True)
         g.user = {"id": user_dict["email"]}
+        display_names = current_app.config["DATABASE"].collection("users").document("display_names").get().to_dict()
+        g.user["display_name"] = display_names.get(g.user["id"], g.user["id"])
     except Exception as e:
         no_user_strings = [
             "session cookie provided: None",
@@ -37,6 +39,7 @@ def load_logged_in_user() -> None:
     else:
         try:
             # for use in accessing firebase from the frontend.  See https://firebase.google.com/docs/auth/admin/create-custom-tokens
+            # this is done when dynamically updating status of a running study, and for the notification system
             g.custom_token = firebase_auth.create_custom_token(user_dict["uid"]).decode("utf-8")
         except Exception as e:
             print(f"Error creating custom token: {e}")
@@ -153,4 +156,6 @@ def login_with_google_callback() -> Response:
         gcloudIAM = GoogleCloudIAM()
         gcloudIAM.give_minimal_required_gcp_permissions(decoded_jwt_token["email"])
 
+    doc_ref = current_app.config["DATABASE"].collection("users").document("display_names")
+    doc_ref.set({decoded_jwt_token["email"]: decoded_jwt_token["name"]}, merge=True)
     return update_user(decoded_jwt_token["email"], rand_temp_password, redirect_url=request.form.get("next", ""))

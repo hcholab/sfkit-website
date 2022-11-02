@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app, g, make_response, render_template, request
+from flask import Blueprint, current_app, g, make_response, redirect, render_template, request, url_for
 from werkzeug import Response
 
 from src.auth import login_required
@@ -27,17 +27,45 @@ def update_notifications() -> Response:
     return Response(status=200)
 
 
-@bp.route("/all_notifications", methods=["GET"])
+@bp.route("/profile/<user_id>", methods=["GET"])
 @login_required
-def all_notifications() -> Response:
-    doc_ref_dict = current_app.config["DATABASE"].collection("users").document(g.user["id"]).get().to_dict()
+def profile(user_id: str) -> Response:
+    users_collection = current_app.config["DATABASE"].collection("users")
+    profile = users_collection.document(user_id).get().to_dict() or {}
+    display_names = users_collection.document("display_names").get().to_dict() or {}
+
     return make_response(
         render_template(
-            "general/all_notifications.html",
-            new_notifications=doc_ref_dict.get("notifications", []),
-            old_notifications=doc_ref_dict.get("old_notifications", []),
+            "general/profile.html",
+            user_id=user_id,
+            profile=profile,
+            display_name=display_names.get(user_id, user_id),
         )
     )
+
+
+@bp.route("/edit_profile", methods=["GET", "POST"])
+@login_required
+def edit_profile() -> Response:
+    users_collection = current_app.config["DATABASE"].collection("users")
+    profile = users_collection.document(g.user["id"]).get().to_dict() or {}
+    display_names = users_collection.document("display_names").get().to_dict() or {}
+
+    if request.method == "GET":
+        return make_response(
+            render_template(
+                "general/edit_profile.html",
+                profile=profile,
+                display_name=display_names.get(g.user["id"], g.user["id"]),
+            )
+        )
+    display_names[g.user["id"]] = request.form["display_name"]
+    users_collection.document("display_names").set(display_names)
+
+    profile["about"] = request.form["about"]
+    users_collection.document(g.user["id"]).set(profile)
+
+    return redirect(url_for("general.profile", user_id=g.user["id"]))
 
 
 # for the pubsub

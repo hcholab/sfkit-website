@@ -22,7 +22,10 @@ def index() -> Response:
     db = current_app.config["DATABASE"]
     studies = db.collection("studies")
     studies_list = [study.to_dict() for study in studies.stream()]
-    return make_response(render_template("studies/index.html", studies=studies_list))
+
+    display_names = db.collection("users").document("display_names").get().to_dict()
+
+    return make_response(render_template("studies/index.html", studies=studies_list, display_names=display_names))
 
 
 @bp.route("/study/<study_title>", methods=("GET", "POST"))
@@ -34,6 +37,8 @@ def study(study_title: str) -> Response:
     user_id = g.user["id"]
     role: int = doc_ref_dict["participants"].index(user_id)
 
+    display_names = db.collection("users").document("display_names").get().to_dict()
+
     return make_response(
         render_template(
             "studies/study/study.html",
@@ -41,6 +46,7 @@ def study(study_title: str) -> Response:
             role=role,
             study_type=doc_ref_dict["study_type"],
             parameters=doc_ref_dict["personal_parameters"][user_id],
+            display_names=display_names,
         )
     )
 
