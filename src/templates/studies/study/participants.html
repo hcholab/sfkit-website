@@ -5,6 +5,9 @@
       {% for participant in study['participants'] %}
         {% if participant != "Broad" %}
           <a class="text-decoration-none" href="{{url_for('general.profile', user_id=participant)}}">{{display_names.get(participant, participant)}}</a>
+          {% if participant == study["owner"] %}
+            <span class="badge bg-secondary">Study Creator</span>
+          {% endif %}
           <br>
         {% endif %}
       {% endfor %}
@@ -36,6 +39,9 @@
             </div>
             <form action="{{ url_for('studies.invite_participant', study_title=study['title']) }}" method="POST">
               <div class="modal-body">
+                <div class="text-start text-muted">
+                  <p>An invitation to join this study will be sent to this email.</p>
+                </div>
                 <div class="mb-3 form-floating">
                   <input type="email" class="form-control" id="invite_participant_email" name="invite_participant_email" placeholder="name@example.com" required="required">
                   <label for="invite_participant_email" class="form-label text-start">Email address</label>

@@ -6,58 +6,27 @@
   <section class="py-5">
     <div class="container">
       <h2 class="h2 fw-bold mt-9 mb-5 text-center">General Instructions</h2>
-      <div class="row">
-        <div class="col-12 col-md-6 col-lg-4 mb-5">
-          <div class="position-relative p-5 text-center bg-light rounded">
-            <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">1</span>
-            <h4 class="fw-bold mb-3">Join Study</h4>
-            <p class="lead text-muted">
-              Create or join a Secure GWAS study with the parameters that you want.
-            </p>
+      <div class="lead">
+        <p>
+          For each of the three workflows (<a class="text-decoration-none" href="{{ url_for('general.home', _anchor='SF-GWAS') }}">SF-GWAS</a>,
+          <a class="text-decoration-none" href="{{ url_for('general.home', _anchor='SF-PCA') }}">SF-PCA</a>, and
+          <a class="text-decoration-none" href="{{ url_for('general.home', _anchor='MPC-GWAS') }}">MPC-GWAS</a>), you have two options for how to set up your VM (virtual machine) and run your study:
+        </p>
+        <p>
+          1. The
+          <a class="text-decoration-none" href="https://sfkit.readthedocs.io/en/latest/tutorial.html">sfkit CLI</a>.
+          <div>
+            <img class="img-fluid" src="static/images/sfkit_diagram.png" alt="">
           </div>
-        </div>
-        <div class="col-12 col-md-6 col-lg-4 mb-5">
-          <div class="position-relative p-5 text-center bg-light rounded">
-            <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">2</span>
-            <h4 class="fw-bold mb-3">Generate Keys</h4>
-            <p class="lead text-muted">
-              Generate public and private cryptographic keys for use in the protocol.
-            </p>
-          </div>
-        </div>
-        <div class="col-12 col-md-6 col-lg-4 mb-5">
-          <div class="position-relative p-5 text-center bg-light rounded">
-            <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">3</span>
-            <h4 class="fw-bold mb-3">Encrypt Data</h4>
-            <p class="lead text-muted">Encrypt your data using the shared cryptographic keys and upload the encrypted data to google cloud.</p>
-          </div>
-        </div>
-        <div class="col-12 col-md-6 col-lg-4 mb-5">
-          <div class="position-relative p-5 text-center bg-light rounded">
-            <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">4</span>
-            <h4 class="fw-bold mb-3">Give Permissions</h4>
-            <p class="lead text-muted">Give this portal the relevant permissions to help you run the GWAS protocol.</p>
-          </div>
-        </div>
-        <div class="col-12 col-md-6 col-lg-4 mb-5 mb-md-0">
-          <div class="position-relative p-5 text-center bg-light rounded">
-            <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">5</span>
-            <h4 class="fw-bold mb-3">Begin Workflow</h4>
-            <p class="lead text-muted">Once everyone is ready, start the GWAS protocol.</p>
-          </div>
-        </div>
-        <div class="col-12 col-md-6 col-lg-4">
-          <div class="position-relative p-5 text-center bg-light rounded">
-            <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">6</span>
-            <h4 class="fw-bold mb-3">Enjoy the Results</h4>
-            <p class="lead text-muted">Download the results and analyze them to your heart's content!</p>
-          </div>
-        </div>
-
-        <p class="lead text-muted mt-0 mb-4">
-          What are you waiting for? Go to the
-          <a class="text-decoration-none" href="{{ url_for('studies.index') }}">Studies</a>
-          page and get started!
+        </p>
+        <p>
+          2. Have the website set up your VM and run your study for you. This will require you to give the website limited permissions to access your Google Cloud Platform (GCP) account. (You will be walked through the specifics of this process if you create a study using this option.)
+        </p>
+        <p>
+          <strong>Option 1</strong>
+          is recommended for users who are familiar with the command line and want to have more control over their VM.
+          <strong>Option 2</strong>
+          is recommended for users who are not familiar with the command line and/or want to get started quickly.
         </p>
       </div>
     </div>
