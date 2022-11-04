@@ -1,3 +1,4 @@
+import secrets
 import io
 from datetime import datetime
 
@@ -106,7 +107,6 @@ def create_study(study_type: str, setup_configuration: str) -> Response:
     if request.method == "GET":
         return make_response(render_template("studies/create_study.html", study_type=study_type))
 
-    db = current_app.config["DATABASE"]
     title = request.form["title"]
     description = request.form["description"]
     study_information = request.form["study_information"]
@@ -115,7 +115,7 @@ def create_study(study_type: str, setup_configuration: str) -> Response:
     if not valid:
         return response
 
-    doc_ref = db.collection("studies").document(title.replace(" ", "").lower())
+    doc_ref = current_app.config["DATABASE"].collection("studies").document(title.replace(" ", "").lower())
     doc_ref.set(
         {
             "title": title,
@@ -138,6 +138,8 @@ def create_study(study_type: str, setup_configuration: str) -> Response:
             "invited_participants": [],
         }
     )
+
+    make_auth_key(title, "Broad")  # make auth_key for cp0
 
     return response
 
@@ -266,6 +268,22 @@ def accept_invitation(study_title: str) -> Response:
     return redirect(url_for("studies.study", study_title=study_title))
 
 
+@bp.route("/study/<study_title>/study_information", methods=["POST"])
+@login_required
+def study_information(study_title: str) -> Response:
+    doc_ref = current_app.config["DATABASE"].collection("studies").document(study_title.replace(" ", "").lower())
+
+    doc_ref.set(
+        {
+            "description": request.form["study_description"],
+            "study_information": request.form["study_information"],
+        },
+        merge=True,
+    )
+
+    return redirect(url_for("studies.study", study_title=study_title))
+
+
 @bp.route("/parameters/<study_title>", methods=("GET", "POST"))
 @login_required
 def parameters(study_title: str) -> Response:
@@ -279,22 +297,16 @@ def parameters(study_title: str) -> Response:
                 study=doc_ref_dict,
             )
         )
-    elif "save" in request.form:
-        for p in request.form:
-            if p in doc_ref_dict["parameters"]["index"]:
-                doc_ref_dict["parameters"][p]["value"] = request.form.get(p)
-            elif p in doc_ref_dict["advanced_parameters"]["index"]:
-                doc_ref_dict["advanced_parameters"][p]["value"] = request.form.get(p)
-            elif "NUM_INDS" in p:
-                participant = p.split("NUM_INDS")[1]
-                doc_ref_dict["personal_parameters"][participant]["NUM_INDS"]["value"] = request.form.get(p)
-        doc_ref.set(doc_ref_dict, merge=True)
-        return redirect(url_for("studies.study", study_title=study_title))
-    else:
-        return redirect_with_flash(
-            url=url_for("studies.parameters", study_title=study_title),
-            message="Something went wrong. Please try again.",
-        )
+    for p in request.form:
+        if p in doc_ref_dict["parameters"]["index"]:
+            doc_ref_dict["parameters"][p]["value"] = request.form.get(p)
+        elif p in doc_ref_dict["advanced_parameters"]["index"]:
+            doc_ref_dict["advanced_parameters"][p]["value"] = request.form.get(p)
+        elif "NUM_INDS" in p:
+            participant = p.split("NUM_INDS")[1]
+            doc_ref_dict["personal_parameters"][participant]["NUM_INDS"]["value"] = request.form.get(p)
+    doc_ref.set(doc_ref_dict, merge=True)
+    return redirect(url_for("studies.study", study_title=study_title))
 
 
 @bp.route("/personal_parameters/<study_title>", methods=("GET", "POST"))
@@ -334,23 +346,45 @@ def set_sa_email(study_title: str) -> Response:
     return redirect(url_for("studies.study", study_title=study_title))
 
 
-# @bp.route("/study/<study_title>/download_sa_key_file", methods=("GET",))
-# @login_required
-# def download_sa_key_file(study_title: str) -> Response:
-#     db = current_app.config["DATABASE"]
-#     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
-#     doc_ref_dict = doc_ref.get().to_dict()
+@bp.route("/study/<study_title>/download_key_file", methods=("GET",))
+@login_required
+def download_key_file(study_title: str) -> Response:
+    db = current_app.config["DATABASE"]
+    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref_dict = doc_ref.get().to_dict()
+    auth_key = doc_ref_dict["personal_parameters"][g.user["id"]]["AUTH_KEY"]["value"]
 
-#     sa_email, json_sa_key = setup_service_account_and_key(study_title, g.user["id"])
-#     doc_ref_dict["personal_parameters"][g.user["id"]]["SA_EMAIL"]["value"] = sa_email
-#     doc_ref.set(doc_ref_dict)
-#     key_file = io.BytesIO(json_sa_key.encode("utf-8"))
-#     return send_file(
-#         key_file,
-#         download_name="sa_key.json",
-#         mimetype="text/plain",
-#         as_attachment=True,
-#     )
+    if not auth_key:
+        auth_key = make_auth_key(study_title, g.user["id"])
+
+    return send_file(
+        io.BytesIO(auth_key.encode()),
+        download_name="auth_key.txt",
+        mimetype="text/plain",
+        as_attachment=True,
+    )
+
+
+def make_auth_key(study_title: str, user_id: str) -> str:
+    db = current_app.config["DATABASE"]
+    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref_dict = doc_ref.get().to_dict()
+
+    auth_key = secrets.token_hex(16)
+    doc_ref_dict["personal_parameters"][user_id]["AUTH_KEY"]["value"] = auth_key
+    doc_ref.set(doc_ref_dict)
+
+    current_app.config["DATABASE"].collection("users").document("auth_keys").set(
+        {
+            auth_key: {
+                "study_title": study_title,
+                "user_email": user_id,
+            }
+        },
+        merge=True,
+    )
+
+    return auth_key
 
 
 @bp.route("/study/<study_title>/start_protocol", methods=["POST"])
@@ -402,12 +436,6 @@ def start_protocol(study_title: str) -> Response:
         doc_ref_dict = doc_ref.get().to_dict()
 
         setup_gcp(doc_ref_dict, role)
-        gcloudCompute = GoogleCloudCompute(doc_ref_dict["personal_parameters"][user_id]["GCP_PROJECT"]["value"])
-        # update service account in firestore
-        doc_ref_dict["personal_parameters"][user_id]["SA_EMAIL"]["value"] = gcloudCompute.get_service_account_for_vm(
-            create_instance_name(study_title, role)
-        )
-        doc_ref.set({"personal_parameters": doc_ref_dict["personal_parameters"]}, merge=True)
 
         if role == "1":
             setup_gcp(doc_ref_dict, "0")
@@ -427,6 +455,7 @@ def setup_gcp(doc_ref_dict: dict, role: str) -> None:
             {"key": "data_path", "value": user_parameters["DATA_PATH"]["value"]},
             {"key": "geno_binary_file_prefix", "value": user_parameters["GENO_BINARY_FILE_PREFIX"]["value"]},
             {"key": "ports", "value": user_parameters["PORTS"]["value"]},
+            {"key": "auth_key", "value": user_parameters["AUTH_KEY"]["value"]},
         ],
         num_cpus=user_parameters["NUM_CPUS"]["value"],
         boot_disk_size=user_parameters["BOOT_DISK_SIZE"]["value"],

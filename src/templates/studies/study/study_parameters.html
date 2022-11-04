@@ -1,0 +1,31 @@
+{% set study_id = study['title'] | replace(' ', '') %}
+<button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#studyParameters{{ study_id }}">
+  Study Parameters
+</button>
+
+<div class="modal fade" id="studyParameters{{ study_id }}" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="studyInformationLabel">
+          Study Parameters:
+          {{ study['title'] }}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="{{ url_for('studies.parameters', study_title=study['title']) }}">
+        <div class="modal-body">
+
+          {% include 'studies/study/shared_study_parameters.html' %}
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          {% if owner %}
+            <button type="submit" class="btn btn-primary">Save changes</button>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

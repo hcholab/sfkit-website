@@ -11,6 +11,9 @@ ports=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attrib
 geno_binary_file_prefix=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/geno_binary_file_prefix" -H "Metadata-Flavor: Google")
 data_path=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/data_path" -H "Metadata-Flavor: Google")
 
+auth_key=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/auth_key" -H "Metadata-Flavor: Google")
+echo $auth_key > auth_key.txt
+
 apt-get --assume-yes update
 apt-get --assume-yes install build-essential
 apt-get install python3-pip wget git zip unzip -y 

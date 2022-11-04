@@ -1,8 +1,6 @@
 from typing import Tuple
 
-import google.auth.transport.requests
 from flask import Blueprint, current_app, request
-from google.oauth2 import id_token
 from werkzeug import Request
 
 from src.studies import setup_gcp
@@ -12,38 +10,42 @@ bp = Blueprint("api", __name__)
 
 @bp.route("/get_doc_ref_dict", methods=["GET"])
 def get_doc_ref_dict() -> Tuple[dict, int]:
-    if not verify_authorization_header(request):
+    auth_key = verify_authorization_header(request)
+    if not auth_key:
         return {"error": "unauthorized"}, 401
 
-    study_title: str = str(request.args.get("study_title"))
-    return current_app.config["DATABASE"].collection("studies").document(study_title).get().to_dict() or {}, 200
+    db = current_app.config["DATABASE"]
+    study_title = db.collection("users").document("auth_keys").get().to_dict()[auth_key]["study_title"]
+
+    doc_ref_dict = db.collection("studies").document(study_title).get().to_dict()
+
+    return doc_ref_dict, 200
 
 
-@bp.route("/get_study_options", methods=["GET"])
-def get_study_options() -> Tuple[dict, int]:
-    token: dict = verify_authorization_header(request, authenticate_user=False)
-    if not token:
+@bp.route("/get_user_email", methods=["GET"])
+def get_user_email() -> Tuple[dict, int]:
+    auth_key = verify_authorization_header(request)
+    if not auth_key:
         return {"error": "unauthorized"}, 401
 
-    options: list = []
-    sa_email: str = str(token.get("email"))
-    for doc_ref in current_app.config["DATABASE"].collection("studies").stream():
-        doc_ref_dict: dict = doc_ref.to_dict() or {}
-        options.extend(
-            (doc_ref.id, user)
-            for user in doc_ref_dict["participants"]
-            if doc_ref_dict["personal_parameters"][user]["SA_EMAIL"]["value"] == sa_email
-        )
-    return {"options": options}, 200
+    db = current_app.config["DATABASE"]
+    user_email = db.collection("users").document("auth_keys").get().to_dict()[auth_key]["user_email"]
+
+    return {"user_email": user_email}, 200
 
 
 @bp.route("/update_firestore", methods=["GET"])
-def update_firestore() -> Tuple:
-    if not verify_authorization_header(request):
+def update_firestore() -> Tuple[dict, int]:
+    auth_key = verify_authorization_header(request)
+    if not auth_key:
         return {"error": "unauthorized"}, 401
 
+    db = current_app.config["DATABASE"]
+    email = db.collection("users").document("auth_keys").get().to_dict()[auth_key]["user_email"]
+    title = db.collection("users").document("auth_keys").get().to_dict()[auth_key]["study_title"]
+
     msg: str = str(request.args.get("msg"))
-    _, parameter, title, email = msg.split("::")
+    _, parameter = msg.split("::")
     doc_ref = current_app.config["DATABASE"].collection("studies").document(title.replace(" ", "").lower())
     doc_ref_dict: dict = doc_ref.get().to_dict()
 
@@ -61,15 +63,18 @@ def update_firestore() -> Tuple:
             return {"error": f"parameter {name} not found in {title}"}, 400
     doc_ref.set(doc_ref_dict)
 
-    return "", 200
+    return {}, 200
 
 
 @bp.route("/create_cp0", methods=["GET"])
-def create_cp0() -> Tuple:
-    if not verify_authorization_header(request):
+def create_cp0() -> Tuple[dict, int]:
+    auth_key = verify_authorization_header(request)
+    if not auth_key:
         return {"error": "unauthorized"}, 401
 
-    study_title: str = str(request.args.get("study_title"))
+    db = current_app.config["DATABASE"]
+    study_title = db.collection("users").document("auth_keys").get().to_dict()[auth_key]["study_title"]
+
     doc_ref = current_app.config["DATABASE"].collection("studies").document(study_title)
     doc_ref_dict: dict = doc_ref.get().to_dict()
 
@@ -78,40 +83,20 @@ def create_cp0() -> Tuple:
 
     setup_gcp(doc_ref_dict, "0")
 
-    return "", 200
+    return {}, 200
 
 
-def verify_authorization_header(request: Request, authenticate_user: bool = True) -> dict:
+def verify_authorization_header(request: Request, authenticate_user: bool = True) -> str:
     print("verifying authorization token")
 
-    study_title = request.args.get("study_title")
-    user = request.args.get("user")
+    auth_key = request.headers.get("Authorization")
+    if not auth_key:
+        print("no authorization header")
+        return ""
 
-    token = request.headers.get("Authorization")
-    if not token:
-        print("No token provided")
-        return {}
-    try:
-        token = token.split(" ")[1]
-        token_payload = verify_token(token)
-    except Exception as e:
-        print(e)
-        return {}
+    doc = current_app.config["DATABASE"].collection("users").document("auth_keys").get().to_dict().get(auth_key)
+    if not doc:
+        print("invalid authorization key")
+        return ""
 
-    if authenticate_user:
-        # authenticate user by project or service account
-        if "broad-cho-priv" in token_payload["google"]["compute_engine"]["project_id"]:
-            return token_payload
-        doc_ref = current_app.config["DATABASE"].collection("studies").document(study_title)
-        doc_ref_dict: dict = doc_ref.get().to_dict()
-        if doc_ref_dict["personal_parameters"][user]["SA_EMAIL"]["value"] == token_payload["email"]:
-            return token_payload
-        return {}
-
-    return token_payload
-
-
-def verify_token(token: str) -> dict:
-    """Verify token signature and return the token payload"""
-    request = google.auth.transport.requests.Request()
-    return id_token.verify_token(token, request=request)
+    return auth_key

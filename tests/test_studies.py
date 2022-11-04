@@ -130,44 +130,44 @@ def test_approve_join_study(client, auth, mocker):
     assert "/study/testtitle" in response.headers.get("Location")
 
 
-def test_parameters(client, auth, mocker):
-    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
-    auth.login()
-    client.post("create_study/MPCGWAS/website", data=test_create_data)
-    assert client.get("parameters/testtitle").status_code == 200
+# def test_parameters(client, auth, mocker):
+#     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+#     auth.login()
+#     client.post("create_study/MPCGWAS/website", data=test_create_data)
+#     assert client.get("parameters/testtitle").status_code == 200
 
-    response = client.post("parameters/testtitle", data={"save": "save"})
-    assert "/study/testtitle" in response.headers.get("Location")
+#     response = client.post("parameters/testtitle", data={"save": "save"})
+#     assert "/study/testtitle" in response.headers.get("Location")
 
-    response = client.post("parameters/testtitle")
-    assert "Something went wrong" in str(response.headers)
+#     response = client.post("parameters/testtitle")
+#     assert "Something went wrong" in str(response.headers)
 
-    # response = client.post(
-    #     "parameters/testtitle",
-    #     data={
-    #         "upload": "upload",
-    #         "file": (io.BytesIO(b"abcdef"), ""),
-    #     },
-    #     content_type="multipart/form-data",
-    # )
-    # assert response.headers["Location"] == "http://localhost/parameters/testtitle"
+# response = client.post(
+#     "parameters/testtitle",
+#     data={
+#         "upload": "upload",
+#         "file": (io.BytesIO(b"abcdef"), ""),
+#     },
+#     content_type="multipart/form-data",
+# )
+# assert response.headers["Location"] == "http://localhost/parameters/testtitle"
 
-    # response = client.post(
-    #     "parameters/testtitle",
-    #     data={"upload": "upload", "file": (io.BytesIO(b"abcdef"), "pos.txt")},
-    #     content_type="multipart/form-data",
-    # )
-    # assert response.headers["Location"] == "http://localhost/study/testtitle"
+# response = client.post(
+#     "parameters/testtitle",
+#     data={"upload": "upload", "file": (io.BytesIO(b"abcdef"), "pos.txt")},
+#     content_type="multipart/form-data",
+# )
+# assert response.headers["Location"] == "http://localhost/study/testtitle"
 
-    # response = client.post(
-    #     "parameters/testtitle",
-    #     data={"upload": "upload", "file": (io.BytesIO(b"abcdef"), "bad_file")},
-    #     content_type="multipart/form-data",
-    # )
-    # assert response.headers["Location"] == "http://localhost/parameters/testtitle"
+# response = client.post(
+#     "parameters/testtitle",
+#     data={"upload": "upload", "file": (io.BytesIO(b"abcdef"), "bad_file")},
+#     content_type="multipart/form-data",
+# )
+# assert response.headers["Location"] == "http://localhost/parameters/testtitle"
 
-    # response = client.post("parameters/testtitle")
-    # assert response.headers["Location"] == "http://localhost/parameters/testtitle"
+# response = client.post("parameters/testtitle")
+# assert response.headers["Location"] == "http://localhost/parameters/testtitle"
 
 
 def test_personal_parameters(client, auth, mocker):

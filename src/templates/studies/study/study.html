@@ -22,7 +22,9 @@
               </span>
               <h2 class="fw-bold mb-0">{{ study['title'] }}</h2>
               <p class="lead text-muted mb-1">{{ study['description'] }}</p>
-              {% include 'studies/study/study_information.html'%}
+              {% set owner = (g.user['id'] == study['owner']) %}
+              {% include 'studies/study/study_information.html' %}
+              {% include 'studies/study/study_parameters.html' %}
             </div>
 
             {% include 'studies/study/participants.html'%}
@@ -84,24 +86,20 @@
                   </div>
                 {% endif %}
               {% else %}
-                {% if parameters['SA_EMAIL']['value'] == "" %}
-                  <form class="mt-5 mb-2" method="post" action="{{url_for('studies.set_sa_email', study_title=study['title'])}}">
-                    <p class="float-start text-start mb-0">Please enter the service account email for your GCP VM:</p>
-                    <p>
-                      <small class="text-muted float-start text-start">(This can be obtained with the
-                        <code>gcloud auth list</code>
-                        command in your VM)</small>
-                    </p>
-                    <input class="form-control mb-2" name="SA_EMAIL" type="email" placeholder="Service Account Email" autocomplete="off">
-                    <button type="submit" class="btn btn-primary">Submit</button>
-                  </form>
-                  <small class="float-start text-start text-muted">Note: If you are deciding what VM size you want/need, we generally recommend using the e2-highmem-16 (16 vCPUs, 128 GB memory) as a reasonable default (estimated cost of ~$20). This size has worked well for us on datasets with &lt;30,000 samples and &lt;700,000 SNPs for SFGWAS. If you are running a larger dataset, you may need to increase the size of the VM. On a dataset with ~10 million SNPs, we have used the larger n2-highmem-64 or n2-highmem-128. If you are running a smaller dataset, you may be able to get away with a smaller VM. Feel free to reach out if you have further questions or concerns.</small>
-                {% else %}
-                  <h5>Please proceed with the CLI tool with
-                    <code>pip install sfkit</code>
-                    on your GCP VM. For more details, see the tutorial
-                    <a class="text-decoration-none" href="https://sfkit.readthedocs.io/en/latest/tutorial.html#cli">here</a>.</h5>
-                {% endif %}
+                <div class="text-start">
+                  <p>
+                    Your authentication key should have downloaded. This
+                    <code>auth_key.txt</code>
+                    will be used on your machine to authenticate with the command-line interface. If it didn't download, you can download it by clicking the button below.
+                    <div class="text-center">
+                      <a href="{{ url_for('studies.download_key_file', study_title=study['title']) }}" class="btn btn-secondary btn-sm">Download Auth Key</a>
+                    </div>
+                  </p>
+                  <p>
+                    Please proceed with the sfkit command-line interface (CLI) tool on your machine. For more details, see the tutorial
+                    <a class="text-decoration-none" href="https://sfkit.readthedocs.io/en/latest/tutorial.html#cli">here</a>.
+                  </p>
+                </div>
               {% endif %}
             </div>
           </div>
@@ -142,4 +140,11 @@
   <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
   <script type="module" src="{{ url_for('static', filename='javascript/save_page_state.js') }}"></script>
   <script type="module" src="{{ url_for('static', filename='javascript/copy_button.js') }}"></script>
+
+  {% if study["setup_configuration"] == "user" and parameters["AUTH_KEY"]["value"] == "" %}
+    <script>
+      window.location.href = "{{ url_for('studies.download_key_file', study_title=study['title']) }}";
+    </script>
+  {% endif %}
+
 {% endblock %}

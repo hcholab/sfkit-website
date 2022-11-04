@@ -383,9 +383,9 @@ DEFAULT_USER_PARAMETERS = {
         "description": "The ports (comma separated) used by the VM instance that will be running the GWAS protocol.",
         "value": "null,8001,8002",
     },
-    "SA_EMAIL": {
-        "name": "Service Account Email",
-        "description": "The service account email used to connect to the server in the workflow where the user uses the cli.",
+    "AUTH_KEY": {
+        "name": "Authentication Key",
+        "description": "A key that will be used to authenticate the VM instance that will be running the protocol.",
         "value": "",
     },
     "index": [
@@ -401,7 +401,7 @@ DEFAULT_USER_PARAMETERS = {
         "DATA_HASH",
         "IP_ADDRESS",
         "PORTS",
-        "SA_EMAIL",
+        "AUTH_KEY",
     ],
 }
 
