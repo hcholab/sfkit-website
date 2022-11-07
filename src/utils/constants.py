@@ -381,7 +381,7 @@ DEFAULT_USER_PARAMETERS = {
     "PORTS": {
         "name": "Ports",
         "description": "The ports (comma separated) used by the VM instance that will be running the GWAS protocol.",
-        "value": "null,8001,8002",
+        "value": "null,8020,8040",
     },
     "AUTH_KEY": {
         "name": "Authentication Key",
@@ -407,14 +407,9 @@ DEFAULT_USER_PARAMETERS = {
 
 
 def default_user_parameters(study_type: str) -> dict:
-    if study_type == "MPCGWAS":
-        return deepcopy(DEFAULT_USER_PARAMETERS)
-    elif study_type in {"PCA", "SFGWAS"}:
-        pars = deepcopy(DEFAULT_USER_PARAMETERS)
-        pars["PORTS"]["value"] = "null,8020,8040"
-        return pars
-    else:
-        raise ValueError(f"Unknown study type: {study_type}")
+    parameters = deepcopy(DEFAULT_USER_PARAMETERS)
+    parameters["PORTS"]["value"] = "null,8060,8080"
+    return parameters
 
 
 def broad_user_parameters() -> dict:

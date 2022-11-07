@@ -20,7 +20,7 @@
       {% for participant in study['requested_participants'] %}
         <br>
         <small class="text-muted ms-2 me-2">
-          {{ participant }}
+          {{ display_names.get(participant, participant) }}
           <a href="{{ url_for('studies.approve_join_study', study_title=study['title'], user_id=participant) }}" type="button" class="btn btn-sm btn-info">Approve Request</a>
         </small>
       {% endfor %}

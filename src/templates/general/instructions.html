@@ -5,30 +5,105 @@
 {% block content %}
   <section class="py-5">
     <div class="container">
-      <h2 class="h2 fw-bold mt-9 mb-5 text-center">General Instructions</h2>
-      <div class="lead">
+      <h2 class="h2 fw-bold mt-9 mb-5 text-center">Instructions</h2>
+      <div class="row lead">
         <p>
-          For each of the three workflows (<a class="text-decoration-none" href="{{ url_for('general.home', _anchor='SF-GWAS') }}">SF-GWAS</a>,
-          <a class="text-decoration-none" href="{{ url_for('general.home', _anchor='SF-PCA') }}">SF-PCA</a>, and
-          <a class="text-decoration-none" href="{{ url_for('general.home', _anchor='MPC-GWAS') }}">MPC-GWAS</a>), you have two options for how to set up your VM (virtual machine) and run your study:
-        </p>
-        <p>
-          1. The
-          <a class="text-decoration-none" href="https://sfkit.readthedocs.io/en/latest/tutorial.html">sfkit CLI</a>.
-          <div>
-            <img class="img-fluid" src="static/images/sfkit_diagram.png" alt="">
-          </div>
-        </p>
-        <p>
-          2. Have the website set up your VM and run your study for you. This will require you to give the website limited permissions to access your Google Cloud Platform (GCP) account. (You will be walked through the specifics of this process if you create a study using this option.)
-        </p>
-        <p>
+          For each of the three workflows (<a class="text-decoration-none" href="{{ url_for('general.workflows', _anchor='SF-GWAS') }}">SF-GWAS</a>,
+          <a class="text-decoration-none" href="{{ url_for('general.workflows', _anchor='SF-PCA') }}">SF-PCA</a>, and
+          <a class="text-decoration-none" href="{{ url_for('general.workflows', _anchor='MPC-GWAS') }}">MPC-GWAS</a>), you have two options for how to set up your machine and run your study.
           <strong>Option 1</strong>
           is recommended for users who are familiar with the command line and want to have more control over their VM.
           <strong>Option 2</strong>
           is recommended for users who are not familiar with the command line and/or want to get started quickly.
         </p>
+        <p>
+          <b>Option 1 - User</b>. The
+          <a class="text-decoration-none" href="https://sfkit.readthedocs.io/en/latest/tutorial.html">sfkit Command-Line Interface</a>
+          will walk you through each step of the workflow yourself, on your own machine.
+        </p>
+      </div>
+      <div class="row lead">
+        <p>
+          <b>Option 2 - Website</b>. This website will set up your machine and run your study for you. This option is done using Google Cloud Platform (GCP) for the machines and will therefore require you to give the website limited permissions to access your Google Cloud Platform (GCP) account where you have placed the data in a storage bucket. (You will be walked through the specifics of this process if you create a study using this option.)
+        </p>
+      </div>
+      <div class="row lead">
+        <p>For either of these options, the following 5 steps will be run on the machine.</p>
+      </div>
+      <div class="row">
+        <div class="col my-5">
+          <div class="position-relative p-5 text-center bg-light rounded">
+            <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">1</span>
+            <h5 class="fw-bold mb-3">Authentication</h5>
+            <img class="img-fluid" src="static/images/sfkit/auth.png" alt="">
+            {# <p class="lead text-muted mt-3">Authenticate with the CLI.</p> #}
+          </div>
+        </div>
+        <div class="col my-5">
+          <div class="position-relative p-5 text-center bg-light rounded">
+            <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">2</span>
+            <h5 class="fw-bold mb-3">Networking</h5>
+            <img class="img-fluid" src="static/images/sfkit/networking.png" alt="" style="width: 50%">
+            {# <p class="lead text-muted mt-3">Setup IP addresses and ports.</p> #}
+          </div>
+        </div>
+        <div class="col my-5">
+          <div class="position-relative p-5 text-center bg-light rounded">
+            <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">3</span>
+            <h5 class="fw-bold mb-3">Key Exchange</h5>
+            <img class="img-fluid" src="static/images/sfkit/keys.png" alt="" style="width: 60%">
+            {# <p class="lead text-muted mt-3">Create encryption keys, share public key.</p> #}
+          </div>
+        </div>
+        <div class="col my-5">
+          <div class="position-relative p-5 text-center bg-light rounded">
+            <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">4</span>
+            <h5 class="fw-bold mb-3">Data Validation</h5>
+            <img class="img-fluid" src="static/images/sfkit/data.png" alt="">
+            {# <p class="lead text-muted mt-3">Validate data files.</p> #}
+          </div>
+        </div>
+        <div class="col my-5">
+          <div class="position-relative p-5 text-center bg-light rounded">
+            <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">5</span>
+            <h5 class="fw-bold mb-3">Run Protocol</h5>
+            <img class="img-fluid" src="static/images/sfkit/run_protocol.png" alt="" style="width: 150%">
+            {# <p class="lead text-muted mt-3">Run the protocol.</p> #}
+          </div>
+        </div>
+      </div>
+      <div class="row lead">
+        <p>
+          1.
+          <b>Authentication</b>
+          - Authenticate your machine with the website. This allows the website to ensure that the machine running the protocol is indeed yours. This step is done via a secure key (similar to an SSH key) that will be copied from the website to the machine. If you are doing
+          <b>Option 1</b>, then you will manually copy this key-file to your machine. Otherwise, it will be down automatically.
+        </p>
+        <p>
+          2.
+          <b>Networking</b>
+          - Setup/communicate the networking for the machine. If you are doing
+          <b>Option 1</b>, then you will be asked for your preferred ports to communicate over for the secure socket connections during the protocol. Then, your ip address and ports will be shared with the website (and the other study participants).
+        </p>
+        <p>
+          3.
+          <b>Key Exchange</b>
+          - Cryptographically secure private and public keys will be created (locally) for you. The public key will be shared withe the website (and the other study participants). The private key will remain on your machine and will be used in step 5 during the protocol to create shared keys and to encrypt your data. See
+          <a href="https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange" class="text-decoration-none">Diffie-Hellman Key Exchange</a>
+          for more information.
+        </p>
+        <p>
+          4.
+          <b>Data Validation</b>
+          - Validate that the data you provided is in the correct format, and is consistent with the protocol and parameters you provided. This step does NOT communicate any of the data to any other machine, it only validates that the data is in the correct format.
+        </p>
+        <p>
+          5.
+          <b>Run Protocol</b>
+          - Run the protocol that you have chosen. Your machine will use the ports and ip addresses provided in step 2 to communicate with the other study participants. It will utilize secret-sharing and/or homomorphic encryption to compute the protocol. This step may take a number of hours, depending on the protocol and parameters you have chosen. The results of the protocol will be stored on your machine to be accessed at your convenience.
+        </p>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 {% endblock %}

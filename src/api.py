@@ -17,7 +17,7 @@ def get_doc_ref_dict() -> Tuple[dict, int]:
     db = current_app.config["DATABASE"]
     study_title = db.collection("users").document("auth_keys").get().to_dict()[auth_key]["study_title"]
 
-    doc_ref_dict = db.collection("studies").document(study_title).get().to_dict()
+    doc_ref_dict: dict = db.collection("studies").document(study_title.replace(" ", "").lower()).get().to_dict()
 
     return doc_ref_dict, 200
 

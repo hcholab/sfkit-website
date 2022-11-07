@@ -29,10 +29,7 @@ def valid_study_title(study_title: str, study_type: str) -> tuple[bool, Response
                 ),
             )
 
-    if study_type == "GWAS":
-        return (True, redirect(url_for("studies.parameters", study_title=study_title)))
-    else:
-        return (True, redirect(url_for("studies.study", study_title=study_title)))
+    return (True, redirect(url_for("studies.parameters", study_title=study_title)))
 
 
 def create_instance_name(study_title: str, role: str) -> str:

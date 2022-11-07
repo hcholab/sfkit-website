@@ -22,11 +22,7 @@ pip install sfkit
 PATH=$PATH:~/.local/bin
 export PYTHONUNBUFFERED=TRUE
 
-if [[ $role == "0" ]]; then
-    sfkit auth --study_title ${study_title}
-else
-    sfkit auth 
-fi
+sfkit auth 
 sfkit networking --ports ${ports} 
 sfkit generate_keys
 if [[ $role != "0" ]]; then

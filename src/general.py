@@ -14,9 +14,19 @@ def home() -> Response:
     return make_response(render_template("general/home.html"))
 
 
+@bp.route("/workflows")
+def workflows() -> Response:
+    return make_response(render_template("general/workflows.html"))
+
+
 @bp.route("/instructions")
 def instructions() -> Response:
     return make_response(render_template("general/instructions.html"))
+
+
+@bp.route("/contact")
+def contact() -> Response:
+    return make_response(render_template("general/contact.html"))
 
 
 @bp.route("/update_notifications", methods=["POST"])

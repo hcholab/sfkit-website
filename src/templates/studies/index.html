@@ -8,9 +8,9 @@
       <div class="row justify-content-center mb-4">
         <div class="col-md-auto text-center">
           {% if studies | length != 0 %}
-            <h2 class="display-5 fw-bold mt-2 mb-0">Registered Studies</h2>
+            <h2 class="display-5 fw-bold mb-0">Registered Studies</h2>
           {% else %}
-            <h2 class="display-5 fw-bold mt-2 mb-0">There are no registered studies.</h2>
+            <h2 class="display-5 fw-bold mb-0">There are no registered studies.</h2>
           {% endif %}
         </div>
       </div>
@@ -53,8 +53,9 @@
                       </label>
                     </div>
                     <small class="mt-2 text-muted">
-                      Note: If you are unsure which workflow to choose, you can read more about them
-                      <a class="text-decoration-none" href="https://sfkit.readthedocs.io/en/latest/workflows.html">here</a>.
+                      Note: If you are unsure which workflow to choose, you can read more about them on the
+                      <a class="text-decoration-none" href="{{url_for('general.workflows')}}">Workflows</a>
+                      page.
                     </small>
                   </div>
                   <hr>
@@ -63,19 +64,24 @@
                       How do you want to have your GCP project configured?
                     </p>
                     <div class="form-check">
-                      <input class="form-check-input" type="radio" name="SETUP_CONFIGURATION" id="website" value="website" checked="checked">
-                      <label class="form-check-label" for="website">
-                        <b>Website</b>
-                        (default) - With this setting, this website will configure the networking and setup in your GCP project for you.
+                      <input class="form-check-input" type="radio" name="SETUP_CONFIGURATION" id="user" value="user" checked="checked">
+                      <label class="form-check-label" for="user">
+                        <b>User</b>
+                        (default) - With this setting you will configure the networking and setup in your GCP project yourself. This is more work for you, but it means you don't need to give the website access to your GCP project.
                       </label>
                     </div>
                     <div class="form-check">
-                      <input class="form-check-input" type="radio" name="SETUP_CONFIGURATION" id="user" value="user">
-                      <label class="form-check-label" for="user">
-                        <b>User</b>
-                        - With this setting you will configure the networking and setup in your GCP project yourself. This is more work for you, but it means you don't need to give the website access to your GCP project.
+                      <input class="form-check-input" type="radio" name="SETUP_CONFIGURATION" id="website" value="website">
+                      <label class="form-check-label" for="website">
+                        <b>Website</b>
+                        With this setting, this website will configure the networking and setup in your GCP project for you.
                       </label>
                     </div>
+                    <small class="mt-2 text-muted">
+                      Note: If you are unsure which configuration to choose, you can read more about them on the
+                      <a class="text-decoration-none" href="{{url_for('general.instructions')}}">Instructions</a>
+                      page.
+                    </small>
                   </div>
                 </div>
                 <div class="modal-footer">

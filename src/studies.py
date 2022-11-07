@@ -322,19 +322,6 @@ def personal_parameters(study_title: str) -> Response:
     return redirect(url_for("studies.study", study_title=study_title))
 
 
-# @bp.route("/study/<study_title>/choose_workflow", methods=("POST",))
-# @login_required
-# def choose_workflow(study_title: str) -> Response:
-#     db = current_app.config["DATABASE"]
-#     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
-#     doc_ref_dict = doc_ref.get().to_dict()
-#     doc_ref_dict["personal_parameters"][g.user["id"]]["CONFIGURE_STUDY_GCP_SETUP_MODE"]["value"] = request.form.get(
-#         "CONFIGURE_STUDY_GCP_SETUP_MODE"
-#     )
-#     doc_ref.set(doc_ref_dict)
-#     return redirect(url_for("studies.study", study_title=study_title))
-
-
 @bp.route("/study/<study_title>/set_sa_email", methods=("POST",))
 @login_required
 def set_sa_email(study_title: str) -> Response:
@@ -366,6 +353,9 @@ def download_key_file(study_title: str) -> Response:
 
 
 def make_auth_key(study_title: str, user_id: str) -> str:
+    """
+    Make auth_key.txt file for user
+    """
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
@@ -435,6 +425,7 @@ def start_protocol(study_title: str) -> Response:
         doc_ref.set({"status": statuses}, merge=True)
         doc_ref_dict = doc_ref.get().to_dict()
 
+        make_auth_key(study_title, user_id)
         setup_gcp(doc_ref_dict, role)
 
         if role == "1":

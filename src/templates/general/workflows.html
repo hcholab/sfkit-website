@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Workflows{% endblock %}
+
+{% block content %}
+  <section class="py-5">
+    <div class="container">
+      <div class="row">
+        <h3 class="text-center">Workflows</h3>
+        <div class="my-3">
+          <div class="position-relative p-3 bg-light rounded" id="SF-GWAS">
+            <h4 class="fw-bold mb-3 text-center">SF-GWAS</h4>
+            <p class="lead text-muted">
+              This workflow is based on “Secure and Federated Genome-Wide Association Studies for Biobank-Scale Datasets”, which is currently under review (2022). It is a complete workflow for GWAS analysis, utilizing homomorphic encryption in addition to secret sharing. There are three major steps to the GWAS in this workflow. The first step is the Quality Control (QC). This filters out some lower quality data/samples. The second step is the Population Stratification via Principal Component Analysis (PCA). This step is meant to allow the GWAS to factor in/control for population differences when doing the associations. The third step is the Association Tests. This is where the actual associations between the phenotypes and genotypes are calculated.
+            </p>
+          </div>
+        </div>
+        <div class="my-3">
+          <div class="position-relative p-3 bg-light rounded" id="SF-PCA">
+            <h4 class="fw-bold mb-3 text-center">SF-PCA</h4>
+            <p class="lead text-muted">
+              This workflow consists of only Principal Component Analysis, using the same implementation as in the 2022 SF-GWAS workflow (phase 2). It is generalized here as its own workflow to allow for PCA in domains other than GWAS.
+            </p>
+          </div>
+        </div>
+        <div class="my-3">
+          <div class="position-relative p-3 bg-light rounded" id="MPC-GWAS">
+            <h4 class="fw-bold mb-3 text-center">MPC-GWAS</h4>
+            <p class="lead text-muted">
+              This workflows is based on the 2018 paper from nature biotechnology
+              <a class="text-decoration-none" href="https://www.nature.com/articles/nbt.4108">Secure genome-wide association analysis using multiparty computation</a>
+              . It is a complete workflow for GWAS analysis using secret sharing to allow for secure multiparty computation.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
