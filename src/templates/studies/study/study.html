@@ -78,19 +78,8 @@
 
             {% include 'studies/study/participants.html'%}
 
-            <div class="my-3" id="instructions">
+            <div class="mt-5" id="instructions">
               {% if study["setup_configuration"] == "website" %}
-                {# {% if study["status"][g.user["id"]] == [""] or study["status"][g.user["id"]] == ["validating"] %}
-                  <div class="mt-2">
-                    <button type="button" class="mt-2 btn btn-success" data-bs-toggle="modal" data-bs-target="#vmConfig" disabled="disabled">
-                      Begin
-                      {{ study_type }}
-                      Workflow
-                    </button>
-                    <p>You must finish configuring your study before you can begin the
-                      {{ study_type }}
-                      workflow</p>
-                  </div> #}
                 {% if study["status"][g.user["id"]] == ["not ready"] or study["status"][g.user["id"]] == [""] %}
                   <div>
                     <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#configure_study_modal">Configure Study</button>
@@ -122,8 +111,8 @@
                     {% if ((["not ready"] in study["status"].values())or([""] in study["status"].values())or(["invalid data"] in study["status"].values())or(["validating"] in study["status"].values())) %}
                       <p>Waiting for others to be ready...</p>
                     {% else %}
-                      <div class="status text-start"></div>
-                      <p class="text-muted text-start">
+                      <div class="status text-start alert alert-info"></div>
+                      <p class="text-muted text-start mt-2">
                         (Optional) While the protocol is running, if you want a more detailed view into what the VM is doing, you can ssh into your VM and run the command
                         <code>sudo journalctl -u google-startup-scripts.service</code>
                         to see detailed logs.

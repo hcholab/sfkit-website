@@ -11,7 +11,12 @@
           <div class="position-relative p-3 bg-light rounded" id="SF-GWAS">
             <h4 class="fw-bold mb-3 text-center">SF-GWAS</h4>
             <p class="lead text-muted">
-              This workflow is based on “Secure and Federated Genome-Wide Association Studies for Biobank-Scale Datasets”, which is currently under review (2022). It is a complete workflow for GWAS analysis, utilizing homomorphic encryption in addition to secret sharing. There are three major steps to the GWAS in this workflow. The first step is the Quality Control (QC). This filters out some lower quality data/samples. The second step is the Population Stratification via Principal Component Analysis (PCA). This step is meant to allow the GWAS to factor in/control for population differences when doing the associations. The third step is the Association Tests. This is where the actual associations between the phenotypes and genotypes are calculated.
+              This workflow is based on “Secure and Federated Genome-Wide Association Studies for Biobank-Scale Datasets”, which is currently under review (2022). It is a complete workflow for GWAS analysis, utilizing homomorphic encryption in addition to secret sharing. There are 3 major steps to the GWAS in this workflow:
+              <ol class="">
+                <li class="lead text-muted">Quality Control (QC) - Filter out some lower quality data/samples.</li>
+                <li class="lead text-muted">Principal Component Analysis (PCA) - Perform PCA to control for population stratification, wherein there may be systematic differences in allele frequencies between subpopulations. If this step is not done, then these systematic differences may show up as false associations when performing association tests.</li>
+                <li class="lead text-muted">Association Tests - Perform association tests to find associations between SNPs (genotypes) and traits (phenotypes).</li>
+              </ol>
             </p>
           </div>
         </div>
@@ -19,7 +24,7 @@
           <div class="position-relative p-3 bg-light rounded" id="SF-PCA">
             <h4 class="fw-bold mb-3 text-center">SF-PCA</h4>
             <p class="lead text-muted">
-              This workflow consists of only Principal Component Analysis, using the same implementation as in the 2022 SF-GWAS workflow (phase 2). It is generalized here as its own workflow to allow for PCA in domains other than GWAS.
+              This workflow consists of only Principal Component Analysis, using the same implementation as in phase 2 of the SF-GWAS workflow (above). It is generalized here as its own workflow to allow for PCA in domains other than GWAS.
             </p>
           </div>
         </div>
