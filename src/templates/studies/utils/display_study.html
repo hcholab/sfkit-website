@@ -9,22 +9,29 @@
     {% endif %}
   </small>
   <div>
-    <span class="h2 fw-bold mb-0">
-      {% if g.user['id'] in study['participants'] %}
-        <a class="text-decoration-none" href="{{ url_for('studies.study', study_title=study['title']) }}">{{ study['title'] }}</a>
-      {% else %}
-        {{ study['title'] }}
-      {% endif %}
-    </span>
-    <span class="badge bg-secondary align-top mt-2">
-      {{ study["setup_configuration"]}}
-      <span type="button" data-bs-toggle="modal" data-bs-target="#{{ study['setup_configuration']}}Modal">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-question-circle" viewbox="0 0 16 16">
-          <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-          <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286zm1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>
-        </svg>
+    <div>
+      <h3 class="h3 mb-0">
+        {% if g.user['id'] in study['participants'] %}
+          <a class="text-decoration-none" href="{{ url_for('studies.study', study_title=study['title']) }}">{{ study['title'] }}</a>
+        {% else %}
+          {{ study['title'] }}
+        {% endif %}
+      </h3>
+      {# put the next span immediately after this one, with no space #}
+      <span class="badge bg-secondary margin-top">
+        {% if study["setup_configuration"] == "website" %}
+          automatically-configured study
+        {% else %}
+          self-configured study
+        {% endif %}
+        <span type="button" data-bs-toggle="modal" data-bs-target="#{{ study['setup_configuration']}}Modal">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-question-circle" viewbox="0 0 16 16">
+            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+            <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286zm1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>
+          </svg>
+        </span>
       </span>
-    </span>
+    </div>
     <div class="modal fade" id="websiteModal" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -62,10 +69,7 @@
       </div>
     </div>
   </div>
-  <p class="lead text-muted mb-1">{{ study['description'] }}</p>
-  {# <div class="mb-2">
-    {% include 'studies/study/study_information.html'%}
-  </div> #}
+  <div class="my-2">{{ study['description'] }}</div>
   {% if g.user['id'] == study['owner'] %}
     <form action="{{ url_for('studies.delete_study', study_title=study['title']) }}" method="post">
       <button class="btn btn-danger btn-sm" type="button submit" onclick="return confirm('Are you sure you want to delete this study?');">Delete Study</button>
@@ -74,11 +78,13 @@
     <form action="{{ url_for('studies.accept_invitation', study_title=study['title']) }}" method="post">
       <button class="btn btn-success btn-sm" type="button submit">Accept Invitation</button>
     </form>
-  {% elif(study['participants'] | length) == 3 and g.user["id"] not in study['participants']%}
-    This study is full.
-  {% elif g.user['id'] not in study['participants'] and g.user['id'] not in study['requested_participants'] %}
-    <a href="{{ url_for('studies.request_join_study', study_title=study['title']) }}" class="btn btn-primary btn-sm">Request to Join Study</a>
   {% elif study['requested_participants'] and g.user['id'] in study['requested_participants'] %}
     <button type="button" class="btn btn-secondary btn-sm" disabled="true">Pending Approval from Study Owner</button>
+  {% elif g.user['id'] not in study['participants'] %}
+    {% if study["study_type"] == "MPCGWAS" and study["participants"] | length == 3 %}
+      <p>(This study is full)</p>
+    {% else %}
+      <a href="{{ url_for('studies.request_join_study', study_title=study['title']) }}" class="btn btn-primary btn-sm">Request to Join Study</a>
+    {% endif %}
   {% endif %}
 </div>

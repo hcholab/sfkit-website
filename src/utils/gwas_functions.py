@@ -6,12 +6,12 @@ from src.utils.generic_functions import redirect_with_flash
 from werkzeug import Response
 
 
-def valid_study_title(study_title: str, study_type: str) -> tuple[bool, Response]:
+def valid_study_title(study_title: str, study_type: str, setup_configuration: str) -> tuple[bool, Response]:
     if not re.match(r"^[a-zA-Z][ a-zA-Z0-9-]*$", study_title):
         return (
             False,
             redirect_with_flash(
-                url=url_for("studies.create_study", study_type=study_type),
+                url=url_for("studies.create_study", study_type=study_type, setup_configuration=setup_configuration),
                 message="Title can include only letters, numbers, spaces, and dashes, and must start with a letter.",
             ),
         )
@@ -24,7 +24,9 @@ def valid_study_title(study_title: str, study_type: str) -> tuple[bool, Response
             return (
                 False,
                 redirect_with_flash(
-                    url=url_for("studies.create_study", study_type=study_type),
+                    url=url_for(
+                        "studies.create_study", study_type=study_type, setup_configuration=setup_configuration
+                    ),
                     message="Title already exists.",
                 ),
             )

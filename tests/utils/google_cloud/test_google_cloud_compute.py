@@ -8,7 +8,7 @@ patch_prefix = "src.utils.google_cloud.google_cloud_compute.GoogleCloudCompute"
 
 def test_setup_networking(mocker):
     setup_mocking(mocker)
-    mocker.patch(f"{patch_prefix}.create_network", return_value=None)
+    mocker.patch(f"{patch_prefix}.create_network_if_it_does_not_already_exist", return_value=None)
     mocker.patch(f"{patch_prefix}.remove_conflicting_peerings", return_value=None)
     mocker.patch(f"{patch_prefix}.remove_conflicting_subnets", return_value=None)
     mocker.patch(f"{patch_prefix}.create_subnet", return_value=None)
@@ -29,8 +29,8 @@ def test_create_network(mocker):
     mocker.patch(f"{patch_prefix}.wait_for_operation", return_value=None)
     mocker.patch(f"{patch_prefix}.create_firewall", return_value=None)
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
-    google_cloud_compute.create_network()
-    google_cloud_compute.create_network("bad_name")
+    google_cloud_compute.create_network_if_it_does_not_already_exist()
+    google_cloud_compute.create_network_if_it_does_not_already_exist("bad_name")
 
 
 def test_create_firewall(mocker):

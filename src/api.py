@@ -81,7 +81,7 @@ def create_cp0() -> Tuple[dict, int]:
     if not doc_ref_dict:
         return {"error": f"study {study_title} not found"}, 400
 
-    setup_gcp(doc_ref_dict, "0")
+    setup_gcp(doc_ref, "0")
 
     return {}, 200
 

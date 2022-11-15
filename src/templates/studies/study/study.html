@@ -10,7 +10,6 @@
       <div class="row">
         <div class="col-lg-7 mx-auto">
           <div class="p-5 bg-light rounded text-center">
-
             <div class="mt-0 mb-3">
               <div>
                 <small class="text-muted">
@@ -22,9 +21,13 @@
               </div>
 
               <div>
-                <span class="h2 fw-bold mb-0">{{ study['title'] }}</span>
-                <span class="badge bg-secondary align-top mt-2">
-                  {{ study["setup_configuration"]}}
+                <span class="h3 mb-0">{{ study['title'] }}</span>
+                <span class="badge rounded-pill bg-secondary align-top" style="margin-left: -7px !important;">
+                  {% if study["setup_configuration"] == "website" %}
+                    auto
+                  {% else %}
+                    self
+                  {% endif %}
                   <span type="button" data-bs-toggle="modal" data-bs-target="#{{ study['setup_configuration']}}">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-question-circle" viewbox="0 0 16 16">
                       <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
@@ -70,7 +73,7 @@
                 </div>
               </div>
 
-              <p class="lead text-muted mb-1">{{ study['description'] }}</p>
+              <p class="mb-1">{{ study['description'] }}</p>
               {% set owner = (g.user['id'] == study['owner']) %}
               {% include 'studies/study/study_information.html' %}
               {% include 'studies/study/study_parameters.html' %}
@@ -78,7 +81,7 @@
 
             {% include 'studies/study/participants.html'%}
 
-            <div class="mt-5" id="instructions">
+            <div class="mt-3" id="instructions">
               {% if study["setup_configuration"] == "website" %}
                 {% if study["status"][g.user["id"]] == ["not ready"] or study["status"][g.user["id"]] == [""] %}
                   <div>
@@ -113,13 +116,22 @@
                     {% else %}
                       <div class="status text-start alert alert-info"></div>
                       <p class="text-muted text-start mt-2">
-                        (Optional) While the protocol is running, if you want a more detailed view into what the VM is doing, you can ssh into your VM and run the command
+                        (While the protocol is running, if you want a more detailed view into what the VM is doing, you can ssh into your VM and run the command
                         <code>sudo journalctl -u google-startup-scripts.service</code>
-                        to see detailed logs.
+                        to see detailed logs.)
                       </p>
                     {% endif %}
                     <form action="{{ url_for('studies.start_protocol', study_title=study['title']) }}" method="POST">
-                      <button type="submit" class="btn btn-secondary">Check for update</button>
+                      <button class="btn btn-secondary" type="submit" onclick="loading();">
+                        <div class="loading" style="display:none">
+                          <span class="spinner-grow spinner-grow-sm" role="status"></span>
+                          Loading...
+                        </div>
+                        <div class="normal-content">
+                          Check for update
+                        </div>
+                      </button>
+
                     </form>
                   </div>
                 {% endif %}
@@ -128,13 +140,14 @@
                   <p>
                     Your authentication key should have downloaded. This
                     <code>auth_key.txt</code>
-                    will be used on your machine to authenticate with the command-line interface. If it didn't download, you can download it by clicking the button below.
+                    will be used on your machine to authenticate with the command-line interface.
+                    <small class="text-muted">(If it didn't download, you can download it by clicking the button below.)</small>
                     <div class="text-center">
-                      <a href="{{ url_for('studies.download_key_file', study_title=study['title']) }}" class="btn btn-secondary btn-sm">Download Auth Key</a>
+                      <a href="{{ url_for('studies.download_key_file', study_title=study['title']) }}" class="btn btn-info btn-sm">Download Auth Key</a>
                     </div>
                   </p>
                   <p>
-                    Please proceed with the sfkit Command-Line Interface (CLI) on your machine. For more details, see the tutorial
+                    Once all participants have joined the study, and you have set the 'Study Parameters' according to your specifications, you can proceed with the sfkit Command-Line Interface (CLI) on your machine. For more details about the sfkit CLI, see the tutorial
                     <a class="text-decoration-none" href="https://sfkit.readthedocs.io/en/latest/tutorial.html#cli">here</a>.
                   </p>
                 </div>

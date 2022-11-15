@@ -27,13 +27,13 @@ class GoogleCloudCompute:
             for participant in doc_ref_dict["participants"]
         )
 
-        self.create_network()
+        self.create_network_if_it_does_not_already_exist()
         self.remove_conflicting_peerings(gcp_projects)
         self.remove_conflicting_subnets(gcp_projects)
         self.create_subnet(role)
         self.create_peerings(gcp_projects)
 
-    def create_network(self, network_name: str = constants.NETWORK_NAME) -> None:
+    def create_network_if_it_does_not_already_exist(self, network_name: str = constants.NETWORK_NAME) -> None:
         networks: list = self.compute.networks().list(project=self.project).execute()["items"]
         network_names: list[str] = [net["name"] for net in networks]
 
@@ -70,9 +70,12 @@ class GoogleCloudCompute:
         self.wait_for_operation(operation["name"])
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(10))
-    def remove_conflicting_peerings(self, gcp_projects: list) -> None:
+    def remove_conflicting_peerings(self, gcp_projects: list = list()) -> None:
         # a peering is conflicting if it connects to a project that is not in the current study
-        network_info = self.compute.networks().get(project=self.project, network=constants.NETWORK_NAME).execute()
+        try:
+            network_info = self.compute.networks().get(project=self.project, network=constants.NETWORK_NAME).execute()
+        except googleapi.HttpError:
+            return
         peerings = [peer["name"].replace("peering-", "") for peer in network_info.get("peerings", [])]
 
         for other_project in peerings:
@@ -271,7 +274,10 @@ class GoogleCloudCompute:
         self.wait_for_zone_operation(zone, operation["name"])
 
     def list_instances(self, zone: str = constants.SERVER_ZONE, subnetwork: str = "") -> list[str]:
-        result = self.compute.instances().list(project=self.project, zone=zone).execute()
+        try:
+            result = self.compute.instances().list(project=self.project, zone=zone).execute()
+        except googleapi.HttpError:
+            return []
         return [
             instance["name"]
             for instance in result.get("items", [])

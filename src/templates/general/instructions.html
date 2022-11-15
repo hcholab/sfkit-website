@@ -5,39 +5,68 @@
 {% block content %}
   <section class="py-5">
     <div class="container">
-      <h2 class="h2 fw-bold mt-9 mb-5 text-center">Instructions</h2>
-      <div class="row lead">
+
+      <h2 class="mb-4 text-center fw-normal">Instructions</h2>
+      <hr>
+      <div class="row">
         <p>
           When you are ready to run a study, you will go to the
           <a href="{{ url_for('studies.index') }}" class="text-decoration-none">Studies</a>
-          page to create or join a study. If you are creating a study, you will choose one of the 3 workflows described in the
-          <a href="{{ url_for('general.workflows') }}" class="text-decoration-none">Workflows</a>
-          page. You will also need to choose on of the 2 configuration options for how to set up your machine and run your study. These are described in more detail below. Once that is done, you will be able to edit study parameters. Then, you will proceed according to the configuration option you chose.
+          page to create or join a study. If you are creating a study, you will also do the following:
         </p>
-        {# <p>
-          For each of the three workflows (<a class="text-decoration-none" href="{{ url_for('general.workflows', _anchor='SF-GWAS') }}">SF-GWAS</a>,
-          <a class="text-decoration-none" href="{{ url_for('general.workflows', _anchor='SF-PCA') }}">SF-PCA</a>, and
-          <a class="text-decoration-none" href="{{ url_for('general.workflows', _anchor='MPC-GWAS') }}">MPC-GWAS</a>), you have two options for how to set up your machine and run your study.
-          <strong>Option 1</strong>
-          is recommended for users who are familiar with the command line and want to have more control over their VM.
-          <strong>Option 2</strong>
-          is recommended for users who are not familiar with the command line and/or want to get started quickly.
-        </p> #}
-        <p>
-          <b>Option 1 - User (default)</b>. The
-          <a class="text-decoration-none" href="https://sfkit.readthedocs.io/en/latest/tutorial.html">sfkit Command-Line Interface</a>
-          will walk you through each step of the workflow yourself, on your own machine. This is recommended for users who are familiar with the command line and want to have more control over their VM.
-        </p>
+        <div>
+          <ul>
+            <li>
+              Choose one of the 3 workflows described in the
+              <a href="{{ url_for('general.workflows') }}" class="text-decoration-none">Workflows</a>
+              page.
+            </li>
+            <li>
+              Choose one of the 2 configuration options (described below) for how to set up your machine and run your study.
+            </li>
+            <li>
+              Edit your study parameters.
+            </li>
+          </ul>
+        </div>
       </div>
-      <div class="row lead">
-        <p>
-          <b>Option 2 - Website</b>. This website will set up your machine and run your study for you. This option is done using Google Cloud Platform (GCP) for the machines and will therefore require you to give the website limited permissions to access your Google Cloud Platform (GCP) account where you have placed the data in a storage bucket. (You will be walked through the specifics of this process if you create a study using this option.) This is recommended for users who are not familiar with the command line and/or want to get started quickly.
-        </p>
+
+      <h4 class="my-4 fw-normal">Configuration Options</h4>
+      <div class="row p-4 bg-light rounded">
+        <ul class="nav nav-tabs" role="tablist">
+          <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#Auto-configured" type="button">Auto-configured (default)</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#Self-configured" type="button">Self-configured</button>
+          </li>
+        </ul>
+        <div class="row tab-content">
+          <div class="container tab-pane fade show active" id="Auto-configured">
+            <div class="row mt-3">
+              <p>
+                This website will set up your machine and run your study for you. This option is done using Google Cloud Platform (GCP) for the machines and will therefore require you to give the website limited permissions to access your Google Cloud Platform (GCP) account where you have placed the data in a storage bucket. (You will be walked through the specifics of this process if you create a study using this option.)
+              </p>
+              <p>This is recommended for users who are not familiar with the command line and/or want to get started quickly.</p>
+            </div>
+          </div>
+          <div class="container tab-pane fade" id="Self-configured">
+            <div class="row mt-3">
+              <p>
+                The
+                <a class="text-decoration-none" href="https://sfkit.readthedocs.io/en/latest/tutorial.html">sfkit Command-Line Interface</a>
+                will walk you through each step of the workflow yourself, on your own machine.
+              </p>
+              <p>This is recommended for users who are familiar with the command line and want to have more control over their VM.</p>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="row lead">
-        <p>For either of these options, the following 5 steps will be run on the machine.</p>
+      <div>
+        <p>For either of these options, the 5 steps of the sfkit process will be run on your machine.</p>
       </div>
-      {# <h4 class="h2 fw-bold text-center">sfkit Procedure</h4> #}
+
+      <h4 class="my-4 fw-normal">sfkit Process</h4>
       <div class="row">
         <div class="col my-5">
           <div class="position-relative p-5 text-center bg-light rounded">
@@ -80,23 +109,21 @@
           </div>
         </div>
       </div>
-      <div class="row lead">
+      <div class="row">
         <p>
           1.
           <b>Authentication</b>
-          - Authenticate your machine with the website. This allows the website to ensure that the machine running the protocol is indeed yours. This step is done via a secure key (similar to an SSH key) that will be copied from the website to the machine. If you are doing
-          <b>Option 1</b>, then you will manually copy this key-file to your machine. Otherwise, it will be down automatically.
+          - Authenticate your machine with the website. This allows the website to ensure that the machine running the protocol is indeed yours. This step is done via a secure key (similar to an SSH key) that will be copied from the website to the machine. If you are running a self-configured study, you will manually copy this key-file to your machine.
         </p>
         <p>
           2.
           <b>Networking</b>
-          - Setup/communicate the networking for the machine. If you are doing
-          <b>Option 1</b>, then you will be asked for your preferred ports to communicate over for the secure socket connections during the protocol. Then, your ip address and ports will be shared with the website (and the other study participants).
+          - Setup/communicate the networking for the machine. If you are running a self-configured study, you will be asked for your preferred ports to communicate over for the secure socket connections during the protocol. Then, your ip address and ports will be shared with the website (and the other study participants).
         </p>
         <p>
           3.
           <b>Key Exchange</b>
-          - Cryptographically secure private and public keys will be created (locally) for you. The public key will be shared withe the website (and the other study participants). The private key will remain on your machine and will be used in step 5 during the protocol to create shared keys and to encrypt your data. See
+          - Cryptographically secure private and public keys will be created (locally) for you. The public key will be shared with the website (and the other study participants). The private key will remain on your machine and will be used in step 5 during the protocol to create shared keys and to encrypt your data. See
           <a href="https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange" class="text-decoration-none">Diffie-Hellman Key Exchange</a>
           for more information.
         </p>
