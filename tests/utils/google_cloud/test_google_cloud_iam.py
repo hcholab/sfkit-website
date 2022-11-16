@@ -2,7 +2,7 @@ import pytest
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 
 
-@pytest.mark.parametrize(("role"), (("roles/logging.viewer"), ("anotherrole")))
+@pytest.mark.parametrize(("role"), (("roles/logging.viewer"), ("another_role")))
 def test_give_cloud_build_view_permissions(mocker, role):
     mocker.patch(
         "src.utils.google_cloud.google_cloud_iam.googleapi",
@@ -33,7 +33,7 @@ def test_test_permissions(mocker):
 
 class MockMakeMockIam:
     @staticmethod
-    def build(api, version):
+    def build(api, version):  # sourcery skip: do-not-use-staticmethod, raise-specific-error, snake-case-functions
         return MockIam()
 
 
@@ -55,4 +55,4 @@ class MockProjects:
 
 class MockExecutable:
     def execute(self):
-        return {"pemrissions": []}
+        return {"permissions": []}

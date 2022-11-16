@@ -16,6 +16,7 @@ def create_app() -> Flask:
     app.config.from_mapping(SECRET_KEY=secrets.token_hex(16), DATABASE=firestore.Client())
 
     Bootstrap(app)
+
     app.register_blueprint(auth.bp)
     app.register_blueprint(api.bp)
     app.register_blueprint(general.bp)

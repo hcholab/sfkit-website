@@ -20,7 +20,7 @@ from src.utils.gwas_functions import create_instance_name, valid_study_title
 bp = Blueprint("studies", __name__)
 
 
-@bp.route("/index")
+@bp.route("/index", methods=["GET"])
 def index() -> Response:
     db = current_app.config["DATABASE"]
     studies = db.collection("studies")
@@ -52,47 +52,6 @@ def study(study_title: str) -> Response:
             display_names=display_names,
         )
     )
-
-
-@bp.route("/study/<study_title>/download_public_key/<role>")
-@login_required
-def download_public_key(study_title: str, role: str) -> Response:
-    db = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
-    doc_ref_dict = doc_ref.get().to_dict()
-    user_id = doc_ref_dict["participants"][int(role)]
-    public_key = doc_ref_dict["personal_parameters"][user_id]["PUBLIC_KEY"]["value"]
-    key_file = io.BytesIO(public_key.encode("utf-8") + b"\n" + role.encode("utf-8"))
-    return send_file(
-        key_file,
-        download_name=f"public_key_{user_id}.txt",
-        mimetype="text/plain",
-        as_attachment=True,
-    )
-
-
-@bp.route("/study/<study_title>/upload_public_key", methods=("GET", "POST"))
-@login_required
-def upload_public_key(study_title: str) -> Response:
-    db = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
-    doc_ref_dict = doc_ref.get().to_dict()
-    file = request.files["file"]
-    if file.filename == "":
-        return redirect_with_flash(
-            url=url_for("studies.study", study_title=study_title),
-            message="Please select a file to upload.",
-        )
-    elif file and file.filename == "my_public_key.txt":
-        public_key = file.read().decode("utf-8")
-        doc_ref_dict["personal_parameters"][g.user["id"]]["PUBLIC_KEY"]["value"] = public_key
-        doc_ref.set(doc_ref_dict)
-        return redirect(url_for("studies.study", study_title=study_title))
-    else:
-        return redirect_with_flash(
-            url=url_for("studies.study", study_title=study_title),
-            message="Please upload a valid my_public_key.txt file.",
-        )
 
 
 @bp.route("/choose_study_type", methods=["POST"])
@@ -335,17 +294,6 @@ def personal_parameters(study_title: str) -> Response:
         if p in request.form:
             parameters[g.user["id"]][p]["value"] = request.form.get(p)
     doc_ref.set({"personal_parameters": parameters}, merge=True)
-    return redirect(url_for("studies.study", study_title=study_title))
-
-
-@bp.route("/study/<study_title>/set_sa_email", methods=("POST",))
-@login_required
-def set_sa_email(study_title: str) -> Response:
-    db = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
-    doc_ref_dict = doc_ref.get().to_dict()
-    doc_ref_dict["personal_parameters"][g.user["id"]]["SA_EMAIL"]["value"] = request.form.get("SA_EMAIL")
-    doc_ref.set(doc_ref_dict)
     return redirect(url_for("studies.study", study_title=study_title))
 
 

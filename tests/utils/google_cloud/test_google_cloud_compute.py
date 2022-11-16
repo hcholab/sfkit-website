@@ -106,11 +106,11 @@ def test_create_peerings(mocker):
 #     google_cloud_compute.create_instance("zone", constants.NETWORK_NAME, "role", 10, 4, {})
 
 
-def test_stop_instance(mocker):
-    setup_mocking(mocker)
-    mocker.patch(f"{patch_prefix}.wait_for_zone_operation", return_value=None)
-    google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
-    google_cloud_compute.stop_instance(zone=constants.SERVER_ZONE, instance="name")
+# def test_stop_instance(mocker):
+#     setup_mocking(mocker)
+#     mocker.patch(f"{patch_prefix}.wait_for_zone_operation", return_value=None)
+#     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
+#     google_cloud_compute.stop_instance(zone=constants.SERVER_ZONE, instance="name")
 
 
 def test_list_instances(mocker):
@@ -164,10 +164,10 @@ def test_vm_external_ip_address(mocker):
     assert google_cloud_compute.get_vm_external_ip_address("zone", "name") == "1877.0.0.1"
 
 
-def test_get_service_account_for_vm(mocker):
-    setup_mocking(mocker)
-    google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
-    assert google_cloud_compute.get_service_account_for_vm("zone", "name") == "test_email@email.com"
+# def test_get_service_account_for_vm(mocker):
+#     setup_mocking(mocker)
+#     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
+#     assert google_cloud_compute.get_service_account_for_vm("zone", "name") == "test_email@email.com"
 
 
 def setup_mocking(mocker):

@@ -26,12 +26,12 @@ def test_sign_in_with_email_and_password(mocker):
 
 
 def test_raise_detailed_error():
-    r = RequestsResponse()
-    r.status_code = 200
-    auth_functions.raise_detailed_error(r)
-    r.status_code = 404
+    response = RequestsResponse()
+    response.status_code = 200
+    auth_functions.raise_detailed_error(response)
+    response.status_code = 404
     with pytest.raises(Exception):
-        auth_functions.raise_detailed_error(r)
+        auth_functions.raise_detailed_error(response)
 
 
 def mock_sign_in_with_email_and_password(email, password):

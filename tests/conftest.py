@@ -43,6 +43,8 @@ class MockFirebaseAdminAuth:
 
     @staticmethod
     def create_user(email, password, uid=None):
+        # sourcery skip: raise-specific-error, do-not-use-staticmethod
+
         if not email:
             raise Exception()
         elif email == "duplicate":
@@ -54,6 +56,7 @@ class MockFirebaseAdminAuth:
 
     @staticmethod
     def verify_session_cookie(session_cookie, check_revoked=True):
+        # sourcery skip: raise-specific-error
         if MockFirebaseAdminAuth.throw_verify_session_cookie_exception:
             raise Exception("A Dell Mouse")
         if MockFirebaseAdminAuth.throw_create_custom_token_exception:
@@ -72,7 +75,7 @@ class MockFirebaseAdminAuth:
         pass
 
     @staticmethod
-    def create_custom_token(uid):
+    def create_custom_token(uid):  # sourcery skip: raise-specific-error
         if MockFirebaseAdminAuth.throw_create_custom_token_exception:
             raise Exception("A Dell Mouse")
         return uid

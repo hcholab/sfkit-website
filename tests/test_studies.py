@@ -31,47 +31,47 @@ def test_index(client):
 #     assert b"personal_parameters" in response.data
 
 
-def test_download_public_key(app, client, auth, mocker):
-    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
-    auth.login()
-    doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
-    doc_ref.set(
-        {
-            "participants": ["Broad", "a@a.com"],
-            "personal_parameters": {"a@a.com": {"PUBLIC_KEY": {"value": "public_key"}}},
-        }
-    )
+# def test_download_public_key(app, client, auth, mocker):
+#     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+#     auth.login()
+#     doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
+#     doc_ref.set(
+#         {
+#             "participants": ["Broad", "a@a.com"],
+#             "personal_parameters": {"a@a.com": {"PUBLIC_KEY": {"value": "public_key"}}},
+#         }
+#     )
 
-    response = client.get("/study/testtitle/download_public_key/1")
-    assert response.status_code == 200
-    assert b"public_key" in response.data
+#     response = client.get("/study/testtitle/download_public_key/1")
+#     assert response.status_code == 200
+#     assert b"public_key" in response.data
 
 
-def test_upload_public_key(app, client, auth, mocker):
-    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
-    auth.login()
-    doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
-    doc_ref.set(
-        {
-            "personal_parameters": {"a@a.com": {"PUBLIC_KEY": {"value": "old_public_key"}}},
-        }
-    )
+# def test_upload_public_key(app, client, auth, mocker):
+#     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+#     auth.login()
+#     doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
+#     doc_ref.set(
+#         {
+#             "personal_parameters": {"a@a.com": {"PUBLIC_KEY": {"value": "old_public_key"}}},
+#         }
+#     )
 
-    client.post(
-        "/study/testtitle/upload_public_key",
-        data={"file": (io.BytesIO(b"new_public_key"), "")},
-    )
-    client.post(
-        "/study/testtitle/upload_public_key",
-        data={"file": (io.BytesIO(b"new_public_key"), "garbage.txt")},
-    )
-    assert doc_ref.get().to_dict()["personal_parameters"]["a@a.com"]["PUBLIC_KEY"]["value"] == "old_public_key"
+#     client.post(
+#         "/study/testtitle/upload_public_key",
+#         data={"file": (io.BytesIO(b"new_public_key"), "")},
+#     )
+#     client.post(
+#         "/study/testtitle/upload_public_key",
+#         data={"file": (io.BytesIO(b"new_public_key"), "garbage.txt")},
+#     )
+#     assert doc_ref.get().to_dict()["personal_parameters"]["a@a.com"]["PUBLIC_KEY"]["value"] == "old_public_key"
 
-    client.post(
-        "/study/testtitle/upload_public_key",
-        data={"file": (io.BytesIO(b"new_public_key"), "my_public_key.txt")},
-    )
-    assert doc_ref.get().to_dict()["personal_parameters"]["a@a.com"]["PUBLIC_KEY"]["value"] == "new_public_key"
+#     client.post(
+#         "/study/testtitle/upload_public_key",
+#         data={"file": (io.BytesIO(b"new_public_key"), "my_public_key.txt")},
+#     )
+#     assert doc_ref.get().to_dict()["personal_parameters"]["a@a.com"]["PUBLIC_KEY"]["value"] == "new_public_key"
 
 
 # def test_create_study(client, auth, mocker):

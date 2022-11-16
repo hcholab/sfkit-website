@@ -10,5 +10,5 @@ def test_initialize_firebase_admin(mocker):
 
 class MockFirebaseAdmin:
     @staticmethod
-    def initialize_app(credentials=None):
+    def initialize_app(credentials=None):  # sourcery skip: do-not-use-staticmethod
         pass

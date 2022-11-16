@@ -36,21 +36,3 @@ def valid_study_title(study_title: str, study_type: str, setup_configuration: st
 
 def create_instance_name(study_title: str, role: str) -> str:
     return f"{study_title.replace(' ', '').lower()}-{constants.INSTANCE_NAME_ROOT}{role}"
-
-
-# def data_has_valid_size(size: int, doc_ref_dict: dict, role: int) -> bool:
-#     user_id: str = doc_ref_dict["participants"][role]
-#     num_snps: int = int(doc_ref_dict["parameters"]["NUM_SNPS"].get("value", "0"))
-#     num_inds: int = int(doc_ref_dict["personal_parameters"][user_id]["NUM_INDS"].get("value", "0"))
-
-#     estimated_size: int = num_snps * num_inds * constants.DATA_VALIDATION_CONSTANT
-
-#     if size > 2 * estimated_size or size < estimated_size / 2:
-#         print(f"Validation has failed.  The size is {size} and the estimated size is {estimated_size}.")
-#         return False
-
-#     return True
-
-
-# def data_has_valid_files(files: str) -> bool:
-#     return all(desired_file in files for desired_file in constants.DATA_VALIDATION_FILES)

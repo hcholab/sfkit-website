@@ -1,13 +1,13 @@
 import os
-import subprocess
 from time import sleep
 
 import googleapiclient.discovery as googleapi
 import ipaddr
-from src.utils import constants
 from tenacity import retry
 from tenacity.stop import stop_after_attempt
 from tenacity.wait import wait_fixed
+
+from src.utils import constants
 
 
 class GoogleCloudCompute:
@@ -267,12 +267,6 @@ class GoogleCloudCompute:
         operation = self.compute.instances().insert(project=self.project, zone=zone, body=instance_body).execute()
         self.wait_for_zone_operation(zone, operation["name"])
 
-    def stop_instance(self, zone: str, instance: str) -> None:
-        print("Stopping VM instance with name ", instance)
-
-        operation = self.compute.instances().stop(project=self.project, zone=zone, instance=instance).execute()
-        self.wait_for_zone_operation(zone, operation["name"])
-
     def list_instances(self, zone: str = constants.SERVER_ZONE, subnetwork: str = "") -> list[str]:
         try:
             result = self.compute.instances().list(project=self.project, zone=zone).execute()
@@ -328,22 +322,3 @@ class GoogleCloudCompute:
         print("Getting the IP address for VM instance", instance)
         response = self.compute.instances().get(project=self.project, zone=zone, instance=instance).execute()
         return response["networkInterfaces"][0]["accessConfigs"][0]["natIP"]
-
-    def get_service_account_for_vm(self, instance: str, zone: str = constants.SERVER_ZONE) -> str:
-        print("Getting the service account for VM instance", instance)
-        response = self.compute.instances().get(project=self.project, zone=zone, instance=instance).execute()
-        return response["serviceAccounts"][0]["email"]
-
-
-def run_command(instance_name: str, cmd: str) -> None:
-    command = f"gcloud compute ssh {instance_name} --project {constants.SERVER_GCP_PROJECT} --zone={constants.SERVER_ZONE} --command '{cmd}'"
-    if subprocess.run(command, shell=True).returncode != 0:
-        print(f"Failed to perform command {command}")
-        exit(1)
-
-
-def run_ssh_command(ip_address: str, cmd: str) -> None:
-    command = f"ssh -o StrictHostKeyChecking=accept-new smendels@{ip_address} -t '{cmd}'"
-    if subprocess.run(command, shell=True).returncode != 0:
-        print(f"Failed to perform command {command}")
-        exit(1)
