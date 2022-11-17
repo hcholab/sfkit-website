@@ -22,17 +22,17 @@ test_doc_ref_dict = {
 }
 
 
-# def test_valid_study_title(client, app, auth, mocker):
-#     setup_mocking(mocker)
-#     with app.app_context():
-#         assert gwas_functions.valid_study_title("testtitle", "MPCGWAS", "user")[0] == True
-#         assert gwas_functions.valid_study_title("test_title", "MPCGWAS", "user")[0] == False
+def test_valid_study_title(client, app, auth, mocker):
+    setup_mocking(mocker)
+    with app.app_context():
+        assert gwas_functions.valid_study_title("testtitle", "MPCGWAS", "user")[0] == True
+        assert gwas_functions.valid_study_title("test_title", "MPCGWAS", "user")[0] == False
 
-#         auth.login()
-#         client.post("create_study/MPCGWAS/website", data=test_create_data)
-#         client.post("create_study/MPCGWAS/website", data=test_create_data2)
+        auth.login()
+        client.post("create_study/MPCGWAS/website", data=test_create_data)
+        client.post("create_study/MPCGWAS/website", data=test_create_data2)
 
-#         assert gwas_functions.valid_study_title("testtitle2", "MPCGWAS", "user")[0] == False
+        assert gwas_functions.valid_study_title("testtitle2", "MPCGWAS", "user")[0] == False
 
 
 def test_create_instance_name():
@@ -65,5 +65,5 @@ def mock_redirect(url):
     return url
 
 
-def mock_url_for(endpoint, study_title="", study_type=""):
+def mock_url_for(endpoint, study_title="", study_type="", setup_configuration=""):
     return endpoint

@@ -70,12 +70,13 @@ class GoogleCloudCompute:
         self.wait_for_operation(operation["name"])
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(10))
-    def remove_conflicting_peerings(self, gcp_projects: list = list()) -> None:
+    def remove_conflicting_peerings(self, gcp_projects: list = list()) -> bool:
         # a peering is conflicting if it connects to a project that is not in the current study
         try:
             network_info = self.compute.networks().get(project=self.project, network=constants.NETWORK_NAME).execute()
-        except googleapi.HttpError:
-            return
+        except Exception as e:  # googleapi.HttpError:
+            print(f"Error getting network info: {e}")
+            return False
         peerings = [peer["name"].replace("peering-", "") for peer in network_info.get("peerings", [])]
 
         for other_project in peerings:
@@ -86,6 +87,7 @@ class GoogleCloudCompute:
                     project=self.project, network=constants.NETWORK_NAME, body=body
                 ).execute()
                 sleep(2)
+        return True
 
     def remove_conflicting_subnets(self, gcp_projects: list) -> None:
         # a subnet is conflicting if it has an IpCidrRange that does not match the expected ranges based on the roles of participants in the study
@@ -181,8 +183,11 @@ class GoogleCloudCompute:
         if name in self.list_instances() and delete:
             self.delete_instance(name)
             print("Waiting for instance to be deleted...")
-            while name in self.list_instances():
+
+            max_wait = 60
+            while name in self.list_instances() and max_wait > 0:
                 sleep(2)
+                max_wait -= 1
 
         if name not in self.list_instances():
             self.create_instance(
@@ -270,7 +275,8 @@ class GoogleCloudCompute:
     def list_instances(self, zone: str = constants.SERVER_ZONE, subnetwork: str = "") -> list[str]:
         try:
             result = self.compute.instances().list(project=self.project, zone=zone).execute()
-        except googleapi.HttpError:
+        except Exception as e:
+            print("Error listing instances:", e)
             return []
         return [
             instance["name"]

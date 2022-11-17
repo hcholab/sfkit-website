@@ -1,9 +1,9 @@
-import io
-from copy import deepcopy
-
-from src.utils import constants
-
 from conftest import MockFirebaseAdminAuth
+from python_http_client.exceptions import HTTPError
+from sendgrid.helpers.mail import Mail
+from werkzeug import Response
+
+from src.studies import email
 
 test_create_data = {
     "title": "testtitle",
@@ -21,90 +21,56 @@ def test_index(client):
     assert b"Secure GWAS" in response.data
 
 
-# def test_study(client, auth, mocker):
-#     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
-#     auth.login()
-#     client.post("create_study/GWAS", data=test_create_data)
-#     response = client.get("/study/testtitle")
-#     assert response.status_code == 200
-#     assert b"parameters" in response.data
-#     assert b"personal_parameters" in response.data
+def test_study(client, auth, mocker):
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+    auth.login()
+    client.post("create_study/MPCGWAS/website", data=test_create_data)
+    response = client.get("/study/testtitle")
+    assert response.status_code == 200
+    assert b"parameters" in response.data
+    assert b"personal_parameters" in response.data
 
 
-# def test_download_public_key(app, client, auth, mocker):
-#     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
-#     auth.login()
-#     doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
-#     doc_ref.set(
-#         {
-#             "participants": ["Broad", "a@a.com"],
-#             "personal_parameters": {"a@a.com": {"PUBLIC_KEY": {"value": "public_key"}}},
-#         }
-#     )
+def test_choose_study_type(client, auth, mocker):
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+    auth.login()
 
-#     response = client.get("/study/testtitle/download_public_key/1")
-#     assert response.status_code == 200
-#     assert b"public_key" in response.data
+    response = client.post(
+        "choose_study_type", data={"CHOOSE_STUDY_TYPE": "MPCGWAS", "SETUP_CONFIGURATION": "website"}
+    )
+
+    assert response.status_code == 302  # 302 is a redirect
+    assert response.headers.get("Location") == "/create_study/MPCGWAS/website"
 
 
-# def test_upload_public_key(app, client, auth, mocker):
-#     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
-#     auth.login()
-#     doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
-#     doc_ref.set(
-#         {
-#             "personal_parameters": {"a@a.com": {"PUBLIC_KEY": {"value": "old_public_key"}}},
-#         }
-#     )
+def test_create_study(client, auth, mocker):
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+    auth.login()
 
-#     client.post(
-#         "/study/testtitle/upload_public_key",
-#         data={"file": (io.BytesIO(b"new_public_key"), "")},
-#     )
-#     client.post(
-#         "/study/testtitle/upload_public_key",
-#         data={"file": (io.BytesIO(b"new_public_key"), "garbage.txt")},
-#     )
-#     assert doc_ref.get().to_dict()["personal_parameters"]["a@a.com"]["PUBLIC_KEY"]["value"] == "old_public_key"
+    response = client.get("create_study/MPCGWAS/website")
+    assert response.status_code == 200
 
-#     client.post(
-#         "/study/testtitle/upload_public_key",
-#         data={"file": (io.BytesIO(b"new_public_key"), "my_public_key.txt")},
-#     )
-#     assert doc_ref.get().to_dict()["personal_parameters"]["a@a.com"]["PUBLIC_KEY"]["value"] == "new_public_key"
+    response = client.post("create_study/MPCGWAS/website", data=test_create_data)
+    assert response.status_code == 302
+    assert response.headers.get("Location") == "/parameters/testtitle"
+
+    # again to assert that the study is not created twice
+    response = client.post("create_study/MPCGWAS/website", data=test_create_data)
+    assert response.status_code == 302
+    assert response.headers.get("Location") == "/create_study/MPCGWAS/website"
 
 
-# def test_create_study(client, auth, mocker):
-#     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
-#     mocker.patch("src.studies.GoogleCloudPubsub", MockGoogleCloudPubsub)
-#     auth.login()
-#     assert client.get("create_study/MPCGWAS").status_code == 200
-#     response = client.post("create_study/MPCGWAS", data=test_create_data)
-#     assert "/parameters/testtitle" in response.headers.get("Location")
-#     response = client.post("create_study/MPCGWAS", data=test_create_data)
-#     assert "/create_study/MPCGWAS" in response.headers.get("Location")
+def test_delete_study(client, app, auth, mocker):
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+    mocker.patch("src.studies.GoogleCloudCompute", MockGoogleCloudCompute)
+    auth.login()
 
+    client.post("create_study/MPCGWAS/website", data=test_create_data)
+    response = client.post("delete_study/testtitle")
+    assert response.status_code == 302
+    assert response.headers.get("Location") == "/index"
 
-# def test_delete_study(client, app, auth, mocker):
-#     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
-#     mocker.patch("src.studies.GoogleCloudCompute", MockGoogleCloudCompute)
-#     auth.login()
-
-#     client.post("create_study/GWAS", data=test_create_data)
-#     response = client.post("delete_study/testtitle")
-#     assert "index" in response.headers.get("Location")
-
-#     client.post("create_study/GWAS", data=test_create_data)
-
-#     user_parameters = deepcopy(constants.DEFAULT_USER_PARAMETERS)
-#     user_parameters["GCP_PROJECT"]["value"] = "gcp_project"
-#     doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
-#     doc_ref.set(
-#         {"personal_parameters": {"a@a.com": user_parameters}},
-#         merge=True,
-#     )
-
-#     client.post("delete_study/testtitle")
+    client.post("create_study/MPCGWAS/website", data=test_create_data)
 
 
 def test_request_join_study(client, auth, mocker):
@@ -112,7 +78,30 @@ def test_request_join_study(client, auth, mocker):
     auth.login()
     client.post("create_study/MPCGWAS/website", data=test_create_data)
     response = client.get("request_join_study/testtitle")
-    assert "index" in response.headers.get("Location")
+    assert response.status_code == 302
+    assert response.headers.get("Location") == "/index"
+
+    auth.logout()
+    auth.login("b@b.com", "b")
+    client.get("request_join_study/testtitle")
+
+
+def test_invite_participant(client, auth, mocker):
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+    mocker.patch("src.studies.email", lambda *args, **kwargs: None)
+    auth.login()
+    client.post("create_study/MPCGWAS/website", data=test_create_data)
+    response = client.post("invite_participant/testtitle", data={"invite_participant_email": "b@b.com"})
+    assert response.status_code == 302
+    assert response.headers.get("Location") == "/study/testtitle"
+
+
+def test_email(app, client, auth, mocker):
+    with app.app_context():
+        mocker.patch("src.studies.SendGridAPIClient", MockSendGridAPIClient)
+        email("a@a.com", "b@b.com", "", "study_title")
+        email("a@a.com", "b@b.com", "invitation_message", "study_title")
+        email("a@a.com", "c@b.com", "invitation_message", "study_title")
 
 
 def test_approve_join_study(client, auth, mocker):
@@ -130,52 +119,70 @@ def test_approve_join_study(client, auth, mocker):
     assert "/study/testtitle" in response.headers.get("Location")
 
 
-# def test_parameters(client, auth, mocker):
-#     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
-#     auth.login()
-#     client.post("create_study/MPCGWAS/website", data=test_create_data)
-#     assert client.get("parameters/testtitle").status_code == 200
+def test_accept_invitation(client, auth, mocker):
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+    auth.login()
+    client.post("create_study/MPCGWAS/website", data=test_create_data)
+    client.post("invite_participant/testtitle", data={"invite_participant_email": "b@b.com"})
 
-#     response = client.post("parameters/testtitle", data={"save": "save"})
-#     assert "/study/testtitle" in response.headers.get("Location")
+    auth.logout()
+    auth.login("b@b.com", "b")
+    response = client.get("accept_invitation/testtitle")
+    assert response.status_code == 302
+    assert response.headers.get("Location") == "/study/testtitle"
 
-#     response = client.post("parameters/testtitle")
-#     assert "Something went wrong" in str(response.headers)
 
-# response = client.post(
-#     "parameters/testtitle",
-#     data={
-#         "upload": "upload",
-#         "file": (io.BytesIO(b"abcdef"), ""),
-#     },
-#     content_type="multipart/form-data",
-# )
-# assert response.headers["Location"] == "http://localhost/parameters/testtitle"
+def test_study_information(client, auth, mocker):
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+    auth.login()
+    client.post("create_study/MPCGWAS/website", data=test_create_data)
 
-# response = client.post(
-#     "parameters/testtitle",
-#     data={"upload": "upload", "file": (io.BytesIO(b"abcdef"), "pos.txt")},
-#     content_type="multipart/form-data",
-# )
-# assert response.headers["Location"] == "http://localhost/study/testtitle"
+    response = client.post(
+        "study/testtitle/study_information",
+        data={"study_description": "new description", "study_information": "new information"},
+    )
+    assert response.status_code == 302
+    assert response.headers.get("Location") == "/study/testtitle"
 
-# response = client.post(
-#     "parameters/testtitle",
-#     data={"upload": "upload", "file": (io.BytesIO(b"abcdef"), "bad_file")},
-#     content_type="multipart/form-data",
-# )
-# assert response.headers["Location"] == "http://localhost/parameters/testtitle"
 
-# response = client.post("parameters/testtitle")
-# assert response.headers["Location"] == "http://localhost/parameters/testtitle"
+def test_parameters(client, auth, mocker):
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+    auth.login()
+    client.post("create_study/MPCGWAS/website", data=test_create_data)
+
+    response = client.get("parameters/testtitle")
+    assert response.status_code == 200
+
+    response = client.post(
+        "parameters/testtitle",
+        data={
+            "NUM_SNPS": "100",
+            "ITER_PER_EVAL": "100",
+            "NUM_INDSa@a.com": "100",
+            "blah": "blah",
+        },
+    )
+    assert response.status_code == 302
+    assert response.headers.get("Location") == "/study/testtitle"
+
+
+def test_download_key_file(client, auth, mocker):
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+    auth.login()
+    client.post("create_study/MPCGWAS/website", data=test_create_data)
+
+    response = client.get("study/testtitle/download_key_file")
+    assert response.status_code == 200
+    print(response.headers.get("Content-Disposition"))
+    assert response.headers.get("Content-Disposition") == "attachment; filename=auth_key.txt"
+
+    client.get("study/testtitle/download_key_file")
 
 
 def test_personal_parameters(client, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     auth.login()
     client.post("create_study/MPCGWAS/website", data=test_create_data)
-    # assert client.get("personal_parameters/testtitle").status_code == 200
-
     client.post("personal_parameters/testtitle", data={"NUM_INDS": "NUM_INDS"})
 
 
@@ -188,36 +195,31 @@ class MockGoogleCloudCompute:
     def setup_networking(self, role):
         pass
 
+    def remove_conflicting_peerings(self, gcp_project: list = list()) -> bool:
+        return True
+
     def setup_instance(self, zone, instance, role, size, metadata=None, boot_disk_size=None):
         pass
-
-    def get_service_account_for_vm(self, zone, instance):
-        return "serviceaccount"
 
     def stop_instance(self, zone, role):
         pass
 
     def list_instances(self):
-        return ["blah", "secure-gwas-instance-1"]
+        return ["blah", "testtitle-secure-gwas-instance-1"]
 
     def delete_instance(self, instance):
         pass
 
 
-class MockGoogleCloudStorage:
-    return_value = False
-
-    def __init__(self, project):
+class MockSendGridAPIClient:
+    def __init__(self, api_key):
         pass
 
-    def copy_parameters_to_bucket(self, study_title, role):
-        pass
+    def send(self, message: Mail) -> Response:
+        response = Response()
 
-    def upload_to_bucket(self, file, filename):
-        pass
-
-    def add_bucket_iam_member(self, bucket_name, role, member):
-        pass
-
-    def check_file_exists(self, filename):
-        return MockGoogleCloudStorage.return_value
+        if message.get()["personalizations"][0]["to"][0]["email"] == "c@b.com":
+            raise HTTPError(400, "Bad Request", "Bad Request", {})
+        else:
+            response.status_code = 202
+        return response

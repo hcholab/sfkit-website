@@ -1,4 +1,4 @@
-# sourcery skip: do-not-use-staticmethod, snake-case-functions
+# sourcery skip: do-not-use-staticmethod, snake-case-functions, raise-specific-error
 import pytest
 from src.utils import constants
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
@@ -46,7 +46,10 @@ def test_create_firewall(mocker):
 def test_remove_conflicting_peerings(mocker):
     setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
-    google_cloud_compute.remove_conflicting_peerings(["broad-cho-priv1"])
+    assert google_cloud_compute.remove_conflicting_peerings(["broad-cho-priv1"]) == True
+
+    google_cloud_compute = GoogleCloudCompute("")
+    assert google_cloud_compute.remove_conflicting_peerings(["broad-cho-priv1"]) == False
 
 
 def test_remove_conflicting_subnets(mocker):
@@ -84,39 +87,35 @@ def test_create_peerings(mocker):
     google_cloud_compute.create_peerings(gcp_projects=["broad-cho-priv1", "peeringproject2", "project3"])
 
 
-# def test_setup_instance(mocker):
-#     setup_mocking(mocker)
-#     mocker.patch(f"{patch_prefix}.list_instances", return_value=[])
-#     mocker.patch(f"{patch_prefix}.delete_instance", return_value=None)
-#     mocker.patch(f"{patch_prefix}.create_instance", return_value=None)
-#     mocker.patch(f"{patch_prefix}.get_vm_external_ip_address", return_value=None)
-#     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
+def test_setup_instance(mocker):
+    setup_mocking(mocker)
+    mocker.patch(f"{patch_prefix}.list_instances", return_value=[])
+    mocker.patch(f"{patch_prefix}.delete_instance", return_value=None)
+    mocker.patch(f"{patch_prefix}.create_instance", return_value=None)
+    mocker.patch(f"{patch_prefix}.get_vm_external_ip_address", return_value=None)
+    google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
 
-#     google_cloud_compute.setup_instance("zone", "name", "role", {})
+    google_cloud_compute.setup_instance("name", "role", ["metadata"])
 
-#     mocker.patch(f"{patch_prefix}.list_instances", return_value=["name"])
-#     google_cloud_compute.setup_instance("zone", "name", "role", {})
-
-
-# def test_create_instance(mocker):
-#     setup_mocking(mocker)
-#     mocker.patch(f"{patch_prefix}.wait_for_zone_operation", return_value=None)
-#     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
-#     google_cloud_compute.create_instance("zone", constants.NETWORK_NAME, "role", 10, 4, {}, startup_script="validate")
-#     google_cloud_compute.create_instance("zone", constants.NETWORK_NAME, "role", 10, 4, {})
+    mocker.patch(f"{patch_prefix}.list_instances", return_value=["name"])
+    google_cloud_compute.setup_instance("name", "role", ["metadata"])
 
 
-# def test_stop_instance(mocker):
-#     setup_mocking(mocker)
-#     mocker.patch(f"{patch_prefix}.wait_for_zone_operation", return_value=None)
-#     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
-#     google_cloud_compute.stop_instance(zone=constants.SERVER_ZONE, instance="name")
+def test_create_instance(mocker):
+    setup_mocking(mocker)
+    mocker.patch(f"{patch_prefix}.wait_for_zone_operation", return_value=None)
+    google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
+    google_cloud_compute.create_instance("name", "role")
+    google_cloud_compute.create_instance("name", "role", metadata=["metadata"])
 
 
 def test_list_instances(mocker):
     setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
     google_cloud_compute.list_instances()
+
+    google_cloud_compute = GoogleCloudCompute("")
+    google_cloud_compute.list_instances("name", "role")
 
 
 def test_delete_instance(mocker):
@@ -164,28 +163,13 @@ def test_vm_external_ip_address(mocker):
     assert google_cloud_compute.get_vm_external_ip_address("zone", "name") == "1877.0.0.1"
 
 
-# def test_get_service_account_for_vm(mocker):
-#     setup_mocking(mocker)
-#     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
-#     assert google_cloud_compute.get_service_account_for_vm("zone", "name") == "test_email@email.com"
-
-
 def setup_mocking(mocker):
     mocker.patch("src.utils.google_cloud.google_cloud_compute.sleep", lambda x: None)
     mocker.patch("time.sleep", lambda x: None)
-    mocker.patch(
-        "src.utils.google_cloud.google_cloud_compute.googleapi",
-        MockMakeMockCompute,
-    )
+    mocker.patch("src.utils.google_cloud.google_cloud_compute.googleapi.build", return_value=MockCompute())
     MockOperations.trial = 0
     MockExecutable.error = ""
     MockExecutable.status = "RUNNING"
-
-
-class MockMakeMockCompute:
-    @staticmethod
-    def build(api, version):
-        return MockCompute()
 
 
 class MockCompute:
@@ -226,12 +210,18 @@ class MockOperations:
 
 class MockInsertable:
     def list(self, project=None, region=None, zone=None):
+        # sourcery skip: raise-specific-error
+        if project == "":
+            raise Exception("no instances")
         return MockExecutable()
 
     def insert(self, project=None, zone=None, region=None, body=None):
         return MockExecutable()
 
     def get(self, project=None, network=None, zone=None, instance=None):
+        # sourcery skip: raise-specific-error
+        if project == "":
+            raise Exception("get failed")
         return MockExecutable()
 
     def delete(self, project=None, zone=None, region=None, subnetwork=None, instance=None):

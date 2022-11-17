@@ -38,7 +38,7 @@
             <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#Auto-configured" type="button">Auto-configured (default)</button>
           </li>
           <li class="nav-item">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#Self-configured" type="button">Self-configured</button>
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#Auto-configured" type="button">User-configured</button>
           </li>
         </ul>
         <div class="row tab-content">
@@ -50,7 +50,7 @@
               <p>This is recommended for users who are not familiar with the command line and/or want to get started quickly.</p>
             </div>
           </div>
-          <div class="container tab-pane fade" id="Self-configured">
+          <div class="container tab-pane fade" id="User-configured">
             <div class="row mt-3">
               <p>
                 The
@@ -62,7 +62,7 @@
           </div>
         </div>
       </div>
-      <div>
+      <div class="mt-4">
         <p>For either of these options, the 5 steps of the sfkit process will be run on your machine.</p>
       </div>
 
@@ -73,23 +73,20 @@
             <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">1</span>
             <h5 class="fw-bold mb-3">Authentication</h5>
             <img class="img-fluid" src="static/images/sfkit/auth.png" alt="">
-            {# <p class="lead text-muted mt-3">Authenticate with the CLI.</p> #}
           </div>
         </div>
         <div class="col my-5">
           <div class="position-relative p-5 text-center bg-light rounded">
             <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">2</span>
             <h5 class="fw-bold mb-3">Networking</h5>
-            <img class="img-fluid" src="static/images/sfkit/networking.png" alt="" style="width: 50%">
-            {# <p class="lead text-muted mt-3">Setup IP addresses and ports.</p> #}
+            <img class="img-fluid" src="static/images/sfkit/networking.png" alt="">
           </div>
         </div>
         <div class="col my-5">
           <div class="position-relative p-5 text-center bg-light rounded">
             <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">3</span>
             <h5 class="fw-bold mb-3">Key Exchange</h5>
-            <img class="img-fluid" src="static/images/sfkit/keys.png" alt="" style="width: 60%">
-            {# <p class="lead text-muted mt-3">Create encryption keys, share public key.</p> #}
+            <img class="img-fluid" src="static/images/sfkit/keys.png" alt="">
           </div>
         </div>
         <div class="col my-5">
@@ -97,15 +94,13 @@
             <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">4</span>
             <h5 class="fw-bold mb-3">Data Validation</h5>
             <img class="img-fluid" src="static/images/sfkit/data.png" alt="">
-            {# <p class="lead text-muted mt-3">Validate data files.</p> #}
           </div>
         </div>
         <div class="col my-5">
           <div class="position-relative p-5 text-center bg-light rounded">
             <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">5</span>
             <h5 class="fw-bold mb-3">Run Protocol</h5>
-            <img class="img-fluid" src="static/images/sfkit/run_protocol.png" alt="" style="width: 150%">
-            {# <p class="lead text-muted mt-3">Run the protocol.</p> #}
+            <img class="img-fluid" src="static/images/sfkit/run_protocol.png" alt="">
           </div>
         </div>
       </div>
@@ -113,12 +108,12 @@
         <p>
           1.
           <b>Authentication</b>
-          - Authenticate your machine with the website. This allows the website to ensure that the machine running the protocol is indeed yours. This step is done via a secure key (similar to an SSH key) that will be copied from the website to the machine. If you are running a self-configured study, you will manually copy this key-file to your machine.
+          - Authenticate your machine with the website. This allows the website to ensure that the machine running the protocol is indeed yours. This step is done via a secure key (similar to an SSH key) that will be copied from the website to the machine. If you are running a user-configured study, you will manually copy this key-file to your machine.
         </p>
         <p>
           2.
           <b>Networking</b>
-          - Setup/communicate the networking for the machine. If you are running a self-configured study, you will be asked for your preferred ports to communicate over for the secure socket connections during the protocol. Then, your ip address and ports will be shared with the website (and the other study participants).
+          - Setup/communicate the networking for the machine. If you are running a user-configured study, you will be asked for your preferred ports to communicate over for the secure socket connections during the protocol. Then, your ip address and ports will be shared with the website (and the other study participants).
         </p>
         <p>
           3.

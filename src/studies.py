@@ -174,7 +174,7 @@ def invite_participant(study_title: str) -> Response:
 
 def email(inviter: str, recipient: str, invitation_message: str, study_title: str) -> str:
     doc_ref_dict: dict = current_app.config["DATABASE"].collection("meta").document("sendgrid").get().to_dict()
-    sg = SendGridAPIClient(api_key=doc_ref_dict["api_key"])
+    sg = SendGridAPIClient(api_key=doc_ref_dict.get("api_key", ""))
 
     html_content = f"<p>Hello!<br>{inviter} has invited you to join the {study_title} study on the Secure GWAS website.  Click <a href='https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/accept_invitation/{study_title.replace(' ', '').lower()}'>here</a> to accept the invitation."
 
@@ -184,11 +184,11 @@ def email(inviter: str, recipient: str, invitation_message: str, study_title: st
 
     message = Mail(
         to_emails=recipient,
-        from_email=Email(doc_ref_dict["from_email"], doc_ref_dict["from_user"]),
+        from_email=Email(doc_ref_dict.get("from_email", ""), doc_ref_dict.get("from_user", "")),
         subject=f"sfkit: Invitation to join {study_title} study",
         html_content=html_content,
     )
-    message.add_bcc(doc_ref_dict["from_email"])
+    message.add_bcc(doc_ref_dict.get("from_email", ""))
 
     try:
         response = sg.send(message)
