@@ -3,7 +3,7 @@ from python_http_client.exceptions import HTTPError
 from sendgrid.helpers.mail import Mail
 from werkzeug import Response
 
-from src.studies import email
+from src.studies import email, setup_gcp
 
 test_create_data = {
     "title": "testtitle",
@@ -184,6 +184,71 @@ def test_personal_parameters(client, auth, mocker):
     auth.login()
     client.post("create_study/MPCGWAS/website", data=test_create_data)
     client.post("personal_parameters/testtitle", data={"NUM_INDS": "NUM_INDS"})
+    client.post("personal_parameters/testtitle", data={"NUM_CPUS": "42"})
+
+
+def test_start_protocol(client, auth, app, mocker):
+    # sourcery skip: no-long-functions
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+    mocker.patch("src.studies.setup_gcp", lambda *args, **kwargs: None)
+    mocker.patch("src.studies.GoogleCloudIAM", MockGoogleCloudIAM)
+
+    auth.login()
+    client.post("create_study/MPCGWAS/website", data=test_create_data)
+    doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
+    doc_ref_dict = doc_ref.get().to_dict()
+
+    client.post("study/testtitle/start_protocol")
+
+    doc_ref_dict["personal_parameters"]["a@a.com"]["NUM_INDS"]["value"] = "100"
+    doc_ref.set(doc_ref_dict)
+    client.post("study/testtitle/start_protocol")
+
+    doc_ref_dict["personal_parameters"]["a@a.com"]["GCP_PROJECT"]["value"] = "BAD"
+    doc_ref.set(doc_ref_dict)
+    client.post("study/testtitle/start_protocol")
+
+    doc_ref_dict["personal_parameters"]["a@a.com"]["DATA_PATH"]["value"] = "TEST_DATA_PATH"
+    doc_ref.set(doc_ref_dict)
+    client.post("study/testtitle/start_protocol")
+
+    doc_ref_dict["personal_parameters"]["a@a.com"]["GCP_PROJECT"]["value"] = "TEST_GCP_PROJECT"
+    doc_ref.set(doc_ref_dict)
+    client.post("study/testtitle/start_protocol")
+
+    doc_ref_dict["status"]["a@a.com"] = ["ready"]
+    doc_ref.set(doc_ref_dict)
+    client.post("study/testtitle/start_protocol")
+
+    doc_ref_dict["status"]["Broad"] = ["ready"]
+    doc_ref.set(doc_ref_dict)
+    client.post("study/testtitle/start_protocol")
+
+    doc_ref_dict["status"]["a@a.com"] = ["running"]
+    doc_ref.set(doc_ref_dict)
+    client.post("study/testtitle/start_protocol")
+
+    auth.logout()
+    auth.login("b@b.com", "b")
+    client.get("request_join_study/testtitle")
+    auth.logout()
+    auth.login()
+    client.get("approve_join_study/testtitle/b@b.com")
+    auth.logout()
+    auth.login("b@b.com", "b")
+    doc_ref_dict = doc_ref.get().to_dict()
+    doc_ref_dict["personal_parameters"]["b@b.com"] = doc_ref_dict["personal_parameters"]["a@a.com"].copy()
+    doc_ref.set(doc_ref_dict)
+    client.post("study/testtitle/start_protocol")
+
+
+def test_setup_gcp(client, auth, app, mocker):
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+    mocker.patch("src.studies.GoogleCloudCompute", MockGoogleCloudCompute)
+    auth.login()
+    client.post("create_study/MPCGWAS/website", data=test_create_data)
+    doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
+    setup_gcp(doc_ref, "1")
 
 
 class MockGoogleCloudCompute:
@@ -192,13 +257,13 @@ class MockGoogleCloudCompute:
     def __init__(self, project):
         pass
 
-    def setup_networking(self, role):
+    def setup_networking(self, doc_ref_dict, role):
         pass
 
     def remove_conflicting_peerings(self, gcp_project: list = list()) -> bool:
         return True
 
-    def setup_instance(self, zone, instance, role, size, metadata=None, boot_disk_size=None):
+    def setup_instance(self, name, role, metadata, num_cpus, boot_disk_size):
         pass
 
     def stop_instance(self, zone, role):
@@ -223,3 +288,8 @@ class MockSendGridAPIClient:
         else:
             response.status_code = 202
         return response
+
+
+class MockGoogleCloudIAM:
+    def test_permissions(self, gcp_project: str) -> bool:
+        return gcp_project != "BAD"

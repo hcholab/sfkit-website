@@ -47,16 +47,27 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                           </div>
                           <div class="modal-body">
-                            {% include 'studies/study/instructions.html' %}
-                          </div>
-                          <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            {% include 'studies/study/configure_study.html' %}
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                  {% include 'studies/study/begin_workflow.html' %}
+                  <div class="mt-2">
+                    <form action="{{ url_for('studies.start_protocol', study_title=study['title']) }}" method="POST">
+                      <button class="mt-2 btn btn-success" type="submit" onclick="loading();">
+                        <div class="loading" style="display:none">
+                          <span class="spinner-grow spinner-grow-sm" role="status"></span>
+                          Loading...
+                        </div>
+                        <div class="normal-content">
+                          Begin
+                          {{ study_type }}
+                          Workflow
+                        </div>
+                      </button>
+                    </form>
+                  </div>
                 {% else %}
                   <div>
                     <p class="text-start">
@@ -88,19 +99,27 @@
                 {% endif %}
               {% else %}
                 <div class="text-start">
+
                   <p>
-                    Your authentication key should have downloaded. This
+                    Once all participants have joined the study, and you have set the 'Study Parameters', you can proceed with the
+                    <a class="text-decoration-none" href="https://sfkit.readthedocs.io/en/latest/tutorial.html#cli">sfkit Command-Line Interface (CLI)</a>
+                    on your machine.
+                  </p>
+                  <p>
+                    If you would like guidance on what size machine to use, see the
+                    <a class="text-decoration-none" href=" {{url_for('general.instructions', _anchor='machine_recommendations')}} ">Machine Recommendations</a>
+                    section in the instructions page.
+                  </p>
+
+                  <p>
+                    Click below to download
                     <code>auth_key.txt</code>
-                    will be used on your machine to authenticate with the command-line interface.
-                    <small class="text-muted">(If it didn't download, you can download it by clicking the button below.)</small>
+                    which you will need on your machine to authenticate with the sfkit command-line interface.
                     <div class="text-center">
                       <a href="{{ url_for('studies.download_key_file', study_title=study['title']) }}" class="btn btn-primary btn-sm">Download Auth Key</a>
                     </div>
                   </p>
-                  <p>
-                    Once all participants have joined the study, and you have set the 'Study Parameters' according to your specifications, you can proceed with the sfkit Command-Line Interface (CLI) on your machine. For more details about the sfkit CLI, see the tutorial
-                    <a class="text-decoration-none" href="https://sfkit.readthedocs.io/en/latest/tutorial.html#cli">here</a>.
-                  </p>
+
                 </div>
               {% endif %}
             </div>
@@ -143,10 +162,10 @@
   <script type="module" src="{{ url_for('static', filename='javascript/save_page_state.js') }}"></script>
   <script type="module" src="{{ url_for('static', filename='javascript/copy_button.js') }}"></script>
 
-  {% if study["setup_configuration"] == "user" and parameters["AUTH_KEY"]["value"] == "" %}
+  {# {% if study["setup_configuration"] == "user" and parameters["AUTH_KEY"]["value"] == "" %}
     <script>
-      window.location.href = "{{ url_for('studies.download_key_file', study_title=study['title']) }}";
+      // window.location.href = "{{ url_for('studies.download_key_file', study_title=study['title']) }}";
     </script>
-  {% endif %}
+  {% endif %} #}
 
 {% endblock %}

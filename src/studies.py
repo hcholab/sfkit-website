@@ -68,6 +68,8 @@ def create_study(study_type: str, setup_configuration: str) -> Response:
     if request.method == "GET":
         return make_response(render_template("studies/create_study.html", study_type=study_type))
 
+    print(f"Creating study of type {study_type} with setup configuration {setup_configuration}")
+
     title = request.form["title"]
     description = request.form["description"]
     study_information = request.form["study_information"]
@@ -266,10 +268,12 @@ def parameters(study_title: str) -> Response:
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
     if request.method == "GET":
+        display_names = db.collection("users").document("display_names").get().to_dict()
         return make_response(
             render_template(
                 "studies/parameters.html",
                 study=doc_ref_dict,
+                display_names=display_names,
             )
         )
     for p in request.form:
@@ -293,6 +297,8 @@ def personal_parameters(study_title: str) -> Response:
     for p in parameters[g.user["id"]]["index"]:
         if p in request.form:
             parameters[g.user["id"]][p]["value"] = request.form.get(p)
+            if p == "NUM_CPUS":
+                parameters[g.user["id"]]["NUM_THREADS"]["value"] = request.form.get(p)
     doc_ref.set({"personal_parameters": parameters}, merge=True)
     return redirect(url_for("studies.study", study_title=study_title))
 
@@ -376,17 +382,7 @@ def start_protocol(study_title: str) -> Response:
             )
 
         statuses[user_id] = ["ready"]
-        personal_parameters = doc_ref_dict["personal_parameters"]
-        personal_parameters[user_id]["NUM_CPUS"]["value"] = request.form["NUM_CPUS"]
-        personal_parameters[user_id]["NUM_THREADS"]["value"] = request.form["NUM_CPUS"]
-        personal_parameters[user_id]["BOOT_DISK_SIZE"]["value"] = request.form["BOOT_DISK_SIZE"]
-        doc_ref.set(
-            {
-                "status": statuses,
-                "personal_parameters": personal_parameters,
-            },
-            merge=True,
-        )
+        doc_ref.set({"status": statuses}, merge=True)
 
     if [""] in statuses.values():
         print("Not all participants are ready.")

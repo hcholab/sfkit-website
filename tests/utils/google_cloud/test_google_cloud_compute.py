@@ -107,6 +107,7 @@ def test_create_instance(mocker):
     google_cloud_compute = GoogleCloudCompute("broad-cho-priv1")
     google_cloud_compute.create_instance("name", "role")
     google_cloud_compute.create_instance("name", "role", metadata=["metadata"])
+    google_cloud_compute.create_instance("name", "role", metadata=["metadata"], num_cpus=64)
 
 
 def test_list_instances(mocker):

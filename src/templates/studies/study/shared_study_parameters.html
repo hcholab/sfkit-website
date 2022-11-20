@@ -2,18 +2,22 @@
 {% set owner = (g.user['id'] == study['owner']) %}
 
 <div class="row p-3 text-start">
-  <div class="text-start mb-2">
-    <p class="mb-1">Number of Individuals:</p>
-    {% for participant in study['participants'] %}
-      {% if participant != "Broad" %}
-        <div class="form-floating">
-          <input type="text" class="form-control" name="NUM_INDS{{participant}}" id="NUM_INDS{{participant}}" value="{{ request.form['NUM_INDS{{participant}}'] or study['personal_parameters'][participant]['NUM_INDS']['value'] }}" {% if user != participant %} disabled="disabled" {% endif %}>
-          <label for="NUM_INDS{{participant}}">NUM_INDS for
-            {{participant}}</label>
-        </div>
-      {% endif %}
-    {% endfor %}
-  </div>
+  {% for participant in study['participants'] %}
+    {% if participant != "Broad" %}
+      <label for="NUM_INDS{{participant}}" class="col-sm-5 col-form-label">
+        NUM_INDS for
+        {{ display_names.get(participant, participant) }}
+      </label>
+      <div class="col-sm-7">
+        <input type="text" class="form-control" name="NUM_INDS{{participant}}" id="NUM_INDS{{participant}}" value="{{ request.form['NUM_INDS{{participant}}'] or study['personal_parameters'][participant]['NUM_INDS']['value'] }}" {% if user != participant %} disabled="disabled" {% endif %}>
+      </div>
+      <p class="mt-1 text-start text-muted">
+        Number of Individuals/Rows in
+        {{ display_names.get(participant, participant) }}'s Data
+      </p>
+    {% endif %}
+  {% endfor %}
+
   {% if not owner %}
     <p>
       <b>Note: Only the creator of the study can edit the Shared Study Parameters.</b>

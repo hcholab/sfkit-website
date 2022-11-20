@@ -15,12 +15,6 @@ test_create_data2 = {
     "private_study": "on",
 }
 
-test_doc_ref_dict = {
-    "participants": ["Broad", "a@a.com"],
-    "parameters": {"NUM_SNPS": {"value": "10"}},
-    "personal_parameters": {"Broad": {"NUM_INDS": {"value": "10"}}, "a@a.com": {"NUM_INDS": {"value": "10"}}},
-}
-
 
 def test_valid_study_title(client, app, auth, mocker):
     setup_mocking(mocker)
@@ -37,17 +31,6 @@ def test_valid_study_title(client, app, auth, mocker):
 
 def test_create_instance_name():
     assert gwas_functions.create_instance_name("testtitle", "1") == "testtitle-secure-gwas1"
-
-
-# def test_data_has_valid_size():
-#     assert gwas_functions.data_has_valid_size(20000, test_doc_ref_dict, 1) == True
-#     assert gwas_functions.data_has_valid_size(2000, test_doc_ref_dict, 1) == False
-#     assert gwas_functions.data_has_valid_size(200000, test_doc_ref_dict, 1) == False
-
-
-# def test_data_has_valid_files():
-#     assert gwas_functions.data_has_valid_files("g.bin m.bin p.bin other_shared_key.bin pos.txt") == True
-#     assert gwas_functions.data_has_valid_files("one two three") == False
 
 
 def setup_mocking(mocker):

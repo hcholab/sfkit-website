@@ -214,7 +214,10 @@ class GoogleCloudCompute:
         image_response = self.compute.images().getFromFamily(project="debian-cloud", family="debian-11").execute()
         # image_response = self.compute.images().getFromFamily(project="ubuntu-os-cloud", family="ubuntu-2110").execute()
         source_disk_image = image_response["selfLink"]
-        machine_type = f"zones/{zone}/machineTypes/e2-highmem-{num_cpus}"
+        if num_cpus <= 16:
+            machine_type = f"zones/{zone}/machineTypes/e2-highmem-{num_cpus}"
+        else:
+            machine_type = f"zones/{zone}/machineTypes/n2-highmem-{num_cpus}"
 
         instance_body = {
             "name": name,

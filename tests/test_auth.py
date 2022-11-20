@@ -61,28 +61,28 @@ def test_register_validate_input(capfd, client, mocker, email, password, passwor
     assert message in capfd.readouterr()[0]
 
 
-# def test_login(client, mocker):
-#     setup_mocking(mocker)
+def test_login(client, mocker):
+    setup_mocking(mocker)
 
-#     assert client.get("/auth/login").status_code == 200
+    assert client.get("/auth/login").status_code == 200
 
-#     response = client.post("/auth/login", data={"email": "a@a.a", "password": "a"})
-#     assert "index" in response.headers.get("Location")
+    response = client.post("/auth/login", data={"email": "a@a.a", "password": "a"})
+    assert "index" in response.headers.get("Location")
 
 
-# @pytest.mark.parametrize(
-#     ("email", "password", "message"),
-#     (
-#         ("bad", "INVALID_PASSWORD", "Invalid password"),
-#         ("bad", "USER_NOT_FOUND", "No user found with that email."),
-#         ("bad", "BAD", "Error logging in."),
-#     ),
-# )
-# def test_login_validate_input(capfd, client, mocker, email, password, message):
-#     setup_mocking(mocker)
-#     client.post("/auth/login", data={"email": email, "password": password})
+@pytest.mark.parametrize(
+    ("email", "password", "message"),
+    (
+        ("bad", "INVALID_PASSWORD", "Invalid password"),
+        ("bad", "USER_NOT_FOUND", "No user found with that email."),
+        ("bad", "BAD", "Error logging in."),
+    ),
+)
+def test_login_validate_input(capfd, client, mocker, email, password, message):
+    setup_mocking(mocker)
+    client.post("/auth/login", data={"email": email, "password": password})
 
-#     assert message in capfd.readouterr()[0]
+    assert message in capfd.readouterr()[0]
 
 
 def test_callback(client, app, auth, mocker):
@@ -93,12 +93,15 @@ def test_callback(client, app, auth, mocker):
         data={"credential": "bad"},
     )
 
-    client.post(
+    response = client.post(
         "/auth/login_with_google_callback",
         data={
-            "credential": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFAYS5hIiwiaWF0IjoxNTE2MjM5MDIyfQ.H8ImFl3EFlNM_nlS07cKOqZJsTjdXbYRuV8KWubADjo"
+            "credential": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFAYS5hIiwibmFtZSI6ImEiLCJpYXQiOjE1MTYyMzkwMjJ9.fx0D7FUvxuXhEZnP7ylFhVoJGDDTGTaOpARCd1Fqeco"
         },
     )
+
+    assert response.status_code == 302
+    assert response.headers.get("Location") == "/index"
 
     client.post(
         "/auth/login_with_google_callback",
@@ -109,8 +112,11 @@ def test_callback(client, app, auth, mocker):
 
 
 def test_logout(client, auth):
+    auth.login()
+    assert client.cookie_jar._cookies["localhost.local"]["/"]["session"].value == '"a@a.com"'
+
     client.get("/auth/logout")
-    # TODO: check nothing in cookie
+    assert client.cookie_jar._cookies["localhost.local"]["/"]["session"].value == ""
 
 
 def setup_mocking(mocker):
@@ -120,7 +126,7 @@ def setup_mocking(mocker):
     mocker.patch("src.auth.id_token.verify_oauth2_token", mock_verify_token)
 
 
-def mock_update_user(email: str, password: str) -> Response:
+def mock_update_user(email: str, password: str, redirect_url: str = "") -> Response:
     if password == "INVALID_PASSWORD":
         print("Invalid password")
         raise ValueError("INVALID_PASSWORD")
