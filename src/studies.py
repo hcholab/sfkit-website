@@ -417,8 +417,8 @@ def setup_gcp(doc_ref: DocumentReference, role: str) -> None:
             {"key": "ports", "value": user_parameters["PORTS"]["value"]},
             {"key": "auth_key", "value": user_parameters["AUTH_KEY"]["value"]},
         ],
-        num_cpus=user_parameters["NUM_CPUS"]["value"],
-        boot_disk_size=user_parameters["BOOT_DISK_SIZE"]["value"],
+        num_cpus=int(user_parameters["NUM_CPUS"]["value"]),
+        boot_disk_size=int(user_parameters["BOOT_DISK_SIZE"]["value"]),
     )
 
 

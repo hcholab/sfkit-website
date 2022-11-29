@@ -74,7 +74,7 @@
                       <b>Status of study:</b>
                     </p>
                     {% if ((["not ready"] in study["status"].values())or([""] in study["status"].values())or(["invalid data"] in study["status"].values())or(["validating"] in study["status"].values())) %}
-                      <p>Waiting for others to be ready...</p>
+                      <div class="text-start alert alert-info">Waiting for others to be ready...</div>
                     {% else %}
                       <div class="status text-start alert alert-info"></div>
                       <p class="text-muted text-start mt-2">
