@@ -125,7 +125,7 @@ def delete_study(study_title: str) -> Response:
 
             # vms
             for instance in google_cloud_compute.list_instances():
-                if constants.INSTANCE_NAME_ROOT in instance and study_title in instance:
+                if constants.INSTANCE_NAME_ROOT in instance and study_title.replace(" ", "").lower() in instance:
                     google_cloud_compute.delete_instance(instance)
 
     # delete auth_keys for study
@@ -381,13 +381,13 @@ def start_protocol(study_title: str) -> Response:
                 message="You have not given the website the necessary GCP permissions for the project you have entered.  Please click on 'Configure Study' to double-check that your project ID is correct and that you have given the website the necessary permissions in that GCP project.",
             )
 
-        statuses[user_id] = "ready"
+        statuses[user_id] = "ready to begin sfkit"
         doc_ref.set({"status": statuses}, merge=True)
 
     if "" in statuses.values():
         print("Not all participants are ready.")
-    elif statuses[user_id] == "ready":
-        statuses[user_id] = "Setting up your vm instance..."
+    elif statuses[user_id] == "ready to begin sfkit":
+        statuses[user_id] = "setting up your vm instance"
         doc_ref.set({"status": statuses}, merge=True)
         doc_ref_dict = doc_ref.get().to_dict()
 

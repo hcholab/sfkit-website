@@ -44,6 +44,7 @@ def test_choose_study_type(client, auth, mocker):
 
 
 def test_create_study(client, auth, mocker):
+    # sourcery skip: extract-duplicate-method
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     auth.login()
 
@@ -188,10 +189,12 @@ def test_personal_parameters(client, auth, mocker):
 
 
 def test_start_protocol(client, auth, app, mocker):
-    # sourcery skip: no-long-functions
+    # sourcery skip: docstrings-for-classes, no-long-functions, require-parameter-annotation, require-return-annotation
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     mocker.patch("src.studies.setup_gcp", lambda *args, **kwargs: None)
     mocker.patch("src.studies.GoogleCloudIAM", MockGoogleCloudIAM)
+    # mock make_auth_key
+    mocker.patch("src.studies.make_auth_key")
 
     auth.login()
     client.post("create_study/MPCGWAS/website", data=test_create_data)
@@ -200,7 +203,7 @@ def test_start_protocol(client, auth, app, mocker):
 
     client.post("study/testtitle/start_protocol")
 
-    doc_ref_dict["personal_parameters"]["a@a.com"]["NUM_INDS"]["value"] = "100"
+    doc_ref_dict["personal_parameters"]["a@a.com"]["NUM_INDS"]["value"] = 100
     doc_ref.set(doc_ref_dict)
     client.post("study/testtitle/start_protocol")
 
@@ -216,15 +219,11 @@ def test_start_protocol(client, auth, app, mocker):
     doc_ref.set(doc_ref_dict)
     client.post("study/testtitle/start_protocol")
 
-    doc_ref_dict["status"]["a@a.com"] = ["ready"]
+    doc_ref_dict["status"]["a@a.com"] = "ready to begin sfkit"
     doc_ref.set(doc_ref_dict)
     client.post("study/testtitle/start_protocol")
 
-    doc_ref_dict["status"]["Broad"] = ["ready"]
-    doc_ref.set(doc_ref_dict)
-    client.post("study/testtitle/start_protocol")
-
-    doc_ref_dict["status"]["a@a.com"] = ["running"]
+    doc_ref_dict["status"]["Broad"] = "ready to begin sfkit"
     doc_ref.set(doc_ref_dict)
     client.post("study/testtitle/start_protocol")
 
@@ -238,6 +237,14 @@ def test_start_protocol(client, auth, app, mocker):
     auth.login("b@b.com", "b")
     doc_ref_dict = doc_ref.get().to_dict()
     doc_ref_dict["personal_parameters"]["b@b.com"] = doc_ref_dict["personal_parameters"]["a@a.com"].copy()
+    doc_ref.set(doc_ref_dict)
+    client.post("study/testtitle/start_protocol")
+
+    auth.logout()
+    auth.login("a@a.com", "a")
+    client.post("study/testtitle/start_protocol")
+
+    doc_ref_dict["status"]["a@a.com"] = "running protocol SFGWAS"
     doc_ref.set(doc_ref_dict)
     client.post("study/testtitle/start_protocol")
 

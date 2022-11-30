@@ -17,62 +17,62 @@ MPCGWAS_SHARED_PARAMETERS = {
     "NUM_SNPS": {
         "name": "Number of SNPs",
         "description": "The number of SNPs (Single Nucleotide Polymorphisms) in the dataset.",
-        "value": "1000",
+        "value": 1000,
     },
     "NUM_COVS": {
         "name": "Number of Covariates",
         "description": "The number of covariate features in the dataset.",
-        "value": "10",
+        "value": 10,
     },
     "NUM_DIM_TO_REMOVE": {
         "name": "Number of Dimensions to Remove",
         "description": "The number of principal components to correct for (in the PCA).",
-        "value": "5",
+        "value": 5,
     },
     "SKIP_QC": {
         "name": "Skip Quality Control",
         "description": "A binary value to skip quality control and use all individuals/SNPs.",
-        "value": "0",
+        "value": 0,
     },
     "IMISS_UB": {
         "name": "Individual Missing Rate UB",
         "description": "The individual missing rate upper bound.",
-        "value": "0.05",
+        "value": 0.05,
     },
     "HET_LB": {
         "name": "Heterozygosity LB",
         "description": "The individual heterozygosity lower bound.",
-        "value": "0.2",
+        "value": 0.2,
     },
     "HET_UB": {
         "name": "Heterozygosity UB",
         "description": "The individual heterozygosity upper bound.",
-        "value": "0.5",
+        "value": 0.5,
     },
     "GMISS_UB": {
         "name": "Genotype Missing Rate UB",
         "description": "The genotype missing rate upper bound.",
-        "value": "0.1",
+        "value": 0.1,
     },
     "MAF_LB": {
         "name": "Minor Allele Frequency LB",
         "description": "The minor allele frequency lower bound.",
-        "value": "0",
+        "value": 0,
     },
     "MAF_UB": {
         "name": "Minor Allele Frequency UB",
         "description": "The minor allele frequency upper bound.",
-        "value": "1",
+        "value": 1,
     },
     "HWE_UB": {
         "name": "Hardy Weinberg Equilibrium UB",
         "description": "The hardy weinberg equilibrium test statistic upper bound.",
-        "value": "100000",
+        "value": 100000,
     },
     "LD_DIST_THRES": {
         "name": "LD Distance Threshold",
         "description": "The genomic distance threshold for selecting SNPs for principal component analysis.",
-        "value": "1",
+        "value": 1,
     },
     "index": [  # index is used to order the parameters in the UI
         "NUM_SNPS",
@@ -94,37 +94,37 @@ MPCGWAS_ADVANCED_PARAMETERS = {
     "ITER_PER_EVAL": {
         "name": "Iterations per Evaluation",
         "description": "The number of QR iterations per eigenvalue when performing eigendecomposition.",
-        "value": "5",
+        "value": 5,
     },
     "NUM_OVERSAMPLE": {
         "name": "Oversampling Parameter for PCA",
         "description": "An oversampling parameter for randomized principal component analysis: how many extra components should be extracted to improve the accuracy.",
-        "value": "5",
+        "value": 5,
     },
     "NUM_POWER_ITER": {
         "name": "Number of Power Iterations",
         "description": "The number of power iterations during the randomized PCA.",
-        "value": "10",
+        "value": 10,
     },
     "NBIT_K": {
         "name": "NBIT_K",
         "description": "Total number of bits used to represent data values",
-        "value": "60",
+        "value": 60,
     },
     "NBIT_F": {
         "name": "NBIT_F",
         "description": "Number of bits assigned to the fractional range",
-        "value": "30",
+        "value": 30,
     },
     "NBIT_V": {
         "name": "NBIT_V",
         "description": "Number of additional bits used as a buffer for statistical security",
-        "value": "64",
+        "value": 64,
     },
     "BASE_P": {
         "name": "BASE_P",
         "description": "Base prime used for cryptography (default is the largest 160 bit prime)",
-        "value": "1461501637330902918203684832716283019655932542929",
+        "value": 1461501637330902918203684832716283019655932542929,
     },
     "index": [  # index is used to order the parameters in the UI
         "ITER_PER_EVAL",
@@ -146,7 +146,7 @@ PCA_SHARED_PARAMETERS = {
     "num_pcs_to_remove": {
         "name": "Number of Principal Components",
         "description": "The number of principal components to extract.",
-        "value": "5",
+        "value": 5,
     },
     "index": [  # index is used to order the parameters in the UI
         "num_columns",
@@ -158,32 +158,32 @@ PCA_ADVANCED_PARAMETERS = {
     "iter_per_eigenval": {
         "name": "Iterations per Evaluation",
         "description": "The number of QR iterations per eigenvalue when performing eigendecomposition.",
-        "value": "5",
+        "value": 5,
     },
     "num_oversampling": {
         "name": "Oversampling Parameter for PCA",
         "description": "An oversampling parameter for randomized principal component analysis: how many extra components should be extracted to improve the accuracy.",
-        "value": "5",
+        "value": 5,
     },
     "num_power_iters": {
         "name": "Number of Power Iterations",
         "description": "The number of power iterations during the randomized PCA.",
-        "value": "10",
+        "value": 10,
     },
     "mpc_field_size": {
         "name": "MPC Field Size",
         "description": "MPC Field Size",
-        "value": "256",
+        "value": 256,
     },
     "mpc_data_bits": {
         "name": "MPC Data Bits",
         "description": "Total number of bits used to represent data values",
-        "value": "60",
+        "value": 60,
     },
     "mpc_frac_bits": {
         "name": "MPC Frac Bits",
         "description": "Number of bits assigned to the fractional range",
-        "value": "30",
+        "value": 30,
     },
     "index": [  # index is used to order the parameters in the UI
         "iter_per_eigenval",
@@ -209,47 +209,47 @@ SFGWAS_SHARED_PARAMETERS = {
     "num_pcs_to_remove": {
         "name": "Number of Dimensions to Remove",
         "description": "The number of principal components to correct for (in the PCA).",
-        "value": "5",
+        "value": 5,
     },
     "skip_qc": {
         "name": "Skip Quality Control",
         "description": "A binary value to skip quality control and use all individuals/SNPs.",
-        "value": "0",
+        "value": 0,
     },
     "imiss_ub": {
         "name": "Individual Missing Rate UB",
         "description": "The individual missing rate upper bound.",
-        "value": "0.05",
+        "value": 0.05,
     },
     "het_lb": {
         "name": "Heterozygosity LB",
         "description": "The individual heterozygosity lower bound.",
-        "value": "0.2",
+        "value": 0.2,
     },
     "het_ub": {
         "name": "Heterozygosity UB",
         "description": "The individual heterozygosity upper bound.",
-        "value": "0.5",
+        "value": 0.5,
     },
     "gmiss": {
         "name": "Genotype Missing Rate UB",
         "description": "The genotype missing rate upper bound.",
-        "value": "0.1",
+        "value": 0.1,
     },
     "maf_lb": {
         "name": "Minor Allele Frequency LB",
         "description": "The minor allele frequency lower bound.",
-        "value": "0",
+        "value": 0,
     },
     "hwe_ub": {
         "name": "Hardy Weinberg Equilibrium UB",
         "description": "The hardy weinberg equilibrium test statistic upper bound.",
-        "value": "100000",
+        "value": 100000,
     },
     "snp_dist_thres": {
         "name": "LD Distance Threshold",
         "description": "The genomic distance threshold for selecting SNPs for principal component analysis.",
-        "value": "1",
+        "value": 1,
     },
     "index": [  # index is used to order the parameters in the UI
         "num_snps",
@@ -270,32 +270,32 @@ SFGWAS_ADVANCED_PARAMETERS = {
     "iter_per_eigenval": {
         "name": "Iterations per Evaluation",
         "description": "The number of QR iterations per eigenvalue when performing eigendecomposition.",
-        "value": "5",
+        "value": 5,
     },
     "num_oversampling": {
         "name": "Oversampling Parameter for PCA",
         "description": "An oversampling parameter for randomized principal component analysis: how many extra components should be extracted to improve the accuracy.",
-        "value": "5",
+        "value": 5,
     },
     "num_power_iters": {
         "name": "Number of Power Iterations",
         "description": "The number of power iterations during the randomized PCA.",
-        "value": "10",
+        "value": 10,
     },
     "mpc_field_size": {
         "name": "MPC Field Size",
         "description": "MPC Field Size",
-        "value": "256",
+        "value": 256,
     },
     "mpc_data_bits": {
         "name": "MPC Data Bits",
         "description": "Total number of bits used to represent data values",
-        "value": "60",
+        "value": 60,
     },
     "mpc_frac_bits": {
         "name": "MPC Frac Bits",
         "description": "Number of bits assigned to the fractional range",
-        "value": "30",
+        "value": 30,
     },
     "index": [  # index is used to order the parameters in the UI
         "iter_per_eigenval",
@@ -351,12 +351,12 @@ DEFAULT_USER_PARAMETERS = {
     "NUM_THREADS": {
         "name": "Number of Threads",
         "description": "The number of threads to use when running the GWAS",
-        "value": "20",
+        "value": 20,
     },
     "NUM_CPUS": {
         "name": "Number of CPUs",
         "description": "The number of CPUs to allocate to the VM instance that will be running the protocol in your GCP account.",
-        "value": "16",
+        "value": 16,
     },
     "ZONE": {
         "name": "Zone",
@@ -366,7 +366,7 @@ DEFAULT_USER_PARAMETERS = {
     "BOOT_DISK_SIZE": {
         "name": "Boot Disk Size",
         "description": "The size of the boot disk for your VM instance. Must be at least 10 (GB).",
-        "value": "128",
+        "value": 128,
     },
     "DATA_HASH": {
         "name": "Data Hash",
