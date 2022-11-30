@@ -209,7 +209,7 @@ class GoogleCloudCompute:
         boot_disk_size: int = 10,
         metadata: list = list(),
     ) -> None:
-        print("Creating VM instance with name", name)
+        print(f"Creating VM instance with name {name} in project {self.project}")
 
         image_response = self.compute.images().getFromFamily(project="debian-cloud", family="debian-11").execute()
         # image_response = self.compute.images().getFromFamily(project="ubuntu-os-cloud", family="ubuntu-2110").execute()

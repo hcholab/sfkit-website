@@ -1,3 +1,4 @@
+# sourcery skip: require-parameter-annotation, require-return-annotation
 import json
 
 from conftest import MockFirebaseAdminAuth

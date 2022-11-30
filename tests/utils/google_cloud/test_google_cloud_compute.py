@@ -1,4 +1,4 @@
-# sourcery skip: do-not-use-staticmethod, snake-case-functions, raise-specific-error
+# sourcery skip: do-not-use-staticmethod, docstrings-for-classes, raise-specific-error, require-parameter-annotation, require-return-annotation, snake-case-functions
 import pytest
 from src.utils import constants
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute

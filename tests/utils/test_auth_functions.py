@@ -1,3 +1,4 @@
+# sourcery skip: docstrings-for-classes, require-parameter-annotation, require-return-annotation
 import pytest
 from conftest import MockFirebaseAdminAuth
 from requests.models import Response as RequestsResponse

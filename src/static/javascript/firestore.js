@@ -93,6 +93,6 @@ function addNotificationToList(notification) {
 
 export function getStatusUpdates(db, study_title, user_id) {
   onSnapshot(doc(db, "studies", study_title), doc => {
-    $("div.status").html(doc.data()["status"][user_id].reduce((acc, curr) => acc + "<br>" + curr));
+    $("div.status").html(doc.data()["status"][user_id]);
   });
 }

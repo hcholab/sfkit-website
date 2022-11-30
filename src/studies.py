@@ -90,7 +90,7 @@ def create_study(study_type: str, setup_configuration: str) -> Response:
             "owner": g.user["id"],
             "created": datetime.now(),
             "participants": ["Broad", g.user["id"]],
-            "status": {"Broad": [""], g.user["id"]: [""]},
+            "status": {"Broad": "", g.user["id"]: ""},
             "parameters": constants.SHARED_PARAMETERS[study_type],
             "advanced_parameters": constants.ADVANCED_PARAMETERS[study_type],
             "personal_parameters": {
@@ -215,7 +215,7 @@ def approve_join_study(study_title: str, user_id: str) -> Response:
             "participants": doc_ref_dict["participants"] + [user_id],
             "personal_parameters": doc_ref_dict["personal_parameters"]
             | {user_id: constants.default_user_parameters(doc_ref_dict["study_type"])},
-            "status": doc_ref_dict["status"] | {user_id: [""]},
+            "status": doc_ref_dict["status"] | {user_id: ""},
         },
         merge=True,
     )
@@ -237,7 +237,7 @@ def accept_invitation(study_title: str) -> Response:
             "participants": doc_ref_dict["participants"] + [g.user["id"]],
             "personal_parameters": doc_ref_dict["personal_parameters"]
             | {g.user["id"]: constants.default_user_parameters(doc_ref_dict["study_type"])},
-            "status": doc_ref_dict["status"] | {g.user["id"]: [""]},
+            "status": doc_ref_dict["status"] | {g.user["id"]: ""},
         },
         merge=True,
     )
@@ -359,7 +359,7 @@ def start_protocol(study_title: str) -> Response:
     data_path: str = doc_ref_dict["personal_parameters"][user_id]["DATA_PATH"]["value"]
     statuses: dict = doc_ref_dict["status"]
 
-    if statuses[user_id] == [""]:
+    if statuses[user_id] == "":
         if not num_inds:
             return redirect_with_flash(
                 url=url_for("studies.study", study_title=study_title),
@@ -381,13 +381,13 @@ def start_protocol(study_title: str) -> Response:
                 message="You have not given the website the necessary GCP permissions for the project you have entered.  Please click on 'Configure Study' to double-check that your project ID is correct and that you have given the website the necessary permissions in that GCP project.",
             )
 
-        statuses[user_id] = ["ready"]
+        statuses[user_id] = "ready"
         doc_ref.set({"status": statuses}, merge=True)
 
-    if [""] in statuses.values():
+    if "" in statuses.values():
         print("Not all participants are ready.")
-    elif statuses[user_id] == ["ready"]:
-        statuses[user_id] = ["Setting up your vm instance..."]
+    elif statuses[user_id] == "ready":
+        statuses[user_id] = "Setting up your vm instance..."
         doc_ref.set({"status": statuses}, merge=True)
         doc_ref_dict = doc_ref.get().to_dict()
 

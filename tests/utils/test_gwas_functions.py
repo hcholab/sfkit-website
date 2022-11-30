@@ -1,3 +1,4 @@
+# sourcery skip: require-parameter-annotation, require-return-annotation
 from conftest import MockFirebaseAdminAuth
 from src.utils import gwas_functions
 

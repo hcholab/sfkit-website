@@ -43,7 +43,7 @@ class MockFirebaseAdminAuth:
 
     @staticmethod
     def create_user(email, password, uid=None):
-        # sourcery skip: raise-specific-error, do-not-use-staticmethod
+        # sourcery skip: do-not-use-staticmethod, docstrings-for-classes, raise-specific-error, require-parameter-annotation, require-return-annotation
 
         if not email:
             raise Exception()

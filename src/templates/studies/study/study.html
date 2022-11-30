@@ -34,7 +34,7 @@
 
             <div class="mt-3" id="instructions">
               {% if study["setup_configuration"] == "website" %}
-                {% if study["status"][g.user["id"]] == ["not ready"] or study["status"][g.user["id"]] == [""] %}
+                {% if study["status"][g.user["id"]] == "not ready" or study["status"][g.user["id"]] == "" %}
                   <div>
                     <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#configure_study_modal">Configure Study</button>
                     <div class="modal fade" id="configure_study_modal" tabindex="-1">
@@ -73,7 +73,7 @@
                     <p class="text-start">
                       <b>Status of study:</b>
                     </p>
-                    {% if ((["not ready"] in study["status"].values())or([""] in study["status"].values())or(["invalid data"] in study["status"].values())or(["validating"] in study["status"].values())) %}
+                    {% if (("not ready" in study["status"].values())or("" in study["status"].values())or("invalid data" in study["status"].values())or("validating" in study["status"].values())) %}
                       <div class="text-start alert alert-info">Waiting for others to be ready...</div>
                     {% else %}
                       <div class="status text-start alert alert-info"></div>

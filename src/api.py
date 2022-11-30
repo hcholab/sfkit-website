@@ -51,7 +51,7 @@ def update_firestore() -> Tuple[dict, int]:
 
     if parameter.startswith("status"):
         status = parameter.split("=")[1]
-        doc_ref_dict["status"][email] = [status]
+        doc_ref_dict["status"][email] = status
     else:
         name, value = parameter.split("=")
         if name in doc_ref_dict["personal_parameters"][email]:

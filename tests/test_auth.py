@@ -146,7 +146,7 @@ def mock_verify_token(token, blah, blah2):
 
 
 def mock_sign_in_with_email_and_password(email, password):
-    # sourcery skip: raise-specific-error
+    # sourcery skip: docstrings-for-classes, raise-specific-error, require-parameter-annotation, require-return-annotation
     if email == "bad":
         raise Exception(password)
     return {"idToken": email}

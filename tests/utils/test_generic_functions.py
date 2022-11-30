@@ -1,3 +1,4 @@
+# sourcery skip: require-parameter-annotation, require-return-annotation
 from conftest import MockFirebaseAdminAuth
 from src.utils import generic_functions
 from werkzeug import Response
@@ -7,10 +8,7 @@ def test_redirect_with_flask(mocker):
     mocker.patch("src.utils.generic_functions.redirect", mock_redirect)
     mocker.patch("src.utils.generic_functions.url_for", mock_url_for)
     mocker.patch("src.utils.generic_functions.flash", mock_flash)
-    assert (
-        generic_functions.redirect_with_flash(url="test_url", message="test_message")
-        == "test_url"
-    )
+    assert generic_functions.redirect_with_flash(url="test_url", message="test_message") == "test_url"
 
 
 def test_flash():
