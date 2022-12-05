@@ -66,6 +66,21 @@
 
     {% block content %}{% endblock %}
 
+    <!-- Cookie Consent Form in bottom right corner-->
+    <div class="container" id="cookieConsent" style="position: fixed; bottom: 0; right: 0; display:none;">
+      <div class="col-4 float-md-end">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Cookie Consent</h5>
+            <p class="card-text">
+              We use cookies for user session/login purposes. We do not use cookies for any tracking. By continuing to use our site, you consent to our use of cookies.
+            </p>
+            <button type="button" id="acceptCookies" class="btn btn-primary">I Accept</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <footer class="text-center text-lg-start bg-light text-muted">
       <section class="d-flex justify-content-center justify-content-lg-between p-4 border-bottom">
         <span>
@@ -102,6 +117,32 @@
         readNotifications(window.firestoreDatabase, window.user_id);
       </script>
     {% endif %}
+
+    <script>
+      // Check if the user has seen the cookie consent form before
+      if (!localStorage.getItem('cookieConsent')) {
+        // Show the cookie consent form
+        document
+          .getElementById('cookieConsent')
+          .style
+          .display = 'block';
+      }
+
+      // Handle the "I Accept" button click
+      document
+        .getElementById('acceptCookies')
+        .addEventListener('click', function () {
+          // Hide the cookie consent form
+          document
+            .getElementById('cookieConsent')
+            .style
+            .display = 'none';
+
+          // Store a value in local storage to indicate that the user has seen the form
+          localStorage.setItem('cookieConsent', 'true');
+        });
+      console.log(localStorage)
+    </script>
 
     {% block javascript %}{% endblock %}
   </body>
