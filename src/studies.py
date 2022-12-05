@@ -1,6 +1,7 @@
 import io
 import secrets
 from datetime import datetime
+from multiprocessing import Process
 
 from flask import Blueprint, current_app, g, make_response, redirect, render_template, request, send_file, url_for
 from google.cloud import firestore
@@ -115,18 +116,10 @@ def delete_study(study_title: str) -> Response:
     doc_ref_dict = doc_ref.get().to_dict()
 
     # delete gcp stuff
-    google_cloud_compute = GoogleCloudCompute("")
     for participant in doc_ref_dict["personal_parameters"].values():
         if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
-            google_cloud_compute.project = gcp_project
-
-            # network peerings
-            google_cloud_compute.remove_conflicting_peerings()
-
-            # vms
-            for instance in google_cloud_compute.list_instances():
-                if constants.INSTANCE_NAME_ROOT in instance and study_title.replace(" ", "").lower() in instance:
-                    google_cloud_compute.delete_instance(instance)
+            google_cloud_compute = GoogleCloudCompute(study_title.replace(" ", "").lower(), gcp_project)
+            google_cloud_compute.delete_everything()
 
     # delete auth_keys for study
     for participant in doc_ref_dict["personal_parameters"].values():
@@ -404,9 +397,10 @@ def setup_gcp(doc_ref: DocumentReference, role: str) -> None:
     generate_ports(doc_ref, role)
 
     doc_ref_dict = doc_ref.get().to_dict() or {}
+    study_title = doc_ref_dict["title"].replace(" ", "").lower()
     user: str = doc_ref_dict["participants"][int(role)]
     user_parameters: dict = doc_ref_dict["personal_parameters"][user]
-    gcloudCompute = GoogleCloudCompute(user_parameters["GCP_PROJECT"]["value"])
+    gcloudCompute = GoogleCloudCompute(study_title, user_parameters["GCP_PROJECT"]["value"])
     gcloudCompute.setup_networking(doc_ref_dict, role)
     gcloudCompute.setup_instance(
         name=create_instance_name(doc_ref_dict["title"], role),

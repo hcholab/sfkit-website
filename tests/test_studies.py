@@ -261,7 +261,10 @@ def test_setup_gcp(client, auth, app, mocker):
 class MockGoogleCloudCompute:
     project: str
 
-    def __init__(self, project):
+    def __init__(self, study, project):
+        pass
+
+    def delete_everything(self):
         pass
 
     def setup_networking(self, doc_ref_dict, role):

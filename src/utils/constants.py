@@ -3,9 +3,9 @@ from copy import deepcopy
 SERVER_GCP_PROJECT = "broad-cho-priv1"
 SERVER_REGION = "us-central1"
 SERVER_ZONE = f"{SERVER_REGION}-a"
-NETWORK_NAME = "secure-gwas"
-SUBNET_NAME = f"{NETWORK_NAME}-subnet"
-INSTANCE_NAME_ROOT = NETWORK_NAME
+NETWORK_NAME_ROOT = "secure-gwas"
+SUBNET_NAME = f"{NETWORK_NAME_ROOT}-subnet"
+INSTANCE_NAME_ROOT = NETWORK_NAME_ROOT
 # PARAMETER_BUCKET = f"{NETWORK_NAME}-data"
 # TEMP_FOLDER = "src/temp"
 # PARAMETER_FILES = ["test.par.0.txt", "test.par.1.txt", "test.par.2.txt"]
