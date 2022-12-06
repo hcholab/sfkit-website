@@ -154,7 +154,11 @@ def invite_participant(study_title: str) -> Response:
     inviter: str = g.user["id"]
     invitee: str = request.form["invite_participant_email"]
     message: str = request.form.get("invite_participant_message", "")
-    email(inviter, invitee, message, study_title)
+
+    if email(inviter, invitee, message, study_title) >= 400:
+        return redirect_with_flash(
+            url=url_for("studies.study", study_title=study_title), message="Email failed to send"
+        )
 
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
@@ -167,7 +171,7 @@ def invite_participant(study_title: str) -> Response:
     return redirect(url_for("studies.study", study_title=study_title))
 
 
-def email(inviter: str, recipient: str, invitation_message: str, study_title: str) -> str:
+def email(inviter: str, recipient: str, invitation_message: str, study_title: str) -> int:
     doc_ref_dict: dict = current_app.config["DATABASE"].collection("meta").document("sendgrid").get().to_dict()
     sg = SendGridAPIClient(api_key=doc_ref_dict.get("api_key", ""))
 
@@ -188,11 +192,11 @@ def email(inviter: str, recipient: str, invitation_message: str, study_title: st
     try:
         response = sg.send(message)
         print("Email sent")
-        return f"email.status_code={response.status_code}"  # expected 202 Accepted
+        return response.status_code  # type: ignore
 
     except HTTPError as e:
         print("Email failed to send", e)
-        return f"email.status_code={e.status_code}"
+        return e.status_code  # type: ignore
 
 
 @bp.route("/approve_join_study/<study_title>/<user_id>")

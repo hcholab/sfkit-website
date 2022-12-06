@@ -60,6 +60,8 @@ class GoogleCloudIAM:
 
         desired_permissions = [
             "compute.disks.create",
+            "compute.firewalls.list",
+            "compute.firewalls.delete",
             "compute.firewallPolicies.create",
             "compute.firewallPolicies.get",
             "compute.instances.create",
@@ -74,6 +76,7 @@ class GoogleCloudIAM:
             "compute.networks.create",
             "compute.networks.get",
             "compute.networks.list",
+            "compute.networks.delete",
             "compute.networks.removePeering",
             "compute.networks.updatePolicy",
             "compute.subnetworks.create",
@@ -90,4 +93,9 @@ class GoogleCloudIAM:
             self.service.projects().testIamPermissions(resource=project_id, body=permissions).execute()
         )
 
-        return returnedPermissions.get("permissions") == desired_permissions
+        # check that everything in desired_permissions is in returnedPermissions
+        if set(desired_permissions).issubset(set(returnedPermissions.get("permissions"))):
+            return True
+
+        print(f"Missing permissions: {set(desired_permissions) - set(returnedPermissions.get('permissions'))}")
+        return False

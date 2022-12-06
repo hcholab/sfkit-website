@@ -7,17 +7,17 @@
       Copy
     </button>
     <code id="gcloud-command" class="language-bash" data-lang="bash" style="font-size: 60%">
-      <div>gcloud iam roles create secureGwasRole --project=$(gcloud config get-value project) \</div>
-      <div>--title="Secure GWAS Role" --permissions=compute.disks.create,compute.firewalls.create,compute.firewallPolicies.create,\</div>
-      <div>compute.firewallPolicies.get,compute.instances.create,compute.instances.delete,compute.instances.get,\</div>
+      <div>gcloud iam roles create sfkitRole --project=$(gcloud config get-value project) \</div>
+      <div>--title="sfkit Role $(gcloud config get-value project)" --permissions=compute.disks.create,compute.firewalls.create,compute.firewalls.list,compute.firewalls.delete,\</div>
+      <div>compute.firewallPolicies.create,compute.firewallPolicies.get,compute.instances.create,compute.instances.delete,compute.instances.get,\</div>
       <div>compute.instances.list,compute.instances.setMetadata,compute.instances.setServiceAccount,compute.instances.setTags,\</div>
       <div>compute.instances.stop,compute.networks.access,compute.networks.addPeering,compute.networks.create,\</div>
-      <div>compute.networks.get,compute.networks.list,compute.networks.removePeering,compute.networks.updatePolicy,\</div>
+      <div>compute.networks.get,compute.networks.list,compute.networks.delete,compute.networks.removePeering,compute.networks.updatePolicy,\</div>
       <div>compute.subnetworks.create,compute.subnetworks.delete,compute.subnetworks.list,compute.subnetworks.use,\</div>
       <div>compute.subnetworks.useExternalIp,iam.serviceAccounts.actAs && \</div>
       <div>gcloud projects add-iam-policy-binding $(gcloud config get-value project) \</div>
       <div>--member=serviceAccount:419003787216-compute@developer.gserviceaccount.com \</div>
-      <div>--role=projects/$(gcloud config get-value project)/roles/secureGwasRole</div>
+      <div>--role=projects/$(gcloud config get-value project)/roles/sfkitRole</div>
     </code>
   </div>
   <br>
@@ -55,7 +55,8 @@
               is needed to create a Compute Engine disk for the VM. This disk stores information such as the operating system, and so is required to create the virtual machine.
             </li>
             <li>
-              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/firewalls/insert#iam-permissions">compute.firewalls.create</a>,
+              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/firewalls/insert">compute.firewalls.create</a>,
+              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/firewalls/list">compute.firewalls.list</a>
               <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/firewall-policies/rules/create">
                 compute.firewallPolicies.create
               </a>

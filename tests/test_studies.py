@@ -89,12 +89,15 @@ def test_request_join_study(client, auth, mocker):
 
 def test_invite_participant(client, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
-    mocker.patch("src.studies.email", lambda *args, **kwargs: None)
+    mocker.patch("src.studies.email", return_value=200)
     auth.login()
     client.post("create_study/MPCGWAS/website", data=test_create_data)
     response = client.post("invite_participant/testtitle", data={"invite_participant_email": "b@b.com"})
     assert response.status_code == 302
     assert response.headers.get("Location") == "/study/testtitle"
+
+    mocker.patch("src.studies.email", return_value=404)
+    client.post("invite_participant/testtitle", data={"invite_participant_email": "b@b.com"})
 
 
 def test_email(app, client, auth, mocker):
@@ -122,6 +125,7 @@ def test_approve_join_study(client, auth, mocker):
 
 def test_accept_invitation(client, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+    mocker.patch("src.studies.email", return_value=200)
     auth.login()
     client.post("create_study/MPCGWAS/website", data=test_create_data)
     client.post("invite_participant/testtitle", data={"invite_participant_email": "b@b.com"})
