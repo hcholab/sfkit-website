@@ -24,8 +24,7 @@ export function getFirestoreDatabase(custom_token) {
 
 export function readNotifications(db, user_id) {
   onSnapshot(doc(db, "users", user_id), doc => {
-    const notifications = doc.data()["notifications"];
-
+    const notifications = doc.data()["notifications"] || [];
     const notification_list = document.getElementById("notification_list");
     notification_list.innerHTML = "";
 

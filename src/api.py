@@ -22,16 +22,16 @@ def get_doc_ref_dict() -> Tuple[dict, int]:
     return doc_ref_dict, 200
 
 
-@bp.route("/get_user_email", methods=["GET"])
-def get_user_email() -> Tuple[dict, int]:
+@bp.route("/get_username", methods=["GET"])
+def get_username() -> Tuple[dict, int]:
     auth_key = verify_authorization_header(request)
     if not auth_key:
         return {"error": "unauthorized"}, 401
 
     db = current_app.config["DATABASE"]
-    user_email = db.collection("users").document("auth_keys").get().to_dict()[auth_key]["user_email"]
+    username = db.collection("users").document("auth_keys").get().to_dict()[auth_key]["username"]
 
-    return {"user_email": user_email}, 200
+    return {"username": username}, 200
 
 
 @bp.route("/update_firestore", methods=["GET"])
@@ -41,7 +41,7 @@ def update_firestore() -> Tuple[dict, int]:
         return {"error": "unauthorized"}, 401
 
     db = current_app.config["DATABASE"]
-    email = db.collection("users").document("auth_keys").get().to_dict()[auth_key]["user_email"]
+    username = db.collection("users").document("auth_keys").get().to_dict()[auth_key]["username"]
     title = db.collection("users").document("auth_keys").get().to_dict()[auth_key]["study_title"]
 
     msg: str = str(request.args.get("msg"))
@@ -51,11 +51,11 @@ def update_firestore() -> Tuple[dict, int]:
 
     if parameter.startswith("status"):
         status = parameter.split("=")[1]
-        doc_ref_dict["status"][email] = status
+        doc_ref_dict["status"][username] = status
     else:
         name, value = parameter.split("=")
-        if name in doc_ref_dict["personal_parameters"][email]:
-            doc_ref_dict["personal_parameters"][email][name]["value"] = value
+        if name in doc_ref_dict["personal_parameters"][username]:
+            doc_ref_dict["personal_parameters"][username][name]["value"] = value
         elif name in doc_ref_dict["parameters"]:
             doc_ref_dict["parameters"][name]["value"] = value
         else:

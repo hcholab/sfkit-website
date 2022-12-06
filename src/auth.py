@@ -24,7 +24,8 @@ def load_logged_in_user() -> None:
         # extract jwt for user from session cookie
         session_cookie = flask.request.cookies.get("session")
         user_dict = firebase_auth.verify_session_cookie(session_cookie, check_revoked=True)
-        g.user = {"id": user_dict["email"]}
+        username: str = user_dict["email"].split("@")[0] if "sfkit.org" in user_dict["email"] else user_dict["email"]
+        g.user = {"id": username}
         display_names = current_app.config["DATABASE"].collection("users").document("display_names").get().to_dict()
         g.user["display_name"] = display_names.get(g.user["id"], g.user["id"])
     except Exception as e:
@@ -65,7 +66,8 @@ def register() -> Response:
     if request.method == "GET":
         return make_response(render_template("auth/register.html"))
 
-    email = request.form["email"]
+    username = request.form["username"]
+    email = f"{username}@sfkit.org" if (username and "@" not in username) else username
     password = request.form["password"]
     password_check = request.form["password_check"]
 
@@ -76,15 +78,15 @@ def register() -> Response:
         )
     try:
         firebase_auth.create_user(email=email, password=password)
-        gcloudIAM = GoogleCloudIAM()
-        gcloudIAM.give_minimal_required_gcp_permissions(email)
+        # gcloudIAM = GoogleCloudIAM()
+        # gcloudIAM.give_minimal_required_gcp_permissions(username)
 
-        return update_user(email, password)
+        return update_user(email=email, password=password)
     except Exception as e:
         if ("EMAIL_EXISTS") in str(e):
             return redirect_with_flash(
                 location="auth.register",
-                message="This email is already registered.  Please either Log In or use a different email.",
+                message="This username is already registered.  Please either Log In or use a different username.",
             )
         else:
             return redirect_with_flash(
@@ -99,7 +101,8 @@ def login() -> Response:
     if request.method == "GET":
         return make_response(render_template("auth/login.html"))
 
-    email = request.form["email"]
+    username = request.form["username"]
+    email = f"{username}@sfkit.org" if "@" not in username else username
     password = request.form["password"]
 
     try:
@@ -110,7 +113,7 @@ def login() -> Response:
         elif ("USER_NOT_FOUND") in str(e):
             return redirect_with_flash(
                 location="auth.login",
-                message="No user found with that email. Please try again.",
+                message="No user found with that username. Please try again.",
             )
         else:
             return redirect_with_flash(

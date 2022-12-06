@@ -22,7 +22,7 @@
 
             </div>
             <p>
-              <b>Email</b>
+              <b>Username</b>
               <br>
               {{ user_id }}
             </p>
@@ -38,31 +38,6 @@
                   <br>
                 </p>
               </div>
-            {% endif %}
-            {% if g.user["id"] == user_id %}
-              {# <div id="notifications">
-                <p>
-                  <b>Notifications</b>
-                </p>
-                {% if profile["notifications"] | length == 0 and profile["old_notifications"] | length == 0 %}
-                  <p>You have no notifications.</p>
-                {% elif profile["notifications"] | length > 0 %}
-                  <p class="lead">New notifications:</p>
-                  {% for notification in profile["notifications"] %}
-                    <div class="alert alert-primary" role="alert">
-                      {{ notification }}
-                    </div>
-                  {% endfor %}
-                {% endif %}
-                {% if profile["old_notifications"] | length > 0 %}
-                  <p class="lead">Old notifications:</p>
-                  {% for notification in profile["old_notifications"] %}
-                    <div class="alert alert-secondary" role="alert">
-                      {{ notification }}
-                    </div>
-                  {% endfor %}
-                {% endif %}
-              </div> #}
             {% endif %}
           </div>
         </div>

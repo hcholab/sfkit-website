@@ -171,7 +171,7 @@ def email(inviter: str, recipient: str, invitation_message: str, study_title: st
     doc_ref_dict: dict = current_app.config["DATABASE"].collection("meta").document("sendgrid").get().to_dict()
     sg = SendGridAPIClient(api_key=doc_ref_dict.get("api_key", ""))
 
-    html_content = f"<p>Hello!<br>{inviter} has invited you to join the {study_title} study on the Secure GWAS website.  Click <a href='https://secure-gwas-website-bhj5a4wkqa-uc.a.run.app/accept_invitation/{study_title.replace(' ', '').lower()}'>here</a> to accept the invitation."
+    html_content = f"<p>Hello!<br>{inviter} has invited you to join the {study_title} study on the Secure GWAS website.  Click <a href='https://sfkit.org/accept_invitation/{study_title.replace(' ', '').lower()}'>here</a> to accept the invitation."
 
     if invitation_message:
         html_content += f"<br><br>Here is a message from {inviter}:<br>{invitation_message}</p>"
@@ -331,7 +331,7 @@ def make_auth_key(study_title: str, user_id: str) -> str:
         {
             auth_key: {
                 "study_title": study_title,
-                "user_email": user_id,
+                "username": user_id,
             }
         },
         merge=True,

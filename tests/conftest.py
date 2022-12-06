@@ -47,7 +47,7 @@ class MockFirebaseAdminAuth:
 
         if not email:
             raise Exception()
-        elif email == "duplicate":
+        elif "duplicate" in email:
             raise Exception("EMAIL_EXISTS")
 
     @staticmethod

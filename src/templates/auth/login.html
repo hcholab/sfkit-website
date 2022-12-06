@@ -10,7 +10,7 @@
           <div class="p-5 bg-light rounded text-center">
             <h3 class="fw-bold mb-5">Log In</h3>
             <form method="post">
-              <input class="form-control mb-2" name="email" type="email" placeholder="E-mail address" autocomplete="off" required="required">
+              <input class="form-control mb-2" name="username" type="text" placeholder="Username" autocomplete="off" required="required">
               <input class="form-control mb-2" name="password" type="password" placeholder="Password" autocomplete="off" required="required">
               <button class="btn btn-primary py-2 w-100 mb-2" type="submit">Log In</button>
               <input type="hidden" value="{{ request.args.get('next', '') }}"/>
