@@ -13,15 +13,15 @@
             <ol>
               <li>
                 <b>SF-GWAS</b>
-                - (Secure-Federated Genome-Wide Association Study) with Homomorphic Encryption
+                - Secure-Federated Genome-Wide Association Study with Homomorphic Encryption
               </li>
               <li>
                 <b>SF-PCA</b>
-                - (Secure-Federated Principal Component Analysis)
+                - Secure-Federated Principal Component Analysis
               </li>
               <li>
                 <b>MPC-GWAS</b>
-                - (Multi-Party Computation Genome-Wide Association Study) with Secure Multi-Party Computation
+                - Multi-Party Computation Genome-Wide Association Study with Secure Multi-Party Computation
               </li>
             </ol>
           </p>
@@ -31,7 +31,9 @@
         </div>
       </div>
 
-      <div class="row mt-3">
+      {# <a class="text-decoration-none" href="{{ url_for('general.instructions') }}"> #}
+      <div class="row mt-5">
+        <h2 class="text-center fw-normal">General Process</h2>
         <div class="col my-5">
           <div class="position-relative p-5 text-center bg-light rounded">
             <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">1</span>
@@ -60,22 +62,15 @@
           </div>
         </div>
       </div>
+      {# </a> #}
 
-      {# <div class="row">
+      <div class="row">
         <p>
           Go to the
-          <a class="text-decoration-none" href="{{ url_for('general.workflows') }}">Workflows</a>
-          page to read more about each of the three workflows.
-          <br>
-          Go to the
           <a class="text-decoration-none" href="{{ url_for('general.instructions') }}">Instructions</a>
-          page for more information on the configuration options for running the protocol.
-          <br>
-          Go to the
-          <a class="text-decoration-none" href="{{ url_for('studies.index') }}">Studies</a>
-          page to get started with creating or joining a study.
+          page for more information on the process and options for running the protocol.
         </p>
-      </div> #}
+      </div>
     </div>
   </section>
 {% endblock %}

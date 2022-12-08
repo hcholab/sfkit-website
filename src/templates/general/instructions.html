@@ -28,6 +28,9 @@
             </li>
           </ul>
         </div>
+        <p>
+          If you are joining a study, you will only need to edit some study parameters.
+        </p>
       </div>
 
       <h4 class="my-4 fw-normal">Configuration Options</h4>
@@ -62,7 +65,7 @@
         </div>
       </div>
       <div class="mt-4">
-        <p>For either of these options, the 5 steps of the sfkit process will be run on your machine.</p>
+        <p>For both configuration options, the 5 steps of the sfkit process will be run on your machine.</p>
       </div>
 
       <h4 class="my-4 fw-normal">sfkit Process</h4>
@@ -147,7 +150,7 @@
           <p>
             5.
             <b>Run Protocol</b>
-            - Run the protocol (SF-GWAS, SF-PCA or MPC-GWAS) that you have chosen. Your machine will use the ports and ip addresses provided in step 2 to communicate with the other study participants. It will utilize secret-sharing and/or homomorphic encryption to compute the protocol. This step may take a number of hours, depending on the protocol and parameters you have chosen. The results of the protocol will be stored on your machine to be accessed at your convenience.
+            - Run the protocol (SF-GWAS, SF-PCA or MPC-GWAS) that you have chosen. Your machine will use the ports and ip addresses provided in step 2 to communicate with the other study participants. It will utilize secret-sharing and/or homomorphic encryption to perform the protocol. This step may take a number of hours, depending on the protocol and parameters you have chosen. The results of the protocol will be stored on your machine to be accessed at your convenience.
           </p>
         </div>
       </div>
@@ -260,6 +263,14 @@
           </div>
         </div>
       </section>
+
+      <div class="row mt-5">
+        <div class="col">
+          When you are ready, go to the
+          <a href="{{url_for('studies.index')}}" class="text-decoration-none">Studies</a>
+          page to create or join a study and get started.
+        </div>
+      </div>
 
     </div>
   </div>
