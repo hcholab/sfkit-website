@@ -23,13 +23,21 @@
             <h6 class="mb-0 fw-normal">Requested Participants</h6>
           </li>
           {% for participant in study['requested_participants'] %}
-            <li class="list-group-item d-flex justify-content-between">
-              <span>
-                <a class="text-decoration-none" href="{{url_for('general.profile', user_id=participant)}}">{{display_names.get(participant, participant)}}</a>
-              </span>
-              <span>
-                <a href="{{ url_for('studies.approve_join_study', study_title=study['title'], user_id=participant) }}" type="button" class="btn btn-sm btn-outline-success">Approve Request</a>
-              </span>
+            <li class="list-group-item">
+              <div class="d-flex justify-content-between">
+                <span>
+                  <a class="text-decoration-none" href="{{url_for('general.profile', user_id=participant)}}">{{display_names.get(participant, participant)}}</a>
+                </span>
+                <span>
+                  <a href="{{ url_for('studies.approve_join_study', study_title=study['title'], user_id=participant) }}" type="button" class="btn btn-sm btn-outline-success">Approve Request</a>
+                </span>
+              </div>
+              {% if study['requested_participants'][participant] != "" %}
+                <div class="text-start">
+                  <span class="text-muted">Message:</span>
+                  <span>{{ study['requested_participants'][participant] }}</span>
+                </div>
+              {% endif %}
             </li>
           {% endfor %}
         {% endif %}

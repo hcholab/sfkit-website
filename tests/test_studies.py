@@ -78,13 +78,13 @@ def test_request_join_study(client, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     auth.login()
     client.post("create_study/MPCGWAS/website", data=test_create_data)
-    response = client.get("request_join_study/testtitle")
+    response = client.post("request_join_study/testtitle", data={"message": "hi"})
     assert response.status_code == 302
     assert response.headers.get("Location") == "/index"
 
     auth.logout()
     auth.login("b@b.com", "b")
-    client.get("request_join_study/testtitle")
+    client.post("request_join_study/testtitle", data={"message": "hi"})
 
 
 def test_invite_participant(client, auth, mocker):
@@ -115,7 +115,7 @@ def test_approve_join_study(client, auth, mocker):
 
     auth.logout()
     auth.login("b@b.com", "b")
-    client.get("request_join_study/testtitle")
+    client.post("request_join_study/testtitle", data={"message": "hi"})
 
     auth.logout()
     auth.login()
@@ -233,7 +233,7 @@ def test_start_protocol(client, auth, app, mocker):
 
     auth.logout()
     auth.login("b@b.com", "b")
-    client.get("request_join_study/testtitle")
+    client.post("request_join_study/testtitle", data={"message": "hi"})
     auth.logout()
     auth.login()
     client.get("approve_join_study/testtitle/b@b.com")

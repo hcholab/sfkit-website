@@ -131,16 +131,19 @@ def delete_study(study_title: str) -> Response:
     return redirect(url_for("studies.index"))
 
 
-@bp.route("/request_join_study/<study_title>")
+@bp.route("/request_join_study/<study_title>", methods=["POST"])
 @login_required
 def request_join_study(study_title: str) -> Response:
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
+
+    message: str = request.form.get("message", "")
+
     if not doc_ref_dict["requested_participants"]:
-        doc_ref_dict["requested_participants"] = [g.user["id"]]
+        doc_ref_dict["requested_participants"] = {g.user["id"]: message}
     else:
-        doc_ref_dict["requested_participants"].append(g.user["id"])
+        doc_ref_dict["requested_participants"][g.user["id"]] = message
     doc_ref.set(
         {"requested_participants": doc_ref_dict["requested_participants"]},
         merge=True,
@@ -206,16 +209,14 @@ def approve_join_study(study_title: str, user_id: str) -> Response:
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
 
-    doc_ref.set(
-        {
-            "requested_participants": doc_ref_dict["requested_participants"].remove(user_id),
-            "participants": doc_ref_dict["participants"] + [user_id],
-            "personal_parameters": doc_ref_dict["personal_parameters"]
-            | {user_id: constants.default_user_parameters(doc_ref_dict["study_type"])},
-            "status": doc_ref_dict["status"] | {user_id: ""},
-        },
-        merge=True,
-    )
+    del doc_ref_dict["requested_participants"][user_id]
+    doc_ref_dict["participants"] = doc_ref_dict["participants"] + [user_id]
+    doc_ref_dict["personal_parameters"] = doc_ref_dict["personal_parameters"] | {
+        user_id: constants.default_user_parameters(doc_ref_dict["study_type"])
+    }
+    doc_ref_dict["status"] = doc_ref_dict["status"] | {user_id: ""}
+
+    doc_ref.set(doc_ref_dict, merge=True)
 
     add_notification(f"You have been accepted to {study_title}", user_id=user_id)
     return redirect(url_for("studies.study", study_title=study_title))

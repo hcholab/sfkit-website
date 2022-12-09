@@ -33,7 +33,35 @@
     {% if study["study_type"] == "MPCGWAS" and study["participants"] | length == 3 %}
       <p>(This study is full)</p>
     {% else %}
-      <a href="{{ url_for('studies.request_join_study', study_title=study['title']) }}" class="btn btn-outline-primary btn-sm">Request to Join Study</a>
+      <div>
+        <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#requestJoinStudyModal{{ study['title'] }}">Request to Join Study</button>
+        <div class="modal fade" id="requestJoinStudyModal{{ study['title'] }}" tabindex="-1">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <form action="{{ url_for('studies.request_join_study', study_title=study['title']) }}" method="post">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="requestJoinStudyModalLabel{{ study['title'] }}">Request to Join
+                    <i>{{study['title']}}</i>
+                    Study</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                  <div class="text-start text-muted">
+                    <p>The creator of the study will be notified of your request.</p>
+                  </div>
+                  <div class="mb-3 form-floating">
+                    <textarea class="form-control" id="requestJoinStudyModalMessage{{ study['title'] }}" name="message" placeholder="Leave a message for the study owner" style="height: 100px"></textarea>
+                    <label for="requestJoinStudyModalMessage{{ study['title'] }}" class="form-label text-start">(optional) Message</label>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      {% endif %}
     {% endif %}
-  {% endif %}
-</div>
+  </div>

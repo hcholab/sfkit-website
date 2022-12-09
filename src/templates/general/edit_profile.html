@@ -8,8 +8,7 @@
       <div class="row">
         <div class="col-12 col-lg-9 mx-auto">
           <div class="p-5 bg-light rounded">
-            <h1 class="h1 text-center">Profile</h1>
-            {# include form with display name #}
+            <h2 class="fw-normal text-center">Profile</h2>
             <form action="{{ url_for('general.edit_profile') }}" method="POST">
               <div class="mb-3">
                 <label class="form-label" for="display_name">
@@ -23,7 +22,6 @@
                 <br>
                 {{ g.user['id'] }}
               </p>
-              {# About section #}
               <div class="mb-3">
                 <label class="form-label mb-2" for="about">
                   <b>About</b>
