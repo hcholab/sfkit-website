@@ -24,6 +24,11 @@ def instructions() -> Response:
     return make_response(render_template("general/instructions.html"))
 
 
+@bp.route("/tutorial", methods=["GET"])
+def tutorial() -> Response:
+    return make_response(render_template("general/tutorial.html"))
+
+
 @bp.route("/contact", methods=["GET"])
 def contact() -> Response:
     return make_response(render_template("general/contact.html"))

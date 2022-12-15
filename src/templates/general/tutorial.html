@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Workflows{% endblock %}
+
+{% block content %}
+  <section class="py-5">
+    <div class="container">
+
+      <h2 class="mb-4 text-center fw-normal">Tutorial</h2>
+      <hr>
+
+      <h4 class="my-4 fw-normal">Introduction</h4>
+      <div class="row">
+        <p>
+          This tutorial will walk you through process of creating and running a study on the platform. For the purpose of this tutorial, we will use the SF-GWAS workflow with the Auto-configured configuration option.
+        </p>
+      </div>
+
+      <h4 class="my-4 fw-normal">Prerequisite</h4>
+      <div class="row">
+        <p>
+          Before you can create a study, you will need to register an account on the platform. This is necessary as the studies involve some sensitive information.
+        </p>
+      </div>
+
+      <h4 class="my-4 fw-normal">Creating a study</h4>
+      <div class="row">
+        <p>
+          The first step is to create a study. To do this, click on the
+          <span class="btn btn-primary btn-sm" style="pointer-events: none;">Create New Study</span>
+          button on the
+          <a class="text-decoration-none" href="{{url_for('studies.index')}}">Studies</a>
+          page. For workflow and configuration, you can leave the defaults and then click
+          <span class="btn btn-primary btn-sm" style="pointer-events: none;">Confirm</span>
+          to continue.
+
+          <br><br>
+          On the next page, you will be asked to provide a name for your study. Pick any unique study title, and you can leave the descritption and study information blank. Be sure to check the "Demo Study" option. Then proceed by clicking
+          <span class="btn btn-primary btn-sm" style="pointer-events: none;">Confirm</span>
+          again.
+
+          <br><br>
+          You will now be taken a a page to set the "Shared Study Parameters". For the demo, you can leave all of the parameters as they are. In a real study, you would set them parameters according to your data and preferences. Click
+          <span class="btn btn-primary btn-sm" style="pointer-events: none;">Submit</span>
+          to proceed.
+        </p>
+      </div>
+
+      <h4 class="my-4 fw-normal">Configuring your study</h4>
+      <div class="row">
+        <p>
+          You should now see a page that looks something like this:
+        </p>
+      </div>
+      <div class="row">
+        <img class="img-fluid" src="static/images/configure.png" alt="TODO">
+      </div>
+      <div class="row mt-2">
+        <p>
+          Please follow the instructions on the page to set up your GCP account. Once you have done so, you can click
+          <span class="btn btn-success btn-sm" style="pointer-events: none;">Next</span>.
+
+          <br><br>
+          For the GCP Project ID, please enter whatever GCP project you chose in step 0. For the sake of the demo, you can ignore the data paths. In a real study, you would need to upload your data to a bucket in your GCP account and indicate the paths to said data here. Click
+          <span class="btn btn-primary btn-sm" style="pointer-events: none;">Save</span>. Once you are done with this step, you can click
+          <span class="btn btn-success btn-sm" style="pointer-events: none;">Next</span>.
+
+          <br><br>
+          Please run the given command in your GCP cloud shell. This command will give the website permissions to set up the protocol for your study in your GCP project. Once you have done this, you can click
+          <span class="btn btn-success btn-sm" style="pointer-events: none;">Next</span>. For the sake of this demo, you can leavbe the VM size as it is. You can click
+          <span class="btn btn-success btn-sm" style="pointer-events: none;">Done</span>
+          to proceed.
+        </p>
+      </div>
+
+      <h4 class="my-4 fw-normal">Running your study</h4>
+      <div class="row">
+        <p>
+          You should now see a page that looks something like this:
+        </p>
+      </div>
+      <div class="row">
+        <img class="img-fluid" src="static/images/study.png" alt="TODO">
+      </div>
+      <div class="row mt-2">
+        <p>
+          Click the
+          <span class="btn btn-success btn-sm" style="pointer-events: none;">Begin SFGWAS Workflow</span>
+          button to begin your study. The study should take about an hour to complete, and status updates will be visible on your study page.
+        </p>
+      </div>
+
+    </div>
+  </section>
+{% endblock %}

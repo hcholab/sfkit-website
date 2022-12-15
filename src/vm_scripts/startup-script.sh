@@ -10,6 +10,7 @@ study_title=$(hostname | awk -F'-secure-gwas' '{print $1}')
 ports=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/ports" -H "Metadata-Flavor: Google")
 geno_binary_file_prefix=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/geno_binary_file_prefix" -H "Metadata-Flavor: Google")
 data_path=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/data_path" -H "Metadata-Flavor: Google")
+demo_study=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/demo" -H "Metadata-Flavor: Google")
 
 auth_key=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/auth_key" -H "Metadata-Flavor: Google")
 echo $auth_key > auth_key.txt
@@ -25,6 +26,13 @@ export PYTHONUNBUFFERED=TRUE
 sfkit auth 
 sfkit networking --ports ${ports} 
 sfkit generate_keys
+
+if [[ $demo_study == "true" ]]; then
+    sfkit register_data --geno_binary_file_prefix demo --data_path demo
+    sfkit run_protocol --demo
+    exit 0
+fi
+
 if [[ $role != "0" ]]; then
     mkdir -p data_path
     gsutil cp -r gs://${data_path}/* data_path

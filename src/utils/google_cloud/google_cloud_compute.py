@@ -125,7 +125,7 @@ class GoogleCloudCompute:
         try:
             network_info = self.compute.networks().get(project=self.gcp_project, network=self.network_name).execute()
         except Exception as e:  # googleapi.HttpError:
-            print(f"Error getting network info: {e}")
+            # print(f"Error getting network info: {e}")
             return False
         peerings = [peer["name"].replace("peering-", "") for peer in network_info.get("peerings", [])]
 

@@ -7,7 +7,7 @@
 {% block content %}
   <section class="container row">
     <div class="col-12 col-lg-8 mx-auto text-center p-3 rounded">
-      <h2 class="h2 display-8 mt-0 mb-4">Shared Study Parameters</h2>
+      <h2 class="h2 display-8 mt-0 mb-4 fw-normal">Shared Study Parameters</h2>
       <small>Note: If you're not sure about some of these parameters, you can always come back to them later.</small>
       <form method="post" action="{{ url_for('studies.parameters', study_title=study['title']) }}">
         <div class="bg-light">

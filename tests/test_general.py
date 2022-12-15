@@ -32,6 +32,12 @@ def test_instructions_page(client):
     assert b"Instructions" in response.data
 
 
+def test_tutorial_page(client):
+    response = client.get("/tutorial")
+    assert response.status_code == 200
+    assert b"Tutorial" in response.data
+
+
 def test_contact(client):
     response = client.get("/contact")
     assert response.status_code == 200

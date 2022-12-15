@@ -67,7 +67,11 @@ def choose_study_type() -> Response:
 @login_required
 def create_study(study_type: str, setup_configuration: str) -> Response:
     if request.method == "GET":
-        return make_response(render_template("studies/create_study.html", study_type=study_type))
+        return make_response(
+            render_template(
+                "studies/create_study.html", study_type=study_type, setup_configuration=setup_configuration
+            )
+        )
 
     print(f"Creating study of type {study_type} with setup configuration {setup_configuration}")
 
@@ -86,12 +90,13 @@ def create_study(study_type: str, setup_configuration: str) -> Response:
             "study_type": study_type,
             "setup_configuration": setup_configuration,
             "private": request.form.get("private_study") == "on",
+            "demo": request.form.get("demo_study", "") == "on",
             "description": description,
             "study_information": study_information,
             "owner": g.user["id"],
             "created": datetime.now(),
             "participants": ["Broad", g.user["id"]],
-            "status": {"Broad": "", g.user["id"]: ""},
+            "status": {"Broad": "ready to begin sfkit", g.user["id"]: ""},
             "parameters": constants.SHARED_PARAMETERS[study_type],
             "advanced_parameters": constants.ADVANCED_PARAMETERS[study_type],
             "personal_parameters": {
@@ -356,9 +361,10 @@ def start_protocol(study_title: str) -> Response:
     gcp_project: str = doc_ref_dict["personal_parameters"][user_id]["GCP_PROJECT"]["value"]
     data_path: str = doc_ref_dict["personal_parameters"][user_id]["DATA_PATH"]["value"]
     statuses: dict = doc_ref_dict["status"]
+    demo: bool = doc_ref_dict["demo"]
 
     if statuses[user_id] == "":
-        if not num_inds:
+        if not demo and not num_inds:
             return redirect_with_flash(
                 url=url_for("studies.study", study_title=study_title),
                 message="Your have not set the number of individuals/rows in your data.  Please click on the 'Study Parameters' button to set this value and any other parameters you wish to change before running the protocol.",
@@ -368,7 +374,7 @@ def start_protocol(study_title: str) -> Response:
                 url=url_for("studies.study", study_title=study_title),
                 message="Your GCP project ID is not set.  Please follow the instructions in the 'Configure Study' button before running the protocol.",
             )
-        if not data_path:
+        if not demo and not data_path:
             return redirect_with_flash(
                 url=url_for("studies.study", study_title=study_title),
                 message="Your data path is not set.  Please follow the instructions in the 'Configure Study' button before running the protocol.",
@@ -392,7 +398,7 @@ def start_protocol(study_title: str) -> Response:
         make_auth_key(study_title, user_id)
         setup_gcp(doc_ref, role)
 
-        if role == "1":
+        if role == "1" and not demo:
             setup_gcp(doc_ref, "0")
 
     return redirect(url_for("studies.study", study_title=study_title))
@@ -407,15 +413,19 @@ def setup_gcp(doc_ref: DocumentReference, role: str) -> None:
     user_parameters: dict = doc_ref_dict["personal_parameters"][user]
     gcloudCompute = GoogleCloudCompute(study_title, user_parameters["GCP_PROJECT"]["value"])
     gcloudCompute.setup_networking(doc_ref_dict, role)
+
+    metadata = [
+        {"key": "data_path", "value": user_parameters["DATA_PATH"]["value"]},
+        {"key": "geno_binary_file_prefix", "value": user_parameters["GENO_BINARY_FILE_PREFIX"]["value"]},
+        {"key": "ports", "value": user_parameters["PORTS"]["value"]},
+        {"key": "auth_key", "value": user_parameters["AUTH_KEY"]["value"]},
+        {"key": "demo", "value": doc_ref_dict["demo"]},
+    ]
+
     gcloudCompute.setup_instance(
         name=create_instance_name(doc_ref_dict["title"], role),
         role=role,
-        metadata=[
-            {"key": "data_path", "value": user_parameters["DATA_PATH"]["value"]},
-            {"key": "geno_binary_file_prefix", "value": user_parameters["GENO_BINARY_FILE_PREFIX"]["value"]},
-            {"key": "ports", "value": user_parameters["PORTS"]["value"]},
-            {"key": "auth_key", "value": user_parameters["AUTH_KEY"]["value"]},
-        ],
+        metadata=metadata,
         num_cpus=int(user_parameters["NUM_CPUS"]["value"]),
         boot_disk_size=int(user_parameters["BOOT_DISK_SIZE"]["value"]),
     )
