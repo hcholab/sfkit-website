@@ -8,13 +8,8 @@
       <h2 class="mb-4 text-center fw-normal">Workflows</h2>
       <hr>
 
-      {# <div class="row">
-        <p>
-          There are three workflow options for a study.
-        </p>
-      </div> #}
-
       <h4 class="my-4 fw-normal">SF-GWAS (Secure-Federated Genome-Wide Association Studies)</h4>
+      <h6>General Information</h6>
       <div class="row">
         <p>
           This workflow is based on “Secure and Federated Genome-Wide Association Studies for Biobank-Scale Datasets”, which is currently under review (2022). It is a complete workflow for GWAS analysis, utilizing homomorphic encryption in addition to secret sharing. There are 3 major steps to the GWAS in this workflow:
@@ -27,21 +22,64 @@
           </ol>
         </div>
       </div>
+      <h6>Data Format</h6>
+      <div class="row">
+        <p>
+          Please see the instructions
+          <a class="text-decoration-none" href="https://github.com/simonjmendelsohn/sfgwas#input-data">on the github</a>
+          for how to format your data for this workflow.
+        </p>
+      </div>
 
       <h4 class="my-4 fw-normal">SF-PCA (Secure-Federated Principal Component Analysis)</h4>
+      <h6>General Information</h6>
       <div class="row">
         <p>
           This workflow consists of only Principal Component Analysis, using the same implementation as in phase 2 of the SF-GWAS workflow (above). It is generalized here as its own workflow to allow for PCA in domains other than GWAS.
         </p>
       </div>
+      <h6>Data Format</h6>
+      <div class="row">
+        <p>
+          Your input data should consists of a single tab-separated file called
+          <code>data.txt</code>
+        </p>
+      </div>
 
       <h4 class="my-4 fw-normal">MPC-GWAS (Multi-Party Computation Genome-Wide Association Studies)</h4>
+      <h6>General Information</h6>
       <div class="row">
         <p>
           This workflows is based on the 2018 paper from nature biotechnology
           <a class="text-decoration-none" href="https://www.nature.com/articles/nbt.4108">Secure genome-wide association analysis using multiparty computation</a>
           . It is a complete workflow for GWAS analysis using secret sharing to allow for secure multiparty computation.
         </p>
+      </div>
+      <h6>Data Format</h6>
+      <div class="row">
+        <p>
+          Your input data should consist of the following files:
+        </p>
+        <div>
+          <ul class="">
+            <li>
+              <code>geno.txt</code>
+              - A tab-separated file containing your genomic data. Each row is a sample, and each column is a SNP. The values should be 0, 1, or 2, where 0 is the reference allele, 1 is the first alternate allele, and 2 is the second alternate allele.
+            </li>
+            <li>
+              <code>cov.txt</code>
+              - A tab-separated file containing your covariates. Each row is a sample, and each column is a covariate.
+            </li>
+            <li>
+              <code>pheno.txt</code>
+              - A file of the phenotype of each sample, where each row consists of a single value.
+            </li>
+            <li>
+              <code>pos.txt</code>
+              - A file containing the position of each SNP, where each row consists of two values: the chromosome number and the position on the chromosome.
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   </section>

@@ -124,7 +124,7 @@ MPCGWAS_ADVANCED_PARAMETERS = {
     "BASE_P": {
         "name": "BASE_P",
         "description": "Base prime used for cryptography (default is the largest 160 bit prime)",
-        "value": 1461501637330902918203684832716283019655932542929,
+        "value": "1461501637330902918203684832716283019655932542929",
     },
     "index": [  # index is used to order the parameters in the UI
         "ITER_PER_EVAL",
