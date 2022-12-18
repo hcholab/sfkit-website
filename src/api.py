@@ -1,3 +1,4 @@
+import os
 from typing import Tuple
 
 from flask import Blueprint, current_app, request
@@ -6,6 +7,46 @@ from werkzeug import Request
 from src.studies import setup_gcp
 
 bp = Blueprint("api", __name__)
+
+
+@bp.route("/upload_file", methods=["POST"])
+def upload_file() -> Tuple[dict, int]:
+    auth_key = verify_authorization_header(request)
+    if not auth_key:
+        return {"error": "unauthorized"}, 401
+
+    db = current_app.config["DATABASE"]
+    study_title = db.collection("users").document("auth_keys").get().to_dict()[auth_key]["study_title"]
+    study_title = study_title.replace(" ", "").lower()
+
+    print(f"uploading file to {study_title}")
+    # print request
+    print("request", request)
+    # print request.files
+    print("request.files", request.files)
+    # print request.files["file"]
+    print("request.files['file']", request.files["file"])
+    file = request.files["file"]
+    # check if file is valid
+    if not file:
+        print("no file")
+        return {"error": "no file"}, 400
+    if file.filename == "":
+        print("no filename")
+        return {"error": "no filename"}, 400
+    # print filename
+    print(f"filename: {file.filename}")
+    # save file to local files system
+    path = f"{study_title}"
+    if not os.path.exists(path):
+        print(f"creating directory {path}")
+        os.makedirs(path, exist_ok=True)
+        print(f"directory {path} created")
+    file.save(os.path.join(path, "assoc.txt"))
+    # file.close()
+    print(f"uploaded file {file.filename} to {study_title}")
+
+    return {}, 200
 
 
 @bp.route("/get_doc_ref_dict", methods=["GET"])

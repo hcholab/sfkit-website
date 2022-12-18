@@ -77,11 +77,19 @@
                       <div class="text-start alert alert-primary">waiting for others to be ready...</div>
                     {% else %}
                       <div class="status text-start alert alert-primary"></div>
-                      <p class="text-muted text-start mt-2">
-                        (While the protocol is running, if you want a more detailed view into what the VM is doing, you can ssh into your VM and run the command
-                        <code>sudo journalctl -u google-startup-scripts.service</code>
-                        to see detailed logs.)
-                      </p>
+                      {% if study['demo'] %}
+                        <div id="download-div" style="display: none">
+                          <a class="text-decoration-none" href="/src/studies/{{ study['title'].replace(' ', '').lower() }}/assoc.txt">
+                            Click here to download the results.
+                          </a>
+                        </div>
+                      {% else %}
+                        <p class="text-muted text-start mt-2">
+                          (While the protocol is running, if you want a more detailed view into what the VM is doing, you can ssh into your VM and run the command
+                          <code>sudo journalctl -u google-startup-scripts.service</code>
+                          to see detailed logs.)
+                        </p>
+                      {% endif %}
                     {% endif %}
                     <form action="{{ url_for('studies.start_protocol', study_title=study['title']) }}" method="POST">
                       <button class="btn btn-secondary" type="submit" onclick="loading();">
@@ -166,6 +174,24 @@
 {% endblock %}
 
 {% block javascript %}
+  <script>
+    var study_title = document
+      .getElementById("study-title-data")
+      .attributes["data-value"]
+      .value
+      .toLowerCase()
+      .replace(/\s/g, '');
+
+    fetch(`/src/studies/${study_title}/assoc.txt`).then(response => {
+      if (response.ok) {
+        document
+          .getElementById("download-div")
+          .style
+          .display = "block";
+      }
+    });
+  </script>
+
   <script>
     function loading() {
       $(".loading").show();
