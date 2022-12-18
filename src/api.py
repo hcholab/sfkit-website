@@ -5,6 +5,7 @@ from flask import Blueprint, current_app, request
 from werkzeug import Request
 
 from src.studies import setup_gcp
+from src.utils.google_cloud.google_cloud_storage import upload_blob
 
 bp = Blueprint("api", __name__)
 
@@ -19,13 +20,8 @@ def upload_file() -> Tuple[dict, int]:
     study_title = db.collection("users").document("auth_keys").get().to_dict()[auth_key]["study_title"]
     study_title = study_title.replace(" ", "").lower()
 
-    print(f"uploading file to {study_title}")
-    # print request
-    print("request", request)
-    # print request.files
-    print("request.files", request.files)
-    # print request.files["file"]
-    print("request.files['file']", request.files["file"])
+    print(f"upload_file: {study_title}, request: {request}, request.files: {request.files}")
+
     file = request.files["file"]
     # check if file is valid
     if not file:
@@ -34,17 +30,17 @@ def upload_file() -> Tuple[dict, int]:
     if file.filename == "":
         print("no filename")
         return {"error": "no filename"}, 400
-    # print filename
+
     print(f"filename: {file.filename}")
-    # save file to local files system
-    path = f"{study_title}"
-    if not os.path.exists(path):
-        print(f"creating directory {path}")
-        os.makedirs(path, exist_ok=True)
-        print(f"directory {path} created")
-    file.save(os.path.join(path, "assoc.txt"))
-    # file.close()
-    print(f"uploaded file {file.filename} to {study_title}")
+
+    dir_path = f"results/{study_title}"
+    os.makedirs(dir_path, exist_ok=True)
+    file_path = os.path.join(dir_path, "result.txt")
+    file.save(file_path)
+    print(f"uploaded file {file.filename} to {study_title} under name result.txt")
+
+    # upload file to google cloud storage
+    upload_blob("sfkit", file_path, "result.txt")
 
     return {}, 200
 

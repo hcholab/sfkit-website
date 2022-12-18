@@ -93,5 +93,8 @@ function addNotificationToList(notification) {
 export function getStatusUpdates(db, study_title, user_id) {
   onSnapshot(doc(db, "studies", study_title), doc => {
     $("div.status").html(doc.data()["status"][user_id]);
+    if (doc.data()["status"][user_id].includes("Finished protocol")) {
+      document.getElementById("download-div").style.display = "block";
+    }
   });
 }

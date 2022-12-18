@@ -1,7 +1,7 @@
 import io
+import os
 import secrets
 from datetime import datetime
-from multiprocessing import Process
 
 from flask import Blueprint, current_app, g, make_response, redirect, render_template, request, send_file, url_for
 from google.cloud import firestore
@@ -16,6 +16,7 @@ from src.utils import constants
 from src.utils.generic_functions import add_notification, redirect_with_flash
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
+from src.utils.google_cloud.google_cloud_storage import download_blob
 from src.utils.gwas_functions import create_instance_name, valid_study_title
 
 bp = Blueprint("studies", __name__)
@@ -202,7 +203,7 @@ def email(inviter: str, recipient: str, invitation_message: str, study_title: st
         print("Email sent")
         return response.status_code  # type: ignore
 
-    except HTTPError as e:
+    except HTTPError as e:  # type: ignore
         print("Email failed to send", e)
         return e.status_code  # type: ignore
 
@@ -323,6 +324,31 @@ def download_key_file(study_title: str) -> Response:
         mimetype="text/plain",
         as_attachment=True,
     )
+
+
+@bp.route("/study/<study_title>/download_results_file", methods=("GET",))
+@login_required
+def download_results_file(study_title: str) -> Response:
+    study_title = study_title.replace(" ", "").lower()
+    os.makedirs(f"results/{study_title}", exist_ok=True)
+    download_blob("sfkit", "result.txt", f"results/{study_title}/result.txt")
+
+    try:
+        with open(f"results/{study_title}/result.txt", "r") as f:
+            return send_file(
+                io.BytesIO(f.read().encode()),
+                download_name="result.txt",
+                mimetype="text/plain",
+                as_attachment=True,
+            )
+    except FileNotFoundError:
+        # return send_file with a string that says "failed to get results"
+        return send_file(
+            io.BytesIO("Failed to get results".encode()),
+            download_name="result.txt",
+            mimetype="text/plain",
+            as_attachment=True,
+        )
 
 
 def make_auth_key(study_title: str, user_id: str) -> str:

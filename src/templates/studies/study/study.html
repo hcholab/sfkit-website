@@ -79,8 +79,8 @@
                       <div class="status text-start alert alert-primary"></div>
                       {% if study['demo'] %}
                         <div id="download-div" style="display: none">
-                          <a class="text-decoration-none" href="/src/studies/{{ study['title'].replace(' ', '').lower() }}/assoc.txt">
-                            Click here to download the results.
+                          <a class="text-decoration-none" href="{{url_for('studies.download_results_file', study_title=study['title'])}}">
+                            Download results
                           </a>
                         </div>
                       {% else %}
@@ -101,7 +101,6 @@
                           Check for update
                         </div>
                       </button>
-
                     </form>
                   </div>
                 {% endif %}
@@ -182,14 +181,7 @@
       .toLowerCase()
       .replace(/\s/g, '');
 
-    fetch(`/src/studies/${study_title}/assoc.txt`).then(response => {
-      if (response.ok) {
-        document
-          .getElementById("download-div")
-          .style
-          .display = "block";
-      }
-    });
+    // check if the results file exists using XMLHttpRequest
   </script>
 
   <script>
