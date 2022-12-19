@@ -30,13 +30,23 @@
                   <p>
                     Which workflow would you like to run?
                   </p>
+
                   <div class="form-check">
-                    <input class="form-check-input" type="radio" name="CHOOSE_STUDY_TYPE" id="sfgwas" value="SFGWAS" checked="checked">
-                    <label class="form-check-label" for="sfgwas">
-                      <b>SF-GWAS</b>
-                      (default) - Secure Federated Genome-Wide Association Study
+                    <input class="form-check-input" type="radio" name="CHOOSE_STUDY_TYPE" id="mpcgwas" value="MPCGWAS" checked="checked">
+                    <label class="form-check-label" for="mpcgwas">
+                      <b>MPC-GWAS</b>
+                      (default) - Secure Multi-Party Computation Genome-Wide Association Study
                     </label>
                   </div>
+
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="CHOOSE_STUDY_TYPE" id="sfgwas" value="SFGWAS">
+                    <label class="form-check-label" for="sfgwas">
+                      <b>SF-GWAS</b>
+                      - Secure Federated Genome-Wide Association Study
+                    </label>
+                  </div>
+
                   <div class="form-check">
                     <input class="form-check-input" type="radio" name="CHOOSE_STUDY_TYPE" id="pca" value="PCA">
                     <label class="form-check-label" for="pca">
@@ -44,13 +54,7 @@
                       - Secure Federated Principal Component Analysis
                     </label>
                   </div>
-                  <div class="form-check">
-                    <input class="form-check-input" type="radio" name="CHOOSE_STUDY_TYPE" id="mpcgwas" value="MPCGWAS">
-                    <label class="form-check-label" for="mpcgwas">
-                      <b>MPC-GWAS</b>
-                      - Secure Multi-Party Computation Genome-Wide Association Study
-                    </label>
-                  </div>
+
                   <small class="mt-2 text-muted">
                     Note: If you are unsure which workflow to choose, you can read more about them on the
                     <a class="text-decoration-none" href="{{url_for('general.workflows')}}">Workflows</a>
@@ -65,14 +69,14 @@
                   <div class="form-check">
                     <input class="form-check-input" type="radio" name="SETUP_CONFIGURATION" id="website" value="website" checked="checked">
                     <label class="form-check-label" for="website">
-                      <b>Auto-configured</b>
+                      <b>auto-configured</b>
                       (default) - With this setting, this website will configure the networking and setup in your GCP project for you.
                     </label>
                   </div>
                   <div class="form-check">
                     <input class="form-check-input" type="radio" name="SETUP_CONFIGURATION" id="user" value="user">
                     <label class="form-check-label" for="user">
-                      <b>User-configured</b>
+                      <b>user-configured</b>
                       - With this setting you will configure the networking and setup in your GCP project yourself. This is more work for you, but it means you don't need to give the website access to your GCP project.
                     </label>
                   </div>

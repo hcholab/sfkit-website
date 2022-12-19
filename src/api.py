@@ -27,9 +27,6 @@ def upload_file() -> Tuple[dict, int]:
     if not file:
         print("no file")
         return {"error": "no file"}, 400
-    if file.filename == "":
-        print("no filename")
-        return {"error": "no filename"}, 400
 
     print(f"filename: {file.filename}")
 

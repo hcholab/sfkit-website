@@ -31,7 +31,7 @@ def test_valid_study_title(client, app, auth, mocker):
 
 
 def test_create_instance_name():
-    assert gwas_functions.create_instance_name("testtitle", "1") == "testtitle-secure-gwas1"
+    assert gwas_functions.create_instance_name("testtitle", "1") == "testtitle-sfkit1"
 
 
 def setup_mocking(mocker):

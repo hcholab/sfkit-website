@@ -8,44 +8,6 @@
       <h2 class="mb-4 text-center fw-normal">Workflows</h2>
       <hr>
 
-      <h4 class="my-4 fw-normal">SF-GWAS (Secure-Federated Genome-Wide Association Studies)</h4>
-      <h6>General Information</h6>
-      <div class="row">
-        <p>
-          This workflow is based on “Secure and Federated Genome-Wide Association Studies for Biobank-Scale Datasets”, which is currently under review (2022). It is a complete workflow for GWAS analysis, utilizing homomorphic encryption in addition to secret sharing. There are 3 major steps to the GWAS in this workflow:
-        </p>
-        <div>
-          <ol class="">
-            <li>Quality Control (QC) - Filter out some lower quality data/samples.</li>
-            <li>Principal Component Analysis (PCA) - Perform PCA to control for population stratification, wherein there may be systematic differences in allele frequencies between subpopulations. If this step is not done, then these systematic differences may show up as false associations when performing association tests.</li>
-            <li>Association Tests - Perform association tests to find associations between SNPs (genotypes) and traits (phenotypes).</li>
-          </ol>
-        </div>
-      </div>
-      <h6>Data Format</h6>
-      <div class="row">
-        <p>
-          Please see the instructions
-          <a class="text-decoration-none" href="https://github.com/simonjmendelsohn/sfgwas#input-data">on the github</a>
-          for how to format your data for this workflow.
-        </p>
-      </div>
-
-      <h4 class="my-4 fw-normal">SF-PCA (Secure-Federated Principal Component Analysis)</h4>
-      <h6>General Information</h6>
-      <div class="row">
-        <p>
-          This workflow consists of only Principal Component Analysis, using the same implementation as in phase 2 of the SF-GWAS workflow (above). It is generalized here as its own workflow to allow for PCA in domains other than GWAS.
-        </p>
-      </div>
-      <h6>Data Format</h6>
-      <div class="row">
-        <p>
-          Your input data should consists of a single tab-separated file called
-          <code>data.txt</code>
-        </p>
-      </div>
-
       <h4 class="my-4 fw-normal">MPC-GWAS (Multi-Party Computation Genome-Wide Association Studies)</h4>
       <h6>General Information</h6>
       <div class="row">
@@ -81,6 +43,49 @@
           </ul>
         </div>
       </div>
+
+      <h4 class="my-4 fw-normal">SF-GWAS (Secure-Federated Genome-Wide Association Studies)</h4>
+      <h6>General Information</h6>
+      <div class="row">
+        <p>
+          This workflow is based on
+          <a class="text-decoration-none" href="https://www.nature.com/articles/s41467-021-25972-y">Truly privacy-preserving federated analytics for precision medicine with multiparty homomorphic encryption</a>
+          from
+          <i>nature communications</i>. The algorithm is further improved based on
+          <a class="text-decoration-none" href="https://www.biorxiv.org/content/10.1101/2022.11.30.518537v1">Secure and Federated Genome-Wide Association Studies for Biobank-Scale Datasets</a>, which is currently under review (2022). It is a complete workflow for GWAS analysis, utilizing homomorphic encryption in addition to secret sharing. There are 3 major steps to the GWAS in this workflow:
+        </p>
+        <div>
+          <ol class="">
+            <li>Quality Control (QC) - Filter out some lower quality data/samples.</li>
+            <li>Principal Component Analysis (PCA) - Perform PCA to control for population stratification, wherein there may be systematic differences in allele frequencies between subpopulations. If this step is not done, then these systematic differences may show up as false associations when performing association tests.</li>
+            <li>Association Tests - Perform association tests to find associations between SNPs (genotypes) and traits (phenotypes).</li>
+          </ol>
+        </div>
+      </div>
+      <h6>Data Format</h6>
+      <div class="row">
+        <p>
+          Please see the instructions
+          <a class="text-decoration-none" href="https://github.com/simonjmendelsohn/sfgwas#input-data">on the github</a>
+          for how to format your data for this workflow.
+        </p>
+      </div>
+
+      <h4 class="my-4 fw-normal">SF-PCA (Secure-Federated Principal Component Analysis)</h4>
+      <h6>General Information</h6>
+      <div class="row">
+        <p>
+          This workflow consists of only Principal Component Analysis, using the same implementation as in phase 2 of the SF-GWAS workflow (above). It is generalized here as its own workflow to allow for PCA in domains other than GWAS.
+        </p>
+      </div>
+      <h6>Data Format</h6>
+      <div class="row">
+        <p>
+          Your input data should consists of a single tab-separated file called
+          <code>data.txt</code>
+        </p>
+      </div>
+
     </div>
   </section>
 {% endblock %}

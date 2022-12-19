@@ -79,6 +79,7 @@ def create_study(study_type: str, setup_configuration: str) -> Response:
     title = request.form["title"]
     description = request.form["description"]
     study_information = request.form["study_information"]
+    demo: bool = request.form.get("demo_study") == "on"
 
     (valid, response) = valid_study_title(title, study_type, setup_configuration)
     if not valid:
@@ -91,7 +92,7 @@ def create_study(study_type: str, setup_configuration: str) -> Response:
             "study_type": study_type,
             "setup_configuration": setup_configuration,
             "private": request.form.get("private_study") == "on",
-            "demo": request.form.get("demo_study") == "on",
+            "demo": demo,
             "description": description,
             "study_information": study_information,
             "owner": g.user["id"],
@@ -102,7 +103,7 @@ def create_study(study_type: str, setup_configuration: str) -> Response:
             "advanced_parameters": constants.ADVANCED_PARAMETERS[study_type],
             "personal_parameters": {
                 "Broad": constants.broad_user_parameters(),
-                g.user["id"]: constants.default_user_parameters(study_type),
+                g.user["id"]: constants.default_user_parameters(study_type, demo),
             },
             "requested_participants": [],
             "invited_participants": [],

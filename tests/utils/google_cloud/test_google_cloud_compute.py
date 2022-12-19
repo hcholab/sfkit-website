@@ -28,7 +28,7 @@ def test_delete_everything(mocker):
     # mock remove_conflicting_peerings
     mocker.patch(f"{patch_prefix}.remove_conflicting_peerings", return_value=None)
     # mock list_instances
-    mocker.patch(f"{patch_prefix}.list_instances", side_effect=[["alpha-secure-gwas", "bad"]])
+    mocker.patch(f"{patch_prefix}.list_instances", side_effect=[["alpha-sfkit", "bad"]])
     # mock delete_instance
     mocker.patch(f"{patch_prefix}.delete_instance", return_value=None)
     # mock delete_firewall
@@ -114,7 +114,7 @@ def test_delete_subnet(mocker):
 
     try:
         with pytest.raises(Exception) as _:
-            google_cloud_compute.delete_subnet({"name": "secure-gwas-subnet0", "selfLink": "link"})
+            google_cloud_compute.delete_subnet({"name": "sfkit-subnet0", "selfLink": "link"})
     except Exception as e:
         if "RetryError" not in str(e):
             raise e from e
@@ -295,8 +295,8 @@ class MockInsertable:
 
 class MockExecutable:
     status: str = "RUNNING"
-    networkName1: str = constants.NETWORK_NAME_ROOT
-    networkName2: str = constants.NETWORK_NAME_ROOT
+    networkName1: str = f"{constants.NETWORK_NAME_ROOT}-alpha"
+    networkName2: str = f"{constants.NETWORK_NAME_ROOT}-alpha"
     project: str = "broad-cho-priv1"
     error: str = ""
     creationTimestamp: str = "2020-04-01T00:00:00Z"
@@ -313,18 +313,18 @@ class MockExecutable:
                     "networkInterfaces": [{"subnetwork": "hi"}],
                 },
                 {
-                    "name": "secure-gwas-subnet0",
+                    "name": "sfkit-alpha-subnet0",
                     "creationTimestamp": MockExecutable.creationTimestamp,
                     "selfLink": "hi",
-                    "network": "secure-gwas-subnet0",
+                    "network": "sfkit-alpha-subnet0",
                     "ipCidrRange": "0.0.0.0/0",
                     "networkInterfaces": [{"subnetwork": "hi"}],
                 },
                 {
-                    "name": "secure-gwas-subnet0",
+                    "name": "sfkit-subnet0",
                     "creationTimestamp": MockExecutable.creationTimestamp,
                     "selfLink": "hi",
-                    "network": "secure-gwas-subnet0",
+                    "network": "sfkit-subnet0",
                     "ipCidrRange": "10.0.2.0/24",
                     "networkInterfaces": [{"subnetwork": "hi"}],
                 },
@@ -332,7 +332,7 @@ class MockExecutable:
                     "name": "garbage",
                     "creationTimestamp": MockExecutable.creationTimestamp,
                     "selfLink": "hi",
-                    "network": "secure-gwas",
+                    "network": "sfkit",
                     "ipCidrRange": "10.0.2.0/24",
                     "networkInterfaces": [{"subnetwork": "hi"}],
                 },

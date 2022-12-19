@@ -17,7 +17,7 @@ class GoogleCloudCompute:
 
     def __init__(self, study_title: str, gcp_project: str) -> None:
         self.gcp_project: str = gcp_project
-        self.study_title: str = study_title
+        self.study_title: str = study_title.replace(" ", "").lower()
         self.network_name = f"{constants.NETWORK_NAME_ROOT}-{study_title}"
         self.compute = googleapi.build("compute", "v1")
 
@@ -27,25 +27,32 @@ class GoogleCloudCompute:
 
         # vms
         for instance in self.list_instances():
-            print(instance)
-            if constants.INSTANCE_NAME_ROOT in instance and self.study_title.replace(" ", "").lower() in instance:
+            if constants.INSTANCE_NAME_ROOT in instance and self.study_title in instance:
                 self.delete_instance(instance)
 
         # firewalls
-        firewalls: list = self.compute.firewalls().list(project=self.gcp_project).execute()["items"]
+        try:
+            firewalls: list = self.compute.firewalls().list(project=self.gcp_project).execute()["items"]
+        except Exception as e:
+            print(f"Error getting firewalls: {e}")
+            firewalls = []
         firewall_names: list[str] = [firewall["name"] for firewall in firewalls]
         for firewall_name in firewall_names:
-            if constants.NETWORK_NAME_ROOT in firewall_name:
+            if self.network_name in firewall_name:
                 self.delete_firewall(firewall_name)
 
         # subnets
-        subnets: list = (
-            self.compute.subnetworks()
-            .list(project=self.gcp_project, region=constants.SERVER_REGION)
-            .execute()["items"]
-        )
+        try:
+            subnets: list = (
+                self.compute.subnetworks()
+                .list(project=self.gcp_project, region=constants.SERVER_REGION)
+                .execute()["items"]
+            )
+        except Exception as e:
+            print(f"Error getting subnets: {e}")
+            subnets = []
         for subnet in subnets:
-            if constants.NETWORK_NAME_ROOT in subnet["name"]:
+            if self.network_name in subnet["name"]:
                 self.delete_subnet(subnet)
 
         # vpc network
@@ -69,8 +76,6 @@ class GoogleCloudCompute:
         networks: list = self.compute.networks().list(project=self.gcp_project).execute()["items"]
         network_names: list[str] = [net["name"] for net in networks]
 
-        print(network_names)
-        print(self.network_name)
         if self.network_name not in network_names:
             print(f"Creating new network {self.network_name}")
             req_body = {
@@ -86,7 +91,11 @@ class GoogleCloudCompute:
             print(f"Network {self.network_name} already exists")
 
     def delete_network(self) -> None:
-        networks: list = self.compute.networks().list(project=self.gcp_project).execute()["items"]
+        try:
+            networks: list = self.compute.networks().list(project=self.gcp_project).execute()["items"]
+        except Exception as e:
+            print(f"Error getting networks: {e}")
+            networks = []
         network_names: list[str] = [net["name"] for net in networks]
 
         if self.network_name in network_names:
@@ -127,12 +136,12 @@ class GoogleCloudCompute:
         except Exception as e:  # googleapi.HttpError:
             # print(f"Error getting network info: {e}")
             return False
-        peerings = [peer["name"].replace("peering-", "") for peer in network_info.get("peerings", [])]
+        peerings = [peer["name"].split("peering-")[1] for peer in network_info.get("peerings", [])]
 
         for other_project in peerings:
             if other_project not in gcp_projects:
-                print(f"Deleting peering from {self.gcp_project} to {other_project}")
-                body = {"name": f"peering-{other_project}"}
+                print(f"Deleting peering called {self.study_title}peering-{other_project}")
+                body = {"name": f"{self.study_title}peering-{other_project}"}
                 self.compute.networks().removePeering(
                     project=self.gcp_project, network=self.network_name, body=body
                 ).execute()
@@ -182,7 +191,7 @@ class GoogleCloudCompute:
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(30))
     def create_subnet(self, role: str, region: str = constants.SERVER_REGION) -> None:
         # create subnet if it doesn't already exist
-        subnet_name = constants.SUBNET_NAME + role
+        subnet_name = f"{self.network_name}-subnet{role}"
         subnets = (
             self.compute.subnetworks()
             .list(project=self.gcp_project, region=constants.SERVER_REGION)
@@ -210,14 +219,14 @@ class GoogleCloudCompute:
     def create_peerings(self, gcp_projects: list) -> None:
         # create peerings if they don't already exist
         network_info = self.compute.networks().get(project=self.gcp_project, network=self.network_name).execute()
-        peerings = [peer["name"].replace("peering-", "") for peer in network_info.get("peerings", [])]
+        peerings = [peer["name"].split("peering-")[1] for peer in network_info.get("peerings", [])]
         other_projects = [p for p in gcp_projects if p != self.gcp_project]
         for other_project in other_projects:
             if other_project not in peerings:
-                print("Creating peering from", self.gcp_project, "to", other_project)
+                print(f"Creating peering called {self.study_title}peering-{other_project}")
                 body = {
                     "networkPeering": {
-                        "name": f"peering-{other_project}",
+                        "name": f"{self.study_title}peering-{other_project}",
                         "network": f"https://www.googleapis.com/compute/v1/projects/{other_project}/global/networks/{self.network_name}",
                         "exchangeSubnetRoutes": True,
                     }
@@ -281,7 +290,7 @@ class GoogleCloudCompute:
             "networkInterfaces": [
                 {
                     "network": f"projects/{self.gcp_project}/global/networks/{self.network_name}",
-                    "subnetwork": f"regions/{constants.SERVER_REGION}/subnetworks/{constants.SUBNET_NAME + role}",
+                    "subnetwork": f"regions/{constants.SERVER_REGION}/subnetworks/{self.network_name}-subnet{role}",
                     "networkIP": f"10.0.{role}.10",
                     "accessConfigs": [
                         {

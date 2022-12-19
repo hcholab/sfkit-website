@@ -1,3 +1,5 @@
+from io import StringIO
+
 from conftest import MockFirebaseAdminAuth
 from python_http_client.exceptions import HTTPError
 from sendgrid.helpers.mail import Mail
@@ -182,6 +184,25 @@ def test_download_key_file(client, auth, mocker):
     assert response.headers.get("Content-Disposition") == "attachment; filename=auth_key.txt"
 
     client.get("study/testtitle/download_key_file")
+
+
+def test_download_results_file(client, auth, mocker):
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+    # mock os.makedirs
+    mocker.patch("os.makedirs")
+    # mock download_blob
+    mocker.patch("src.studies.download_blob")
+    # mock open to return a mock file
+    auth.login()
+    client.post("create_study/MPCGWAS/website", data=test_create_data)
+
+    mocker.patch("src.studies.open", return_value=StringIO(""))
+    response = client.get("study/testtitle/download_results_file")
+    assert response.status_code == 200
+    assert response.headers.get("Content-Disposition") == "attachment; filename=result.txt"
+
+    mocker.patch("src.studies.open", side_effect=FileNotFoundError)
+    client.get("study/testtitle/download_results_file")
 
 
 def test_personal_parameters(client, auth, mocker):

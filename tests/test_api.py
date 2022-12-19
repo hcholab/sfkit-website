@@ -1,4 +1,5 @@
 # sourcery skip: require-parameter-annotation, require-return-annotation
+from io import BytesIO
 from conftest import MockFirebaseAdminAuth
 
 test_create_data = {
@@ -6,7 +7,33 @@ test_create_data = {
     "description": "test description",
     "study_information": "hi",
     "private_study": "on",
+    "demo_study": "on",
 }
+
+
+def test_upload_file(client, app, mocker):
+    # mock os.makedirs
+    mocker.patch("os.makedirs")
+    # mock file.save
+    mocker.patch("werkzeug.datastructures.FileStorage.save")
+    # mock upload_blob
+    mocker.patch("src.api.upload_blob")
+
+    doc_ref = app.config["DATABASE"].collection("users").document("auth_keys")
+    doc_ref.set({"auth_key": {"study_title": "blah"}})
+
+    response = client.post(
+        "/upload_file", headers={"Authorization": "auth_key"}, data={"file": (BytesIO(b"some file data"), "test.txt")}
+    )
+    assert response.status_code == 200
+
+    response = client.post(
+        "/upload_file", headers={"Authorization": "auth_key"}, data={"file": (BytesIO(b"some file data"), b"")}
+    )
+    assert response.status_code == 400
+
+    response = client.post("/upload_file", data={"file": (BytesIO(b"some file data"), "test.txt")})
+    assert response.status_code == 401
 
 
 def test_get_doc_ref_dict(client, app):

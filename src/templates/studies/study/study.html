@@ -91,17 +91,20 @@
                         </p>
                       {% endif %}
                     {% endif %}
-                    <form action="{{ url_for('studies.start_protocol', study_title=study['title']) }}" method="POST">
-                      <button class="btn btn-secondary" type="submit" onclick="loading();">
-                        <div class="loading" style="display:none">
-                          <span class="spinner-grow spinner-grow-sm" role="status"></span>
-                          Loading...
-                        </div>
-                        <div class="normal-content">
-                          Check for update
-                        </div>
-                      </button>
-                    </form>
+                    <div id="check-for-update">
+                      <form action="{{ url_for('studies.start_protocol', study_title=study['title']) }}" method="POST">
+                        <button class="btn btn-secondary" type="submit" onclick="loading();">
+                          <div class="loading" style="display:none">
+                            <span class="spinner-grow spinner-grow-sm" role="status"></span>
+                            Loading...
+                          </div>
+                          <div class="normal-content">
+                            Check for update
+                          </div>
+                        </button>
+                      </form>
+                    </div>
+
                   </div>
                 {% endif %}
               {% else %}
