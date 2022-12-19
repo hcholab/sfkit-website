@@ -17,7 +17,6 @@ build/
 *.swp
 *~
 .DS_Store
-run.py
 src/temp/test*
 node_modules/*
 serviceAccountKey.json
