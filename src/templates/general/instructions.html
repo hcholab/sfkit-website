@@ -19,7 +19,7 @@
         deploy the joint analysis protocol in the Google Cloud Platform (GCP).
         To allow this automation, sfkit will ask for a minimal set of permissions for your GCP project.</p>
 
-      <p>In a <b>self-configured</b> mode, once the study is configured, you can
+      <p>In a <b>user-configured</b> mode, once the study is configured, you can
         easily run the protocol on your own machine (and your collaborators on their machines) using
         the sfkit command-line interface (CLI).
       </p>
@@ -37,7 +37,7 @@
             a Google Cloud Platform (GCP) account that can create and manage virtual machines (VMs) in the cloud; or
           </li>
           <li>
-            a machine of your own with a nework connection, if you are running a self-configured study.
+            a machine of your own with a nework connection, if you are running a user-configured study.
           </li>
         </ol>
 
@@ -46,7 +46,7 @@
 
         <span class="text-muted">Note: For the <a href="{{ url_for('general.tutorial') }}"
             class="text-decoration-none">Tutorial</a>,
-          you can use our GCP project and exameple data for testing purposes.</span>
+          you can use our GCP project and example data for testing purposes.</span>
       </div>
     </div>
 
@@ -108,18 +108,17 @@
       <p>
         When you are ready to run a study, go to
         <a href="{{ url_for('studies.index') }}" class="text-decoration-none">Studies</a>
-        to create or join a study. If you are creating a study, you will also do the following:
+        to create or join a study. 
       </p>
+
       <div>
+        <p>If you are creating a study, you will need to:</p>
         <ul>
           <li>
-            Choose one of the 3 workflows described in the
-            <a href="{{ url_for('general.workflows') }}" class="text-decoration-none">Workflows</a>
-            page.
+            Choose one of our <a href="{{ url_for('general.workflows') }}" class="text-decoration-none">Workflows</a> for the study.
           </li>
           <li>
-            Choose one of the 2 configuration options (described below) for how to set up your machine and run your
-            study.
+            Specify whether you want the study to be auto-configured or user-configured (described below).
           </li>
           <li>
             Edit your study parameters.
@@ -127,7 +126,7 @@
         </ul>
       </div>
       <p>
-        If you are joining a study, you will only need to edit some of the study parameters.
+        If you are joining a study, you will only need to review and update the study parameters to provide information about your dataset.
       </p>
     </div>
 
@@ -140,20 +139,21 @@
         </li>
         <li class="nav-item">
           <button class="nav-link" data-bs-toggle="tab" data-bs-target="#User-configured"
-            type="button">Self-configured</button>
+            type="button">User-configured</button>
         </li>
       </ul>
       <div class="row tab-content">
         <div class="container tab-pane fade show active" id="Auto-configured">
           <div class="row mt-3">
             <p>
-              This website will set up your machine and run your study for you. This option is done using Google Cloud
-              Platform (GCP) for the machines and will therefore require you to give the website limited permissions
-              to access your Google Cloud Platform (GCP) account where you have placed the data in a storage bucket.
-              You will be walked through the specifics of this process if you create a study using this option. 
+              The sfkit portal will set up the machine and run the study for you. This option is currently supported 
+              using the  <a class="text-decoration-none" href="https://cloud.google.com/">Google Cloud Platform (GCP)</a>. 
+              You will need to give sfkit limited permissions
+              to interact with your GCP project.
+              You will be walked through the specifics of this process once you create a study with this option. 
               <!-- If you are new to GCP, you can find lots of information and tutorials on <a class="text-decoration-none" href="https://cloud.google.com/">their website</a>. -->
             </p>
-            <p>This is recommended for users who are not familiar with the command-line interface and/or want to get started
+            <p>This is recommended for users who are not familiar with the command line and/or want to get started
               quickly.</p>
           </div>
         </div>
@@ -163,17 +163,17 @@
               The
               <a class="text-decoration-none" href="https://sfkit.readthedocs.io/en/latest/tutorial.html">sfkit
                 Command-Line Interface</a>
-              will walk you through each step of the workflow yourself, on your own machine.
+              will walk you through each step of the workflow so you can run the study on your own machine.
             </p>
-            <p>This is recommended for users who are familiar with the command line and want to have more control over
-              their VM.</p>
+            <p>This is recommended for users who are familiar with the command line and want to directly control
+               their computing environment.</p>
           </div>
         </div>
       </div>
     </div>
 
     <div class="mt-4">
-      <p>For both configuration options, the 5 steps of the sfkit process will be run on your machine.</p>
+      <p>For both configuration options, the following steps will be run on your machine:</p>
     </div>
 
     <h4 class="my-4 fw-normal">sfkit Process</h4>
@@ -229,11 +229,10 @@
       <div class="card card-body">
         <p>
           1.
-          <b>Authentication</b>
-          - Authenticate your machine with the website. This allows the website to ensure that the machine running the
-          protocol is indeed yours. This step is done via a secure key (similar to an SSH key) that will be copied
-          from the website to the machine. If you are running a user-configured study, you will manually copy this
-          key-file to your machine.
+          <b>Authentication</b>:
+          Authenticate your machine with sfkit. This allows sfkit to ensure that the machine running the
+          protocol is indeed yours. This is achieved by validating a secure key that is copied
+          from the website to the machine.
         </p>
       </div>
     </div>
@@ -241,10 +240,10 @@
       <div class="card card-body">
         <p>
           2.
-          <b>Networking</b>
-          - Setup/communicate the networking for the machine. If you are running a user-configured study, you will be
-          asked for your preferred ports to communicate over for the secure socket connections during the protocol.
-          Then, your ip address and ports will be shared with the website (and the other study participants).
+          <b>Networking</b>:
+          Setup the networking for the machine. If you are running a user-configured study, you will be
+          asked for the designated ports to use for the secure connections used by the protocol.
+          Then, your IP address and ports will be shared with your collaborators via the sfkit portal.
         </p>
       </div>
     </div>
@@ -252,10 +251,10 @@
       <div class="card card-body">
         <p>
           3.
-          <b>Key Exchange</b>
-          - Cryptographically secure private and public keys will be created (locally) for you. The public key will be
-          shared with the website (and the other study participants). The private key will remain on your machine and
-          will be used in step 5 during the protocol to create shared keys and to encrypt your data. See
+          <b>Key Exchange</b>:
+          Cryptographically secure private and public keys will be created (locally) for you. The public key will be
+          shared with your collaborators via the sfkit portal. The private key will remain on your machine and
+          will be used during the study protocol to establish secure connections between machines. See
           <a href="https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange"
             class="text-decoration-none">Diffie-Hellman Key Exchange</a>
           for more information.
@@ -266,10 +265,10 @@
       <div class="card card-body">
         <p>
           4.
-          <b>Data Validation</b>
-          - Validate that the data you provided is in the correct format, and is consistent with the protocol and
-          parameters you provided. This step does NOT communicate any of the data to any other machine, it only
-          validates that the data is in the correct format.
+          <b>Data Validation</b>:
+          Validate that the data you provided is in the correct format, and is consistent with the study
+          parameters you provided. This step does NOT communicate any of the data externally and only reports
+          the validation result back to the sfkit portal to assess when the study is ready to be launched.
         </p>
       </div>
     </div>
@@ -277,24 +276,24 @@
       <div class="card card-body">
         <p>
           5.
-          <b>Run Protocol</b>
-          - Run the protocol (SF-GWAS, SF-PCA or MPC-GWAS) that you have chosen. Your machine will use the ports and
-          ip addresses provided in step 2 to communicate with the other study participants. It will utilize
-          secret-sharing and/or homomorphic encryption to perform the protocol. This step may take a number of hours,
-          depending on the protocol and parameters you have chosen. The results of the protocol will be stored on your
-          machine to be accessed at your convenience.
+          <b>Run Protocol</b>:
+          Run the collaborative analysis protocol that you have chosen. Your machine will use the ports and
+          IP addresses provided in Step 2 to securely communicate with collaborators' machines. 
+          This step may take several hours depending on the study workflow and the dataset sizes.
+          The results of the protocol can be accessed at your convenience in the output location, or via the portal
+          if you have given sfkit permission to fetch results for you.
         </p>
       </div>
     </div>
 
     <br>
-    <hr>
+    
     <section id="machine_recommendations">
       <h4 class="my-4 fw-normal">Machine Recommendations</h4>
       <p>
-        If you are unsure what machine size/type to use for your study, you can use this tool to help you decide.
-        <span class="text-muted">(We assume here that you are using Google Cloud, but an equivalent machine can be
-          used off of Google Cloud.)</span>
+        If you are unsure what machine size or type to use for your study, you can use this tool to see our recommendation.
+        Note that this guidance is based on the machines that are available on the Google Cloud Platform, but equivalent machines can
+        be used instead.
       </p>
       <div class="row p-4 bg-light rounded">
         <ul class="nav nav-tabs" role="tablist">
@@ -400,15 +399,6 @@
       </div>
     </section>
 
-    <div class="row mt-5">
-      <div class="col">
-        When you are ready, go to the
-        <a href="{{url_for('studies.index')}}" class="text-decoration-none">Studies</a>
-        page to create or join a study and get started. Or go to the tutorial page
-        <a href="{{url_for('general.tutorial')}}" class="text-decoration-none">Tutorials</a>
-        to follow directions to run a demo study.
-      </div>
-    </div>
 
   </div>
 </section>
