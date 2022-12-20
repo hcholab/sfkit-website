@@ -2,6 +2,7 @@ import io
 import os
 import secrets
 from datetime import datetime
+from threading import Thread
 
 from flask import Blueprint, current_app, g, make_response, redirect, render_template, request, send_file, url_for
 from google.cloud import firestore
@@ -122,11 +123,15 @@ def delete_study(study_title: str) -> Response:
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
 
-    # delete gcp stuff
-    for participant in doc_ref_dict["personal_parameters"].values():
-        if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
-            google_cloud_compute = GoogleCloudCompute(study_title.replace(" ", "").lower(), gcp_project)
-            google_cloud_compute.delete_everything()
+    def delete_gcp_stuff_background(doc_ref_dict: dict) -> None:
+        # delete gcp stuff
+        for participant in doc_ref_dict["personal_parameters"].values():
+            if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
+                google_cloud_compute = GoogleCloudCompute(study_title.replace(" ", "").lower(), gcp_project)
+                google_cloud_compute.delete_everything()
+        print("Successfully Deleted gcp stuff")
+
+    Thread(target=delete_gcp_stuff_background, args=(doc_ref_dict,)).start()
 
     # delete auth_keys for study
     for participant in doc_ref_dict["personal_parameters"].values():
