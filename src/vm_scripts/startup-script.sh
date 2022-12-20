@@ -37,6 +37,9 @@ if [[ $role != "0" ]]; then
     mkdir -p data_path
     gsutil cp -r gs://${data_path}/* data_path
     
+    # copy dummy file to the gs bucket to make sure we have write access
+    touch .dummy_file && gsutil cp .dummy_file gs://${data_path}/.dummy_file && rm .dummy_file
+    
     geno_absolute_path=$(pwd)/data_path/${geno_binary_file_prefix}
     sfkit register_data --geno_binary_file_prefix ${geno_absolute_path} --data_path $(pwd)/data_path 
 fi
