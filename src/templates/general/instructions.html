@@ -3,443 +3,433 @@
 {% block title %}Instructions{% endblock %}
 
 {% block content %}
-<section class="py-5">
-  <div class="container">
-    <h2 class="mb-4 text-center fw-normal">Instructions</h2>
-    <hr>
+  <section class="py-5">
+    <div class="container">
+      <h2 class="mb-4 text-center fw-normal">Instructions</h2>
+      <hr>
 
-    <div class="col-12 col-lg-9 bg-light p-4 mt-3 mx-auto">
-      <h5>
-        <img src="static/images/info-square.svg" class="me-1 mb-1" width="20" height="20" alt="info-square">
-        Two ways to use <b>sfkit</b>
-      </h5>
+      <div class="col-12 col-lg-9 bg-light p-4 mt-3 mx-auto">
+        <h5>
+          <img src="static/images/info-square.svg" class="me-1 mb-1" width="20" height="20" alt="info-square">
+          Two ways to use
+          <b>sfkit</b>
+        </h5>
 
-      <p>In an <b>auto-configured</b> mode, once the study is configured and launched on the website,
-        sfkit will automatically create the computing environment and
-        deploy the joint analysis protocol in the Google Cloud Platform (GCP).
-        To allow this automation, sfkit will ask for a minimal set of permissions for your GCP project.</p>
+        <p>In an
+          <b>auto-configured</b>
+          mode, once the study is configured and launched on the website, sfkit will automatically create the computing environment and deploy the joint analysis protocol in the Google Cloud Platform (GCP). To allow this automation, sfkit will ask for a minimal set of permissions for your GCP project.</p>
 
-      <p>In a <b>self-configured</b> mode, once the study is configured, you can
-        easily run the protocol on your own machine (and your collaborators on their machines) using
-        the sfkit command-line interface (CLI).
-      </p>
-    </div>
-
-
-    <h4 class="my-4 fw-normal">Prerequisites</h4>
-    <div class="row">
-      <p>
-        To run a study using <b>sfkit</b>, you will need either:
-      </p>
-      <div>
-        <ol>
-          <li>
-            a Google Cloud Platform (GCP) account that can create and manage virtual machines (VMs) in the cloud; or
-          </li>
-          <li>
-            a machine of your own with a nework connection, if you are running a self-configured study.
-          </li>
-        </ol>
-
-        <p>See <i>Machine Recommendations</i> on the bottom of this page for guidance on machine types.</p>
-
-
-        <span class="text-muted">Note: For the <a href="{{ url_for('general.tutorial') }}"
-            class="text-decoration-none">Tutorial</a>,
-          you can use our GCP project and exameple data for testing purposes.</span>
-      </div>
-    </div>
-
-
-    <h4 class="my-4 fw-normal">Data Preparation</h4>
-    <div class="row p-4 bg-light rounded">
-      <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item">
-          <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#data-mpcgwas"
-            type="button">MPC-GWAS workflow</button>
-        </li>
-        <li class="nav-item">
-          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#data-sfgwas"
-            type="button">SF-GWAS workflow</button>
-        </li>
-        <li class="nav-item">
-          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#data-sfpca"
-            type="button">SF-PCA workflow</button>
-        </li>
-      </ul>
-      <div class="row tab-content">
-        <div class="container tab-pane fade show active" id="data-mpcgwas">
-          <div class="row mt-3">
-            <p>
-              For GWAS, each user holds a portion of the horizontally distributed input genotype matrix (in which each row is a data sample and the features correspond to SNPs), covariate matrix (cov.txt) and the phenotype vector (pheno.txt). These users’ local files must be named and formatted as follows:
-- geno.txt - The genotype matrix, or minor allele dosage matrix, is stored as a tab-separated file in which the SNP values (i.e., features) are encoded as genotype scores (i.e., as 0, 1, or 2).
-- pos.txt - This file must accompany the genotype matrix and stores the genomic positions of the SNPs in a 2-columns file where each row contains the chromosome number and the position in the chromosome of the corresponding SNP, separated by a tabulation.
-- cov.txt - A tab-separated file storing the covariate matrix in which each row is a sample, and each column is a covariate, e.g., patient older than 50 years old. We assume all covariates are binary.
-- pheno.txt - The phenotype vector, e.g., containing the infection status of each patient, is stored in a single-column file. We assume that the phenotype is binary.
-            </p>
-          </div>
-        </div>
-
-        <div class="container tab-pane fade" id="data-sfgwas">
-          <div class="row mt-3">
-            <p>
-              For this workflow, the input data are similar as in (2) except for the encoding of the genotype matrix file and for the fact that neither the covariates or the phenotypes are required to be binary.
-              - geno/chr[1-22].[pgen|psam|pvar]: the genotype or minor allele dosage matrix is encoded by using the PGEN file format for each chromosome. This format has been introduced in the standard PLINK2 tool for genomic data processing as an efficient format to store large-scale genomic datasets. Note that this file encodes directly the genomic positions of the SNPs.
-              - sample_keep.txt: this file accompanies the genotype matrix and lists the sample IDs from the .psam file to include in the analysis. This file is required to comply with the standard format proposed in PLINK2 (see --keep option in PLINK2 documentation).
-              - pheno.txt: as before, each line includes the phenotype under study for each sample.
-              - cov.txt: each line includes a tab-separated list of covariates for each sample.              
-            </p>
-          </div>
-        </div>
-
-        <div class="container tab-pane fade" id="data-sfpca">
-          <div class="row mt-3">
-            <p>
-              Each user data, consisting in an horizontal partition of the input matrix (in which the rows are the data samples and the columns correspond to the features) must be locally stored as a single tab-separated file called data.txt.
-            </p>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <h4 class="my-4 fw-normal">Getting Started</h4>
-    <div class="row">
-      <p>
-        When you are ready to run a study, go to
-        <a href="{{ url_for('studies.index') }}" class="text-decoration-none">Studies</a>
-        to create or join a study. If you are creating a study, you will also do the following:
-      </p>
-      <div>
-        <ul>
-          <li>
-            Choose one of the 3 workflows described in the
-            <a href="{{ url_for('general.workflows') }}" class="text-decoration-none">Workflows</a>
-            page.
-          </li>
-          <li>
-            Choose one of the 2 configuration options (described below) for how to set up your machine and run your
-            study.
-          </li>
-          <li>
-            Edit your study parameters.
-          </li>
-        </ul>
-      </div>
-      <p>
-        If you are joining a study, you will only need to edit some of the study parameters.
-      </p>
-    </div>
-
-    <h4 class="my-4 fw-normal">Configuration Options</h4>
-    <div class="row p-4 bg-light rounded">
-      <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item">
-          <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#Auto-configured"
-            type="button">Auto-configured</button>
-        </li>
-        <li class="nav-item">
-          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#User-configured"
-            type="button">Self-configured</button>
-        </li>
-      </ul>
-      <div class="row tab-content">
-        <div class="container tab-pane fade show active" id="Auto-configured">
-          <div class="row mt-3">
-            <p>
-              This website will set up your machine and run your study for you. This option is done using Google Cloud
-              Platform (GCP) for the machines and will therefore require you to give the website limited permissions
-              to access your Google Cloud Platform (GCP) account where you have placed the data in a storage bucket.
-              You will be walked through the specifics of this process if you create a study using this option. 
-              <!-- If you are new to GCP, you can find lots of information and tutorials on <a class="text-decoration-none" href="https://cloud.google.com/">their website</a>. -->
-            </p>
-            <p>This is recommended for users who are not familiar with the command-line interface and/or want to get started
-              quickly.</p>
-          </div>
-        </div>
-        <div class="container tab-pane fade" id="User-configured">
-          <div class="row mt-3">
-            <p>
-              The
-              <a class="text-decoration-none" href="https://sfkit.readthedocs.io/en/latest/tutorial.html">sfkit
-                Command-Line Interface</a>
-              will walk you through each step of the workflow yourself, on your own machine.
-            </p>
-            <p>This is recommended for users who are familiar with the command line and want to have more control over
-              their VM.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="mt-4">
-      <p>For both configuration options, the 5 steps of the sfkit process will be run on your machine.</p>
-    </div>
-
-    <h4 class="my-4 fw-normal">sfkit Process</h4>
-    <div class="row">
-      <div class="col my-3 btn" id="a">
-        <div class="position-relative p-5 text-center bg-light rounded">
-          <span
-            class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white"
-            style="width: 48px;height: 48px">1</span>
-          <h5 class="fw-bold mb-3">Authentication</h5>
-          <img class="img-fluid" src="static/images/sfkit/auth.png" alt="">
-        </div>
-      </div>
-      <div class="col my-3 btn" id="b">
-        <div class="position-relative p-5 text-center bg-light rounded">
-          <span
-            class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white"
-            style="width: 48px;height: 48px">2</span>
-          <h5 class="fw-bold mb-3">Networking</h5>
-          <img class="img-fluid" src="static/images/sfkit/networking.png" alt="">
-        </div>
-      </div>
-      <div class="col my-3 btn" id="c">
-        <div class="position-relative p-5 text-center bg-light rounded">
-          <span
-            class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white"
-            style="width: 48px;height: 48px">3</span>
-          <h5 class="fw-bold mb-3">Key Exchange</h5>
-          <img class="img-fluid" src="static/images/sfkit/keys.png" alt="">
-        </div>
-      </div>
-      <div class="col my-3 btn" id="d">
-        <div class="position-relative p-5 text-center bg-light rounded">
-          <span
-            class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white"
-            style="width: 48px;height: 48px">4</span>
-          <h5 class="fw-bold mb-3">Data Validation</h5>
-          <img class="img-fluid" src="static/images/sfkit/data.png" alt="">
-        </div>
-      </div>
-      <div class="col my-3 btn" id="e">
-        <div class="position-relative p-5 text-center bg-light rounded">
-          <span
-            class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white"
-            style="width: 48px;height: 48px">5</span>
-          <h5 class="fw-bold mb-3">Run Protocol</h5>
-          <img class="img-fluid" src="static/images/sfkit/run_protocol.png" alt="">
-        </div>
-      </div>
-    </div>
-
-    <div class="row" id="Authentication" style="display: none">
-      <div class="card card-body">
-        <p>
-          1.
-          <b>Authentication</b>
-          - Authenticate your machine with the website. This allows the website to ensure that the machine running the
-          protocol is indeed yours. This step is done via a secure key (similar to an SSH key) that will be copied
-          from the website to the machine. If you are running a user-configured study, you will manually copy this
-          key-file to your machine.
+        <p>In a
+          <b>user-configured</b>
+          mode, once the study is configured, you can easily run the protocol on your own machine (and your collaborators on their machines) using the sfkit command-line interface (CLI).
         </p>
       </div>
-    </div>
-    <div class="row" id="Networking" style="display: none">
-      <div class="card card-body">
-        <p>
-          2.
-          <b>Networking</b>
-          - Setup/communicate the networking for the machine. If you are running a user-configured study, you will be
-          asked for your preferred ports to communicate over for the secure socket connections during the protocol.
-          Then, your ip address and ports will be shared with the website (and the other study participants).
-        </p>
-      </div>
-    </div>
-    <div class="row" id="KeyExchange" style="display: none">
-      <div class="card card-body">
-        <p>
-          3.
-          <b>Key Exchange</b>
-          - Cryptographically secure private and public keys will be created (locally) for you. The public key will be
-          shared with the website (and the other study participants). The private key will remain on your machine and
-          will be used in step 5 during the protocol to create shared keys and to encrypt your data. See
-          <a href="https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange"
-            class="text-decoration-none">Diffie-Hellman Key Exchange</a>
-          for more information.
-        </p>
-      </div>
-    </div>
-    <div class="row" id="DataValidation" style="display: none">
-      <div class="card card-body">
-        <p>
-          4.
-          <b>Data Validation</b>
-          - Validate that the data you provided is in the correct format, and is consistent with the protocol and
-          parameters you provided. This step does NOT communicate any of the data to any other machine, it only
-          validates that the data is in the correct format.
-        </p>
-      </div>
-    </div>
-    <div class="row" id="RunProtocol" style="display: none">
-      <div class="card card-body">
-        <p>
-          5.
-          <b>Run Protocol</b>
-          - Run the protocol (SF-GWAS, SF-PCA or MPC-GWAS) that you have chosen. Your machine will use the ports and
-          ip addresses provided in step 2 to communicate with the other study participants. It will utilize
-          secret-sharing and/or homomorphic encryption to perform the protocol. This step may take a number of hours,
-          depending on the protocol and parameters you have chosen. The results of the protocol will be stored on your
-          machine to be accessed at your convenience.
-        </p>
-      </div>
-    </div>
 
-    <br>
-    <hr>
-    <section id="machine_recommendations">
-      <h4 class="my-4 fw-normal">Machine Recommendations</h4>
-      <p>
-        If you are unsure what machine size/type to use for your study, you can use this tool to help you decide.
-        <span class="text-muted">(We assume here that you are using Google Cloud, but an equivalent machine can be
-          used off of Google Cloud.)</span>
-      </p>
+      <h4 class="my-4 fw-normal">Prerequisites</h4>
+      <div class="row">
+        <p>
+          To run a study using
+          <b>sfkit</b>, you need either:
+        </p>
+        <div>
+          <ol>
+            <li>
+              Google Cloud Platform (GCP) account that can create and manage virtual machines (VMs) in the cloud
+            </li>
+            <li>
+              machine of your own with a nework connection, if you are running a user-configured study.
+            </li>
+          </ol>
+
+          <p>See
+            <i>Machine Recommendations</i>
+            on the bottom of this page for guidance on machine types.</p>
+
+          <span class="text-muted">Note: For the
+            <a href="{{ url_for('general.tutorial') }}" class="text-decoration-none">Tutorial</a>, you can use our GCP project and exameple data for testing purposes.</span>
+        </div>
+      </div>
+
+      <h4 class="my-4 fw-normal">Data Preparation</h4>
       <div class="row p-4 bg-light rounded">
         <ul class="nav nav-tabs" role="tablist">
           <li class="nav-item">
-            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#MPCGWASmachine" type="button">
-              MPC-GWAS workflow
-            </button>
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#data-mpcgwas" type="button">MPC-GWAS workflow</button>
           </li>
           <li class="nav-item">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#SFGWASmachine" type="button">
-              SF-GWAS workflow
-            </button>
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#data-sfgwas" type="button">SF-GWAS workflow</button>
           </li>
           <li class="nav-item">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#SFPCAmachine" type="button">
-              SF-PCA workflow
-            </button>
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#data-sfpca" type="button">SF-PCA workflow</button>
           </li>
         </ul>
-
-        <div class="tab-content" id="myTabContent">
-          <div class="tab-pane fade show active" id="SFGWASmachine" role="tabpanel">
+        <div class="row tab-content">
+          <div class="container tab-pane fade show active" id="data-mpcgwas">
             <div class="row mt-3">
-              <div class="col-6">
-                <select class="form-select" id="num_rows_sfgwas">
-                  <option selected="selected">Approximately how many samples/individuals are in your dataset?</option>
-                  <option value="1">fewer than 30,000</option>
-                  <option value="2">30,000 - 100,000</option>
-                  <option value="3">100,000 - 500,000</option>
-                  <option value="4">more than 500,000</option>
-                </select>
-              </div>
-              <div class="col-6">
-                <select class="form-select" id="num_cols_sfgwas">
-                  <option selected="selected">Approximately how many SNPs are in your dataset?</option>
-                  <option value="1">fewer than 700,000</option>
-                  <option value="2">700,000 - 10,000,000</option>
-                  <option value="3">10,000,000 - 30,000,000</option>
-                  <option value="4">more than 30,000,000</option>
-                </select>
-              </div>
-              <div class="col mt-3">
-                <div class="card card-body" id="recommendation_sfgwas">The default recommendation is an e2-highmem-16
-                  machine with 128GB RAM and a boot disk of at least 128GB.</div>
+              <p>
+                For GWAS, each user holds a portion of the horizontally distributed input genotype matrix (in which each row is a data sample and the features correspond to SNPs), covariate matrix and phenotype vector. These users’ local files must be named and formatted as follows:
+              </p>
+              <div>
+                <ul>
+                  <li>
+                    <code>geno.txt</code>
+                    - The genotype matrix, or minor allele dosage matrix, is stored as a tab-separated file in which the SNP values (i.e., features) are encoded as genotype scores (i.e., as 0, 1, or 2).</li>
+                  <li>
+                    <code>pos.txt</code>
+                    - This file must accompany the genotype matrix and stores the genomic positions of the SNPs in a 2-columns file where each row contains the chromosome number and the position in the chromosome of the corresponding SNP, separated by a tabulation.</li>
+                  <li>
+                    <code>cov.txt</code>
+                    - A tab-separated file storing the covariate matrix in which each row is a sample, and each column is a covariate, e.g., patient older than 50 years old. We assume all covariates are binary.</li>
+                  <li>
+                    <code>pheno.txt</code>
+                    - The phenotype vector, e.g., containing the infection status of each patient, is stored in a single-column file. We assume that the phenotype is binary.</li>
+                </ul>
               </div>
             </div>
           </div>
 
-          <div class="tab-pane fade" id="SFPCAmachine" role="tabpanel">
+          <div class="container tab-pane fade" id="data-sfgwas">
             <div class="row mt-3">
-              <div class="col-6">
-                <select class="form-select" id="num_rows_sfpca">
-                  <option selected="selected">Approximately how many rows are in your dataset?</option>
-                  <option value="1">fewer than 30,000</option>
-                  <option value="2">30,000 - 100,000</option>
-                  <option value="3">100,000 - 500,000</option>
-                  <option value="4">more than 500,000</option>
-                </select>
-              </div>
-              <div class="col-6">
-                <select class="form-select" id="num_cols_sfpca">
-                  <option selected="selected">Approximately how many columns are in your dataset?</option>
-                  <option value="1">fewer than 700,000</option>
-                  <option value="2">700,000 - 10,000,000</option>
-                  <option value="3">10,000,000 - 30,000,000</option>
-                  <option value="4">more than 30,000,000</option>
-                </select>
-              </div>
-              <div class="col mt-3">
-                <div class="card card-body" id="recommendation_sfpca">The default recommendation is an e2-highmem-16
-                  machine with 128GB RAM and a boot disk of at least 128GB.</div>
+              <p>
+                For this workflow, the input data are similar to those in the previous workflow, except for the following differences:
+              </p>
+              <div>
+                <ul>
+                  <li>
+                    <code>geno/chr[1-22].[pgen|psam|pvar]:</code>
+                    The genotype or minor allele dosage matrix is encoded using the PGEN file format for each chromosome. This format has been introduced in the standard
+                    <a class="text-decoration-none" href="https://www.cog-genomics.org/plink/2.0/formats">PLINK2</a>
+                    tool for genomic data processing as an efficient way to store large-scale genomic datasets. Note that this file encodes the genomic positions of the SNPs directly.
+                  </li>
+                  <li>
+                    <code>sample_keep.txt:</code>
+                    This file accompanies the genotype matrix and lists the sample IDs from the .psam file to include in the analysis. This file is required to comply with the standard format proposed in PLINK2 (see the --keep option in the PLINK2 documentation).
+                  </li>
+                  <li>
+                    <code>pheno.txt:</code>
+                    As before, each line includes the phenotype under study for each sample.
+                  </li>
+                  <li>
+                    <code>cov.txt:</code>
+                    Each line includes a tab-separated list of covariates for each sample. Unlike in the previous workflow, the covariates and phenotypes in this workflow are not required to be binary.
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
 
-          <div class="tab-pane fade" id="MPCGWASmachine" role="tabpanel">
+          <div class="container tab-pane fade" id="data-sfpca">
             <div class="row mt-3">
-              <div class="col-6">
-                <select class="form-select" id="num_rows_mpcgwas">
-                  <option selected="selected">Approximately how many samples/individuals are in your dataset?</option>
-                  <option value="1">fewer than 30,000</option>
-                  <option value="2">30,000 - 100,000</option>
-                  <option value="3">100,000 - 500,000</option>
-                  <option value="4">more than 500,000</option>
-                </select>
-              </div>
-              <div class="col-6">
-                <select class="form-select" id="num_cols_mpcgwas">
-                  <option selected="selected">Approximately how many SNPs are in your dataset?</option>
-                  <option value="1">fewer than 700,000</option>
-                  <option value="2">700,000 - 10,000,000</option>
-                  <option value="3">10,000,000 - 30,000,000</option>
-                  <option value="4">more than 30,000,000</option>
-                </select>
-              </div>
-              <div class="col mt-3">
-                <div class="card card-body" id="recommendation_mpcgwas">The default recommendation is an e2-highmem-16
-                  machine with 128GB RAM and a boot disk of at least 128GB.</div>
-              </div>
+              <p>
+                Each user data, consisting in an horizontal partition of the input matrix (in which the rows are the data samples and the columns correspond to the features) must be locally stored as a single tab-separated file called
+                <code>data.txt</code>.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <h4 class="my-4 fw-normal">Getting Started</h4>
+      <div class="row">
+        <p>
+          When you are ready to run a study, go to
+          <a href="{{ url_for('studies.index') }}" class="text-decoration-none">Studies</a>
+          to create or join a study. If you are creating a study, you will also do the following:
+        </p>
+        <div>
+          <ul>
+            <li>
+              Choose one of the 3 workflows described in the
+              <a href="{{ url_for('general.workflows') }}" class="text-decoration-none">Workflows</a>
+              page.
+            </li>
+            <li>
+              Choose one of the 2 configuration options (described below) for how to set up your machine and run your study.
+            </li>
+            <li>
+              Edit your study parameters.
+            </li>
+          </ul>
+        </div>
+        <p>
+          If you are joining a study, you will only need to edit some of the study parameters.
+        </p>
+      </div>
+
+      <h4 class="my-4 fw-normal">Configuration Options</h4>
+      <div class="row p-4 bg-light rounded">
+        <ul class="nav nav-tabs" role="tablist">
+          <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#Auto-configured" type="button">Auto-configured</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#User-configured" type="button">User-configured</button>
+          </li>
+        </ul>
+        <div class="row tab-content">
+          <div class="container tab-pane fade show active" id="Auto-configured">
+            <div class="row mt-3">
+              <p>
+                This website will set up your machine and run your study for you. This option is done using Google Cloud Platform (GCP) for the machines and will therefore require you to give the website limited permissions to access your Google Cloud Platform (GCP) account where you have placed the data in a storage bucket. You will be walked through the specifics of this process if you create a study using this option.
+                <!-- If you are new to GCP, you can find lots of information and tutorials on <a class="text-decoration-none" href="https://cloud.google.com/">their website</a>. -->
+              </p>
+              <p>This is recommended for users who are not familiar with the command-line interface and/or want to get started quickly.</p>
+            </div>
+          </div>
+          <div class="container tab-pane fade" id="User-configured">
+            <div class="row mt-3">
+              <p>
+                The
+                <a class="text-decoration-none" href="https://sfkit.readthedocs.io/en/latest/tutorial.html">sfkit Command-Line Interface</a>
+                will walk you through each step of the workflow yourself, on your own machine.
+              </p>
+              <p>This is recommended for users who are familiar with the command line and want to have more control over their VM.</p>
             </div>
           </div>
         </div>
       </div>
-    </section>
 
-    <div class="row mt-5">
-      <div class="col">
-        When you are ready, go to the
-        <a href="{{url_for('studies.index')}}" class="text-decoration-none">Studies</a>
-        page to create or join a study and get started. Or go to the tutorial page
-        <a href="{{url_for('general.tutorial')}}" class="text-decoration-none">Tutorials</a>
-        to follow directions to run a demo study.
+      <div class="mt-4">
+        <p>For both configuration options, the 5 steps of the sfkit process will be run on your machine.</p>
       </div>
-    </div>
 
-  </div>
-</section>
+      <h4 class="my-4 fw-normal">sfkit Process</h4>
+      <div class="row">
+        <div class="col my-3 btn" id="a">
+          <div class="position-relative p-5 text-center bg-light rounded">
+            <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">1</span>
+            <h5 class="fw-bold mb-3">Authentication</h5>
+            <img class="img-fluid" src="static/images/sfkit/auth.png" alt="">
+          </div>
+        </div>
+        <div class="col my-3 btn" id="b">
+          <div class="position-relative p-5 text-center bg-light rounded">
+            <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">2</span>
+            <h5 class="fw-bold mb-3">Networking</h5>
+            <img class="img-fluid" src="static/images/sfkit/networking.png" alt="">
+          </div>
+        </div>
+        <div class="col my-3 btn" id="c">
+          <div class="position-relative p-5 text-center bg-light rounded">
+            <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">3</span>
+            <h5 class="fw-bold mb-3">Key Exchange</h5>
+            <img class="img-fluid" src="static/images/sfkit/keys.png" alt="">
+          </div>
+        </div>
+        <div class="col my-3 btn" id="d">
+          <div class="position-relative p-5 text-center bg-light rounded">
+            <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">4</span>
+            <h5 class="fw-bold mb-3">Data Validation</h5>
+            <img class="img-fluid" src="static/images/sfkit/data.png" alt="">
+          </div>
+        </div>
+        <div class="col my-3 btn" id="e">
+          <div class="position-relative p-5 text-center bg-light rounded">
+            <span class="d-flex justify-content-center align-items-center position-absolute top-0 start-50 translate-middle rounded-circle bg-primary text-white" style="width: 48px;height: 48px">5</span>
+            <h5 class="fw-bold mb-3">Run Protocol</h5>
+            <img class="img-fluid" src="static/images/sfkit/run_protocol.png" alt="">
+          </div>
+        </div>
+      </div>
+
+      <div class="row" id="Authentication" style="display: none">
+        <div class="card card-body">
+          <p>
+            1.
+            <b>Authentication</b>
+            - Authenticate your machine with the website. This allows the website to ensure that the machine running the protocol is indeed yours. This step is done via a secure key (similar to an SSH key) that will be copied from the website to the machine. If you are running a user-configured study, you will manually copy this key-file to your machine.
+          </p>
+        </div>
+      </div>
+      <div class="row" id="Networking" style="display: none">
+        <div class="card card-body">
+          <p>
+            2.
+            <b>Networking</b>
+            - Setup/communicate the networking for the machine. If you are running a user-configured study, you will be asked for your preferred ports to communicate over for the secure socket connections during the protocol. Then, your ip address and ports will be shared with the website (and the other study participants).
+          </p>
+        </div>
+      </div>
+      <div class="row" id="KeyExchange" style="display: none">
+        <div class="card card-body">
+          <p>
+            3.
+            <b>Key Exchange</b>
+            - Cryptographically secure private and public keys will be created (locally) for you. The public key will be shared with the website (and the other study participants). The private key will remain on your machine and will be used in step 5 during the protocol to create shared keys and to encrypt your data. See
+            <a href="https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange" class="text-decoration-none">Diffie-Hellman Key Exchange</a>
+            for more information.
+          </p>
+        </div>
+      </div>
+      <div class="row" id="DataValidation" style="display: none">
+        <div class="card card-body">
+          <p>
+            4.
+            <b>Data Validation</b>
+            - Validate that the data you provided is in the correct format, and is consistent with the protocol and parameters you provided. This step does NOT communicate any of the data to any other machine, it only validates that the data is in the correct format.
+          </p>
+        </div>
+      </div>
+      <div class="row" id="RunProtocol" style="display: none">
+        <div class="card card-body">
+          <p>
+            5.
+            <b>Run Protocol</b>
+            - Run the protocol (SF-GWAS, SF-PCA or MPC-GWAS) that you have chosen. Your machine will use the ports and ip addresses provided in step 2 to communicate with the other study participants. It will utilize secret-sharing and/or homomorphic encryption to perform the protocol. This step may take a number of hours, depending on the protocol and parameters you have chosen. The results of the protocol will be stored on your machine to be accessed at your convenience.
+          </p>
+        </div>
+      </div>
+
+      <br>
+      <hr>
+      <section id="machine_recommendations">
+        <h4 class="my-4 fw-normal">Machine Recommendations</h4>
+        <p>
+          If you are unsure what machine size/type to use for your study, you can use this tool to help you decide.
+          <span class="text-muted">(We assume here that you are using Google Cloud, but an equivalent machine can be used off of Google Cloud.)</span>
+        </p>
+        <div class="row p-4 bg-light rounded">
+          <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item">
+              <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#MPCGWASmachine" type="button">
+                MPC-GWAS workflow
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link" data-bs-toggle="tab" data-bs-target="#SFGWASmachine" type="button">
+                SF-GWAS workflow
+              </button>
+            </li>
+            <li class="nav-item">
+              <button class="nav-link" data-bs-toggle="tab" data-bs-target="#SFPCAmachine" type="button">
+                SF-PCA workflow
+              </button>
+            </li>
+          </ul>
+
+          <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active" id="SFGWASmachine" role="tabpanel">
+              <div class="row mt-3">
+                <div class="col-6">
+                  <select class="form-select" id="num_rows_sfgwas">
+                    <option selected="selected">Approximately how many samples/individuals are in your dataset?</option>
+                    <option value="1">fewer than 30,000</option>
+                    <option value="2">30,000 - 100,000</option>
+                    <option value="3">100,000 - 500,000</option>
+                    <option value="4">more than 500,000</option>
+                  </select>
+                </div>
+                <div class="col-6">
+                  <select class="form-select" id="num_cols_sfgwas">
+                    <option selected="selected">Approximately how many SNPs are in your dataset?</option>
+                    <option value="1">fewer than 700,000</option>
+                    <option value="2">700,000 - 10,000,000</option>
+                    <option value="3">10,000,000 - 30,000,000</option>
+                    <option value="4">more than 30,000,000</option>
+                  </select>
+                </div>
+                <div class="col mt-3">
+                  <div class="card card-body" id="recommendation_sfgwas">The default recommendation is an e2-highmem-16 machine with 128GB RAM and a boot disk of at least 128GB.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-pane fade" id="SFPCAmachine" role="tabpanel">
+              <div class="row mt-3">
+                <div class="col-6">
+                  <select class="form-select" id="num_rows_sfpca">
+                    <option selected="selected">Approximately how many rows are in your dataset?</option>
+                    <option value="1">fewer than 30,000</option>
+                    <option value="2">30,000 - 100,000</option>
+                    <option value="3">100,000 - 500,000</option>
+                    <option value="4">more than 500,000</option>
+                  </select>
+                </div>
+                <div class="col-6">
+                  <select class="form-select" id="num_cols_sfpca">
+                    <option selected="selected">Approximately how many columns are in your dataset?</option>
+                    <option value="1">fewer than 700,000</option>
+                    <option value="2">700,000 - 10,000,000</option>
+                    <option value="3">10,000,000 - 30,000,000</option>
+                    <option value="4">more than 30,000,000</option>
+                  </select>
+                </div>
+                <div class="col mt-3">
+                  <div class="card card-body" id="recommendation_sfpca">The default recommendation is an e2-highmem-16 machine with 128GB RAM and a boot disk of at least 128GB.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-pane fade" id="MPCGWASmachine" role="tabpanel">
+              <div class="row mt-3">
+                <div class="col-6">
+                  <select class="form-select" id="num_rows_mpcgwas">
+                    <option selected="selected">Approximately how many samples/individuals are in your dataset?</option>
+                    <option value="1">fewer than 30,000</option>
+                    <option value="2">30,000 - 100,000</option>
+                    <option value="3">100,000 - 500,000</option>
+                    <option value="4">more than 500,000</option>
+                  </select>
+                </div>
+                <div class="col-6">
+                  <select class="form-select" id="num_cols_mpcgwas">
+                    <option selected="selected">Approximately how many SNPs are in your dataset?</option>
+                    <option value="1">fewer than 700,000</option>
+                    <option value="2">700,000 - 10,000,000</option>
+                    <option value="3">10,000,000 - 30,000,000</option>
+                    <option value="4">more than 30,000,000</option>
+                  </select>
+                </div>
+                <div class="col mt-3">
+                  <div class="card card-body" id="recommendation_mpcgwas">The default recommendation is an e2-highmem-16 machine with 128GB RAM and a boot disk of at least 128GB.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="row mt-5">
+        <div class="col">
+          When you are ready, go to the
+          <a href="{{url_for('studies.index')}}" class="text-decoration-none">Studies</a>
+          page to create or join a study and get started. Or go to the tutorial page
+          <a href="{{url_for('general.tutorial')}}" class="text-decoration-none">Tutorials</a>
+          to follow directions to run a demo study.
+        </div>
+      </div>
+
+    </div>
+  </section>
 {% endblock %}
 
 {% block javascript %}
-<script>
-  function recommendMachine(workflow) {
-    var base = "Based on your selection, we recommend you use an ";
-    var recommendations = {
-      1: 'e2-highmem-16 with at least a 128 GB boot disk.',
-      2: 'n2-highmem-32 with at least a 256 GB boot disk.',
-      3: 'n2-highmem-64 with at least a 512 GB boot disk.',
-      4: 'n2-highmem-128 with at least a 1024 GB boot disk.'
+  <script>
+    function recommendMachine(workflow) {
+      var base = "Based on your selection, we recommend you use an ";
+      var recommendations = {
+        1: 'e2-highmem-16 with at least a 128 GB boot disk.',
+        2: 'n2-highmem-32 with at least a 256 GB boot disk.',
+        3: 'n2-highmem-64 with at least a 512 GB boot disk.',
+        4: 'n2-highmem-128 with at least a 1024 GB boot disk.'
+      }
+      var num_rows = parseInt($('#num_rows_' + workflow).val()) || 0;
+      var num_cols = parseInt($('#num_cols_' + workflow).val()) || 0;
+      var selection = Math.max(num_rows, num_cols, 1);
+      $('#recommendation_' + workflow).text(base + recommendations[selection]);
     }
-    var num_rows = parseInt($('#num_rows_' + workflow).val()) || 0;
-    var num_cols = parseInt($('#num_cols_' + workflow).val()) || 0;
-    var selection = Math.max(num_rows, num_cols, 1);
-    $('#recommendation_' + workflow).text(base + recommendations[selection]);
-  }
 
-  const workflows = ['sfgwas', 'sfpca', 'mpcgwas'];
-  workflows.forEach(function (workflow) {
-    $('#num_rows_' + workflow).change(function () {
-      recommendMachine(workflow);
+    const workflows = ['sfgwas', 'sfpca', 'mpcgwas'];
+    workflows.forEach(function (workflow) {
+      $('#num_rows_' + workflow).change(function () {
+        recommendMachine(workflow);
+      });
+      $('#num_cols_' + workflow).change(function () {
+        recommendMachine(workflow);
+      });
     });
-    $('#num_cols_' + workflow).change(function () {
-      recommendMachine(workflow);
-    });
-  });
-</script>
+  </script>
 
-<script type="module" src="{{ url_for('static', filename='javascript/sfkit_explanations.js') }}"></script>
+  <script type="module" src="{{ url_for('static', filename='javascript/sfkit_explanations.js') }}"></script>
 {% endblock %}
