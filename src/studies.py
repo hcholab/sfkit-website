@@ -28,10 +28,25 @@ def index() -> Response:
     db = current_app.config["DATABASE"]
     studies = db.collection("studies")
     studies_list = [study.to_dict() for study in studies.stream()]
+    my_studies = []
+    other_studies = []
+    for study in studies_list:
+        if g.user["id"] in study["participants"] or g.user["id"] in study.get("invited_participants", []):
+            my_studies.append(study)
+        elif not study["private"]:
+            other_studies.append(study)
 
     display_names = db.collection("users").document("display_names").get().to_dict()
 
-    return make_response(render_template("studies/index.html", studies=studies_list, display_names=display_names))
+    return make_response(
+        render_template(
+            "studies/index.html",
+            studies=studies_list,
+            my_studies=my_studies,
+            other_studies=other_studies,
+            display_names=display_names,
+        )
+    )
 
 
 @bp.route("/study/<study_title>", methods=("GET", "POST"))
