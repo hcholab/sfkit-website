@@ -32,7 +32,7 @@ options:
   logging: CLOUD_LOGGING_ONLY
   substitutionOption: ALLOW_LOOSE
 substitutions:
-  _SERVICE_NAME: secure-gwas-website
+  _SERVICE_NAME: sfkit-website
   _LABELS: gcb-trigger-id=44d26102-694b-457c-afaf-b086e4d866be
   _TRIGGER_ID: 44d26102-694b-457c-afaf-b086e4d866be
   _DEPLOY_REGION: us-central1
@@ -41,4 +41,4 @@ substitutions:
 tags:
   - gcp-cloud-build-deploy-cloud-run
   - gcp-cloud-build-deploy-cloud-run-managed
-  - secure-gwas-website
+  - sfkit-website
