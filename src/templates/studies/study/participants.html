@@ -17,6 +17,12 @@
             </li>
           {% endif %}
         {% endfor %}
+        {% if study["demo"] %}
+          <li class="list-group-item text-start">
+            Dummy Participant
+            <span class="text-muted">(for demo)</span>
+          </li>
+        {% endif %}
 
         {% if study['requested_participants'] %}
           <li class="list-group-item bg-light">

@@ -31,7 +31,11 @@ def index() -> Response:
     my_studies = []
     other_studies = []
     for study in studies_list:
-        if g.user["id"] in study["participants"] or g.user["id"] in study.get("invited_participants", []):
+        if (
+            g.user
+            and "id" in g.user
+            and (g.user["id"] in study["participants"] or g.user["id"] in study.get("invited_participants", []))
+        ):
             my_studies.append(study)
         elif not study["private"]:
             other_studies.append(study)
