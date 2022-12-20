@@ -34,7 +34,7 @@
 <div class="accordion" id="accordion">
 
   {% set i = namespace(value = 0) %}
-  {% call instruction_step(i.value, "Prerequisites", collapsed = "", show = "show") %}
+  {% call instruction_step(i.value, "Prepare Project", collapsed = "", show = "show") %}
   <div>
     {% set i.value = i.value + 1 %}
     {% if study_type == "MPCGWAS" %}
