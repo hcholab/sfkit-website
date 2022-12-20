@@ -403,6 +403,12 @@ def default_user_parameters(study_type: str, demo: bool = False) -> dict:
     parameters = deepcopy(DEFAULT_USER_PARAMETERS)
     if demo:
         parameters["GCP_PROJECT"]["value"] = SERVER_GCP_PROJECT
+        if study_type == "MPCGWAS":
+            parameters["NUM_INDS"]["value"] = "1000"
+        elif study_type == "PCA":
+            parameters["NUM_INDS"]["value"] = "2504"
+        elif study_type == "SFGWAS":
+            parameters["NUM_INDS"]["value"] = "2000"
     parameters["PORTS"]["value"] = "null,8060,8080"
     return parameters
 
