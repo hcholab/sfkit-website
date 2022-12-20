@@ -5,7 +5,9 @@ from flask import Blueprint, current_app, request
 from werkzeug import Request
 
 from src.studies import setup_gcp
+from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
 from src.utils.google_cloud.google_cloud_storage import upload_blob
+from src.utils.gwas_functions import create_instance_name
 
 bp = Blueprint("api", __name__)
 
@@ -76,16 +78,23 @@ def update_firestore() -> Tuple[dict, int]:
 
     db = current_app.config["DATABASE"]
     username = db.collection("users").document("auth_keys").get().to_dict()[auth_key]["username"]
-    title = db.collection("users").document("auth_keys").get().to_dict()[auth_key]["study_title"]
+    study_title = db.collection("users").document("auth_keys").get().to_dict()[auth_key]["study_title"]
+    study_title = study_title.replace(" ", "").lower()
 
     msg: str = str(request.args.get("msg"))
     _, parameter = msg.split("::")
-    doc_ref = current_app.config["DATABASE"].collection("studies").document(title.replace(" ", "").lower())
+    doc_ref = current_app.config["DATABASE"].collection("studies").document(study_title)
     doc_ref_dict: dict = doc_ref.get().to_dict()
+    gcp_project: str = doc_ref_dict["personal_parameters"][username]["GCP_PROJECT"]["value"]
+    role: str = str(doc_ref_dict["participants"].index(username))
 
     if parameter.startswith("status"):
         status = parameter.split("=")[1]
         doc_ref_dict["status"][username] = status
+        if "Finished protocol" in status and doc_ref_dict["setup_configuration"] == "website":
+            gcloudCompute = GoogleCloudCompute(study_title, gcp_project)
+            gcloudCompute.stop_instance(create_instance_name(doc_ref_dict["title"], role))
+
     else:
         name, value = parameter.split("=")
         if name in doc_ref_dict["personal_parameters"][username]:
@@ -93,8 +102,8 @@ def update_firestore() -> Tuple[dict, int]:
         elif name in doc_ref_dict["parameters"]:
             doc_ref_dict["parameters"][name]["value"] = value
         else:
-            print(f"parameter {name} not found in {title}")
-            return {"error": f"parameter {name} not found in {title}"}, 400
+            print(f"parameter {name} not found in {study_title}")
+            return {"error": f"parameter {name} not found in {study_title}"}, 400
     doc_ref.set(doc_ref_dict)
 
     return {}, 200

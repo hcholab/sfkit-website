@@ -340,6 +340,11 @@ class GoogleCloudCompute:
         operation = self.compute.instances().insert(project=self.gcp_project, zone=zone, body=instance_body).execute()
         self.wait_for_zone_operation(zone, operation["name"])
 
+    def stop_instance(self, name: str, zone: str = constants.SERVER_ZONE) -> None:
+        print(f"Stopping VM instance with name {name}...")
+        operation = self.compute.instances().stop(project=self.gcp_project, zone=zone, instance=name).execute()
+        self.wait_for_zone_operation(zone, operation["name"])
+
     def list_instances(self, zone: str = constants.SERVER_ZONE, subnetwork: str = "") -> list[str]:
         try:
             result = self.compute.instances().list(project=self.gcp_project, zone=zone).execute()
