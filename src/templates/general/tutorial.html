@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Workflows{% endblock %}
+{% block title %}Tutorial{% endblock %}
 
 {% block content %}
   <section class="py-5">
@@ -12,7 +12,10 @@
       <h4 class="my-4 fw-normal">Introduction</h4>
       <div class="row">
         <p>
-          This tutorial will walk you through process of creating and running a study on the platform. For the purpose of this tutorial, we will use the MPC-GWAS workflow with the auto-configured option.
+          This tutorial will walk you through process of creating and running a study on the platform. For the purpose of this tutorial, we will use the MPC-GWAS workflow with the auto-configured option. That said, this same tutorial can be followed with any of the workflows.
+        </p>
+        <p>
+          The purpose of a GWAS study is to identify genetic variants that are associated with a trait of interest. In this tutorial, we will use a simulated dataset to demonstrate the process of running a GWAS study with multiple participants. This tutorial uses a simulated dataset of genotypes, phenotypes, and covariates.
         </p>
         <p class="text-muted">
           Note: There is also a tutorial for the user-configured option. That is available on the
@@ -34,17 +37,36 @@
           <span class="btn btn-primary btn-sm" style="pointer-events: none;">Create New Study</span>
           button on the
           <a class="text-decoration-none" href="{{url_for('studies.index')}}">Studies</a>
-          page. For workflow and configuration, you can leave the defaults and then click
+          page.
+          <span class="text-muted">(In a real study, you could also choose to join someone else's study instead.)</span>
+        </p>
+      </div>
+
+      <div class="row my-2">
+        <div class="text-center">
+          <img class="img-fluid w-75" src="static/images/tutorial/choose_workflow.png" alt="Image failed to load">
+        </div>
+      </div>
+
+      <div class="row">
+        <p>
+          For workflow and configuration, you can leave the defaults and then click
           <span class="btn btn-primary btn-sm" style="pointer-events: none;">Confirm</span>
           to continue.
+        </p>
+      </div>
 
-          <br><br>
+      <div class="row my-2">
+        <div class="text-center">
+          <img class="img-fluid w-50" src="static/images/tutorial/choose_title.png" alt="Image failed to load">
+        </div>
+      </div>
+
+      <div class="row">
+        <p>
           On the next page, you will be asked to provide a name for your study. Pick any unique study title, and you can leave the descritption and study information blank. Be sure to check the "Demo Study" option. Then proceed by clicking
           <span class="btn btn-primary btn-sm" style="pointer-events: none;">Confirm</span>
-          again.
-
-          <br><br>
-          You will now be taken a a page to set the "Shared Study Parameters". For the demo, you can leave all of the parameters as they are. In a real study, you would set them parameters according to your data and preferences. Click
+          again. You will now be taken a a page to set the "Shared Study Parameters". For the demo, you can leave all of the parameters as they are. In a real study, you would set them parameters according to your data and preferences. Click
           <span class="btn btn-primary btn-sm" style="pointer-events: none;">Submit</span>
           to proceed.
         </p>
@@ -53,28 +75,58 @@
       <h4 class="my-4 fw-normal">Configuring your study</h4>
       <div class="row">
         <p>
-          You should now see a page that looks something like this:
+          You should now see a page that looks something like this
+          <span class="text-muted" ">(if you instead see the main study page, click the " Configure Study" button to get to this page)</span>:
         </p>
       </div>
-      <div class="row">
-        <img class="img-fluid" src="static/images/configure.png" alt="Image failed to load">
+      <div class="row my-2">
+        <div class="text-center">
+          <img class="img-fluid w-75" src="static/images/tutorial/prerequisites.png" alt="Image failed to load">
+        </div>
       </div>
-      <div class="row mt-2">
+      <div class="row">
         <p>
           0. When running a real study, you would need to follow the instructions to set up your GCP account. For the sake of this demo, these steps are optional, and the default configuration will run the demo on a GCP machine controlled by us. If you would like to run the demo on your own GCP account, you can follow the instructions. When you are done, you can click
           <span class="btn btn-success btn-sm" style="pointer-events: none;">Next</span>.
+        </p>
+      </div>
 
-          <br><br>
+      <div class="row my-2">
+        <div class="text-center">
+          <img class="img-fluid w-75" src="static/images/tutorial/upload_data.png" alt="Image failed to load">
+        </div>
+      </div>
+
+      <div class="row">
+        <p>
           1. For the GCP Project ID, either leave it as is to use our machines or enter whatever GCP project you chose in step 0. Either way, for the sake of the demo, you can ignore the data paths. In a real study, you would need to upload your data to a bucket in your GCP account and indicate the paths to said data here. Click
           <span class="btn btn-primary btn-sm" style="pointer-events: none;">Save</span>
           if you have made any changes. Once you are done with this step, you can click
           <span class="btn btn-success btn-sm" style="pointer-events: none;">Next</span>.
+        </p>
+      </div>
 
-          <br><br>
+      <div class="row my-2">
+        <div class="text-center">
+          <img class="img-fluid w-75" src="static/images/tutorial/give_permissions.png" alt="Image failed to load">
+        </div>
+      </div>
+
+      <div class="row">
+        <p>
           2. If you are using your own GCP project, please run the given command in your GCP cloud shell. This command will give the website permissions to set up the protocol for your study in your GCP project. Otherwise, you don't need to do anything here. Once you are done, you can click
           <span class="btn btn-success btn-sm" style="pointer-events: none;">Next</span>.
+        </p>
+      </div>
 
-          <br><br>
+      <div class="row my-2">
+        <div class="text-center">
+          <img class="img-fluid w-75" src="static/images/tutorial/choose_vm_size.png" alt="Image failed to load">
+        </div>
+      </div>
+
+      <div class="row">
+        <p>
           3. For the sake of this demo, you can leave the VM size as it is. You can click
           <span class="btn btn-success btn-sm" style="pointer-events: none;">Done</span>
           to proceed.
@@ -88,18 +140,27 @@
         </p>
       </div>
 
-      <div class="row">
+      <div class="row my-2">
         <div class="text-center">
-          <img class="img-fluid w-50" src="static/images/study.png" alt="Image failed to load">
+          <img class="img-fluid w-75" src="static/images/tutorial/study.png" alt="Image failed to load">
         </div>
       </div>
 
-      <div class="row mt-2">
+      <div>
+        <p>
+          This is your main study page. Here you can see the status of your study, and you can download the results when the study is complete. You can also click the "Configure Study" button to go back to the configuration page. This is also where you can view the study participants and add more participants to your study. When all partiicpants initiate their study, the joint study will begin. For this demo, you are the only real participant.
+        </p>
         <p>
           Click the
           <span class="btn btn-success btn-sm" style="pointer-events: none;">Begin MPCGWAS Workflow</span>
-          button to begin your study. The study should take about 1/2 hour to complete, and status updates will be visible on this page. When the study is complete, a link to download the results should appear.
+          button to begin your study. The study should take about 1/2 hour to complete, and status updates will be visible on this page. Feel free to leave this page and come back. When the study is complete, a link to download the results should appear.
         </p>
+      </div>
+
+      <div class="row my-2">
+        <div class="text-center">
+          <img class="img-fluid w-75" src="static/images/tutorial/result.png" alt="Image failed to load">
+        </div>
       </div>
 
     </div>

@@ -5,7 +5,7 @@
   {% for participant in study['participants'] %}
     {% if participant != "Broad" %}
       <label for="NUM_INDS{{participant}}" class="col-sm-5 col-form-label">
-        NUM_INDS for
+        Number of Individuals for
         {{ display_names.get(participant, participant) }}
       </label>
       <div class="col-sm-7">

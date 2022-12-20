@@ -8,7 +8,7 @@ INSTANCE_NAME_ROOT = NETWORK_NAME_ROOT
 
 MPCGWAS_SHARED_PARAMETERS = {
     "NUM_SNPS": {
-        "name": "Number of SNPs",
+        "name": "Number of Single Nucleotide Polymorphisms",
         "description": "The number of SNPs (Single Nucleotide Polymorphisms) in the dataset.",
         "value": 1000,
     },
@@ -18,7 +18,7 @@ MPCGWAS_SHARED_PARAMETERS = {
         "value": 10,
     },
     "NUM_DIM_TO_REMOVE": {
-        "name": "Number of Dimensions to Remove",
+        "name": "Number of PCs for Population Stratification",
         "description": "The number of principal components to correct for (in the PCA).",
         "value": 5,
     },
@@ -28,37 +28,37 @@ MPCGWAS_SHARED_PARAMETERS = {
         "value": 0,
     },
     "IMISS_UB": {
-        "name": "Individual Missing Rate UB",
+        "name": "Individual Missing Rate Upper Bound",
         "description": "The individual missing rate upper bound.",
         "value": 0.05,
     },
     "HET_LB": {
-        "name": "Heterozygosity LB",
+        "name": "Heterozygosity Lower Bound",
         "description": "The individual heterozygosity lower bound.",
         "value": 0.2,
     },
     "HET_UB": {
-        "name": "Heterozygosity UB",
+        "name": "Heterozygosity Upper Bound",
         "description": "The individual heterozygosity upper bound.",
         "value": 0.5,
     },
     "GMISS_UB": {
-        "name": "Genotype Missing Rate UB",
+        "name": "Genotype Missing Rate Upper Bound",
         "description": "The genotype missing rate upper bound.",
         "value": 0.1,
     },
     "MAF_LB": {
-        "name": "Minor Allele Frequency LB",
+        "name": "Minor Allele Frequency Lower Bound",
         "description": "The minor allele frequency lower bound.",
         "value": 0,
     },
     "MAF_UB": {
-        "name": "Minor Allele Frequency UB",
+        "name": "Minor Allele Frequency Upper Bound",
         "description": "The minor allele frequency upper bound.",
         "value": 1,
     },
     "HWE_UB": {
-        "name": "Hardy Weinberg Equilibrium UB",
+        "name": "Hardy Weinberg Equilibrium Upper Bound",
         "description": "The hardy weinberg equilibrium test statistic upper bound.",
         "value": 100000,
     },
@@ -190,7 +190,7 @@ PCA_ADVANCED_PARAMETERS = {
 
 SFGWAS_SHARED_PARAMETERS = {
     "num_snps": {
-        "name": "Number of SNPs",
+        "name": "Number of Single Nucleotide Polymorphisms",
         "description": "The number of SNPs in the dataset.",
         "value": "",
     },
@@ -200,7 +200,7 @@ SFGWAS_SHARED_PARAMETERS = {
         "value": "",
     },
     "num_pcs_to_remove": {
-        "name": "Number of Dimensions to Remove",
+        "name": "Number of PCs for Population Stratification",
         "description": "The number of principal components to correct for (in the PCA).",
         "value": 5,
     },
@@ -210,32 +210,32 @@ SFGWAS_SHARED_PARAMETERS = {
         "value": 0,
     },
     "imiss_ub": {
-        "name": "Individual Missing Rate UB",
+        "name": "Individual Missing Rate Upper Bound",
         "description": "The individual missing rate upper bound.",
         "value": 0.05,
     },
     "het_lb": {
-        "name": "Heterozygosity LB",
+        "name": "Heterozygosity Lower Bound",
         "description": "The individual heterozygosity lower bound.",
         "value": 0.2,
     },
     "het_ub": {
-        "name": "Heterozygosity UB",
+        "name": "Heterozygosity Upper Bound",
         "description": "The individual heterozygosity upper bound.",
         "value": 0.5,
     },
     "gmiss": {
-        "name": "Genotype Missing Rate UB",
+        "name": "Genotype Missing Rate Upper Bound",
         "description": "The genotype missing rate upper bound.",
         "value": 0.1,
     },
     "maf_lb": {
-        "name": "Minor Allele Frequency LB",
+        "name": "Minor Allele Frequency Lower Bound",
         "description": "The minor allele frequency lower bound.",
         "value": 0,
     },
     "hwe_ub": {
-        "name": "Hardy Weinberg Equilibrium UB",
+        "name": "Hardy Weinberg Equilibrium Upper Bound",
         "description": "The hardy weinberg equilibrium test statistic upper bound.",
         "value": 100000,
     },
@@ -328,7 +328,7 @@ DEFAULT_USER_PARAMETERS = {
     "DATA_PATH": {
         "name": "GCP Path to Data",
         "description": "The path to your data in the GCP bucket.  For example, if I put the 'for_gwas' folder in a bucket called 'secure-gwas-data', \
-            the the path would be 'secure-gwas-data/for_gwas'.",
+            the path would be 'secure-gwas-data/for_gwas'.",
         "value": "",
     },
     "GENO_BINARY_FILE_PREFIX": {
