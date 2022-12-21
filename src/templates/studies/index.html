@@ -21,7 +21,7 @@
         <div class="modal-dialog">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title" id="chooseWorkflowLabel">Choose Workflow</h5>
+              <h5 class="modal-title" id="chooseWorkflowLabel">Choose Workflow and Configuration</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="post" action="{{url_for('studies.choose_study_type')}}">
@@ -34,32 +34,30 @@
                   <div class="form-check">
                     <input class="form-check-input" type="radio" name="CHOOSE_STUDY_TYPE" id="mpcgwas" value="MPCGWAS" checked="checked">
                     <label class="form-check-label" for="mpcgwas">
-                      <b>MPC-GWAS</b>
-                      (default) - Secure Multi-Party Computation Genome-Wide Association Study
+                      MPC-GWAS
                     </label>
                   </div>
 
                   <div class="form-check">
                     <input class="form-check-input" type="radio" name="CHOOSE_STUDY_TYPE" id="sfgwas" value="SFGWAS">
                     <label class="form-check-label" for="sfgwas">
-                      <b>SF-GWAS</b>
-                      - Secure Federated Genome-Wide Association Study
+                      SF-GWAS
                     </label>
                   </div>
 
                   <div class="form-check">
                     <input class="form-check-input" type="radio" name="CHOOSE_STUDY_TYPE" id="pca" value="PCA">
                     <label class="form-check-label" for="pca">
-                      <b>SF-PCA</b>
-                      - Secure Federated Principal Component Analysis
+                      SF-PCA
                     </label>
                   </div>
-
-                  <small class="mt-2 text-muted">
-                    Note: If you are unsure which workflow to choose, you can read more about them on the
-                    <a class="text-decoration-none" href="{{url_for('general.workflows')}}">Workflows</a>
-                    page.
-                  </small>
+                  <div class="mt-2">
+                    <small class="text-muted">
+                      Note: If you are unsure which workflow to choose, you can read more about them on the
+                      <a class="text-decoration-none" href="{{url_for('general.workflows')}}">Workflows</a>
+                      page.
+                    </small>
+                  </div>
                 </div>
                 <hr>
                 <div>
@@ -69,22 +67,22 @@
                   <div class="form-check">
                     <input class="form-check-input" type="radio" name="SETUP_CONFIGURATION" id="website" value="website" checked="checked">
                     <label class="form-check-label" for="website">
-                      <b>auto-configured</b>
-                      (default) - With this setting, this website will configure the networking and setup in your GCP project for you.
+                      Auto-configured
                     </label>
                   </div>
                   <div class="form-check">
                     <input class="form-check-input" type="radio" name="SETUP_CONFIGURATION" id="user" value="user">
                     <label class="form-check-label" for="user">
-                      <b>user-configured</b>
-                      - With this setting you will configure the networking and setup in your GCP project yourself. This is more work for you, but it means you don't need to give the website access to your GCP project.
+                      User-configured
                     </label>
                   </div>
-                  <small class="mt-2 text-muted">
-                    Note: If you are unsure which configuration to choose, you can read more about them on the
-                    <a class="text-decoration-none" href="{{url_for('general.instructions')}}">Instructions</a>
-                    page.
-                  </small>
+                  <div class="mt-2">
+                    <small class="text-muted">
+                      Note: If you are unsure which configuration to choose, you can read more about them on the
+                      <a class="text-decoration-none" href="{{url_for('general.instructions')}}">Instructions</a>
+                      page.
+                    </small>
+                  </div>
                 </div>
               </div>
               <div class="modal-footer">

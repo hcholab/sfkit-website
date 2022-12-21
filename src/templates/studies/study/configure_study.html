@@ -37,17 +37,24 @@
   {% call instruction_step(i.value, "Prepare Project", collapsed = "", show = "show") %}
   <div>
     {% set i.value = i.value + 1 %}
-    {% if study_type == "MPCGWAS" %}
+    {# {% if study_type == "MPCGWAS" %}
       <p>0. If you don't already have them, you will need to install
         <a class="text-decoration-none" href="https://git-scm.com/book/en/v2/Getting-Started-Installing-Git">Git</a>
         and
         <a class="text-decoration-none" href="https://www.python.org/downloads/">Python3</a>.
       </p>
+    {% endif %} #}
+    {% if study["demo"] %}
+      <div class="alert alert-info" role="alert">
+        <p class="mb-0">
+          <img src="../static/images/info-square.svg" class="me-1 mb-1" width="20" height="20" alt="info-square">
+          This step can be skipped if you are following the tutorial and using the default GCP Project.
+        </p>
+      </div>
     {% endif %}
     <p>1. You should create a GCP (Google Cloud Platform) project that is dedicated to this study. If you are new to GCP, go to
       <a href="https://console.cloud.google.com/" class="text-decoration-none">console.cloud.google.com</a>
-      and create an account and a project. You can also find lots of information and tutorials on
-      <a class="text-decoration-none" href="https://cloud.google.com/">their website</a>.
+      and create an account and a project.
       <p class="px-2 mb-0">1a. You need to have the
         <code>gcloud.iam.roles.create</code>
         permission in your GCP project. If you are the owner/creator of the project, this is automatically given.</p>
@@ -65,6 +72,14 @@
   {% call instruction_step(i.value, "Upload Data") %}
   <div>
     {% set i.value = i.value + 1 %}
+    {% if study["demo"] %}
+      <div class="alert alert-info" role="alert">
+        <p class="mb-0">
+          <img src="../static/images/info-square.svg" class="me-1 mb-1" width="20" height="20" alt="info-square">
+          This step can be skipped if you are following the tutorial and using the default GCP Project.
+        </p>
+      </div>
+    {% endif %}
     <p>
       1. Upload your data to a google cloud storage bucket in your GCP (Google Cloud Platform) project. If you are unfamiliar with Google Cloud Storage, see the google documentation
       <a class="text-decoration-none" href="https://cloud.google.com/storage/docs/quickstart-console">here</a>
@@ -123,11 +138,27 @@
 
   {% call instruction_step(i.value, "Give Permissions") %}
   {% set i.value = i.value + 1 %}
+  {% if study["demo"] %}
+    <div class="alert alert-info" role="alert">
+      <p class="mb-0">
+        <img src="../static/images/info-square.svg" class="me-1 mb-1" width="20" height="20" alt="info-square">
+        This step can be skipped if you are following the tutorial and using the default GCP Project.
+      </p>
+    </div>
+  {% endif %}
   {% include 'studies/study/permissions.html' %}
   {% endcall %}
 
   {% call instruction_step(i.value, "Choose VM Size") %}
   {% set i.value = i.value + 1 %}
+  {% if study["demo"] %}
+    <div class="alert alert-info" role="alert">
+      <p class="mb-0">
+        <img src="../static/images/info-square.svg" class="me-1 mb-1" width="20" height="20" alt="info-square">
+        This step can be skipped if you are following the tutorial and using the default GCP Project.
+      </p>
+    </div>
+  {% endif %}
   <p>
     1. Choose the Virtual Machine (VM) size that you would like to use for your study. The VM size determines the amount of memory and CPU cores that will be available to your study. The VM size also determines the cost of your study. If you would like guidance on what size machine to use, see the
     <a class="text-decoration-none" href=" {{url_for('general.instructions', _anchor='machine_recommendations')}} ">Machine Recommendations</a>
