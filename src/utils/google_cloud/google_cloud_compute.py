@@ -49,7 +49,7 @@ class GoogleCloudCompute:
             print(f"Error getting subnets: {e}")
             subnets = []
         for subnet in subnets:
-            if subnet["name"][:-1] == create_subnet_name(self.study_title, ""):
+            if subnet["name"][:-1] == create_subnet_name(self.network_name, ""):
                 self.delete_subnet(subnet)
 
         self.delete_network()
@@ -62,13 +62,14 @@ class GoogleCloudCompute:
             for participant in doc_ref_dict["participants"]
         )
 
-        self.create_network_if_it_does_not_already_exist()
+        self.create_network_if_it_does_not_already_exist(doc_ref_dict)
         self.remove_conflicting_peerings(gcp_projects)
         self.remove_conflicting_subnets(gcp_projects)
         self.create_subnet(role)
-        self.create_peerings(gcp_projects)
+        if doc_ref_dict["setup_configuration"] == "website":
+            self.create_peerings(gcp_projects)
 
-    def create_network_if_it_does_not_already_exist(self) -> None:
+    def create_network_if_it_does_not_already_exist(self, doc_ref_dict: dict) -> None:
         networks: list = self.compute.networks().list(project=self.gcp_project).execute()["items"]
         network_names: list[str] = [net["name"] for net in networks]
 
@@ -82,7 +83,7 @@ class GoogleCloudCompute:
             operation = self.compute.networks().insert(project=self.gcp_project, body=req_body).execute()
             self.wait_for_operation(operation["name"])
 
-            self.create_firewall()
+            self.create_firewall(doc_ref_dict)
         else:
             print(f"Network {self.network_name} already exists")
 
@@ -99,20 +100,24 @@ class GoogleCloudCompute:
             operation = self.compute.networks().delete(project=self.gcp_project, network=self.network_name).execute()
             self.wait_for_operation(operation["name"])
 
-    def create_firewall(self) -> None:
+    def create_firewall(self, doc_ref_dict) -> None:
         print(f"Creating new firewalls for network {self.network_name}")
         network_url: str = ""
         for net in self.compute.networks().list(project=self.gcp_project).execute()["items"]:
             if net["name"] == self.network_name:
                 network_url = net["selfLink"]
 
+        source_ranges: list = constants.SOURCE_IP_RANGES
+        for participant in doc_ref_dict["participants"]:
+            ip = doc_ref_dict["personal_parameters"][participant]["IP_ADDRESS"]["value"]
+            if ip != "":
+                source_ranges.append(ip)
+
         firewall_body: dict = {
             "name": self.firewall_name,
             "network": network_url,
             "targetTags": [constants.INSTANCE_NAME_ROOT],
-            "sourceRanges": constants.BROAD_VM_SOURCE_IP_RANGES
-            if "broad-cho-priv" in self.gcp_project
-            else ["0.0.0.0/0"],
+            "sourceRanges": source_ranges,
             "allowed": [{"ports": ["8000-8999", "22"], "IPProtocol": "tcp"}],
         }
 

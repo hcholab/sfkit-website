@@ -109,6 +109,15 @@ def create_study(study_type: str, setup_configuration: str) -> Response:
         return response
 
     doc_ref = current_app.config["DATABASE"].collection("studies").document(title.replace(" ", "").lower())
+
+    broad_starting_status: str = "ready to begin "
+    if setup_configuration == "website":
+        broad_starting_status += "sfkit"
+    elif setup_configuration == "user":
+        broad_starting_status += "protocol"
+    else:
+        raise ValueError(f"Invalid setup configuration: {setup_configuration}")
+
     doc_ref.set(
         {
             "title": title,
@@ -121,7 +130,7 @@ def create_study(study_type: str, setup_configuration: str) -> Response:
             "owner": g.user["id"],
             "created": datetime.now(),
             "participants": ["Broad", g.user["id"]],
-            "status": {"Broad": "ready to begin sfkit", g.user["id"]: ""},
+            "status": {"Broad": broad_starting_status, g.user["id"]: ""},
             "parameters": constants.SHARED_PARAMETERS[study_type],
             "advanced_parameters": constants.ADVANCED_PARAMETERS[study_type],
             "personal_parameters": {

@@ -435,16 +435,9 @@ BROAD_VM_SOURCE_IP_RANGES = [
     "69.173.64.0/19",
     "69.173.127.192/27",
     "69.173.124.0/23",
+]
+
+SOURCE_IP_RANGES = BROAD_VM_SOURCE_IP_RANGES + [
     "35.235.240.0/20",  # IAP TCP forwarding
-    "10.0.0.10",  # other VMs for auto-configured computation
-    "10.0.1.10",
-    "10.0.2.10",
-    "10.0.3.10",
-    "10.0.4.10",
-    "10.0.5.10",
-    "10.0.6.10",
-    "10.0.7.10",
-    "10.0.8.10",
-    "10.0.9.10",
-    "10.0.10.10",
+    "10.128.0.0/9",  # Google internal IPs
 ]

@@ -19,6 +19,7 @@ def test_setup_networking(mocker):
         {
             "personal_parameters": {"Broad": {"GCP_PROJECT": {"value": "b"}}, "p": {"GCP_PROJECT": {"value": "b"}}},
             "participants": ["Broad", "p"],
+            "setup_configuration": "website",
         },
         "role",
     )
@@ -51,10 +52,10 @@ def test_create_network_if_it_does_not_already_exist(mocker):
     mocker.patch(f"{patch_prefix}.wait_for_operation", return_value=None)
     mocker.patch(f"{patch_prefix}.create_firewall", return_value=None)
     google_cloud_compute = GoogleCloudCompute("alpha", "broad-cho-priv1")
-    google_cloud_compute.create_network_if_it_does_not_already_exist()
+    google_cloud_compute.create_network_if_it_does_not_already_exist({})
 
     google_cloud_compute = GoogleCloudCompute("subnet0", "subnet")
-    google_cloud_compute.create_network_if_it_does_not_already_exist()
+    google_cloud_compute.create_network_if_it_does_not_already_exist({})
 
     # assert False
 
@@ -72,10 +73,10 @@ def test_create_firewall(mocker):
     setup_mocking(mocker)
     mocker.patch(f"{patch_prefix}.wait_for_operation", return_value=None)
     google_cloud_compute = GoogleCloudCompute("alpha", "broad-cho-priv1")
-    google_cloud_compute.create_firewall()
+    google_cloud_compute.create_firewall({"participants": []})
 
     google_cloud_compute = GoogleCloudCompute("subnet0", "subnet")
-    google_cloud_compute.create_firewall()
+    google_cloud_compute.create_firewall({"participants": []})
 
 
 def test_delete_firewall(mocker):
