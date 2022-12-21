@@ -116,6 +116,7 @@ def create_cp0() -> Tuple[dict, int]:
 
     db = current_app.config["DATABASE"]
     study_title = db.collection("users").document("auth_keys").get().to_dict()[auth_key]["study_title"]
+    study_title = study_title.replace(" ", "").lower()
 
     doc_ref = current_app.config["DATABASE"].collection("studies").document(study_title)
     doc_ref_dict: dict = doc_ref.get().to_dict()
