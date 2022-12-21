@@ -452,9 +452,6 @@ def start_protocol(study_title: str) -> Response:
         make_auth_key(study_title, user_id)
         setup_gcp(doc_ref, role)
 
-        if role == "1" and not demo:
-            setup_gcp(doc_ref, "0")
-
     return redirect(url_for("studies.study", study_title=study_title))
 
 
