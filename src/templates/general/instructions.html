@@ -11,7 +11,8 @@
     <div class="col-12 col-lg-9 bg-light p-4 mt-3 mx-auto">
       <h5>
         <img src="static/images/info-square.svg" class="me-1 mb-1" width="20" height="20" alt="info-square">
-        Two ways to use <b>sfkit</b>
+        Two ways to use
+        <b>sfkit</b>
       </h5>
 
       <p>In an <b>auto-configured</b> mode, once the study is configured and launched on the website,
@@ -41,61 +42,115 @@
           </li>
         </ol>
 
-        <p>See <i>Machine Recommendations</i> on the bottom of this page for guidance on machine types.</p>
+
+        <p>See
+          <i>Machine Recommendations</i>
+          on the bottom of this page for guidance on machine types.
+        </p>
 
 
-        <span class="text-muted">Note: For the <a href="{{ url_for('general.tutorial') }}"
-            class="text-decoration-none">Tutorial</a>,
-          you can use our GCP project and example data for testing purposes.</span>
+
+        <span class="text-muted">Note: For the
+          <a href="{{ url_for('general.tutorial') }}" class="text-decoration-none">Tutorial</a>, you can use our GCP
+          project and exameple data for testing purposes.</span>
       </div>
     </div>
-
 
     <h4 class="my-4 fw-normal">Data Preparation</h4>
     <div class="row p-4 bg-light rounded">
       <ul class="nav nav-tabs" role="tablist">
         <li class="nav-item">
-          <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#data-mpcgwas"
-            type="button">MPC-GWAS workflow</button>
+          <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#data-mpcgwas" type="button">MPC-GWAS
+            workflow</button>
         </li>
         <li class="nav-item">
-          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#data-sfgwas"
-            type="button">SF-GWAS workflow</button>
+          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#data-sfgwas" type="button">SF-GWAS
+            workflow</button>
         </li>
         <li class="nav-item">
-          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#data-sfpca"
-            type="button">SF-PCA workflow</button>
+          <button class="nav-link" data-bs-toggle="tab" data-bs-target="#data-sfpca" type="button">SF-PCA
+            workflow</button>
         </li>
       </ul>
       <div class="row tab-content">
         <div class="container tab-pane fade show active" id="data-mpcgwas">
           <div class="row mt-3">
             <p>
-              For GWAS, each user holds a portion of the horizontally distributed input genotype matrix (in which each row is a data sample and the features correspond to SNPs), covariate matrix (cov.txt) and the phenotype vector (pheno.txt). These users’ local files must be named and formatted as follows:
-- geno.txt - The genotype matrix, or minor allele dosage matrix, is stored as a tab-separated file in which the SNP values (i.e., features) are encoded as genotype scores (i.e., as 0, 1, or 2).
-- pos.txt - This file must accompany the genotype matrix and stores the genomic positions of the SNPs in a 2-columns file where each row contains the chromosome number and the position in the chromosome of the corresponding SNP, separated by a tabulation.
-- cov.txt - A tab-separated file storing the covariate matrix in which each row is a sample, and each column is a covariate, e.g., patient older than 50 years old. We assume all covariates are binary.
-- pheno.txt - The phenotype vector, e.g., containing the infection status of each patient, is stored in a single-column file. We assume that the phenotype is binary.
+              For GWAS, each user holds a portion of the horizontally distributed input genotype matrix (in which each
+              row is a data sample and the features correspond to SNPs), covariate matrix and phenotype vector. These
+              users’ local files must be named and formatted as follows:
             </p>
+            <div>
+              <ul>
+                <li>
+                  <code>geno.txt</code>
+                  - The genotype matrix, or minor allele dosage matrix, is stored as a tab-separated file in which the
+                  SNP values (i.e., features) are encoded as genotype scores (i.e., as 0, 1, or 2).
+                </li>
+                <li>
+                  <code>pos.txt</code>
+                  - This file must accompany the genotype matrix and stores the genomic positions of the SNPs in a
+                  2-columns file where each row contains the chromosome number and the position in the chromosome of the
+                  corresponding SNP, separated by a tabulation.
+                </li>
+                <li>
+                  <code>cov.txt</code>
+                  - A tab-separated file storing the covariate matrix in which each row is a sample, and each column is
+                  a covariate, e.g., patient older than 50 years old. We assume all covariates are binary.
+                </li>
+                <li>
+                  <code>pheno.txt</code>
+                  - The phenotype vector, e.g., containing the infection status of each patient, is stored in a
+                  single-column file. We assume that the phenotype is binary.
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
 
         <div class="container tab-pane fade" id="data-sfgwas">
           <div class="row mt-3">
             <p>
-              For this workflow, the input data are similar as in (2) except for the encoding of the genotype matrix file and for the fact that neither the covariates or the phenotypes are required to be binary.
-              - geno/chr[1-22].[pgen|psam|pvar]: the genotype or minor allele dosage matrix is encoded by using the PGEN file format for each chromosome. This format has been introduced in the standard PLINK2 tool for genomic data processing as an efficient format to store large-scale genomic datasets. Note that this file encodes directly the genomic positions of the SNPs.
-              - sample_keep.txt: this file accompanies the genotype matrix and lists the sample IDs from the .psam file to include in the analysis. This file is required to comply with the standard format proposed in PLINK2 (see --keep option in PLINK2 documentation).
-              - pheno.txt: as before, each line includes the phenotype under study for each sample.
-              - cov.txt: each line includes a tab-separated list of covariates for each sample.              
+              For this workflow, the input data are similar to those in the previous workflow, except for the following
+              differences:
             </p>
+            <div>
+              <ul>
+                <li>
+                  <code>geno/chr[1-22].[pgen|psam|pvar]:</code>
+                  The genotype or minor allele dosage matrix is encoded using the PGEN file format for each chromosome.
+                  This format has been introduced in the standard
+                  <a class="text-decoration-none" href="https://www.cog-genomics.org/plink/2.0/formats">PLINK2</a>
+                  tool for genomic data processing as an efficient way to store large-scale genomic datasets. Note that
+                  this file encodes the genomic positions of the SNPs directly.
+                </li>
+                <li>
+                  <code>sample_keep.txt:</code>
+                  This file accompanies the genotype matrix and lists the sample IDs from the .psam file to include in
+                  the analysis. This file is required to comply with the standard format proposed in PLINK2 (see the
+                  --keep option in the PLINK2 documentation).
+                </li>
+                <li>
+                  <code>pheno.txt:</code>
+                  As before, each line includes the phenotype under study for each sample.
+                </li>
+                <li>
+                  <code>cov.txt:</code>
+                  Each line includes a tab-separated list of covariates for each sample. Unlike in the previous
+                  workflow, the covariates and phenotypes in this workflow are not required to be binary.
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
 
         <div class="container tab-pane fade" id="data-sfpca">
           <div class="row mt-3">
             <p>
-              Each user data, consisting in an horizontal partition of the input matrix (in which the rows are the data samples and the columns correspond to the features) must be locally stored as a single tab-separated file called data.txt.
+              Each user data, consisting in an horizontal partition of the input matrix (in which the rows are the data
+              samples and the columns correspond to the features) must be locally stored as a single tab-separated file
+              called
+              <code>data.txt</code>.
             </p>
           </div>
         </div>
@@ -108,14 +163,15 @@
       <p>
         When you are ready to run a study, go to
         <a href="{{ url_for('studies.index') }}" class="text-decoration-none">Studies</a>
-        to create or join a study. 
+        to create or join a study.
       </p>
 
       <div>
         <p>If you are creating a study, you will need to:</p>
         <ul>
           <li>
-            Choose one of our <a href="{{ url_for('general.workflows') }}" class="text-decoration-none">Workflows</a> for the study.
+            Choose one of our <a href="{{ url_for('general.workflows') }}" class="text-decoration-none">Workflows</a>
+            for the study.
           </li>
           <li>
             Specify whether you want the study to be auto-configured or user-configured (described below).
@@ -126,7 +182,8 @@
         </ul>
       </div>
       <p>
-        If you are joining a study, you will only need to review and update the study parameters to provide information about your dataset.
+        If you are joining a study, you will only need to review and update the study parameters to provide information
+        about your dataset.
       </p>
     </div>
 
@@ -146,11 +203,12 @@
         <div class="container tab-pane fade show active" id="Auto-configured">
           <div class="row mt-3">
             <p>
-              The sfkit portal will set up the machine and run the study for you. This option is currently supported 
-              using the  <a class="text-decoration-none" href="https://cloud.google.com/">Google Cloud Platform (GCP)</a>. 
+              The sfkit portal will set up the machine and run the study for you. This option is currently supported
+              using the <a class="text-decoration-none" href="https://cloud.google.com/">Google Cloud Platform
+                (GCP)</a>.
               You will need to give sfkit limited permissions
               to interact with your GCP project.
-              You will be walked through the specifics of this process once you create a study with this option. 
+              You will be walked through the specifics of this process once you create a study with this option.
               <!-- If you are new to GCP, you can find lots of information and tutorials on <a class="text-decoration-none" href="https://cloud.google.com/">their website</a>. -->
             </p>
             <p>This is recommended for users who are not familiar with the command line and/or want to get started
@@ -166,7 +224,7 @@
               will walk you through each step of the workflow so you can run the study on your own machine.
             </p>
             <p>This is recommended for users who are familiar with the command line and want to directly control
-               their computing environment.</p>
+              their computing environment.</p>
           </div>
         </div>
       </div>
@@ -278,7 +336,7 @@
           5.
           <b>Run Protocol</b>:
           Run the collaborative analysis protocol that you have chosen. Your machine will use the ports and
-          IP addresses provided in Step 2 to securely communicate with collaborators' machines. 
+          IP addresses provided in Step 2 to securely communicate with collaborators' machines.
           This step may take several hours depending on the study workflow and the dataset sizes.
           The results of the protocol can be accessed at your convenience in the output location, or via the portal
           if you have given sfkit permission to fetch results for you.
@@ -287,12 +345,14 @@
     </div>
 
     <br>
-    
+
     <section id="machine_recommendations">
       <h4 class="my-4 fw-normal">Machine Recommendations</h4>
       <p>
-        If you are unsure what machine size or type to use for your study, you can use this tool to see our recommendation.
-        Note that this guidance is based on the machines that are available on the Google Cloud Platform, but equivalent machines can
+        If you are unsure what machine size or type to use for your study, you can use this tool to see our
+        recommendation.
+        Note that this guidance is based on the machines that are available on the Google Cloud Platform, but equivalent
+        machines can
         be used instead.
       </p>
       <div class="row p-4 bg-light rounded">
