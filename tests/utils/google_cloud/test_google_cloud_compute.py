@@ -1,7 +1,7 @@
 # sourcery skip: do-not-use-staticmethod, docstrings-for-classes, raise-specific-error, require-parameter-annotation, require-return-annotation, snake-case-functions
 import pytest
 from src.utils import constants
-from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
+from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, create_instance_name
 
 patch_prefix = "src.utils.google_cloud.google_cloud_compute.GoogleCloudCompute"
 
@@ -212,6 +212,10 @@ def test_vm_external_ip_address(mocker):
     setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("alpha", "broad-cho-priv1")
     assert google_cloud_compute.get_vm_external_ip_address("zone", "name") == "1877.0.0.1"
+
+
+def test_create_instance_name():
+    assert create_instance_name("testtitle", "1") == "testtitle-sfkit1"
 
 
 def setup_mocking(mocker):

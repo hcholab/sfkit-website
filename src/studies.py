@@ -15,10 +15,10 @@ from werkzeug import Response
 from src.auth import login_required
 from src.utils import constants
 from src.utils.generic_functions import add_notification, redirect_with_flash
-from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
+from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, create_instance_name
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 from src.utils.google_cloud.google_cloud_storage import download_blob
-from src.utils.gwas_functions import create_instance_name, valid_study_title
+from src.utils.gwas_functions import valid_study_title
 
 bp = Blueprint("studies", __name__)
 
@@ -212,7 +212,7 @@ def email(inviter: str, recipient: str, invitation_message: str, study_title: st
     doc_ref_dict: dict = current_app.config["DATABASE"].collection("meta").document("sendgrid").get().to_dict()
     sg = SendGridAPIClient(api_key=doc_ref_dict.get("api_key", ""))
 
-    html_content = f"<p>Hello!<br>{inviter} has invited you to join the {study_title} study on the Secure GWAS website.  Click <a href='https://sfkit.org/accept_invitation/{study_title.replace(' ', '').lower()}'>here</a> to accept the invitation."
+    html_content = f"<p>Hello!<br>{inviter} has invited you to join the {study_title} study on the sfkit website.  Click <a href='https://sfkit.org/accept_invitation/{study_title.replace(' ', '').lower()}'>here</a> to accept the invitation."
 
     if invitation_message:
         html_content += f"<br><br>Here is a message from {inviter}:<br>{invitation_message}</p>"

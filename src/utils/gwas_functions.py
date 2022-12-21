@@ -1,7 +1,6 @@
 import re
 
 from flask import current_app, redirect, url_for
-from src.utils import constants
 from src.utils.generic_functions import redirect_with_flash
 from werkzeug import Response
 
@@ -32,7 +31,3 @@ def valid_study_title(study_title: str, study_type: str, setup_configuration: st
             )
 
     return (True, redirect(url_for("studies.parameters", study_title=study_title)))
-
-
-def create_instance_name(study_title: str, role: str) -> str:
-    return f"{study_title.replace(' ', '').lower()}-{constants.INSTANCE_NAME_ROOT}{role}"

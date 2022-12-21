@@ -5,9 +5,8 @@ from flask import Blueprint, current_app, request
 from werkzeug import Request
 
 from src.studies import setup_gcp
-from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
+from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, create_instance_name
 from src.utils.google_cloud.google_cloud_storage import upload_blob
-from src.utils.gwas_functions import create_instance_name
 
 bp = Blueprint("api", __name__)
 

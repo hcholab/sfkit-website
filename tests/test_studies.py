@@ -20,7 +20,6 @@ def test_index(client):
     assert response.status_code == 200
     assert b"Log In" in response.data
     assert b"Register" in response.data
-    assert b"Secure GWAS" in response.data
 
 
 def test_study(client, auth, mocker):

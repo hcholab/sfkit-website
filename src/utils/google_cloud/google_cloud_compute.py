@@ -19,18 +19,16 @@ class GoogleCloudCompute:
         self.gcp_project: str = gcp_project
         self.study_title: str = study_title.replace(" ", "").lower()
         self.network_name = f"{constants.NETWORK_NAME_ROOT}-{study_title}"
+        self.firewall_name = f"{self.network_name}-vm-ingress"
         self.compute = googleapi.build("compute", "v1")
 
     def delete_everything(self) -> None:
-        # network peerings
         self.remove_conflicting_peerings()
 
-        # vms
         for instance in self.list_instances():
-            if constants.INSTANCE_NAME_ROOT in instance and self.study_title in instance:
+            if instance[:-1] == create_instance_name(self.study_title, ""):
                 self.delete_instance(instance)
 
-        # firewalls
         try:
             firewalls: list = self.compute.firewalls().list(project=self.gcp_project).execute()["items"]
         except Exception as e:
@@ -38,10 +36,9 @@ class GoogleCloudCompute:
             firewalls = []
         firewall_names: list[str] = [firewall["name"] for firewall in firewalls]
         for firewall_name in firewall_names:
-            if self.network_name in firewall_name:
+            if firewall_name == self.firewall_name:
                 self.delete_firewall(firewall_name)
 
-        # subnets
         try:
             subnets: list = (
                 self.compute.subnetworks()
@@ -52,10 +49,9 @@ class GoogleCloudCompute:
             print(f"Error getting subnets: {e}")
             subnets = []
         for subnet in subnets:
-            if self.network_name in subnet["name"]:
+            if subnet["name"][:-1] == create_subnet_name(self.study_title, ""):
                 self.delete_subnet(subnet)
 
-        # vpc network
         self.delete_network()
 
     def setup_networking(self, doc_ref_dict: dict, role: str) -> None:
@@ -111,7 +107,7 @@ class GoogleCloudCompute:
                 network_url = net["selfLink"]
 
         firewall_body: dict = {
-            "name": f"{self.network_name}-vm-ingress",
+            "name": self.firewall_name,
             "network": network_url,
             "targetTags": [constants.INSTANCE_NAME_ROOT],
             "sourceRanges": constants.BROAD_VM_SOURCE_IP_RANGES
@@ -191,7 +187,7 @@ class GoogleCloudCompute:
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(30))
     def create_subnet(self, role: str, region: str = constants.SERVER_REGION) -> None:
         # create subnet if it doesn't already exist
-        subnet_name = f"{self.network_name}-subnet{role}"
+        subnet_name = create_subnet_name(self.network_name, role)
         subnets = (
             self.compute.subnetworks()
             .list(project=self.gcp_project, region=constants.SERVER_REGION)
@@ -405,3 +401,11 @@ class GoogleCloudCompute:
         print("Getting the IP address for VM instance", instance)
         response = self.compute.instances().get(project=self.gcp_project, zone=zone, instance=instance).execute()
         return response["networkInterfaces"][0]["accessConfigs"][0]["natIP"]
+
+
+def create_instance_name(study_title: str, role: str) -> str:
+    return f"{study_title.replace(' ', '').lower()}-{constants.INSTANCE_NAME_ROOT}{role}"
+
+
+def create_subnet_name(network_name: str, role: str) -> str:
+    return f"{network_name}-subnet{role}"

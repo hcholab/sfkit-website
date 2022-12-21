@@ -30,10 +30,6 @@ def test_valid_study_title(client, app, auth, mocker):
         assert gwas_functions.valid_study_title("testtitle2", "MPCGWAS", "user")[0] == False
 
 
-def test_create_instance_name():
-    assert gwas_functions.create_instance_name("testtitle", "1") == "testtitle-sfkit1"
-
-
 def setup_mocking(mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     mocker.patch("src.utils.gwas_functions.redirect", mock_redirect)
