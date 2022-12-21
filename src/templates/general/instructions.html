@@ -397,7 +397,7 @@
               </div>
               <div class="col mt-3">
                 <div class="card card-body" id="recommendation_sfgwas">The default recommendation is an e2-highmem-16
-                  machine with 128GB RAM and a boot disk of at least 128GB.</div>
+                  machine with 128GB RAM and a boot disk of at least 128GB (estimated cost of $0.75/hour).</div>
               </div>
             </div>
           </div>
@@ -424,7 +424,7 @@
               </div>
               <div class="col mt-3">
                 <div class="card card-body" id="recommendation_sfpca">The default recommendation is an e2-highmem-16
-                  machine with 128GB RAM and a boot disk of at least 128GB.</div>
+                  machine with 128GB RAM and a boot disk of at least 128GB (estimated cost of $0.75/hour).</div>
               </div>
             </div>
           </div>
@@ -451,7 +451,7 @@
               </div>
               <div class="col mt-3">
                 <div class="card card-body" id="recommendation_mpcgwas">The default recommendation is an e2-highmem-16
-                  machine with 128GB RAM and a boot disk of at least 128GB.</div>
+                  machine with 128GB RAM and a boot disk of at least 128GB (estimated cost of $0.75/hour).</div>
               </div>
             </div>
           </div>
@@ -469,10 +469,10 @@
   function recommendMachine(workflow) {
     var base = "Based on your selection, we recommend you use an ";
     var recommendations = {
-      1: 'e2-highmem-16 with at least a 128 GB boot disk.',
-      2: 'n2-highmem-32 with at least a 256 GB boot disk.',
-      3: 'n2-highmem-64 with at least a 512 GB boot disk.',
-      4: 'n2-highmem-128 with at least a 1024 GB boot disk.'
+      1: 'e2-highmem-16 with at least a 128 GB boot disk (estimated cost of $0.75/hour).',
+      2: 'n2-highmem-32 with at least a 256 GB boot disk (estimated cost of $1.75/hour).',
+      3: 'n2-highmem-64 with at least a 512 GB boot disk (estimated cost of $3.50/hour).',
+      4: 'n2-highmem-128 with at least a 1024 GB boot disk (estimated cost of $6.50/hour).'
     }
     var num_rows = parseInt($('#num_rows_' + workflow).val()) || 0;
     var num_cols = parseInt($('#num_cols_' + workflow).val()) || 0;
