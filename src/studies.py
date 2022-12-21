@@ -114,7 +114,7 @@ def create_study(study_type: str, setup_configuration: str) -> Response:
             "title": title,
             "study_type": study_type,
             "setup_configuration": setup_configuration,
-            "private": request.form.get("private_study") == "on",
+            "private": request.form.get("private_study") == "on" or demo,
             "demo": demo,
             "description": description,
             "study_information": study_information,
