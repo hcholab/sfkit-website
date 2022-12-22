@@ -33,12 +33,12 @@ def upload_file() -> Tuple[dict, int]:
 
     dir_path = f"results/{study_title}"
     os.makedirs(dir_path, exist_ok=True)
-    file_path = os.path.join(dir_path, "result.txt")
+    file_path = os.path.join(dir_path, str(file.filename))
     file.save(file_path)
-    print(f"uploaded file {file.filename} to {study_title} under name result.txt")
+    print(f"uploaded file {file.filename} to {study_title}")
 
     # upload file to google cloud storage
-    upload_blob("sfkit", file_path, "result.txt")
+    upload_blob("sfkit", file_path, str(file.filename))
 
     return {}, 200
 

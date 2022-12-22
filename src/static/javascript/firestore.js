@@ -96,6 +96,14 @@ export function getStatusUpdates(db, study_title, user_id) {
     if (doc.data()["status"][user_id].includes("Finished protocol")) {
       document.getElementById("download-div").style.display = "block";
       document.getElementById("check-for-update").style.display = "none";
+
+      // make div that has image from static/images/{study_title}_manhattan.png
+      const manhattan = document.createElement("img");
+      manhattan.setAttribute("src", "/static/images/" + study_title + "_manhattan.png");
+      manhattan.setAttribute("alt", "Please click 'Download results' and reload page to show Manhattan plot");
+      manhattan.setAttribute("width", "100%");
+      manhattan.setAttribute("height", "100%");
+      document.getElementById("manhattan-div").appendChild(manhattan);
     }
   });
 }

@@ -17,7 +17,7 @@ echo $auth_key > auth_key.txt
 
 apt-get --assume-yes update
 apt-get --assume-yes install build-essential
-apt-get install python3-pip wget git zip unzip -y 
+apt-get install python3-pip python3-numpy wget git zip unzip -y 
 
 pip install sfkit
 PATH=$PATH:~/.local/bin

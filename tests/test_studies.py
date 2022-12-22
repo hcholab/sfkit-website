@@ -198,7 +198,7 @@ def test_download_results_file(client, auth, mocker):
     mocker.patch("src.studies.open", return_value=StringIO(""))
     response = client.get("study/testtitle/download_results_file")
     assert response.status_code == 200
-    assert response.headers.get("Content-Disposition") == "attachment; filename=result.txt"
+    assert response.headers.get("Content-Disposition") == "attachment; filename=assoc.txt"
 
     mocker.patch("src.studies.open", side_effect=FileNotFoundError)
     client.get("study/testtitle/download_results_file")
