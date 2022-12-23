@@ -97,13 +97,15 @@ export function getStatusUpdates(db, study_title, user_id) {
       document.getElementById("download-div").style.display = "block";
       document.getElementById("check-for-update").style.display = "none";
 
-      // make div that has image from static/images/{study_title}_manhattan.png
-      const manhattan = document.createElement("img");
-      manhattan.setAttribute("src", "/static/images/" + study_title + "_manhattan.png");
-      manhattan.setAttribute("alt", "Please click 'Download results' and reload page to show Manhattan plot");
-      manhattan.setAttribute("width", "100%");
-      manhattan.setAttribute("height", "100%");
-      document.getElementById("manhattan-div").appendChild(manhattan);
+      // if study_type is MPCGWAS, show manhattan plot
+      if (doc.data()["study_type"] === "MPCGWAS") {
+        const manhattan = document.createElement("img");
+        manhattan.setAttribute("src", "/static/images/" + study_title + "_manhattan.png");
+        manhattan.setAttribute("alt", "Click 'Download results' and reload page to view manhattan plot");
+        manhattan.setAttribute("width", "100%");
+        manhattan.setAttribute("height", "100%");
+        document.getElementById("manhattan-div").appendChild(manhattan);
+      }
     }
   });
 }

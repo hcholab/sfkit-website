@@ -368,21 +368,26 @@ def download_key_file(study_title: str) -> Response:
 def download_results_file(study_title: str) -> Response:
     study_title = study_title.replace(" ", "").lower()
     os.makedirs(f"results/{study_title}", exist_ok=True)
-    download_blob("sfkit", "new_assoc.txt", f"results/{study_title}/new_assoc.txt")
-
-    # download manhattan.png to static/images/manhattan.png
-    download_blob("sfkit", "manhattan.png", f"src/static/images/{study_title}_manhattan.png")
+    download_blob(
+        "sfkit",
+        f"{study_title}/result.txt",
+        f"results/{study_title}/result.txt",
+    )
+    download_blob(
+        "sfkit",
+        f"{study_title}/manhattan.png",
+        f"src/static/images/{study_title}_manhattan.png",
+    )
 
     try:
-        with open(f"results/{study_title}/new_assoc.txt", "r") as f:
+        with open(f"results/{study_title}/result.txt", "r") as f:
             return send_file(
                 io.BytesIO(f.read().encode()),
-                download_name="assoc.txt",
+                download_name="result.txt",
                 mimetype="text/plain",
                 as_attachment=True,
             )
     except FileNotFoundError:
-        # return send_file with a string that says "failed to get results"
         return send_file(
             io.BytesIO("Failed to get results".encode()),
             download_name="result.txt",

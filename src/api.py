@@ -31,14 +31,21 @@ def upload_file() -> Tuple[dict, int]:
 
     print(f"filename: {file.filename}")
 
-    dir_path = f"results/{study_title}"
-    os.makedirs(dir_path, exist_ok=True)
-    file_path = os.path.join(dir_path, str(file.filename))
+    if "manhattan" in str(file.filename):
+        file_path = f"src/static/images/{study_title}_manhattan.png"
+    else:
+        dir_path = f"results/{study_title}"
+        os.makedirs(dir_path, exist_ok=True)
+        file_path = os.path.join(dir_path, str(file.filename))
+
     file.save(file_path)
-    print(f"uploaded file {file.filename} to {study_title}")
+    print(f"saved file {file.filename} to {file_path}")
 
     # upload file to google cloud storage
-    upload_blob("sfkit", file_path, str(file.filename))
+    if "manhattan" in str(file.filename):
+        upload_blob("sfkit", file_path, f"{study_title}/manhattan.png")
+    else:
+        upload_blob("sfkit", file_path, f"{study_title}/result.txt")
 
     return {}, 200
 
