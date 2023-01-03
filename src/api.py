@@ -97,6 +97,7 @@ def update_firestore() -> Tuple[dict, int]:
     if parameter.startswith("status"):
         status = parameter.split("=")[1]
         doc_ref_dict["status"][username] = status
+        doc_ref.set(doc_ref_dict)
         if "Finished protocol" in status and doc_ref_dict["setup_configuration"] == "website":
             gcloudCompute = GoogleCloudCompute(study_title, gcp_project)
             gcloudCompute.stop_instance(create_instance_name(doc_ref_dict["title"], role))

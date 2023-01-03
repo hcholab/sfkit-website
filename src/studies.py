@@ -110,13 +110,7 @@ def create_study(study_type: str, setup_configuration: str) -> Response:
 
     doc_ref = current_app.config["DATABASE"].collection("studies").document(title.replace(" ", "").lower())
 
-    broad_starting_status: str = "ready to begin "
-    if setup_configuration == "website":
-        broad_starting_status += "sfkit"
-    elif setup_configuration == "user":
-        broad_starting_status += "protocol"
-    else:
-        raise ValueError(f"Invalid setup configuration: {setup_configuration}")
+    broad_starting_status: str = "ready to begin protocol"
 
     doc_ref.set(
         {

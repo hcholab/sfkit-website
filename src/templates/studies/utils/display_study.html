@@ -34,13 +34,14 @@
       <p>(This study is full)</p>
     {% else %}
       <div>
-        <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#requestJoinStudyModal{{ study['title'] }}">Request to Join Study</button>
-        <div class="modal fade" id="requestJoinStudyModal{{ study['title'] }}" tabindex="-1">
+        {% set study_id = study['title'] | replace(' ', '') %}
+        <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#requestJoinStudyModal{{ study_id }}">Request to Join Study</button>
+        <div class="modal fade" id="requestJoinStudyModal{{ study_id }}" tabindex="-1">
           <div class="modal-dialog">
             <div class="modal-content">
               <form action="{{ url_for('studies.request_join_study', study_title=study['title']) }}" method="post">
                 <div class="modal-header">
-                  <h5 class="modal-title" id="requestJoinStudyModalLabel{{ study['title'] }}">Request to Join
+                  <h5 class="modal-title" id="requestJoinStudyModalLabel{{ study_id }}">Request to Join
                     <i>{{study['title']}}</i>
                     Study</h5>
                   <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -50,8 +51,8 @@
                     <p>The creator of the study will be notified of your request.</p>
                   </div>
                   <div class="mb-3 form-floating">
-                    <textarea class="form-control" id="requestJoinStudyModalMessage{{ study['title'] }}" name="message" placeholder="Leave a message for the study owner" style="height: 100px"></textarea>
-                    <label for="requestJoinStudyModalMessage{{ study['title'] }}" class="form-label text-start">(optional) Message</label>
+                    <textarea class="form-control" id="requestJoinStudyModalMessage{{ study_id }}" name="message" placeholder="Leave a message for the study owner" style="height: 100px"></textarea>
+                    <label for="requestJoinStudyModalMessage{{ study_id }}" class="form-label text-start">(optional) Message</label>
                   </div>
                 </div>
                 <div class="modal-footer">
