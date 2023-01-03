@@ -151,12 +151,12 @@ PCA_ADVANCED_PARAMETERS = {
     "iter_per_eigenval": {
         "name": "Iterations per Evaluation",
         "description": "The number of QR iterations per eigenvalue when performing eigendecomposition.",
-        "value": 5,
+        "value": 1,
     },
     "num_oversampling": {
         "name": "Oversampling Parameter for PCA",
         "description": "An oversampling parameter for randomized principal component analysis: how many extra components should be extracted to improve the accuracy.",
-        "value": 5,
+        "value": 2,
     },
     "num_power_iters": {
         "name": "Number of Power Iterations",
@@ -207,22 +207,22 @@ SFGWAS_SHARED_PARAMETERS = {
     "skip_qc": {
         "name": "Skip Quality Control",
         "description": "A binary value to skip quality control and use all individuals/SNPs.",
-        "value": 0,
+        "value": "false",
     },
     "imiss_ub": {
         "name": "Individual Missing Rate Upper Bound",
         "description": "The individual missing rate upper bound.",
-        "value": 0.05,
+        "value": 1.0,
     },
     "het_lb": {
         "name": "Heterozygosity Lower Bound",
         "description": "The individual heterozygosity lower bound.",
-        "value": 0.2,
+        "value": 0.0,
     },
     "het_ub": {
         "name": "Heterozygosity Upper Bound",
         "description": "The individual heterozygosity upper bound.",
-        "value": 0.5,
+        "value": 0.1,
     },
     "gmiss": {
         "name": "Genotype Missing Rate Upper Bound",
@@ -232,17 +232,17 @@ SFGWAS_SHARED_PARAMETERS = {
     "maf_lb": {
         "name": "Minor Allele Frequency Lower Bound",
         "description": "The minor allele frequency lower bound.",
-        "value": 0,
+        "value": 0.1,
     },
     "hwe_ub": {
         "name": "Hardy Weinberg Equilibrium Upper Bound",
         "description": "The hardy weinberg equilibrium test statistic upper bound.",
-        "value": 100000,
+        "value": 28.374,
     },
     "snp_dist_thres": {
         "name": "LD Distance Threshold",
         "description": "The genomic distance threshold for selecting SNPs for principal component analysis.",
-        "value": 1,
+        "value": 100000,
     },
     "index": [  # index is used to order the parameters in the UI
         "num_snps",
@@ -268,12 +268,12 @@ SFGWAS_ADVANCED_PARAMETERS = {
     "num_oversampling": {
         "name": "Oversampling Parameter for PCA",
         "description": "An oversampling parameter for randomized principal component analysis: how many extra components should be extracted to improve the accuracy.",
-        "value": 5,
+        "value": 10,
     },
     "num_power_iters": {
         "name": "Number of Power Iterations",
         "description": "The number of power iterations during the randomized PCA.",
-        "value": 10,
+        "value": 20,
     },
     "mpc_field_size": {
         "name": "MPC Field Size",
