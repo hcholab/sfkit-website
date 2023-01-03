@@ -28,7 +28,11 @@
       {{study["parameters"][parameter_name]['name']}}
     </label>
     <div class="col-sm-3">
-      <input type="number" step="any" class="form-control" name="{{parameter_name}}" id="{{parameter_name}}" min="0" value="{{ request.form['{{parameter_name}}'] or study['parameters'][parameter_name]['value'] }}" {% if not owner %} disabled="disabled" {% endif %}>
+      {% if parameter_name == "skip_qc" %}
+        <input type="text" class="form-control" name="{{parameter_name}}" id="{{parameter_name}}" value="{{ request.form['{{parameter_name}}'] or study['parameters'][parameter_name]['value'] }}" {% if not owner %} disabled="disabled" {% endif %}>
+      {% else %}
+        <input type="number" step="any" class="form-control" name="{{parameter_name}}" id="{{parameter_name}}" min="0" value="{{ request.form['{{parameter_name}}'] or study['parameters'][parameter_name]['value'] }}" {% if not owner %} disabled="disabled" {% endif %}>
+      {% endif %}
     </div>
     <p class="mt-1 text-start text-muted">
       {{study["parameters"][parameter_name]['description']}}

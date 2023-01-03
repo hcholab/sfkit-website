@@ -1,4 +1,5 @@
 import os
+from threading import Thread
 from typing import Tuple
 
 from flask import Blueprint, current_app, request
@@ -99,9 +100,7 @@ def update_firestore() -> Tuple[dict, int]:
         doc_ref_dict["status"][username] = status
         doc_ref.set(doc_ref_dict)
         if "Finished protocol" in status and doc_ref_dict["setup_configuration"] == "website":
-            gcloudCompute = GoogleCloudCompute(study_title, gcp_project)
-            gcloudCompute.stop_instance(create_instance_name(doc_ref_dict["title"], role))
-
+            Thread(target=stop_instance, args=(study_title, doc_ref_dict, gcp_project, role)).start()
     else:
         name, value = parameter.split("=")
         if name in doc_ref_dict["personal_parameters"][username]:
@@ -114,6 +113,11 @@ def update_firestore() -> Tuple[dict, int]:
     doc_ref.set(doc_ref_dict)
 
     return {}, 200
+
+
+def stop_instance(study_title, doc_ref_dict, gcp_project, role):
+    gcloudCompute = GoogleCloudCompute(study_title, gcp_project)
+    gcloudCompute.stop_instance(create_instance_name(doc_ref_dict["title"], role))
 
 
 @bp.route("/create_cp0", methods=["GET"])
