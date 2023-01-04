@@ -22,14 +22,12 @@
                   <small class="text-muted">(other participants can view and join only by invitation)</small>
                 </label>
               </div>
-              {% if setup_configuration == "website" %}
-                <div class="mt-2 form-check form-switch">
-                  <input class="form-check-input" type="checkbox" role="switch" name="demo_study" id="demo_study">
-                  <label class="form-check-label float-start" for="demo_study">Demo Study
-                    <small class="text-muted">(for tutorial - run with only one user and doesn't require user-provided data)</small>
-                  </label>
-                </div>
-              {% endif %}
+              <div class="mt-2 form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" name="demo_study" id="demo_study">
+                <label class="form-check-label float-start" for="demo_study">Demo Study
+                  <small class="text-muted">(for tutorial - run with only one user and doesn't require user-provided data)</small>
+                </label>
+              </div>
               <div class="mt-3">
                 <a href="{{ url_for('studies.index') }}" class="btn btn-outline-secondary me-2">Cancel</a>
                 <input type="submit" value="Confirm" class="btn btn-primary me-2">

@@ -95,16 +95,23 @@ export function getStatusUpdates(db, study_title, user_id) {
     $("div.status").html(doc.data()["status"][user_id]);
     if (doc.data()["status"][user_id].includes("Finished protocol")) {
       document.getElementById("download-div").style.display = "block";
+      document.getElementById("manhattan-div").style.display = "block";
       document.getElementById("check-for-update").style.display = "none";
 
-      // if study_type is MPCGWAS, show manhattan plot
-      if (doc.data()["study_type"] === "MPCGWAS") {
-        const manhattan = document.createElement("img");
-        manhattan.setAttribute("src", "/static/images/" + study_title + "_manhattan.png");
-        manhattan.setAttribute("alt", "Click 'Download results' and reload page to view manhattan plot");
-        manhattan.setAttribute("width", "100%");
-        manhattan.setAttribute("height", "100%");
-        document.getElementById("manhattan-div").appendChild(manhattan);
+      if (doc.data()["study_type"] === "MPCGWAS" || doc.data()["study_type"] === "SFGWAS") {
+        const imageElement = document.getElementById("my-image");
+        const labelElement = document.getElementById("image-label");
+
+        const image = new Image();
+        image.src = imageElement.src;
+
+        image.addEventListener("error", event => {
+          labelElement.style.display = "none";
+        });
+
+        image.addEventListener("load", event => {
+          labelElement.style.display = "block";
+        });
       }
     }
   });

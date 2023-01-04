@@ -19,7 +19,7 @@ def upload_blob(bucket_name: str, source_file_name: str, destination_blob_name: 
     print(f"File {source_file_name} uploaded to {destination_blob_name}.")
 
 
-def download_blob(bucket_name: str, source_blob_name: str, destination_file_name: str) -> None:
+def download_blob(bucket_name: str, source_blob_name: str, destination_file_name: str) -> bool:
     """Downloads a blob from the bucket."""
     # The ID of your GCS bucket
     # bucket_name = "your-bucket-name"
@@ -48,6 +48,10 @@ def download_blob(bucket_name: str, source_blob_name: str, destination_file_name
         )
         print(e)
 
+        return False
+
     print(
         f"Downloaded storage object {source_blob_name} from bucket {bucket_name} to local file {destination_file_name}."
     )
+
+    return True

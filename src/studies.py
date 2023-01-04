@@ -1,6 +1,7 @@
 import io
 import os
 import secrets
+import zipfile
 from datetime import datetime
 from threading import Thread
 
@@ -362,18 +363,38 @@ def download_key_file(study_title: str) -> Response:
 def download_results_file(study_title: str) -> Response:
     study_title = study_title.replace(" ", "").lower()
     os.makedirs(f"results/{study_title}", exist_ok=True)
-    download_blob(
+
+    result_success = download_blob(
         "sfkit",
         f"{study_title}/result.txt",
         f"results/{study_title}/result.txt",
     )
-    download_blob(
+    manhattan_success = download_blob(
         "sfkit",
         f"{study_title}/manhattan.png",
         f"src/static/images/{study_title}_manhattan.png",
     )
 
-    try:
+    if result_success and manhattan_success:
+        # Create a zip file in memory
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            # Add the result file to the zip
+            with open(f"results/{study_title}/result.txt", "r") as f:
+                zip_file.writestr("result.txt", f.read())
+            # Add the Manhattan plot to the zip
+            with open(f"src/static/images/{study_title}_manhattan.png", "rb") as f:
+                zip_file.writestr("manhattan.png", f.read())
+        # Send the zip file to the user
+        zip_buffer.seek(0)
+        return send_file(
+            zip_buffer,
+            download_name="results.zip",
+            mimetype="application/zip",
+            as_attachment=True,
+        )
+    elif result_success:
+        # The Manhattan plot was not downloaded, so only send the result file
         with open(f"results/{study_title}/result.txt", "r") as f:
             return send_file(
                 io.BytesIO(f.read().encode()),
@@ -381,7 +402,8 @@ def download_results_file(study_title: str) -> Response:
                 mimetype="text/plain",
                 as_attachment=True,
             )
-    except FileNotFoundError:
+    else:
+        # Both files failed to download, so return an error message
         return send_file(
             io.BytesIO("Failed to get results".encode()),
             download_name="result.txt",
