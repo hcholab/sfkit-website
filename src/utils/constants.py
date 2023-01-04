@@ -333,7 +333,7 @@ DEFAULT_USER_PARAMETERS = {
     },
     "GENO_BINARY_FILE_PREFIX": {
         "name": "Genotype Binary File Prefix",
-        "description": "Path to the genotype binary file prefix (e.g. 'for_sfgwas/lung/pgen_converted/party1/geno/lung_party1_chr%d').",
+        "description": "Path to the genotype binary file prefix (e.g. 'geno/chr%d').",
         "value": "",
     },
     "NUM_INDS": {
