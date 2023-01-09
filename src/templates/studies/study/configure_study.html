@@ -17,7 +17,7 @@
               </button>
             {% endif %}
 
-            {% if i == 3 %}
+            {% if i == 4 %}
               <button type="button" class="btn btn-success" data-bs-dismiss="modal">Done</button>
             {% else %}
               <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target=".collapse-{{i}}-{{i+1}}">
@@ -199,5 +199,61 @@
     </form>
   </p>
   {% endcall %}
+
+  {% call instruction_step(i.value, "Post-Processing") %}
+  {% set i.value = i.value + 1 %}
+  {% if study["demo"] %}
+    <div class="alert alert-info" role="alert">
+      <p class="mb-0">
+        <img src="../static/images/info-square.svg" class="me-1 mb-1" width="20" height="20" alt="info-square">
+        This step can be skipped if you are following the tutorial and using the default GCP Project.
+      </p>
+    </div>
+  {% endif %}
+  <div>
+    <p>
+      Options for what happens on protocol completion:
+    </p>
+  </div>
+  <div>
+    <form method="post" action="{{url_for('studies.personal_parameters', study_title=study['title'])}}">
+      <div class="text-start row">
+        <label for="DELETE_VM" class="col-sm-3 col-form-label">
+          {{parameters.get('DELETE_VM', {}).get('name')}}
+        </label>
+        <div class="col-sm-9">
+          <select class="form-select" name="DELETE_VM" id="DELETE_VM" value="{{ parameters.get('DELETE_VM', {}).get('value') or request.form['DELETE_VM'] }}">
+            <option value="Yes">Yes</option>
+            <option value="No" {% if parameters.get('DELETE_VM', {}).get('value') == 'No' %} selected="selected" {% endif %}>No</option>
+          </select>
+        </div>
+      </div>
+      <p class="mt-3 text-start text-muted">
+        {{parameters.get('DELETE_VM', {}).get('description')}}
+      </p>
+
+      <div class="text-start row">
+        <label for="SEND_RESULTS" class="col-sm-3 col-form-label">
+          {{parameters.get('SEND_RESULTS', {}).get('name')}}
+        </label>
+        <div class="col-sm-9">
+          <select class="form-select" name="SEND_RESULTS" id="SEND_RESULTS" value="{{ request.form['SEND_RESULTS'] or parameters.get('SEND_RESULTS', {}).get('value') }}">
+            <option value="Yes">Yes</option>
+            <option value="No" {% if parameters.get('SEND_RESULTS', {}).get('value') == 'No' %} selected="selected" {% endif %}>No</option>
+          </select>
+        </div>
+      </div>
+      <p class="mt-3 text-start text-muted">
+        {{parameters.get('SEND_RESULTS', {}).get('description')}}
+      </p>
+
+      <div class="text-center">
+        <button class="mt-2 btn btn-primary" type="submit">
+          Confirm Post-Processing Configuration
+        </button>
+      </div>
+    </form>
+  </div>
+  {% endcall%}
 
 </div>

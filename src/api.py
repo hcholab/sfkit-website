@@ -100,7 +100,10 @@ def update_firestore() -> Tuple[dict, int]:
         doc_ref_dict["status"][username] = status
         doc_ref.set(doc_ref_dict)
         if "Finished protocol" in status and doc_ref_dict["setup_configuration"] == "website":
-            Thread(target=stop_instance, args=(study_title, doc_ref_dict, gcp_project, role)).start()
+            if doc_ref_dict["personal_parameters"][username]["DELETE_VM"]["value"] == "Yes":
+                Thread(target=delete_instance, args=(study_title, doc_ref_dict, gcp_project, role)).start()
+            else:
+                Thread(target=stop_instance, args=(study_title, doc_ref_dict, gcp_project, role)).start()
     else:
         name, value = parameter.split("=")
         if name in doc_ref_dict["personal_parameters"][username]:
@@ -113,6 +116,11 @@ def update_firestore() -> Tuple[dict, int]:
     doc_ref.set(doc_ref_dict)
 
     return {}, 200
+
+
+def delete_instance(study_title, doc_ref_dict, gcp_project, role):
+    gcloudCompute = GoogleCloudCompute(study_title, gcp_project)
+    gcloudCompute.delete_instance(create_instance_name(doc_ref_dict["title"], role))
 
 
 def stop_instance(study_title, doc_ref_dict, gcp_project, role):

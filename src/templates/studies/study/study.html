@@ -77,13 +77,13 @@
                       <div class="text-start alert alert-primary">waiting for others to be ready...</div>
                     {% else %}
                       <div class="status text-start alert alert-primary"></div>
-                      {% if study['demo'] %}
+                      {% if parameters["SEND_RESULTS"]["value"] == "Yes" %}
                         <div id="download-div" style="display: none">
                           <a class="text-decoration-none" href="{{url_for('studies.download_results_file', study_title=study['title'])}}">
                             Download results
                           </a>
                         </div>
-                      {% else %}
+                      {% elif not study['demo'] %}
                         <p class="text-muted text-start mt-2">
                           (While the protocol is running, if you want a more detailed view into what the VM is doing, you can ssh into your VM and run the command
                           <code>sudo journalctl -u google-startup-scripts.service</code>

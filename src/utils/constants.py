@@ -381,6 +381,16 @@ DEFAULT_USER_PARAMETERS = {
         "description": "A key that will be used to authenticate the VM instance that will be running the protocol.",
         "value": "",
     },
+    "SEND_RESULTS": {
+        "name": "Send Results",
+        "description": "Whether or not to send the results of the protocol back to the website to be downloadable and displayed.",
+        "value": "Yes",
+    },
+    "DELETE_VM": {
+        "name": "Delete VM",
+        "description": "Whether or not to immediately and automatically delete the VM instance on protocol completion.",
+        "value": "No",
+    },
     "index": [
         "PUBLIC_KEY",
         "GCP_PROJECT",
@@ -395,6 +405,8 @@ DEFAULT_USER_PARAMETERS = {
         "IP_ADDRESS",
         "PORTS",
         "AUTH_KEY",
+        "SEND_RESULTS",
+        "DELETE_VM",
     ],
 }
 
