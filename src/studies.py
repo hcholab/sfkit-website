@@ -57,13 +57,22 @@ def index() -> Response:
 @bp.route("/study/<study_title>", methods=("GET", "POST"))
 @login_required
 def study(study_title: str) -> Response:
+    study_title = study_title.replace(" ", "").lower()
     db = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref = db.collection("studies").document(study_title)
     doc_ref_dict = doc_ref.get().to_dict()
     user_id = g.user["id"]
     role: int = doc_ref_dict["participants"].index(user_id)
 
     display_names = db.collection("users").document("display_names").get().to_dict()
+
+    manhattan_plot_path = f"src/static/images/{study_title}_manhattan.png"
+    if "Finished protocol" in doc_ref_dict["status"][user_id] and not os.path.exists(manhattan_plot_path):
+        download_blob(
+            "sfkit",
+            f"{study_title}/manhattan.png",
+            f"src/static/images/{study_title}_manhattan.png",
+        )
 
     return make_response(
         render_template(
