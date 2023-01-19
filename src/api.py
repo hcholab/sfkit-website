@@ -45,6 +45,8 @@ def upload_file() -> Tuple[dict, int]:
     # upload file to google cloud storage
     if "manhattan" in str(file.filename):
         upload_blob("sfkit", file_path, f"{study_title}/manhattan.png")
+    elif str(file.filename) == "pos.txt":
+        upload_blob("sfkit", file_path, f"{study_title}/pos.txt")
     else:
         upload_blob("sfkit", file_path, f"{study_title}/result.txt")
 
