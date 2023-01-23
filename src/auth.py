@@ -13,6 +13,7 @@ from werkzeug import Response
 from src.utils.auth_functions import update_user
 from src.utils.generic_functions import redirect_with_flash
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
+from src.utils.google_cloud.google_cloud_secret_manager import get_firebase_api_key
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -42,6 +43,7 @@ def load_logged_in_user() -> None:
             # for use in accessing firebase from the frontend.  See https://firebase.google.com/docs/auth/admin/create-custom-tokens
             # this is done when dynamically updating status of a running study, and for the notification system
             g.custom_token = firebase_auth.create_custom_token(user_dict["uid"]).decode("utf-8")
+            g.firebase_api_key = get_firebase_api_key()
         except Exception as e:
             print(f"Error creating custom token: {e}")
 

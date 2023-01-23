@@ -2,19 +2,8 @@ import {initializeApp} from "https://www.gstatic.com/firebasejs/9.6.6/firebase-a
 import {getFirestore, doc, onSnapshot} from "https://www.gstatic.com/firebasejs/9.6.6/firebase-firestore.js";
 import {getAuth, signInWithCustomToken} from "https://www.gstatic.com/firebasejs/9.6.6/firebase-auth.js";
 
-export function getFirestoreDatabase(custom_token) {
-  const firebaseConfig = {
-    apiKey: "AIzaSyAJ5Ql7iZ4QMi640Xryx0YbBzwhGdGxKdE",
-    authDomain: "broad-cho-priv1.firebaseapp.com",
-    projectId: "broad-cho-priv1",
-    storageBucket: "broad-cho-priv1.appspot.com",
-    messagingSenderId: "419003787216",
-    appId: "1:419003787216:web:1128a872a2eb31c00cfbd5",
-    measurementId: "G-FV14RX2JXN",
-    databaseURL: "",
-    serviceAccount: "serviceAccountKey.json"
-  };
-  const app = initializeApp(firebaseConfig);
+export function getFirestoreDatabase(custom_token, firebase_api_key) {
+  const app = initializeApp({apiKey: firebase_api_key, projectId: "broad-cho-priv1"});
   const auth = getAuth(app);
   signInWithCustomToken(auth, custom_token);
 

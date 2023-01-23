@@ -4,9 +4,11 @@ import json
 from firebase_admin import auth as firebase_auth
 from flask import redirect, url_for
 from requests import post
+from requests.exceptions import HTTPError
 from requests.models import Response as RequestsResponse
 from werkzeug import Response
-from requests.exceptions import HTTPError
+
+from src.utils.google_cloud.google_cloud_secret_manager import get_firebase_api_key
 
 
 def update_user(email: str, password: str, redirect_url: str = "") -> Response:
@@ -27,9 +29,7 @@ def update_user(email: str, password: str, redirect_url: str = "") -> Response:
 
 
 def sign_in_with_email_and_password(email: str, password: str) -> dict:
-    with open("fbconfig.json") as f:
-        config = json.load(f)
-    api_key = config["apiKey"]
+    api_key = get_firebase_api_key()
     request_ref = "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key={0}".format(api_key)
     headers = {"content-type": "application/json; charset=UTF-8"}
     data = json.dumps({"email": email, "password": password, "returnSecureToken": True})

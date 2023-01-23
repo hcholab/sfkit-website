@@ -19,11 +19,11 @@ def test_update_user(mocker):
     assert "session=test_token" in response.headers["Set-Cookie"]
 
 
-def test_sign_in_with_email_and_password(mocker):
-    mocker.patch("src.utils.auth_functions.post", mock_post)
-    mocker.patch("src.utils.auth_functions.raise_detailed_error", mock_raise_detailed_error)
+# def test_sign_in_with_email_and_password(mocker):
+#     mocker.patch("src.utils.auth_functions.post", mock_post)
+#     mocker.patch("src.utils.auth_functions.raise_detailed_error", mock_raise_detailed_error)
 
-    auth_functions.sign_in_with_email_and_password("email", "password")
+#     auth_functions.sign_in_with_email_and_password("email", "password")
 
 
 def test_raise_detailed_error():

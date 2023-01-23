@@ -118,8 +118,9 @@
         import {getFirestoreDatabase, readNotifications} from "/static/javascript/firestore.js";
 
         var custom_token = "{{g.custom_token}}";
+        var firebase_api_key = "{{g.firebase_api_key}}"
         window.user_id = "{{g.user['id']}}"
-        window.firestoreDatabase = getFirestoreDatabase(custom_token);
+        window.firestoreDatabase = getFirestoreDatabase(custom_token, firebase_api_key);
         readNotifications(window.firestoreDatabase, window.user_id);
       </script>
     {% endif %}
