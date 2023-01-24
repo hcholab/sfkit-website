@@ -19,6 +19,6 @@ build/
 .DS_Store
 src/temp/test*
 node_modules/*
-serviceAccountKey.json
+.serviceAccountKey.json
 requirements2.txt 
 .sourcery.yaml
