@@ -146,7 +146,7 @@ def create_cp0() -> Tuple[dict, int]:
     if not doc_ref_dict:
         return {"error": f"study {study_title} not found"}, 400
 
-    setup_gcp(doc_ref, "0")  # TODO: do in another thread?
+    Thread(target=setup_gcp, args=(doc_ref, "0")).start()
 
     return {}, 200
 
