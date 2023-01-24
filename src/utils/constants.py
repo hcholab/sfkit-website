@@ -15,7 +15,7 @@ MPCGWAS_SHARED_PARAMETERS = {
     "NUM_COVS": {
         "name": "Number of Covariates",
         "description": "The number of covariate features in the dataset.",
-        "value": 10,
+        "value": 2,
     },
     "NUM_DIM_TO_REMOVE": {
         "name": "Number of PCs for Population Stratification",
