@@ -115,7 +115,7 @@ def update_firestore() -> Tuple[dict, int]:
         else:
             print(f"parameter {name} not found in {study_title}")
             return {"error": f"parameter {name} not found in {study_title}"}, 400
-    doc_ref.set(doc_ref_dict)
+        doc_ref.set(doc_ref_dict)
 
     return {}, 200
 
