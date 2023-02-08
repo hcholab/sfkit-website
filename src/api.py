@@ -3,6 +3,7 @@ from threading import Thread
 from typing import Tuple
 
 from flask import Blueprint, current_app, request
+from google.cloud import firestore
 from werkzeug import Request
 
 from src.studies import setup_gcp
@@ -92,15 +93,14 @@ def update_firestore() -> Tuple[dict, int]:
 
     msg: str = str(request.args.get("msg"))
     _, parameter = msg.split("::")
-    doc_ref = current_app.config["DATABASE"].collection("studies").document(study_title)
+    doc_ref = db.collection("studies").document(study_title)
     doc_ref_dict: dict = doc_ref.get().to_dict()
     gcp_project: str = doc_ref_dict["personal_parameters"][username]["GCP_PROJECT"]["value"]
     role: str = str(doc_ref_dict["participants"].index(username))
 
     if parameter.startswith("status"):
         status = parameter.split("=")[1]
-        doc_ref_dict["status"][username] = status
-        doc_ref.set(doc_ref_dict)
+        update_status(db.transaction(), doc_ref, username, status)
         if "Finished protocol" in status and doc_ref_dict["setup_configuration"] == "website":
             if doc_ref_dict["personal_parameters"][username]["DELETE_VM"]["value"] == "Yes":
                 Thread(target=delete_instance, args=(study_title, doc_ref_dict, gcp_project, role)).start()
@@ -108,6 +108,7 @@ def update_firestore() -> Tuple[dict, int]:
                 Thread(target=stop_instance, args=(study_title, doc_ref_dict, gcp_project, role)).start()
     else:
         name, value = parameter.split("=")
+        doc_ref_dict = doc_ref.get().to_dict()
         if name in doc_ref_dict["personal_parameters"][username]:
             doc_ref_dict["personal_parameters"][username][name]["value"] = value
         elif name in doc_ref_dict["parameters"]:
@@ -118,6 +119,13 @@ def update_firestore() -> Tuple[dict, int]:
         doc_ref.set(doc_ref_dict)
 
     return {}, 200
+
+
+@firestore.transactional
+def update_status(transaction, doc_ref, username, status):
+    doc_ref_dict: dict = doc_ref.get(transaction=transaction).to_dict()
+    doc_ref_dict["status"][username] = status
+    transaction.update(doc_ref, doc_ref_dict)
 
 
 def delete_instance(study_title, doc_ref_dict, gcp_project, role):
@@ -152,8 +160,6 @@ def create_cp0() -> Tuple[dict, int]:
 
 
 def verify_authorization_header(request: Request, authenticate_user: bool = True) -> str:
-    print("verifying authorization token")
-
     auth_key = request.headers.get("Authorization")
     if not auth_key:
         print("no authorization header")

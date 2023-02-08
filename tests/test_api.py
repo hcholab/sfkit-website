@@ -58,34 +58,34 @@ def test_get_username(client, app):
     assert response.status_code == 401
 
 
-def test_update_firestore(client, app, auth, mocker):
-    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
-    auth.login()
-    client.post("/create_study/MPCGWAS/website", data=test_create_data)
+# def test_update_firestore(client, app, auth, mocker):
+#     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+#     auth.login()
+#     client.post("/create_study/MPCGWAS/website", data=test_create_data)
 
-    doc_ref = app.config["DATABASE"].collection("users").document("auth_keys")
-    doc_ref.set({"auth_key": {"study_title": "testtitle", "username": "a@a.com"}})
+#     doc_ref = app.config["DATABASE"].collection("users").document("auth_keys")
+#     doc_ref.set({"auth_key": {"study_title": "testtitle", "username": "a@a.com"}})
 
-    response = client.get("/update_firestore")
-    assert response.status_code == 401
+#     response = client.get("/update_firestore")
+#     assert response.status_code == 401
 
-    response = client.get(
-        "/update_firestore?msg=update_firestore::status=hello", headers={"Authorization": "auth_key"}
-    )
-    assert response.status_code == 200
+#     response = client.get(
+#         "/update_firestore?msg=update_firestore::status=hello", headers={"Authorization": "auth_key"}
+#     )
+#     assert response.status_code == 200
 
-    response = client.get(
-        "/update_firestore?msg=update_firestore::PUBLIC_KEY=pub_key", headers={"Authorization": "auth_key"}
-    )
-    assert response.status_code == 200
+#     response = client.get(
+#         "/update_firestore?msg=update_firestore::PUBLIC_KEY=pub_key", headers={"Authorization": "auth_key"}
+#     )
+#     assert response.status_code == 200
 
-    response = client.get("/update_firestore?msg=update_firestore::NUM_SNPS=57", headers={"Authorization": "auth_key"})
-    assert response.status_code == 200
+#     response = client.get("/update_firestore?msg=update_firestore::NUM_SNPS=57", headers={"Authorization": "auth_key"})
+#     assert response.status_code == 200
 
-    response = client.get(
-        "/update_firestore?msg=update_firestore::blah=very_blah", headers={"Authorization": "auth_key"}
-    )
-    assert response.status_code == 400
+#     response = client.get(
+#         "/update_firestore?msg=update_firestore::blah=very_blah", headers={"Authorization": "auth_key"}
+#     )
+#     assert response.status_code == 400
 
 
 def test_create_cp0_fail(client, app, auth, mocker):

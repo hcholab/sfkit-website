@@ -423,7 +423,7 @@ def download_results_file(study_title: str) -> Response:
         zip_buffer.seek(0)
         return send_file(
             zip_buffer,
-            download_name="results.zip",
+            download_name=f"{study_title}_results.zip",
             mimetype="application/zip",
             as_attachment=True,
         )
