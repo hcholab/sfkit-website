@@ -63,7 +63,6 @@ def study(study_title: str) -> Response:
     doc_ref_dict = doc_ref.get().to_dict()
     user_id = g.user["id"]
     role: int = doc_ref_dict["participants"].index(user_id)
-
     display_names = db.collection("users").document("display_names").get().to_dict()
 
     manhattan_plot_path = f"src/static/images/{study_title}_manhattan.png"
@@ -82,8 +81,34 @@ def study(study_title: str) -> Response:
             study_type=doc_ref_dict["study_type"],
             parameters=doc_ref_dict["personal_parameters"][user_id],
             display_names=display_names,
+            default_tab=request.args.get("default_tab", "main_study"),
         )
     )
+
+
+@bp.route("/study/<study_title>/send_message", methods=["POST"])
+@login_required
+def send_message(study_title: str) -> Response:
+    study_title = study_title.replace(" ", "").lower()
+    db = current_app.config["DATABASE"]
+    doc_ref = db.collection("studies").document(study_title)
+    doc_ref_dict = doc_ref.get().to_dict()
+
+    message = request.form["message"]
+    if message == "":
+        return redirect(url_for("studies.study", study_title=study_title))
+
+    doc_ref_dict["messages"] = doc_ref_dict.get("messages", []) + [
+        {
+            "sender": g.user["id"],
+            "time": datetime.now().strftime("%m/%d/%Y %H:%M"),
+            "body": message,
+        }
+    ]
+
+    doc_ref.set(doc_ref_dict)
+
+    return redirect(url_for("studies.study", study_title=study_title, default_tab="chat_study"))
 
 
 @bp.route("/choose_study_type", methods=["POST"])
