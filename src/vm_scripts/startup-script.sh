@@ -19,6 +19,10 @@ apt-get --assume-yes update
 apt-get --assume-yes install build-essential
 apt-get install python3-pip python3-numpy wget git zip unzip -y 
 
+# install google-cloud-ops-agent
+curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
+bash add-google-cloud-ops-agent-repo.sh --also-install
+
 pip install sfkit
 PATH=$PATH:~/.local/bin
 export PYTHONUNBUFFERED=TRUE
