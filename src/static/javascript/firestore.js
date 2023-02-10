@@ -106,3 +106,51 @@ export function getStatusUpdates(db, study_title, user_id) {
     }
   });
 }
+
+export function getChatUpdates(db, study_title, user_id, display_names) {
+  onSnapshot(doc(db, "studies", study_title), doc => {
+    const chat_array = doc.data()["messages"];
+
+    if (chat_array.length > 0) {
+      const chat = document.getElementById("past_messages");
+      chat.innerHTML = "";
+
+      for (const message of chat_array) {
+        const messageElement = document.createElement("div");
+        messageElement.classList.add("message", "d-flex");
+        if (message["sender"] === user_id) {
+          messageElement.classList.add("flex-row-reverse");
+        } else {
+          messageElement.classList.add("flex-row");
+        }
+
+        const alertElement = document.createElement("div");
+        alertElement.classList.add("alert");
+        if (String(message["sender"]) === String(user_id)) {
+          alertElement.classList.add("alert-primary");
+        } else {
+          alertElement.classList.add("alert-secondary");
+        }
+
+        const headerElement = document.createElement("div");
+        headerElement.classList.add("message-header", "text-start", "mb-2");
+
+        headerElement.innerHTML = `
+          <b>
+          <span class="message-sender">${display_names[message["sender"]] || message["sender"]}</span>
+          </b>
+          <span class="message-time text-muted">${message["time"]}</span>
+        `;
+        alertElement.appendChild(headerElement);
+
+        const bodyElement = document.createElement("div");
+        bodyElement.classList.add("message-body", "text-start");
+        bodyElement.innerHTML = message["body"];
+        alertElement.appendChild(bodyElement);
+
+        messageElement.appendChild(alertElement);
+        chat.appendChild(messageElement);
+      }
+    }
+  });
+}

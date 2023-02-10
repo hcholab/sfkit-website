@@ -1,10 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}Study{% endblock %}
 {% block content %}
-  <meta id="study-title-data" data-value="{{ study['title'] }}">
-  <meta id="id-data" data-value="{{ g.user['id'] }}">
-  <meta id="num-cpus-data" data-value="{{ request.form['NUM_CPUS'] or parameters['NUM_CPUS']['value'] }}">
-
   <section class="py-5">
     <div class="container">
       <div class="row">
@@ -158,7 +154,7 @@
 
               <div class="container tab-pane fade {% if default_tab == 'chat_study' %}show active{% endif %} p-2" id="chat_study">
 
-                <div id="past_messages" class="my-2 d-flex flex-column overflow-scroll" style="max-height: 60vh">
+                <div id="past_messages" class="my-2 d-flex flex-column overflow-auto" style="max-height: 60vh;">
                   {% if study['messages'] | length == 0 %}
                     <div class="alert alert-secondary text-start">
                       <small class="text-muted text-start">
@@ -202,51 +198,29 @@
 
 {% block javascript %}
   <script>
-    var study_title = document
-      .getElementById("study-title-data")
-      .attributes["data-value"]
-      .value
-      .toLowerCase()
-      .replace(/\s/g, '');
-
-    // check if the results file exists using XMLHttpRequest
-  </script>
-
-  <script>
     function loading() {
       $(".loading").show();
       $(".normal-content").hide();
     }
   </script>
 
-  <script>
-    $(document).ready(function () {
-      $('#NUM_CPUS').val($('#num-cpus-data').data()['value']);
-    });
-  </script>
-
   <script type="module">
-    // get the status updates from firestore
-    import {getStatusUpdates} from "/static/javascript/firestore.js";
+    // get the status updates and chat messages from firestore
+    import {getStatusUpdates, getChatUpdates} from "/static/javascript/firestore.js";
 
-    var study_title = document
-      .getElementById("study-title-data")
-      .attributes["data-value"]
-      .value
+    var doc_ref_dict = {{ study | tojson }};
+    var study_title = doc_ref_dict['title']
       .toLowerCase()
       .replace(/\s/g, '');
 
     getStatusUpdates(window.firestoreDatabase, study_title, window.user_id);
+
+    var display_names = {{ display_names | tojson }};
+    getChatUpdates(window.firestoreDatabase, study_title, window.user_id, display_names);
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
   <script type="module" src="{{ url_for('static', filename='javascript/save_page_state.js') }}"></script>
   <script type="module" src="{{ url_for('static', filename='javascript/copy_button.js') }}"></script>
-
-  {# {% if study["setup_configuration"] == "user" and parameters["AUTH_KEY"]["value"] == "" %}
-    <script>
-      // window.location.href = "{{ url_for('studies.download_key_file', study_title=study['title']) }}";
-    </script>
-  {% endif %} #}
 
 {% endblock %}
