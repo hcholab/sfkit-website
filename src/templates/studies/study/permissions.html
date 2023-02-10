@@ -8,7 +8,8 @@
     </button>
     <code id="gcloud-command" class="language-bash" data-lang="bash" style="font-size: 60%">
       <div>gcloud iam roles create sfkitRole --project=$(gcloud config get-value project) \</div>
-      <div>--title="sfkit Role $(gcloud config get-value project)" --permissions=compute.disks.create,compute.firewalls.create,compute.firewalls.list,compute.firewalls.delete,\</div>
+      <div>--title="sfkit Role $(gcloud config get-value project)" \</div>
+      <div>--permissions=compute.disks.create,compute.firewalls.create,compute.firewalls.list,compute.firewalls.delete,\</div>
       <div>compute.firewallPolicies.create,compute.firewallPolicies.get,compute.instances.create,compute.instances.delete,compute.instances.get,\</div>
       <div>compute.instances.list,compute.instances.setMetadata,compute.instances.setServiceAccount,compute.instances.setTags,\</div>
       <div>compute.instances.stop,compute.networks.access,compute.networks.addPeering,compute.networks.create,\</div>

@@ -111,7 +111,7 @@ export function getChatUpdates(db, study_title, user_id, display_names) {
   onSnapshot(doc(db, "studies", study_title), doc => {
     const chat_array = doc.data()["messages"];
 
-    if (chat_array.length > 0) {
+    if (chat_array) {
       const chat = document.getElementById("past_messages");
       chat.innerHTML = "";
 
@@ -145,6 +145,7 @@ export function getChatUpdates(db, study_title, user_id, display_names) {
 
         const bodyElement = document.createElement("div");
         bodyElement.classList.add("message-body", "text-start");
+        bodyElement.style.wordBreak = "break-word";
         bodyElement.innerHTML = message["body"];
         alertElement.appendChild(bodyElement);
 
