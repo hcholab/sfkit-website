@@ -106,6 +106,9 @@ def update_firestore() -> Tuple[dict, int]:
                 Thread(target=delete_instance, args=(study_title, doc_ref_dict, gcp_project, role)).start()
             else:
                 Thread(target=stop_instance, args=(study_title, doc_ref_dict, gcp_project, role)).start()
+    elif parameter.startswith("task"):
+        task = parameter.split("=")[1]
+        update_tasks(db.transaction(), doc_ref, username, task)
     else:
         name, value = parameter.split("=")
         doc_ref_dict = doc_ref.get().to_dict()
@@ -125,6 +128,25 @@ def update_firestore() -> Tuple[dict, int]:
 def update_status(transaction, doc_ref, username, status):
     doc_ref_dict: dict = doc_ref.get(transaction=transaction).to_dict()
     doc_ref_dict["status"][username] = status
+    transaction.update(doc_ref, doc_ref_dict)
+
+
+@firestore.transactional
+def update_tasks(transaction, doc_ref, username, task):
+    doc_ref_dict: dict = doc_ref.get(transaction=transaction).to_dict()
+
+    if "tasks" not in doc_ref_dict:
+        doc_ref_dict["tasks"] = {}
+    if username not in doc_ref_dict["tasks"]:
+        doc_ref_dict["tasks"][username] = []
+
+    if task.endswith("completed"):
+        task = task.replace(" completed", "")
+        if doc_ref_dict["tasks"][username][-1] == task:
+            doc_ref_dict["tasks"][username][-1] += " completed"
+    else:
+        doc_ref_dict["tasks"][username].append(task)
+
     transaction.update(doc_ref, doc_ref_dict)
 
 

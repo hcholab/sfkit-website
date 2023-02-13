@@ -81,7 +81,23 @@ function addNotificationToList(notification) {
 
 export function getStatusUpdates(db, study_title, user_id) {
   onSnapshot(doc(db, "studies", study_title), doc => {
-    $("div.status").html(doc.data()["status"][user_id]);
+    let tasks = doc.data()["tasks"][user_id];
+    let taskDiv = $("div.task");
+    taskDiv.html("");
+
+    tasks.forEach((task, _) => {
+      let taskLine = $("<p></p>");
+
+      if (task.endsWith("completed")) {
+        task = task.replace(" completed", "");
+        taskLine.append("<img src='../static/images/check.svg'> " + task);
+      } else {
+        taskLine.append("<div class='spinner-grow ms-2 me-2' style='width: 16px; height: 16px;'></div> " + task);
+      }
+
+      taskDiv.append(taskLine);
+    });
+
     if (doc.data()["status"][user_id].includes("Finished protocol")) {
       document.getElementById("download-div").style.display = "block";
       document.getElementById("check-for-update").style.display = "none";

@@ -517,7 +517,8 @@ def start_protocol(study_title: str) -> Response:
         doc_ref_dict = doc_ref.get().to_dict()
 
         make_auth_key(study_title, user_id)
-        setup_gcp(doc_ref, role)
+
+        Thread(target=setup_gcp, args=(doc_ref, role)).start()
 
     return redirect(url_for("studies.study", study_title=study_title))
 
@@ -529,6 +530,14 @@ def setup_gcp(doc_ref: DocumentReference, role: str) -> None:
     study_title = doc_ref_dict["title"].replace(" ", "").lower()
     user: str = doc_ref_dict["participants"][int(role)]
     user_parameters: dict = doc_ref_dict["personal_parameters"][user]
+
+    if "tasks" not in doc_ref_dict:
+        doc_ref_dict["tasks"] = {}
+    if user not in doc_ref_dict["tasks"]:
+        doc_ref_dict["tasks"][user] = []
+    doc_ref_dict["tasks"][user].append("Setting up networking and creating VM instance")
+    doc_ref.set(doc_ref_dict)
+
     gcloudCompute = GoogleCloudCompute(study_title, user_parameters["GCP_PROJECT"]["value"])
     gcloudCompute.setup_networking(doc_ref_dict, role)
 
@@ -547,6 +556,11 @@ def setup_gcp(doc_ref: DocumentReference, role: str) -> None:
         num_cpus=int(user_parameters["NUM_CPUS"]["value"]),
         boot_disk_size=int(user_parameters["BOOT_DISK_SIZE"]["value"]),
     )
+
+    if doc_ref_dict["tasks"][user][-1] == "Setting up networking and creating VM instance":
+        doc_ref_dict["tasks"][user][-1] += " completed"
+    doc_ref_dict["tasks"][user].append("Configuring your VM instance")
+    doc_ref.set(doc_ref_dict)
 
 
 def generate_ports(doc_ref: DocumentReference, role: str) -> None:

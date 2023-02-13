@@ -82,13 +82,10 @@
                       </div>
                     {% else %}
                       <div>
-                        <p class="text-start">
-                          <b>Status of study:</b>
-                        </p>
                         {% if "" in study["status"].values() %}
                           <div class="text-start alert alert-primary">waiting for others to be ready...</div>
                         {% else %}
-                          <div class="status text-start alert alert-primary"></div>
+                          <div class="task text-start"></div>
                           {% if parameters["SEND_RESULTS"]["value"] == "Yes" %}
                             <div id="download-div" style="display: none">
                               <a class="text-decoration-none" href="{{url_for('studies.download_results_file', study_title=study['title'])}}">
