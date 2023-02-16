@@ -1,8 +1,12 @@
 <span class="badge bg-secondary margin-top">
   {% if study["setup_configuration"] == "website" %}
-    auto-configured study
+    auto-configured
+    {{ study['study_type'] }}
+    study
   {% else %}
-    user-configured study
+    user-configured
+    {{ study['study_type'] }}
+    study
   {% endif %}
   <span type="button" data-bs-toggle="modal" data-bs-target="#{{ study['setup_configuration']}}Modal">
     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-question-circle" viewbox="0 0 16 16">

@@ -140,10 +140,10 @@ def update_tasks(transaction, doc_ref, username, task):
     if username not in doc_ref_dict["tasks"]:
         doc_ref_dict["tasks"][username] = []
 
-    if task.endswith("completed"):
-        task = task.replace(" completed", "")
-        if doc_ref_dict["tasks"][username][-1] == task:
-            doc_ref_dict["tasks"][username][-1] += " completed"
+    if doc_ref_dict["tasks"][username][-1] == task:
+        pass
+    elif doc_ref_dict["tasks"][username][-1] + " completed" == task:
+        doc_ref_dict["tasks"][username][-1] += " completed"
     else:
         doc_ref_dict["tasks"][username].append(task)
 
