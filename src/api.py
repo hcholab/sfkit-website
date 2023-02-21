@@ -1,4 +1,5 @@
 import os
+import time
 from threading import Thread
 from typing import Tuple
 
@@ -99,40 +100,61 @@ def update_firestore() -> Tuple[dict, int]:
     role: str = str(doc_ref_dict["participants"].index(username))
 
     if parameter.startswith("status"):
-        status = parameter.split("=")[1]
-        update_status(db.transaction(), doc_ref, username, status)
-        if "Finished protocol" in status and doc_ref_dict["setup_configuration"] == "website":
-            if doc_ref_dict["personal_parameters"][username]["DELETE_VM"]["value"] == "Yes":
-                Thread(target=delete_instance, args=(study_title, doc_ref_dict, gcp_project, role)).start()
-            else:
-                Thread(target=stop_instance, args=(study_title, doc_ref_dict, gcp_project, role)).start()
+        return process_status(db, username, study_title, parameter, doc_ref, doc_ref_dict, gcp_project, role)
     elif parameter.startswith("task"):
-        task = parameter.split("=")[1]
-        update_tasks(db.transaction(), doc_ref, username, task)
+        return process_task(db, username, parameter, doc_ref)
     else:
-        name, value = parameter.split("=")
-        doc_ref_dict = doc_ref.get().to_dict()
-        if name in doc_ref_dict["personal_parameters"][username]:
-            doc_ref_dict["personal_parameters"][username][name]["value"] = value
-        elif name in doc_ref_dict["parameters"]:
-            doc_ref_dict["parameters"][name]["value"] = value
+        return process_parameter(username, study_title, parameter, doc_ref)
+
+
+def process_status(db, username, study_title, parameter, doc_ref, doc_ref_dict, gcp_project, role):
+    status = parameter.split("=")[1]
+    update_status(db.transaction(), doc_ref, username, status)
+    if "Finished protocol" in status and doc_ref_dict["setup_configuration"] == "website":
+        if doc_ref_dict["personal_parameters"][username]["DELETE_VM"]["value"] == "Yes":
+            Thread(target=delete_instance, args=(study_title, doc_ref_dict, gcp_project, role)).start()
         else:
-            print(f"parameter {name} not found in {study_title}")
-            return {"error": f"parameter {name} not found in {study_title}"}, 400
-        doc_ref.set(doc_ref_dict)
+            Thread(target=stop_instance, args=(study_title, doc_ref_dict, gcp_project, role)).start()
 
     return {}, 200
 
 
+def process_task(db, username, parameter, doc_ref):
+    task = parameter.split("=")[1]
+    for _ in range(10):
+        try:
+            update_tasks(db.transaction(), doc_ref, username, task)
+            return {}, 200
+        except Exception as e:
+            print(f"Failed to update task: {e}")
+            time.sleep(1)
+
+    return {"error": "Failed to update task"}, 400
+
+
+def process_parameter(username, study_title, parameter, doc_ref):
+    name, value = parameter.split("=")
+    doc_ref_dict = doc_ref.get().to_dict()
+    if name in doc_ref_dict["personal_parameters"][username]:
+        doc_ref_dict["personal_parameters"][username][name]["value"] = value
+    elif name in doc_ref_dict["parameters"]:
+        doc_ref_dict["parameters"][name]["value"] = value
+    else:
+        print(f"parameter {name} not found in {study_title}")
+        return {"error": f"parameter {name} not found in {study_title}"}, 400
+    doc_ref.set(doc_ref_dict)
+    return {}, 200
+
+
 @firestore.transactional
-def update_status(transaction, doc_ref, username, status):
+def update_status(transaction, doc_ref, username, status) -> None:
     doc_ref_dict: dict = doc_ref.get(transaction=transaction).to_dict()
     doc_ref_dict["status"][username] = status
     transaction.update(doc_ref, doc_ref_dict)
 
 
 @firestore.transactional
-def update_tasks(transaction, doc_ref, username, task):
+def update_tasks(transaction, doc_ref, username, task) -> None:
     doc_ref_dict: dict = doc_ref.get(transaction=transaction).to_dict()
 
     if "tasks" not in doc_ref_dict:
