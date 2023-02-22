@@ -1,6 +1,7 @@
 import io
 import os
 import secrets
+import time
 import zipfile
 from datetime import datetime
 from threading import Thread
@@ -477,7 +478,7 @@ def start_protocol(study_title: str) -> Response:
     user_id: str = g.user["id"]
     doc_ref = current_app.config["DATABASE"].collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict: dict = doc_ref.get().to_dict()
-    role: str = str(doc_ref_dict["participants"].index(user_id))
+    # role: str = str(doc_ref_dict["participants"].index(user_id))
     num_inds: str = doc_ref_dict["personal_parameters"][user_id]["NUM_INDS"]["value"]
     gcp_project: str = doc_ref_dict["personal_parameters"][user_id]["GCP_PROJECT"]["value"]
     data_path: str = doc_ref_dict["personal_parameters"][user_id]["DATA_PATH"]["value"]
@@ -511,19 +512,26 @@ def start_protocol(study_title: str) -> Response:
                 message="You have not given the website the necessary GCP permissions for the project you have entered.  Please click on 'Configure Study' to double-check that your project ID is correct and that you have given the website the necessary permissions in that GCP project.",
             )
 
+        doc_ref_dict = doc_ref.get().to_dict()
+        statuses = doc_ref_dict["status"]
         statuses[user_id] = "ready to begin sfkit"
         doc_ref.set({"status": statuses}, merge=True)
 
     if "" in statuses.values():
         print("Not all participants are ready.")
     elif statuses[user_id] == "ready to begin sfkit":
-        statuses[user_id] = "setting up your vm instance"
-        doc_ref.set({"status": statuses}, merge=True)
-        doc_ref_dict = doc_ref.get().to_dict()
+        for role in range(1, len(doc_ref_dict["participants"])):
+            user = doc_ref_dict["participants"][role]
+            doc_ref_dict = doc_ref.get().to_dict()
+            statuses = doc_ref_dict["status"]
+            statuses[user] = "setting up your vm instance"
+            doc_ref.set({"status": statuses}, merge=True)
 
-        make_auth_key(study_title, user_id)
+            make_auth_key(study_title, user)
 
-        Thread(target=setup_gcp, args=(doc_ref, role)).start()
+            Thread(target=setup_gcp, args=(doc_ref, str(role))).start()
+
+            time.sleep(1)
 
     return redirect(url_for("studies.study", study_title=study_title))
 

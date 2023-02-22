@@ -19,6 +19,6 @@ $(document).ready(function () {
     }
     $("#accordion").bind('shown.bs.collapse', function () {
         var active = $("#accordion .show").attr('id');
-        Cookies.set('activeAccordionGroup', active);
+        Cookies.set('activeAccordionGroup', active, { sameSite: 'none', secure: true });
     });
 });

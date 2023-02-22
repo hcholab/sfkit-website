@@ -82,43 +82,20 @@
                       </div>
                     {% else %}
                       <div>
-                        {% if "" in study["status"].values() %}
-                          <div class="text-start alert alert-primary">waiting for others to be ready...</div>
-                        {% else %}
-                          <div class="task text-start"></div>
-                          {% if parameters["SEND_RESULTS"]["value"] == "Yes" %}
-                            <div id="download-div" style="display: none">
-                              <a class="text-decoration-none" href="{{url_for('studies.download_results_file', study_title=study['title'])}}">
-                                Download results
-                              </a>
-                            </div>
-                          {% elif not study['demo'] %}
-                            <p class="text-muted text-start mt-2">
-                              (While the protocol is running, if you want a more detailed view into what the VM is doing, you can ssh into your VM and run the command
-                              <code>sudo journalctl -u google-startup-scripts.service</code>
-                              to see detailed logs.)
-                            </p>
-                          {% endif %}
+                        <div id="waiting-div" class="text-start alert alert-primary" style="display: none">Waiting for other participants to be ready...</div>
+                        <div class="task text-start"></div>
+                        {% if parameters["SEND_RESULTS"]["value"] == "Yes" %}
+                          <div id="download-div" style="display: none">
+                            <a class="text-decoration-none" href="{{url_for('studies.download_results_file', study_title=study['title'])}}">
+                              Download results
+                            </a>
+                          </div>
+
+                          <div id="manhattan-div" class="mt-2" style="display: none;">
+                            <img class="w-100 h-100" id="my-image" src="" alt="Reload page to view manhattan plot">
+                            <label id="image-label" style="display: none;">Manhattan Plot</label>
+                          </div>
                         {% endif %}
-                        <div id="check-for-update">
-                          <form action="{{ url_for('studies.start_protocol', study_title=study['title']) }}" method="POST">
-                            <button class="btn btn-secondary" type="submit" onclick="loading();">
-                              <div class="loading" style="display:none">
-                                <span class="spinner-grow spinner-grow-sm" role="status"></span>
-                                Loading...
-                              </div>
-                              <div class="normal-content">
-                                Check for update
-                              </div>
-                            </button>
-                          </form>
-                        </div>
-
-                        <div id="manhattan-div" class="mt-2" style="display: none;">
-                          <img class="w-100 h-100" id="my-image" src="/static/images/{{study['title'] | lower | replace(' ', '')}}_manhattan.png" alt="Reload page to view manhattan plot">
-                          <label id="image-label" style="display: none;">Manhattan Plot</label>
-                        </div>
-
                       </div>
                     {% endif %}
                   {% else %}

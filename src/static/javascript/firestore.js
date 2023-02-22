@@ -81,31 +81,44 @@ function addNotificationToList(notification) {
 
 export function getStatusUpdates(db, study_title, user_id) {
   onSnapshot(doc(db, "studies", study_title), doc => {
-    let tasks = doc.data()["tasks"][user_id];
-    let taskDiv = $("div.task");
-    taskDiv.html("");
+    let status = doc.data()["status"][user_id];
 
-    tasks.forEach((task, _) => {
-      let taskLine = $("<p></p>");
-
-      if (task.endsWith("completed")) {
-        task = task.replace(" completed", "");
-        taskLine.append("<img src='../static/images/check.svg'> " + task);
+    let waiting_div = document.getElementById("waiting-div");
+    if (waiting_div) {
+      if (status.includes("ready to begin sfkit")) {
+        waiting_div.style.display = "block";
       } else {
-        taskLine.append("<div class='spinner-grow ms-2 me-2' style='width: 16px; height: 16px;'></div> " + task);
+        waiting_div.style.display = "none";
       }
+    }
 
-      taskDiv.append(taskLine);
-    });
+    if (doc.data()["tasks"] && doc.data()["tasks"][user_id]) {
+      let tasks = doc.data()["tasks"][user_id];
+      let taskDiv = $("div.task");
+      taskDiv.html("");
 
-    if (doc.data()["status"][user_id].includes("Finished protocol")) {
+      tasks.forEach((task, _) => {
+        let taskLine = $("<p></p>");
+
+        if (task.endsWith("completed")) {
+          task = task.replace(" completed", "");
+          taskLine.append("<img src='../static/images/check.svg'> " + task);
+        } else {
+          taskLine.append("<div class='spinner-grow ms-2 me-2' style='width: 16px; height: 16px;'></div> " + task);
+        }
+
+        taskDiv.append(taskLine);
+      });
+    }
+
+    if (status.includes("Finished protocol")) {
       document.getElementById("download-div").style.display = "block";
-      document.getElementById("check-for-update").style.display = "none";
 
       if (doc.data()["study_type"] === "MPCGWAS" || doc.data()["study_type"] === "SFGWAS") {
         document.getElementById("manhattan-div").style.display = "block";
 
         const imageElement = document.getElementById("my-image");
+        imageElement.src = "/static/images/" + study_title + "_manhattan.png";
         const labelElement = document.getElementById("image-label");
 
         const image = new Image();
