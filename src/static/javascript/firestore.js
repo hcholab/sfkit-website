@@ -79,6 +79,57 @@ function addNotificationToList(notification) {
   document.getElementById("notification_list").appendChild(li);
 }
 
+function createTaskElement(task, sub_task = false) {
+  let taskLine = $("<p></p>");
+
+  if (sub_task) {
+    taskLine = $("<p class='ms-5'></p>");
+  }
+
+  if (task.endsWith("completed")) {
+    task = task.replace(" completed", "");
+    taskLine.append("<img src='../static/images/check.svg'> " + task);
+  } else {
+    taskLine.append("<div class='spinner-grow ms-2 me-2' style='width: 16px; height: 16px;'></div> " + task);
+  }
+
+  return taskLine;
+}
+
+function createSubTaskContainer() {
+  let subTaskContainer = $("<div class='sub-task-container'></div>");
+  let toggleButton = $("<button class='toggle-sub-task'></button>").html("&#9660;");
+  toggleButton.click(() => {
+    subTaskContainer.toggle();
+    toggleButton.toggleClass("rotate");
+  });
+  let container = $("<div></div>");
+  container.append(toggleButton);
+  container.append(subTaskContainer);
+  return {container, subTaskContainer, toggleButton};
+}
+
+function renderTasks(tasks, taskDiv) {
+  let subTaskContainers = [];
+  let isSubTask = false;
+
+  tasks.forEach((task, index) => {
+    if (task.startsWith("sub-task ")) {
+      task = task.replace("sub-task ", "");
+      if (!isSubTask) {
+        isSubTask = true;
+        let {container, subTaskContainer, toggleButton} = createSubTaskContainer();
+        taskDiv.append(container);
+        subTaskContainers.push({subTaskContainer, toggleButton});
+      }
+      subTaskContainers[subTaskContainers.length - 1].subTaskContainer.append(createTaskElement(task, true));
+    } else {
+      isSubTask = false;
+      taskDiv.append(createTaskElement(task));
+    }
+  });
+}
+
 export function getStatusUpdates(db, study_title, user_id) {
   onSnapshot(doc(db, "studies", study_title), doc => {
     let status = doc.data()["status"][user_id];
@@ -96,19 +147,7 @@ export function getStatusUpdates(db, study_title, user_id) {
       let tasks = doc.data()["tasks"][user_id];
       let taskDiv = $("div.task");
       taskDiv.html("");
-
-      tasks.forEach((task, _) => {
-        let taskLine = $("<p></p>");
-
-        if (task.endsWith("completed")) {
-          task = task.replace(" completed", "");
-          taskLine.append("<img src='../static/images/check.svg'> " + task);
-        } else {
-          taskLine.append("<div class='spinner-grow ms-2 me-2' style='width: 16px; height: 16px;'></div> " + task);
-        }
-
-        taskDiv.append(taskLine);
-      });
+      renderTasks(tasks, taskDiv);
     }
 
     if (status.includes("Finished protocol")) {

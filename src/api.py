@@ -162,10 +162,13 @@ def update_tasks(transaction, doc_ref, username, task) -> None:
     if username not in doc_ref_dict["tasks"]:
         doc_ref_dict["tasks"][username] = []
 
-    if doc_ref_dict["tasks"][username][-1] == task:
+    if len(doc_ref_dict["tasks"][username]) == 0:
+        doc_ref_dict["tasks"][username].append(task)
+    elif task in doc_ref_dict["tasks"][username]:
         pass
-    elif doc_ref_dict["tasks"][username][-1] + " completed" == task:
-        doc_ref_dict["tasks"][username][-1] += " completed"
+    elif " completed" in task and task.split(" completed")[0] in doc_ref_dict["tasks"][username]:
+        index = doc_ref_dict["tasks"][username].index(task.split(" completed")[0])
+        doc_ref_dict["tasks"][username][index] += " completed"
     else:
         doc_ref_dict["tasks"][username].append(task)
 

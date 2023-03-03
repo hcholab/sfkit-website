@@ -1,4 +1,7 @@
 {% extends 'base.html' %}
+{% block styling %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/study.css') }}">
+{% endblock %}
 {% block title %}Study{% endblock %}
 {% block content %}
   <section class="py-5">

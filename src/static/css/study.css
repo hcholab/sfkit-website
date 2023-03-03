@@ -1,0 +1,7 @@
+.toggle-sub-task {
+    transition: transform 0.2s ease-in-out;
+}
+
+.toggle-sub-task.rotate {
+    transform: rotate(-90deg);
+}
