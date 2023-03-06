@@ -1,14 +1,48 @@
 import datetime
 import json
+import random
+import secrets
+import string
 
 from firebase_admin import auth as firebase_auth
-from flask import redirect, url_for
+from flask import current_app, redirect, url_for
 from requests import post
 from requests.exceptions import HTTPError
 from requests.models import Response as RequestsResponse
 from werkzeug import Response
 
 from src.utils.google_cloud.google_cloud_secret_manager import get_firebase_api_key
+
+
+def create_user(user_id="", name="anonymous_user", redirect_url=""):
+    if not user_id:
+        user_id = name + str(random.randint(0, 1000000))
+
+    email = f"{user_id}@sfkit.org" if "@" not in user_id else user_id
+    rand_password = "".join(secrets.choice(string.ascii_letters) for _ in range(16))
+
+    try:
+        firebase_auth.get_user_by_email(email)
+        firebase_auth.update_user(
+            uid=user_id,
+            email=email,
+            password=rand_password,
+        )
+    except firebase_auth.UserNotFoundError:
+        firebase_auth.create_user(
+            uid=user_id,
+            email=email,
+            password=rand_password,
+        )
+
+    doc_ref = current_app.config["DATABASE"].collection("users").document("display_names")
+    doc_ref.set({user_id: name}, merge=True)
+
+    if "anonymous_user" in email:
+        doc_ref = current_app.config["DATABASE"].collection("users").document(user_id)
+        doc_ref.set({"secret_access_code": rand_password}, merge=True)
+
+    return update_user(email, rand_password, redirect_url)
 
 
 def update_user(email: str, password: str, redirect_url: str = "") -> Response:

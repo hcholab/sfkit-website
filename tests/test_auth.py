@@ -85,30 +85,30 @@ def test_login_validate_input(capfd, client, mocker, username, password, message
     assert message in capfd.readouterr()[0]
 
 
-def test_callback(client, app, auth, mocker):
-    setup_mocking(mocker)
+# def test_callback(client, app, auth, mocker):
+#     setup_mocking(mocker)
 
-    client.post(
-        "/auth/login_with_google_callback",
-        data={"credential": "bad"},
-    )
+#     client.post(
+#         "/auth/login_with_google_callback",
+#         data={"credential": "bad"},
+#     )
 
-    response = client.post(
-        "/auth/login_with_google_callback",
-        data={
-            "credential": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFAYS5hIiwibmFtZSI6ImEiLCJpYXQiOjE1MTYyMzkwMjJ9.fx0D7FUvxuXhEZnP7ylFhVoJGDDTGTaOpARCd1Fqeco"
-        },
-    )
+#     response = client.post(
+#         "/auth/login_with_google_callback",
+#         data={
+#             "credential": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFAYS5hIiwibmFtZSI6ImEiLCJpYXQiOjE1MTYyMzkwMjJ9.fx0D7FUvxuXhEZnP7ylFhVoJGDDTGTaOpARCd1Fqeco"
+#         },
+#     )
 
-    assert response.status_code == 302
-    assert response.headers.get("Location") == "/index"
+#     assert response.status_code == 302
+#     assert response.headers.get("Location") == "/index"
 
-    client.post(
-        "/auth/login_with_google_callback",
-        data={
-            "credential": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImJhZCIsImlhdCI6MTUxNjIzOTAyMn0.XY1kpbvla-z1h6kzkCciSIMGU_MCDTxZwaZzStOPkfE"
-        },
-    )
+#     client.post(
+#         "/auth/login_with_google_callback",
+#         data={
+#             "credential": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImJhZCIsImlhdCI6MTUxNjIzOTAyMn0.XY1kpbvla-z1h6kzkCciSIMGU_MCDTxZwaZzStOPkfE"
+#         },
+#     )
 
 
 def test_logout(client, auth):

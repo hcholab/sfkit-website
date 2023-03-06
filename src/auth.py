@@ -1,6 +1,4 @@
 import functools
-import secrets
-import string
 import typing
 
 import flask
@@ -10,7 +8,7 @@ from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from werkzeug import Response
 
-from src.utils.auth_functions import update_user
+from src.utils.auth_functions import create_user, update_user
 from src.utils.generic_functions import redirect_with_flash
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 from src.utils.google_cloud.google_cloud_secret_manager import get_firebase_api_key
@@ -143,24 +141,11 @@ def login_with_google_callback() -> Response:
     except Exception as e:
         return redirect_with_flash(location="studies.index", message="Invalid Google account.", error=str(e))
 
-    rand_temp_password = "".join(secrets.choice(string.ascii_letters) for _ in range(16))
+    user_id = decoded_jwt_token["email"]
+    name = decoded_jwt_token["name"]
+    redirect_url = request.form.get("next", "")
 
-    try:
-        firebase_auth.get_user_by_email(decoded_jwt_token["email"])
-        firebase_auth.update_user(
-            uid=decoded_jwt_token["email"],
-            email=decoded_jwt_token["email"],
-            password=rand_temp_password,
-        )
-    except firebase_auth.UserNotFoundError:
-        firebase_auth.create_user(
-            uid=decoded_jwt_token["email"],
-            email=decoded_jwt_token["email"],
-            password=rand_temp_password,
-        )
-        gcloudIAM = GoogleCloudIAM()
-        gcloudIAM.give_minimal_required_gcp_permissions(decoded_jwt_token["email"])
+    gcloudIAM = GoogleCloudIAM()
+    gcloudIAM.give_minimal_required_gcp_permissions(user_id)
 
-    doc_ref = current_app.config["DATABASE"].collection("users").document("display_names")
-    doc_ref.set({decoded_jwt_token["email"]: decoded_jwt_token["name"]}, merge=True)
-    return update_user(decoded_jwt_token["email"], rand_temp_password, redirect_url=request.form.get("next", ""))
+    return create_user(user_id, name, redirect_url)

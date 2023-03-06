@@ -1,5 +1,6 @@
 import io
 import os
+import random
 import secrets
 import time
 import zipfile
@@ -27,6 +28,7 @@ from werkzeug import Response
 
 from src.auth import login_required
 from src.utils import constants
+from src.utils.auth_functions import create_user, update_user
 from src.utils.generic_functions import add_notification, redirect_with_flash
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, create_instance_name
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
@@ -71,9 +73,17 @@ def index() -> Response:
 def study(study_title: str) -> Response:
     study_title = study_title.replace(" ", "").lower()
     db = current_app.config["DATABASE"]
+    user_id = g.user["id"]
+
+    if "anonymous_user" in user_id:
+        doc_ref = db.collection("users").document(user_id)
+        doc_ref_dict = doc_ref.get().to_dict()
+        secret_access_code = doc_ref_dict["secret_access_code"]
+    else:
+        secret_access_code = ""
+
     doc_ref = db.collection("studies").document(study_title)
     doc_ref_dict = doc_ref.get().to_dict()
-    user_id = g.user["id"]
 
     if user_id in doc_ref_dict["participants"]:
         role = doc_ref_dict["participants"].index(user_id)
@@ -104,8 +114,20 @@ def study(study_title: str) -> Response:
             parameters=doc_ref_dict["personal_parameters"][user_id],
             display_names=display_names,
             default_tab=request.args.get("default_tab", "main_study"),
+            secret_access_code=secret_access_code,
         )
     )
+
+
+@bp.route("/anonymous/study/<study_title>/<user_id>/<secret_access_code>", methods=("GET", "POST"))
+def anonymous_study(study_title: str, user_id: str, secret_access_code: str) -> Response:
+    email = f"{user_id}@sfkit.org" if "@" not in user_id else user_id
+    password = secret_access_code
+    redirect_url = url_for("studies.study", study_title=study_title)
+    try:
+        return update_user(email, password, redirect_url)
+    except Exception as e:
+        abort(404)
 
 
 @bp.route("/study/<study_title>/send_message", methods=["POST"])
@@ -134,11 +156,12 @@ def send_message(study_title: str) -> Response:
 
 
 @bp.route("/choose_study_type", methods=["POST"])
-@login_required
 def choose_study_type() -> Response:
     study_type = request.form["CHOOSE_STUDY_TYPE"]
     setup_configuration: str = request.form["SETUP_CONFIGURATION"]
-    return redirect(url_for("studies.create_study", study_type=study_type, setup_configuration=setup_configuration))
+
+    redirect_url = url_for("studies.create_study", study_type=study_type, setup_configuration=setup_configuration)
+    return redirect(redirect_url) if g.user else create_user(redirect_url=redirect_url)
 
 
 @bp.route("/create_study/<study_type>/<setup_configuration>", methods=("GET", "POST"))
@@ -160,15 +183,13 @@ def create_study(study_type: str, setup_configuration: str) -> Response:
     description = request.form["description"]
     study_information = request.form["study_information"]
     demo: bool = request.form.get("demo_study") == "on"
+    user_id = g.user["id"]
 
     (valid, response) = valid_study_title(title, study_type, setup_configuration)
     if not valid:
         return response
 
     doc_ref = current_app.config["DATABASE"].collection("studies").document(title.replace(" ", "").lower())
-
-    broad_starting_status: str = "ready to begin protocol"
-
     doc_ref.set(
         {
             "title": title,
@@ -178,21 +199,20 @@ def create_study(study_type: str, setup_configuration: str) -> Response:
             "demo": demo,
             "description": description,
             "study_information": study_information,
-            "owner": g.user["id"],
+            "owner": user_id,
             "created": datetime.now(),
-            "participants": ["Broad", g.user["id"]],
-            "status": {"Broad": broad_starting_status, g.user["id"]: ""},
+            "participants": ["Broad", user_id],
+            "status": {"Broad": "ready to begin protocol", user_id: ""},
             "parameters": constants.SHARED_PARAMETERS[study_type],
             "advanced_parameters": constants.ADVANCED_PARAMETERS[study_type],
             "personal_parameters": {
                 "Broad": constants.broad_user_parameters(),
-                g.user["id"]: constants.default_user_parameters(study_type, demo),
+                user_id: constants.default_user_parameters(study_type, demo),
             },
             "requested_participants": [],
             "invited_participants": [],
         }
     )
-
     make_auth_key(title, "Broad")
 
     return response
@@ -225,9 +245,11 @@ def delete_study(study_title: str) -> Response:
     return redirect(url_for("studies.index"))
 
 
-@bp.route("/request_join_study/<study_title>", methods=["POST"])
-@login_required
+@bp.route("/request_join_study/<study_title>", methods=["GET", "POST"])
 def request_join_study(study_title: str) -> Response:
+    if not g.user:
+        return create_user(redirect_url=url_for("studies.request_join_study", study_title=study_title))
+
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict = doc_ref.get().to_dict()
