@@ -6,7 +6,18 @@ import zipfile
 from datetime import datetime
 from threading import Thread
 
-from flask import Blueprint, current_app, g, make_response, redirect, render_template, request, send_file, url_for
+from flask import (
+    Blueprint,
+    abort,
+    current_app,
+    g,
+    make_response,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    url_for,
+)
 from google.cloud import firestore
 from google.cloud.firestore_v1 import DocumentReference
 from python_http_client.exceptions import HTTPError
@@ -63,7 +74,16 @@ def study(study_title: str) -> Response:
     doc_ref = db.collection("studies").document(study_title)
     doc_ref_dict = doc_ref.get().to_dict()
     user_id = g.user["id"]
-    role: int = doc_ref_dict["participants"].index(user_id)
+
+    if user_id in doc_ref_dict["participants"]:
+        role = doc_ref_dict["participants"].index(user_id)
+    elif os.environ.get("FLASK_DEBUG") == "development" and user_id == constants.DEVELOPER_USER_ID:
+        # allow developer to view study as participant
+        role = 1
+        user_id = doc_ref_dict["participants"][role]
+    else:
+        abort(404)
+
     display_names = db.collection("users").document("display_names").get().to_dict()
 
     manhattan_plot_path = f"src/static/images/{study_title}_manhattan.png"
@@ -79,6 +99,7 @@ def study(study_title: str) -> Response:
             "studies/study/study.html",
             study=doc_ref_dict,
             role=role,
+            user_id=user_id,
             study_type=doc_ref_dict["study_type"],
             parameters=doc_ref_dict["personal_parameters"][user_id],
             display_names=display_names,
