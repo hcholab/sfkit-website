@@ -22,3 +22,4 @@ node_modules/*
 .serviceAccountKey.json
 requirements2.txt 
 .sourcery.yaml
+*_manhattan.png

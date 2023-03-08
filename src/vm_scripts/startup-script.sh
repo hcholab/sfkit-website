@@ -5,6 +5,8 @@ sudo -s
 if [[ -f startup_was_launched ]]; then exit 0; fi
 touch startup_was_launched
 
+exec 1> >(logger -s -t $(basename $0)) 2>&1 # log stdout and stderr to syslog
+
 role=$(hostname | tail -c 2)
 study_title=$(hostname | awk -F'-secure-gwas' '{print $1}')
 ports=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/ports" -H "Metadata-Flavor: Google")
