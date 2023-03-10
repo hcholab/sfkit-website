@@ -118,7 +118,7 @@ class GoogleCloudCompute:
             "network": network_url,
             "targetTags": [constants.INSTANCE_NAME_ROOT],
             "sourceRanges": source_ranges,
-            "allowed": [{"ports": ["8000-8999", "22"], "IPProtocol": "tcp"}],
+            "allowed": [{"ports": ["8000-12000", "22"], "IPProtocol": "tcp"}],
         }
 
         operation = self.compute.firewalls().insert(project=self.gcp_project, body=firewall_body).execute()

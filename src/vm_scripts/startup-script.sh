@@ -5,8 +5,6 @@ sudo -s
 if [[ -f startup_was_launched ]]; then exit 0; fi
 touch startup_was_launched
 
-exec 1> >(logger -s -t $(basename $0)) 2>&1 # log stdout and stderr to syslog
-
 role=$(hostname | tail -c 2)
 study_title=$(hostname | awk -F'-secure-gwas' '{print $1}')
 ports=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/ports" -H "Metadata-Flavor: Google")
@@ -41,7 +39,7 @@ fi
 
 if [[ $role != "0" ]]; then
     mkdir -p data_path
-    gsutil cp -r gs://${data_path}/* data_path
+    gsutil -m cp -r gs://${data_path}/* data_path
     
     # copy dummy file to the gs bucket to make sure we have write access
     touch .dummy_file && gsutil cp .dummy_file gs://${data_path}/.dummy_file && rm .dummy_file

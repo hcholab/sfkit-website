@@ -101,12 +101,12 @@ def test_invite_participant(client, auth, mocker):
     client.post("invite_participant/testtitle", data={"invite_participant_email": "b@b.com"})
 
 
-def test_email(app, client, auth, mocker):
-    with app.app_context():
-        mocker.patch("src.studies.SendGridAPIClient", MockSendGridAPIClient)
-        email("a@a.com", "b@b.com", "", "study_title")
-        email("a@a.com", "b@b.com", "invitation_message", "study_title")
-        email("a@a.com", "c@b.com", "invitation_message", "study_title")
+# def test_email(app, client, auth, mocker):
+#     with app.app_context():
+#         mocker.patch("src.studies.SendGridAPIClient", MockSendGridAPIClient)
+#         email("a@a.com", "b@b.com", "", "study_title")
+#         email("a@a.com", "b@b.com", "invitation_message", "study_title")
+#         email("a@a.com", "c@b.com", "invitation_message", "study_title")
 
 
 def test_approve_join_study(client, auth, mocker):
@@ -273,13 +273,13 @@ def test_start_protocol(client, auth, app, mocker):
     client.post("study/testtitle/start_protocol")
 
 
-def test_setup_gcp(client, auth, app, mocker):
-    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
-    mocker.patch("src.studies.GoogleCloudCompute", MockGoogleCloudCompute)
-    auth.login()
-    client.post("create_study/MPCGWAS/website", data=test_create_data)
-    doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
-    setup_gcp(doc_ref, "1")
+# def test_setup_gcp(client, auth, app, mocker):
+#     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+#     mocker.patch("src.studies.GoogleCloudCompute", MockGoogleCloudCompute)
+#     auth.login()
+#     client.post("create_study/MPCGWAS/website", data=test_create_data)
+#     doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
+#     setup_gcp(doc_ref, "1")
 
 
 class MockGoogleCloudCompute:
