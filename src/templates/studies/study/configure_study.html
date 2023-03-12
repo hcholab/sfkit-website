@@ -169,11 +169,11 @@
           {{parameters['NUM_CPUS']['name']}}
         </label>
         <div class="col-sm-9">
-          <select class="form-select" name="NUM_CPUS" id="NUM_CPUS" value="{{ request.form['NUM_CPUS'] or parameters['NUM_CPUS']['value'] }}">
-            <option value="16">16</option>
-            <option value="32">32</option>
-            <option value="64">64</option>
-            <option value="128">128</option>
+          <select class="form-select" name="NUM_CPUS" id="NUM_CPUS">
+            <option value="16" {% if parameters['NUM_CPUS']['value'] == '16' %} selected="selected" {% endif %}>16</option>
+            <option value="32" {% if parameters['NUM_CPUS']['value'] == '32' %} selected="selected" {% endif %}>32</option>
+            <option value="64" {% if parameters['NUM_CPUS']['value'] == '64' %} selected="selected" {% endif %}>64</option>
+            <option value="128" {% if parameters['NUM_CPUS']['value'] == '128' %} selected="selected" {% endif %}>128</option>
           </select>
         </div>
       </div>
