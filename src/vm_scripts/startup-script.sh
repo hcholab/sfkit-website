@@ -48,4 +48,9 @@ if [[ $role != "0" ]]; then
     sfkit register_data --geno_binary_file_prefix ${geno_absolute_path} --data_path $(pwd)/data_path 
 fi
 
-sfkit run_protocol
+# increase allowed number of open files
+ulimit -n 1000000
+# increase allowed number of open processes
+ulimit -u 1000000
+
+nohup sfkit run_protocol > output.log 2>&1 &
