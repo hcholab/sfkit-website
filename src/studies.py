@@ -308,10 +308,11 @@ def accept_invitation(study_title: str) -> Response:
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict: dict = doc_ref.get().to_dict()
+    doc_ref_dict["invited_participants"].remove(g.user["id"])
 
     doc_ref.set(
         {
-            "invited_participants": doc_ref_dict["invited_participants"].remove(g.user["id"]),
+            "invited_participants": doc_ref_dict["invited_participants"],
             "participants": doc_ref_dict["participants"] + [g.user["id"]],
             "personal_parameters": doc_ref_dict["personal_parameters"]
             | {g.user["id"]: constants.default_user_parameters(doc_ref_dict["study_type"])},

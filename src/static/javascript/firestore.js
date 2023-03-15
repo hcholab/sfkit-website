@@ -171,6 +171,9 @@ export function getStatusUpdates(db, study_title, user_id) {
           labelElement.style.display = "block";
         });
       }
+    } else if (status.includes("FAILED")) {
+      document.getElementById("status-fail").style.display = "block";
+      document.getElementById("status-fail").innerHTML = status;
     }
   });
 }
