@@ -18,7 +18,7 @@ def upload_blob(bucket_name: str, source_file_name: str, destination_blob_name: 
     return True
 
 
-def download_blob(bucket_name: str, source_blob_name: str, destination_file_name: str) -> bool:
+def download_blob_to_filename(bucket_name: str, source_blob_name: str, destination_file_name: str) -> bool:
     try:
         storage_client = storage.Client()
         bucket = storage_client.bucket(bucket_name)
@@ -33,3 +33,10 @@ def download_blob(bucket_name: str, source_blob_name: str, destination_file_name
     print(f"Downloaded storage object {source_blob_name} from bucket {bucket_name} to file {destination_file_name}.")
 
     return True
+
+
+def download_blob(bucket_name: str, source_blob_name: str) -> bytes:
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(source_blob_name)
+    return blob.download_as_bytes()

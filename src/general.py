@@ -1,9 +1,24 @@
-from flask import Blueprint, current_app, g, make_response, redirect, render_template, request, url_for
+import io
+from typing import Tuple, Union
+
+from flask import (
+    Blueprint,
+    current_app,
+    g,
+    jsonify,
+    make_response,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    url_for,
+)
 from google.cloud.firestore_v1 import CollectionReference
 from werkzeug import Response
 
 from src.auth import login_required
 from src.utils.generic_functions import add_notification, remove_notification
+from src.utils.google_cloud.google_cloud_storage import download_blob
 
 bp = Blueprint("general", __name__)
 
@@ -82,3 +97,20 @@ def edit_profile() -> Response:
     users_collection.document(g.user["id"]).set(profile)
 
     return redirect(url_for("general.profile", user_id=g.user["id"]))
+
+
+@bp.route("/sample_data/<workflow_type>/<party_id>", methods=["GET"])
+def sample_data(workflow_type: str, party_id: str) -> Union[Response, Tuple[Response, int]]:
+    filename: str = f"{workflow_type}_p{party_id}.zip"
+    try:
+        file_data = download_blob("sfkit_1000_genomes", filename)
+        return send_file(
+            io.BytesIO(file_data),
+            as_attachment=True,
+            download_name=filename,
+            mimetype="application/zip",
+        )
+    except Exception as e:
+        print(f"Error downloading file {filename}")
+        print(e)
+        return jsonify({"error": "Failed to download file"}), 500

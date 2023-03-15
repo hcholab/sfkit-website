@@ -1,0 +1,181 @@
+<h4 class="my-4 fw-normal">Introduction</h4>
+<div class="row">
+  <p>
+    This two-person tutorial is designed to guide you and a partner through the process of running a study using real or partially real data. You'll both download sample data, configure your respective parts of the study, and execute a workflow together.
+  </p>
+  <span class="text-muted">
+    (Note: one person can run this tutorial by yourself, but you will need to do it as two separate users. One easy way to do this is with two different browsers, e.g. Chrome and Firefox.)
+  </span>
+</div>
+
+<h4 class="my-4 fw-normal">Sample Data</h4>
+<div class="row">
+  <p>For this tutorial, we will use simulated data based on the
+    <a href="https://www.internationalgenome.org/data/" class="text-decoration-none">1000 Genomes Dataset</a>. The genotypes are from real data, while the covariates and phenotypes are simulated for an illustrative GWAS analysis.</p>
+  <p>
+    To begin, each participant should download a set of sample data by clicking the appropriate link below. Choose a workflow, and ensure each participant downloads one set of data.
+  </p>
+
+  <div class="row p-4 bg-light rounded">
+    <ul class="nav nav-tabs" role="tablist">
+      <li class="nav-item">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#data-mpcgwas" type="button">MPC-GWAS Workflow</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#data-sfgwas" type="button">SF-GWAS Workflow</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#data-sfpca" type="button">SF-PCA Workflow</button>
+      </li>
+    </ul>
+    <div class="tab-content">
+      <div class="container tab-pane fade show active" id="data-mpcgwas">
+        <div class="row mt-4">
+          <div class="d-flex justify-content-around align-items-center">
+            <a class="btn btn-secondary" href="{{ url_for('general.sample_data', workflow_type='mpcgwas', party_id='1') }}">Party 1 MPC-GWAS Sample Data</a>
+            <a class="btn btn-secondary" href="{{ url_for('general.sample_data', workflow_type='mpcgwas', party_id='2') }}">Party 2 MPC-GWAS Sample Data</a>
+          </div>
+        </div>
+      </div>
+      <div class="container tab-pane fade" id="data-sfgwas">
+        <div class="row mt-4">
+          <div class="d-flex justify-content-around align-items-center">
+            <a class="btn btn-secondary" href="{{ url_for('general.sample_data', workflow_type='sfgwas', party_id='1') }}">Party 1 SF-GWAS Sample Data</a>
+            <a class="btn btn-secondary" href="{{ url_for('general.sample_data', workflow_type='sfgwas', party_id='2') }}">Party 2 SF-GWAS Sample Data</a>
+          </div>
+        </div>
+      </div>
+      <div class="container tab-pane fade" id="data-sfpca">
+        <div class="row mt-4">
+          <div class="d-flex justify-content-around align-items-center">
+            <a class="btn btn-secondary" href="{{ url_for('general.sample_data', workflow_type='pca', party_id='1') }}">Party 1 SF-PCA Sample Data</a>
+            <a class="btn btn-secondary" href="{{ url_for('general.sample_data', workflow_type='pca', party_id='2') }}">Party 2 SF-PCA Sample Data</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<h4 class="my-4 fw-normal">Set up Your Study</h4>
+<div class="row">
+  <p>
+    Follow the steps in the primary tutorial to create your study. However, don't select a "demo" study this time! Furthermore, you will need to edit the parameters for your study. See below for a possible configuration of your parameters.
+  </p>
+
+  <div class="row p-4 bg-light rounded">
+    <ul class="nav nav-tabs" role="tablist">
+      <li class="nav-item">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#parameters-mpcgwas" type="button">MPC-GWAS Workflow</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#parameters-sfgwas" type="button">SF-GWAS Workflow</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#parameters-sfpca" type="button">SF-PCA Workflow</button>
+      </li>
+    </ul>
+    <div class="row tab-content">
+      <div class="container tab-pane fade show active" id="parameters-mpcgwas">
+        <div class="row justify-content-center mt-2">
+          <div class="col-md-6 mb-4 mb-md-0">
+            <img class="img-fluid" src="static/images/sample_parameters/mpcgwas1.png" alt="">
+          </div>
+          <div class="col-md-6">
+            <img class="img-fluid" src="static/images/sample_parameters/mpcgwas2.png" alt="">
+          </div>
+        </div>
+      </div>
+      <div class="container tab-pane fade" id="parameters-sfgwas">
+        <div class="row justify-content-center mt-2">
+          <div class="col-md-6 mb-4 mb-md-0">
+            <img class="img-fluid" src="static/images/sample_parameters/sfgwas1.png" alt="">
+          </div>
+          <div class="col-md-6">
+            <img class="img-fluid" src="static/images/sample_parameters/sfgwas2.png" alt="">
+          </div>
+        </div>
+      </div>
+      <div class="container tab-pane fade" id="parameters-sfpca">
+        <div class="row justify-content-center mt-2">
+          <div class="col-md-6">
+            <img class="img-fluid" src="static/images/sample_parameters/sfpca.png" alt="">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <p>
+      The second participant can then click the "Request to Join Study" button in the Studies page to request to join your study.
+    </p>
+    <div class="text-center">
+      <img class="img-fluid" style="max-width: 65%" src="static/images/tutorial/request_join.png" alt="">
+    </div>
+    <p>Once they have done so, you can click the "Approve Request" button to accept them into your study.</p>
+    <div class="text-center">
+      <img class="img-fluid" style="max-width: 50%" src="static/images/tutorial/approve_request.png" alt="">
+    </div>
+    <p>
+      <span class="text-muted" ">(Alternatively, the study creator can invite another participant with the " Invite New Study Participant" button to send an invite link via email.)</span>
+    </p>
+    <p>
+      Then follow the instructions on your study page to configure your study. Note that this will require you to use your own GCP project, in contrast to the first tutorial.
+    </p>
+  </div>
+</div>
+<h4 class="my-4 fw-normal">Execute the Workflow</h4>
+<div class="row">
+  <p>
+    Once both participants have configured their parts of the study, each participant should click the
+    <span class="btn btn-success btn-sm" style="pointer-events: none;">Begin MPCGWAS Workflow</span>
+    button (or the equivalent for a different workflow) on their respective study pages (this is the same as in Tutorial 1). The study will run, and you'll be able to see its status on the study page.
+  </p>
+</div>
+
+<h4 class="my-4 fw-normal">Results</h4>
+<div class="row">
+  <p>
+    The expected runtime for this tutorial is approximately 2 hours. When the study is complete, each participant will be able to download the results file with the association statistics (or principal components, in the case of the PCA worfklow) by clicking the "Download results" link on their respective study pages. The results should be consistent between both participants.
+  </p>
+
+  <div class="row p-4 bg-light rounded">
+    <ul class="nav nav-tabs" role="tablist">
+      <li class="nav-item">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#results-mpcgwas" type="button">MPC-GWAS Workflow</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#results-sfgwas" type="button">SF-GWAS Workflow</button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#results-sfpca" type="button">SF-PCA Workflow</button>
+      </li>
+    </ul>
+    <div class="row tab-content">
+      <div class="container tab-pane fade show active" id="results-mpcgwas">
+        <div class="text-center">
+          <img class="img-fluid" style="max-width: 75%" src="static/images/tutorial/results_mpcgwas_1kg.png" alt="">
+        </div>
+      </div>
+      <div class="container tab-pane fade" id="results-sfgwas">
+        <div class="text-center">
+          <img class="img-fluid" style="max-width: 75%" src="static/images/tutorial/results_sfgwas_1kg.png" alt="">
+        </div>
+      </div>
+      <div class="container tab-pane fade" id="results-sfpca">
+        <div class="text-center">
+          <img class="img-fluid" style="max-width: 75%" src="static/images/tutorial/results_sfpca_1kg.png" alt="">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h4 class="my-4 fw-normal">Conclusion</h4>
+<div class="row">
+  <p>
+    Congratulations! You have successfully completed the two-person tutorial. You should now have a better understanding of how to configure and execute a study with a partner using our platform. Feel free to explore other workflows and data types or to use the platform for your own research projects.
+  </p>
+</div>

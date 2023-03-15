@@ -27,7 +27,7 @@ from src.utils.auth_functions import create_user, update_user
 from src.utils.generic_functions import add_notification, redirect_with_flash
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
-from src.utils.google_cloud.google_cloud_storage import download_blob
+from src.utils.google_cloud.google_cloud_storage import download_blob_to_filename
 from src.utils.gwas_functions import valid_study_title
 from src.utils.studies_functions import add_file_to_zip, email, make_auth_key, setup_gcp
 
@@ -92,7 +92,7 @@ def study(study_title: str) -> Response:
 
     manhattan_plot_path: str = f"src/static/images/{study_title}_manhattan.png"
     if "Finished protocol" in doc_ref_dict["status"][user_id] and not os.path.exists(manhattan_plot_path):
-        download_blob(
+        download_blob_to_filename(
             "sfkit",
             f"{study_title}/manhattan.png",
             f"src/static/images/{study_title}_manhattan.png",
@@ -407,12 +407,12 @@ def download_results_file(study_title: str) -> Response:
     study_title = study_title.replace(" ", "").lower()
     os.makedirs(f"results/{study_title}", exist_ok=True)
 
-    result_success = download_blob(
+    result_success = download_blob_to_filename(
         "sfkit",
         f"{study_title}/result.txt",
         f"results/{study_title}/result.txt",
     )
-    manhattan_success = download_blob(
+    manhattan_success = download_blob_to_filename(
         "sfkit",
         f"{study_title}/manhattan.png",
         f"src/static/images/{study_title}_manhattan.png",
