@@ -1,4 +1,6 @@
+import os
 import secrets
+from typing import Optional
 
 from flask import current_app
 from google.cloud.firestore_v1 import DocumentReference
@@ -113,3 +115,8 @@ def generate_ports(doc_ref: DocumentReference, role: str) -> None:
 
     doc_ref_dict["personal_parameters"][user]["PORTS"]["value"] = ports
     doc_ref.set(doc_ref_dict, merge=True)
+
+
+def add_file_to_zip(zip_file, filepath: str, archive_name: Optional[str] = None) -> None:
+    with open(filepath, "rb") as f:
+        zip_file.writestr(archive_name or os.path.basename(filepath), f.read())

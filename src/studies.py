@@ -29,7 +29,7 @@ from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 from src.utils.google_cloud.google_cloud_storage import download_blob
 from src.utils.gwas_functions import valid_study_title
-from src.utils.studies_functions import email, make_auth_key, setup_gcp
+from src.utils.studies_functions import add_file_to_zip, email, make_auth_key, setup_gcp
 
 bp = Blueprint("studies", __name__)
 
@@ -417,41 +417,28 @@ def download_results_file(study_title: str) -> Response:
         f"src/static/images/{study_title}_manhattan.png",
     )
 
-    if result_success and manhattan_success:
-        # Create a zip file in memory
-        zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-            # Add the result file to the zip
-            with open(f"results/{study_title}/result.txt", "r") as f:
-                zip_file.writestr("result.txt", f.read())
-            # Add the Manhattan plot to the zip
-            with open(f"src/static/images/{study_title}_manhattan.png", "rb") as f:
-                zip_file.writestr("manhattan.png", f.read())
-        # Send the zip file to the user
-        zip_buffer.seek(0)
-        return send_file(
-            zip_buffer,
-            download_name=f"{study_title}_results.zip",
-            mimetype="application/zip",
-            as_attachment=True,
-        )
-    elif result_success:
-        # The Manhattan plot was not downloaded, so only send the result file
-        with open(f"results/{study_title}/result.txt", "r") as f:
-            return send_file(
-                io.BytesIO(f.read().encode()),
-                download_name="result.txt",
-                mimetype="text/plain",
-                as_attachment=True,
-            )
-    else:
-        # Both files failed to download, so return an error message
+    if not (result_success or manhattan_success):
         return send_file(
             io.BytesIO("Failed to get results".encode()),
             download_name="result.txt",
             mimetype="text/plain",
             as_attachment=True,
         )
+
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        if result_success:
+            add_file_to_zip(zip_file, f"results/{study_title}/result.txt", "result.txt")
+        if manhattan_success:
+            add_file_to_zip(zip_file, f"src/static/images/{study_title}_manhattan.png", "manhattan.png")
+
+    zip_buffer.seek(0)
+    return send_file(
+        zip_buffer,
+        download_name=f"{study_title}_results.zip",
+        mimetype="application/zip",
+        as_attachment=True,
+    )
 
 
 @bp.route("/study/<study_title>/start_protocol", methods=["POST"])
