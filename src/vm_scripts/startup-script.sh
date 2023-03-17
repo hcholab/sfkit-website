@@ -33,7 +33,7 @@ sfkit generate_keys
 
 if [[ $demo_study == "true" ]]; then
     sfkit register_data --geno_binary_file_prefix demo --data_path demo
-    sfkit run_protocol --demo
+    nohup sfkit run_protocol --demo > output.log 2>&1 &
     exit 0
 fi
 
