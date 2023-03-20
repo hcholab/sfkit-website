@@ -154,7 +154,7 @@
 
                   {% for message in study['messages'] %}
                     <div class="message d-flex {% if message['sender'] == user_id %}flex-row-reverse{% else %}flex-row{% endif %}">
-                      <div class="alert {% if message['sender'] == user_id %}alert-primary{% else %}alert-secondary{% endif %}">
+                      <div class="alert {% if message['sender'] == user_id %}alert-primary{% else %}alert-dark{% endif %}">
                         <div class="message-header text-start mb-2">
                           <b>
                             <span class="message-sender">{{ display_names.get(message['sender'], message['sender']) }}</span></b>
@@ -177,6 +177,7 @@
                   </form>
                 </div>
               </div>
+
             </div>
           </div>
         </div>

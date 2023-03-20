@@ -200,7 +200,7 @@ export function getChatUpdates(db, study_title, user_id, display_names) {
         if (String(message["sender"]) === String(user_id)) {
           alertElement.classList.add("alert-primary");
         } else {
-          alertElement.classList.add("alert-secondary");
+          alertElement.classList.add("alert-dark");
         }
 
         const headerElement = document.createElement("div");
