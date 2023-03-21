@@ -29,3 +29,14 @@
     </div>
   </section>
 {% endblock %}
+
+{% block javascript %}
+  <script>
+    $(document).ready(function () {
+      var hash = window.location.hash;
+      if (hash) {
+        $('.nav-tabs a[href="' + hash + '"]').tab('show');
+      }
+    });
+  </script>
+{% endblock %}
