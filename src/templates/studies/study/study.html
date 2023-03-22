@@ -106,8 +106,12 @@
                           </div>
 
                           <div id="manhattan-div" class="mt-2" style="display: none;">
-                            <img class="w-100 h-100" id="my-image" src="" alt="Reload page to view manhattan plot">
-                            <label id="image-label" style="display: none;">Manhattan Plot</label>
+                            <img class="w-100 h-100" id="my-image" src="" alt="Reload page to view plot">
+                            {% if study_type == "SFGWAS"%}
+                              <label id="image-label" style="display: none;">Manhattan Plot</label>
+                            {% else %}
+                              <label id="image-label" style="display: none;">PCA Plot</label>
+                            {% endif %}
                           </div>
                         {% endif %}
                         <div id="status-fail" class="text-start alert alert-danger" style="display: none"></div>

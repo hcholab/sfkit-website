@@ -39,8 +39,11 @@ fi
 
 if [[ $role != "0" ]]; then
     mkdir -p data_path
-    gsutil -m cp -r gs://${data_path}/* data_path
-    
+
+    gsutil -m cp -r gs://${data_path}/* data_path >/dev/null 2>&1 &
+    gsutil_pid=$!
+    while kill -0 "$gsutil_pid" >/dev/null 2>&1; do printf '.' -n; sleep 1; done
+
     # copy dummy file to the gs bucket to make sure we have write access
     touch .dummy_file && gsutil cp .dummy_file gs://${data_path}/.dummy_file && rm .dummy_file
     

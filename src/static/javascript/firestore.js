@@ -153,24 +153,28 @@ export function getStatusUpdates(db, study_title, user_id) {
     if (status.includes("Finished protocol")) {
       document.getElementById("download-div").style.display = "block";
 
-      if (doc.data()["study_type"] === "MPCGWAS" || doc.data()["study_type"] === "SFGWAS") {
-        document.getElementById("manhattan-div").style.display = "block";
+      document.getElementById("manhattan-div").style.display = "block";
 
-        const imageElement = document.getElementById("my-image");
-        imageElement.src = "/static/images/" + study_title + "_manhattan.png";
-        const labelElement = document.getElementById("image-label");
+      const imageElement = document.getElementById("my-image");
 
-        const image = new Image();
-        image.src = imageElement.src;
+      imageElement.src = "/static/images/" + study_title + "_manhattan.png";
 
-        image.addEventListener("error", event => {
-          labelElement.style.display = "none";
-        });
-
-        image.addEventListener("load", event => {
-          labelElement.style.display = "block";
-        });
+      if (doc.data()["study_type"] === "PCA") {
+        imageElement.src = "/static/images/" + study_title + "_pca_plot.png";
       }
+
+      const labelElement = document.getElementById("image-label");
+
+      const image = new Image();
+      image.src = imageElement.src;
+
+      image.addEventListener("error", event => {
+        labelElement.style.display = "none";
+      });
+
+      image.addEventListener("load", event => {
+        labelElement.style.display = "block";
+      });
     } else if (status.includes("FAILED")) {
       document.getElementById("status-fail").style.display = "block";
       document.getElementById("status-fail").innerHTML = status;

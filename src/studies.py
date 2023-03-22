@@ -90,13 +90,24 @@ def study(study_title: str) -> Response:
 
     display_names: dict = db.collection("users").document("display_names").get().to_dict()
 
-    manhattan_plot_path: str = f"src/static/images/{study_title}_manhattan.png"
-    if "Finished protocol" in doc_ref_dict["status"][user_id] and not os.path.exists(manhattan_plot_path):
-        download_blob_to_filename(
-            "sfkit",
-            f"{study_title}/manhattan.png",
-            f"src/static/images/{study_title}_manhattan.png",
-        )
+    study_type: str = doc_ref_dict["study_type"]
+    if "Finished protocol" in doc_ref_dict["status"][user_id]:
+        if study_type == "SFGWAS":
+            manhattan_plot_path: str = f"src/static/images/{study_title}_manhattan.png"
+            if not os.path.exists(manhattan_plot_path):
+                download_blob_to_filename(
+                    "sfkit",
+                    f"{study_title}/manhattan.png",
+                    manhattan_plot_path,
+                )
+        elif study_type == "PCA":
+            pca_plot_path: str = f"src/static/images/{study_title}_pca_plot.png"
+            if not os.path.exists(pca_plot_path):
+                download_blob_to_filename(
+                    "sfkit",
+                    f"{study_title}/pca_plot.png",
+                    pca_plot_path,
+                )
 
     return make_response(
         render_template(
@@ -104,7 +115,7 @@ def study(study_title: str) -> Response:
             study=doc_ref_dict,
             role=role,
             user_id=user_id,
-            study_type=doc_ref_dict["study_type"],
+            study_type=study_type,
             parameters=doc_ref_dict["personal_parameters"][user_id],
             display_names=display_names,
             default_tab=request.args.get("default_tab", "main_study"),
@@ -414,20 +425,23 @@ def download_key_file(study_title: str) -> Response:
 @login_required
 def download_results_file(study_title: str) -> Response:
     study_title = study_title.replace(" ", "").lower()
-    os.makedirs(f"results/{study_title}", exist_ok=True)
+    doc_ref_dict = current_app.config["DATABASE"].collection("studies").document(study_title).get().to_dict()
 
+    os.makedirs(f"results/{study_title}", exist_ok=True)
     result_success = download_blob_to_filename(
         "sfkit",
         f"{study_title}/result.txt",
         f"results/{study_title}/result.txt",
     )
-    manhattan_success = download_blob_to_filename(
+
+    plot_name = "manhattan" if "GWAS" in doc_ref_dict["study_type"] else "pca_plot"
+    plot_success = download_blob_to_filename(
         "sfkit",
-        f"{study_title}/manhattan.png",
-        f"src/static/images/{study_title}_manhattan.png",
+        f"{study_title}/{plot_name}.png",
+        f"src/static/images/{study_title}_{plot_name}.png",
     )
 
-    if not (result_success or manhattan_success):
+    if not (result_success or plot_success):
         return send_file(
             io.BytesIO("Failed to get results".encode()),
             download_name="result.txt",
@@ -439,8 +453,8 @@ def download_results_file(study_title: str) -> Response:
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
         if result_success:
             add_file_to_zip(zip_file, f"results/{study_title}/result.txt", "result.txt")
-        if manhattan_success:
-            add_file_to_zip(zip_file, f"src/static/images/{study_title}_manhattan.png", "manhattan.png")
+        if plot_success:
+            add_file_to_zip(zip_file, f"src/static/images/{study_title}_{plot_name}.png", f"{plot_name}.png")
 
     zip_buffer.seek(0)
     return send_file(

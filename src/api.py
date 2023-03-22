@@ -33,6 +33,8 @@ def upload_file() -> Tuple[dict, int]:
 
     if "manhattan" in str(file.filename):
         file_path = f"src/static/images/{study_title}_manhattan.png"
+    elif "pca_plot" in str(file.filename):
+        file_path = f"src/static/images/{study_title}_pca_plot.png"
     else:
         dir_path = f"results/{study_title}"
         os.makedirs(dir_path, exist_ok=True)
@@ -44,6 +46,8 @@ def upload_file() -> Tuple[dict, int]:
     # upload file to google cloud storage
     if "manhattan" in str(file.filename):
         upload_blob("sfkit", file_path, f"{study_title}/manhattan.png")
+    elif "pca_plot" in str(file.filename):
+        upload_blob("sfkit", file_path, f"{study_title}/pca_plot.png")
     elif str(file.filename) == "pos.txt":
         upload_blob("sfkit", file_path, f"{study_title}/pos.txt")
     else:
