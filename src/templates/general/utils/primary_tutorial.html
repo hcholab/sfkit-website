@@ -1,7 +1,9 @@
 <h4 class="my-4 fw-normal">Introduction</h4>
 <div class="row">
   <p>
-    This stand-alond tutorial can be run alone and will walk you through process of creating and executing a study on the platform. For the purpose of this tutorial, we will use the MPC-GWAS workflow with the auto-configured option. That said, this same tutorial can be followed with any of the workflows.
+    This stand-alone tutorial can be run alone and will walk you through process of creating and executing a study on this platform. For the purpose of this tutorial, we will use the MPC-GWAS workflow with the
+    <i>auto-configured</i>
+    option. That said, this same tutorial can be followed with any of the workflows.
   </p>
   <p>
     The purpose of a GWAS study is to identify genetic variants that are associated with a trait of interest. In this tutorial, we will use a simulated dataset to demonstrate the process of running a GWAS study with multiple participants. This tutorial uses a simulated dataset of genotypes, phenotypes, and covariates.
@@ -25,12 +27,23 @@
 <h4 class="my-4 fw-normal">Creating a study</h4>
 <div class="row">
   <p>
-    The first step is to create a study. To do this, click on the
-    <span class="btn btn-primary btn-sm" style="pointer-events: none;">Create New Study</span>
-    button on the
+    The first step is to create a study. To do this, go to the
     <a class="text-decoration-none" href="{{url_for('studies.index')}}">Studies</a>
-    page.
+    page and click
+    <span class="btn btn-primary btn-sm" style="pointer-events: none;">Create New Study</span>.
     <span class="text-muted">(In a real study, you could also choose to join someone else's study instead.)</span>
+  </p>
+</div>
+
+<div class="row my-2">
+  <div class="text-center">
+    <img class="img-fluid w-75" src="static/images/tutorial/studies_index.png" alt="Image failed to load">
+  </div>
+</div>
+
+<div class="row">
+  <p>
+    You will now see a page that looks something like this:
   </p>
 </div>
 
@@ -42,7 +55,7 @@
 
 <div class="row">
   <p>
-    For workflow and configuration, you can leave the defaults and then click
+    You are given the option to choose among any of the 3 workflows and 2 configuration options. More details about these choices are available in the "Instructions" page. For this tutorial, you can leave the defaults and then click
     <span class="btn btn-primary btn-sm" style="pointer-events: none;">Confirm</span>
     to continue.
   </p>
@@ -64,11 +77,17 @@
   </p>
 </div>
 
+<div class="row my-2">
+  <div class="text-center">
+    <img class="img-fluid w-50" src="static/images/tutorial/mpc_parameters.png" alt="Image failed to load">
+  </div>
+</div>
+
 <h4 class="my-4 fw-normal">Configuring your study</h4>
 <div class="row">
   <p>
     You should now see a page that looks something like this
-    <span class="text-muted">(if you instead see the main study page, click the " Configure Study" button to get to this page)</span>:
+    <span class="text-muted">(if you instead see the main study page, click the "Configure Study" button to get to this page)</span>:
   </p>
 </div>
 <div class="row my-2">
@@ -134,7 +153,7 @@
 
 <div class="row my-2">
   <div class="text-center">
-    <img class="img-fluid w-75" src="static/images/tutorial/study.png" alt="Image failed to load">
+    <img class="img-fluid w-50" src="static/images/tutorial/study.png" alt="Image failed to load">
   </div>
 </div>
 
