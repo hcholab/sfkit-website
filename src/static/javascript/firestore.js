@@ -79,14 +79,14 @@ function addNotificationToList(notification) {
   document.getElementById("notification_list").appendChild(li);
 }
 
-function createTaskElement(task, sub_task = false) {
+function createTaskElement(task, status, sub_task = false) {
   let taskLine = $("<p></p>");
 
   if (sub_task) {
     taskLine = $("<p class='ms-5'></p>");
   }
 
-  if (task.endsWith("completed")) {
+  if (task.endsWith("completed") || status.includes("Finished protocol")) {
     task = task.replace(" completed", "");
     taskLine.append("<img src='../static/images/check.svg'> " + task);
   } else {
@@ -109,7 +109,7 @@ function createSubTaskContainer() {
   return {container, subTaskContainer, toggleButton};
 }
 
-function renderTasks(tasks, taskDiv) {
+function renderTasks(tasks, taskDiv, status) {
   let subTaskContainers = [];
   let isSubTask = false;
 
@@ -122,10 +122,10 @@ function renderTasks(tasks, taskDiv) {
         taskDiv.append(container);
         subTaskContainers.push({subTaskContainer, toggleButton});
       }
-      subTaskContainers[subTaskContainers.length - 1].subTaskContainer.append(createTaskElement(task, true));
+      subTaskContainers[subTaskContainers.length - 1].subTaskContainer.append(createTaskElement(task, status, true));
     } else {
       isSubTask = false;
-      taskDiv.append(createTaskElement(task));
+      taskDiv.append(createTaskElement(task, status));
     }
   });
 }
@@ -147,7 +147,7 @@ export function getStatusUpdates(db, study_title, user_id) {
       let tasks = doc.data()["tasks"][user_id];
       let taskDiv = $("div.task");
       taskDiv.html("");
-      renderTasks(tasks, taskDiv);
+      renderTasks(tasks, taskDiv, status);
     }
 
     if (status.includes("Finished protocol")) {

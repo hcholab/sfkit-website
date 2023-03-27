@@ -89,13 +89,13 @@ class GoogleCloudIAM:
 
         permissions = {"permissions": desired_permissions}
 
-        returnedPermissions = (
+        returnedPermissions: dict = (
             self.service.projects().testIamPermissions(resource=project_id, body=permissions).execute()
-        )
+        ) or {}
 
         # check that everything in desired_permissions is in returnedPermissions
-        if set(desired_permissions).issubset(set(returnedPermissions.get("permissions"))):
+        if set(desired_permissions).issubset(set(returnedPermissions.get("permissions", {}))):
             return True
 
-        print(f"Missing permissions: {set(desired_permissions) - set(returnedPermissions.get('permissions'))}")
+        print(f"Missing permissions: {set(desired_permissions) - set(returnedPermissions.get('permissions', {}))}")
         return False

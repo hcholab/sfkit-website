@@ -23,7 +23,7 @@ apt-get install python3-pip python3-numpy wget git zip unzip -y
 curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
 bash add-google-cloud-ops-agent-repo.sh --also-install
 
-pip install sfkit
+pip install --upgrade --no-cache-dir sfkit
 PATH=$PATH:~/.local/bin
 export PYTHONUNBUFFERED=TRUE
 

@@ -18,7 +18,8 @@
       <div>compute.subnetworks.useExternalIp,iam.serviceAccounts.actAs && \</div>
       <div>gcloud projects add-iam-policy-binding $(gcloud config get-value project) \</div>
       <div>--member=serviceAccount:419003787216-compute@developer.gserviceaccount.com \</div>
-      <div>--role=projects/$(gcloud config get-value project)/roles/sfkitRole</div>
+      <div>--role=projects/$(gcloud config get-value project)/roles/sfkitRole \</div>
+      <div>--condition="title=Expiration,description=30 days,expression=request.time&lt;timestamp('$(date -u -d '+30 days' +%Y-%m-%dT%H:%M:%S.000Z)')"</div>
     </code>
   </div>
   <br>

@@ -92,7 +92,7 @@ def study(study_title: str) -> Response:
 
     study_type: str = doc_ref_dict["study_type"]
     if "Finished protocol" in doc_ref_dict["status"][user_id]:
-        if study_type == "SFGWAS":
+        if study_type in {"SFGWAS", "MPCGWAS"}:
             manhattan_plot_path: str = f"src/static/images/{study_title}_manhattan.png"
             if not os.path.exists(manhattan_plot_path):
                 download_blob_to_filename(
@@ -243,6 +243,11 @@ def delete_study(study_title: str) -> Response:
         if (auth_key := participant.get("AUTH_KEY").get("value")) != "":
             doc_ref_auth_keys = db.collection("users").document("auth_keys")
             doc_ref_auth_keys.update({auth_key: firestore.DELETE_FIELD})
+
+    # save study to deleted studies collection
+    db.collection("deleted_studies").document(
+        study_title.replace(" ", "").lower() + "-" + str(doc_ref_dict["created"]).replace(" ", "").lower()
+    ).set(doc_ref_dict)
 
     doc_ref.delete()
     return redirect(url_for("studies.index"))
@@ -501,7 +506,7 @@ def start_protocol(study_title: str) -> Response:
         if not GoogleCloudIAM().test_permissions(gcp_project):
             return redirect_with_flash(
                 url=url_for("studies.study", study_title=study_title),
-                message="You have not given the website the necessary GCP permissions for the project you have entered.  Please click on 'Configure Study' to double-check that your project ID is correct and that you have given the website the necessary permissions in that GCP project.",
+                message="You have not given the website the necessary GCP permissions for the project you have entered.  Please click on 'Configure Study' to double-check that your project ID is correct and that you have given the website the necessary permissions (and they are not expired) in that GCP project.",
             )
 
         doc_ref_dict = doc_ref.get().to_dict()
