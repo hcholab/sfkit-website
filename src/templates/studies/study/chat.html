@@ -1,0 +1,35 @@
+<div class="container tab-pane fade {% if default_tab == 'chat_study' %}show active{% endif %} p-2" id="chat_study">
+  <div id="past_messages" class="my-2 d-flex flex-column overflow-auto" style="max-height: 60vh;">
+    {% if study['messages'] | length == 0 %}
+      <div class="alert alert-secondary text-start">
+        <small class="text-muted text-start">
+          Send a message here to share information with other study participants.
+        </small>
+      </div>
+    {% endif %}
+
+    {% for message in study['messages'] %}
+      <div class="message d-flex {% if message['sender'] == user_id %}flex-row-reverse{% else %}flex-row{% endif %}">
+        <div class="alert {% if message['sender'] == user_id %}alert-primary{% else %}alert-dark{% endif %}">
+          <div class="message-header text-start mb-2">
+            <b>
+              <span class="message-sender">{{ display_names.get(message['sender'], message['sender']) }}</span></b>
+            <span class="message-time text-muted">{{ message['time'] }}</span>
+          </div>
+          <div class="message-body text-start" style="word-break: break-word;">
+            {{ message['body'] }}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div id="send_message" class="flex-grow-0 pt-3 px-4 border-top">
+    <form action="{{ url_for('studies.send_message', study_title=study['title']) }}" method="POST">
+      <div class="input-group">
+        <input type="text" class="form-control" placeholder="Type your message" id="message" name="message">
+        <button class="btn btn-primary">Send</button>
+      </div>
+    </form>
+  </div>
+</div>
