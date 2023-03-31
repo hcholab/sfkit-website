@@ -217,6 +217,7 @@
   </div>
   <div>
     <form method="post" action="{{url_for('studies.personal_parameters', study_title=study['title'])}}">
+
       <div class="text-start row">
         <label for="DELETE_VM" class="col-sm-3 col-form-label">
           {{parameters.get('DELETE_VM', {}).get('name')}}
@@ -246,6 +247,18 @@
       <p class="mt-3 text-start text-muted">
         {{parameters.get('SEND_RESULTS', {}).get('description')}}
       </p>
+
+      <div class="text-start row">
+        <label for="RESULTS_PATH" class="col-sm-3 col-form-label text-start">
+          {{parameters['RESULTS_PATH']['name']}}
+        </label>
+        <div class="col-sm-9">
+          <input type="text" class="form-control" name="RESULTS_PATH" id="RESULTS_PATH" value="{{ request.form['RESULTS_PATH'] or parameters['RESULTS_PATH']['value'] }}">
+        </div>
+        <p class="mt-3 text-start text-muted">
+          {{parameters['RESULTS_PATH']['description']}}
+        </p>
+      </div>
 
       <div class="text-center">
         <button class="mt-2 btn btn-primary" type="submit">

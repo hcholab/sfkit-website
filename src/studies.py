@@ -493,7 +493,7 @@ def start_protocol(study_title: str) -> Response:
                 url=url_for("studies.study", study_title=study_title),
                 message="Your GCP project ID is not set.  Please follow the instructions in the 'Configure Study' button before running the protocol.",
             )
-        if not demo and "broad-cho-priv" in gcp_project and os.environ.get("FLASK_DEBUG") != "development":
+        if not demo and "broad-cho-priv1" in gcp_project and os.environ.get("FLASK_DEBUG") != "development":
             return redirect_with_flash(
                 url=url_for("studies.study", study_title=study_title),
                 message="This project ID is only allowed for a demo study.  Please follow the instructions in the 'Configure Study' button to set up your own GCP project before running the protocol.",

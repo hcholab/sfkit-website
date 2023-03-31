@@ -383,9 +383,14 @@ DEFAULT_USER_PARAMETERS = {
         "value": "",
     },
     "SEND_RESULTS": {
-        "name": "Send Results",
-        "description": "Whether or not to send the results of the protocol back to the website to be downloadable and displayed.",
+        "name": "Visualize Results",
+        "description": "Whether or not to send the results of the protocol back to the website to be downloaded and visualized.",
         "value": "Yes",
+    },
+    "RESULTS_PATH": {
+        "name": "Results Path",
+        "description": "The path in a GCP bucket where you would like to send the results of the protocol. Leave blank if you don't want to send the results to a GCP bucket.  This could be in the same bucket as your data, or a different one.",
+        "value": "",
     },
     "DELETE_VM": {
         "name": "Delete VM",
@@ -407,6 +412,7 @@ DEFAULT_USER_PARAMETERS = {
         "PORTS",
         "AUTH_KEY",
         "SEND_RESULTS",
+        "RESULTS_PATH",
         "DELETE_VM",
     ],
 }
