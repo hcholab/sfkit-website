@@ -157,10 +157,11 @@ export function getStatusUpdates(db, study_title, user_id) {
 
       const imageElement = document.getElementById("my-image");
 
-      imageElement.src = "/static/images/" + study_title + "_manhattan.png";
+      const role = doc.data()["participants"].indexOf(user_id).toString();
+      imageElement.src = "/static/results/" + study_title + "/p" + role + "/manhattan.png";
 
       if (doc.data()["study_type"] === "PCA") {
-        imageElement.src = "/static/images/" + study_title + "_pca_plot.png";
+        imageElement.src = "/static/results/" + study_title + "/p" + role + "/pca_plot.png";
       }
 
       const labelElement = document.getElementById("image-label");

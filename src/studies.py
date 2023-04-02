@@ -92,21 +92,23 @@ def study(study_title: str) -> Response:
 
     study_type: str = doc_ref_dict["study_type"]
     if "Finished protocol" in doc_ref_dict["status"][user_id]:
+        base = "src/static/results"
+        shared = f"{study_title}/p{role}"
+        os.makedirs(f"{base}/{shared}", exist_ok=True)
+
         if study_type in {"SFGWAS", "MPCGWAS"}:
-            manhattan_plot_path: str = f"src/static/images/{study_title}_manhattan.png"
-            if not os.path.exists(manhattan_plot_path):
+            if not os.path.exists(f"{base}/{shared}/manhattan.png"):
                 download_blob_to_filename(
                     "sfkit",
-                    f"{study_title}/manhattan.png",
-                    manhattan_plot_path,
+                    f"{shared}/manhattan.png",
+                    f"{base}/{shared}/manhattan.png",
                 )
         elif study_type == "PCA":
-            pca_plot_path: str = f"src/static/images/{study_title}_pca_plot.png"
-            if not os.path.exists(pca_plot_path):
+            if not os.path.exists(f"{base}/{shared}/pca_plot.png"):
                 download_blob_to_filename(
                     "sfkit",
-                    f"{study_title}/pca_plot.png",
-                    pca_plot_path,
+                    f"{shared}/pca_plot.png",
+                    f"{base}/{shared}/pca_plot.png",
                 )
 
     return make_response(
@@ -431,19 +433,23 @@ def download_key_file(study_title: str) -> Response:
 def download_results_file(study_title: str) -> Response:
     study_title = study_title.replace(" ", "").lower()
     doc_ref_dict = current_app.config["DATABASE"].collection("studies").document(study_title).get().to_dict()
+    role: str = str(doc_ref_dict["participants"].index(g.user["id"]))
 
-    os.makedirs(f"results/{study_title}", exist_ok=True)
+    base = "src/static/results"
+    shared = f"{study_title}/p{role}"
+    os.makedirs(f"{base}/{shared}", exist_ok=True)
+
     result_success = download_blob_to_filename(
         "sfkit",
-        f"{study_title}/result.txt",
-        f"results/{study_title}/result.txt",
+        f"{shared}/result.txt",
+        f"{base}/{shared}/result.txt",
     )
 
     plot_name = "manhattan" if "GWAS" in doc_ref_dict["study_type"] else "pca_plot"
     plot_success = download_blob_to_filename(
         "sfkit",
-        f"{study_title}/{plot_name}.png",
-        f"src/static/images/{study_title}_{plot_name}.png",
+        f"{shared}/{plot_name}.png",
+        f"{base}/{shared}/{plot_name}.png",
     )
 
     if not (result_success or plot_success):
@@ -457,14 +463,14 @@ def download_results_file(study_title: str) -> Response:
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
         if result_success:
-            add_file_to_zip(zip_file, f"results/{study_title}/result.txt", "result.txt")
+            add_file_to_zip(zip_file, f"{base}/{shared}/result.txt", "result.txt")
         if plot_success:
-            add_file_to_zip(zip_file, f"src/static/images/{study_title}_{plot_name}.png", f"{plot_name}.png")
+            add_file_to_zip(zip_file, f"{base}/{shared}/{plot_name}.png", f"{plot_name}.png")
 
     zip_buffer.seek(0)
     return send_file(
         zip_buffer,
-        download_name=f"{study_title}_results.zip",
+        download_name=f"{study_title}_p{role}_results.zip",
         mimetype="application/zip",
         as_attachment=True,
     )

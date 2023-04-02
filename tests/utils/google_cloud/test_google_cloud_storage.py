@@ -1,10 +1,10 @@
-from src.utils.google_cloud.google_cloud_storage import download_blob_to_filename, upload_blob
+from src.utils.google_cloud.google_cloud_storage import download_blob_to_filename, upload_blob_from_filename
 
 
 def test_upload_blob(mocker):
     # mock storage.Client
     mocker.patch("src.utils.google_cloud.google_cloud_storage.storage.Client", MockStorageClient)
-    upload_blob("bucket_name", "source_file_name", "destination_blob_name")
+    upload_blob_from_filename("bucket_name", "source_file_name", "destination_blob_name")
 
 
 def test_download_blob(mocker):

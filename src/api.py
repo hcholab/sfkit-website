@@ -18,40 +18,35 @@ def upload_file() -> Tuple[dict, int]:
         return {"error": "unauthorized"}, 401
 
     db = current_app.config["DATABASE"]
-    study_title = db.collection("users").document("auth_keys").get().to_dict()[auth_key]["study_title"]
-    study_title = study_title.replace(" ", "").lower()
+    user_dict = db.collection("users").document("auth_keys").get().to_dict()[auth_key]
+    study_title = user_dict["study_title"].replace(" ", "").lower()
+    username = user_dict["username"]
 
     print(f"upload_file: {study_title}, request: {request}, request.files: {request.files}")
 
     file = request.files["file"]
-    # check if file is valid
+
     if not file:
         print("no file")
         return {"error": "no file"}, 400
 
     print(f"filename: {file.filename}")
 
-    if "manhattan" in str(file.filename):
-        file_path = f"src/static/images/{study_title}_manhattan.png"
-    elif "pca_plot" in str(file.filename):
-        file_path = f"src/static/images/{study_title}_pca_plot.png"
-    else:
-        dir_path = f"results/{study_title}"
-        os.makedirs(dir_path, exist_ok=True)
-        file_path = os.path.join(dir_path, str(file.filename))
+    doc_ref_dict: dict = db.collection("studies").document(study_title).get().to_dict()
+    role: str = str(doc_ref_dict["participants"].index(username))
 
-    file.save(file_path)
-    print(f"saved file {file.filename} to {file_path}")
+    if "manhattan" in str(file.filename):
+        file_path = f"{study_title}/p{role}/manhattan.png"
+    elif "pca_plot" in str(file.filename):
+        file_path = f"{study_title}/p{role}/pca_plot.png"
+    elif str(file.filename) == "pos.txt":
+        file_path = f"{study_title}/p{role}/pos.txt"
+    else:
+        file_path = f"{study_title}/p{role}/result.txt"
 
     # upload file to google cloud storage
-    if "manhattan" in str(file.filename):
-        upload_blob("sfkit", file_path, f"{study_title}/manhattan.png")
-    elif "pca_plot" in str(file.filename):
-        upload_blob("sfkit", file_path, f"{study_title}/pca_plot.png")
-    elif str(file.filename) == "pos.txt":
-        upload_blob("sfkit", file_path, f"{study_title}/pos.txt")
-    else:
-        upload_blob("sfkit", file_path, f"{study_title}/result.txt")
+    upload_blob("sfkit", file, file_path)
+    print(f"uploaded file {file.filename} to {file_path}")
 
     return {}, 200
 
