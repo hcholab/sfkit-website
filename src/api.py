@@ -40,7 +40,7 @@ def upload_file() -> Tuple[dict, int]:
     elif "pca_plot" in str(file.filename):
         file_path = f"{study_title}/p{role}/pca_plot.png"
     elif str(file.filename) == "pos.txt":
-        file_path = f"{study_title}/p{role}/pos.txt"
+        file_path = f"{study_title}/pos.txt"
     else:
         file_path = f"{study_title}/p{role}/result.txt"
 
