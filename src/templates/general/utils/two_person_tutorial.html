@@ -20,9 +20,9 @@
 
   <div class="row p-4 bg-light rounded">
     <ul class="nav nav-tabs" role="tablist">
-      <li class="nav-item">
+      {# <li class="nav-item">
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#data-mpcgwas" type="button">MPC-GWAS Workflow</button>
-      </li>
+      </li> #}
       <li class="nav-item">
         <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#data-sfgwas" type="button">SF-GWAS Workflow</button>
       </li>
@@ -31,14 +31,14 @@
       </li>
     </ul>
     <div class="tab-content">
-      <div class="container tab-pane fade" id="data-mpcgwas">
+      {# <div class="container tab-pane fade" id="data-mpcgwas">
         <div class="row mt-4">
           <div class="d-flex justify-content-around align-items-center">
             <a class="btn btn-secondary" href="{{ url_for('general.sample_data', workflow_type='mpcgwas', party_id='1') }}">Party 1 MPC-GWAS Sample Data</a>
             <a class="btn btn-secondary" href="{{ url_for('general.sample_data', workflow_type='mpcgwas', party_id='2') }}">Party 2 MPC-GWAS Sample Data</a>
           </div>
         </div>
-      </div>
+      </div> #}
       <div class="container tab-pane fade show active" id="data-sfgwas">
         <div class="row mt-4">
           <div class="d-flex justify-content-around align-items-center">
@@ -68,9 +68,9 @@
 
   <div class="row p-4 bg-light rounded">
     <ul class="nav nav-tabs" role="tablist">
-      <li class="nav-item">
+      {# <li class="nav-item">
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#parameters-mpcgwas" type="button">MPC-GWAS Workflow</button>
-      </li>
+      </li> #}
       <li class="nav-item">
         <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#parameters-sfgwas" type="button">SF-GWAS Workflow</button>
       </li>
@@ -79,7 +79,7 @@
       </li>
     </ul>
     <div class="row tab-content">
-      <div class="container tab-pane fade" id="parameters-mpcgwas">
+      {# <div class="container tab-pane fade" id="parameters-mpcgwas">
         <div class="row justify-content-center mt-2">
           <div class="col-md-6 mb-4 mb-md-0">
             <img class="img-fluid" src="static/images/sample_parameters/mpcgwas1.png" alt="">
@@ -88,7 +88,7 @@
             <img class="img-fluid" src="static/images/sample_parameters/mpcgwas2.png" alt="">
           </div>
         </div>
-      </div>
+      </div> #}
       <div class="container tab-pane fade show active" id="parameters-sfgwas">
         <div class="row justify-content-center mt-2">
           <div class="col-md-6 mb-4 mb-md-0">
@@ -145,9 +145,9 @@
 
   <div class="row p-4 bg-light rounded">
     <ul class="nav nav-tabs" role="tablist">
-      <li class="nav-item">
+      {# <li class="nav-item">
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#results-mpcgwas" type="button">MPC-GWAS Workflow</button>
-      </li>
+      </li> #}
       <li class="nav-item">
         <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#results-sfgwas" type="button">SF-GWAS Workflow</button>
       </li>
@@ -156,11 +156,11 @@
       </li>
     </ul>
     <div class="row tab-content">
-      <div class="container tab-pane fade" id="results-mpcgwas">
+      {# <div class="container tab-pane fade" id="results-mpcgwas">
         <div class="text-center">
           <img class="img-fluid" style="max-width: 75%" src="static/images/tutorial/results_mpcgwas_1kg.png" alt="">
         </div>
-      </div>
+      </div> #}
       <div class="container tab-pane fade show active" id="results-sfgwas">
         <div class="text-center">
           <img class="img-fluid" style="max-width: 75%" src="static/images/tutorial/results_sfgwas_1kg.png" alt="">
