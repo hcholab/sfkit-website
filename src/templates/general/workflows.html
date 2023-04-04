@@ -4,7 +4,7 @@
 
 {% block content %}
   <section class="py-5">
-    <div class="container">
+    <div class="container col-12 col-lg-9">
       <h2 class="mb-4 text-center fw-normal">Collaborative Study Workflows</h2>
       <hr>
 
@@ -13,7 +13,8 @@
           <img src="static/images/info-square.svg" class="me-1 mb-1" width="20" height="20" alt="info-square">
           What is secure computation and how do
           <b>sfkit</b>
-          workflows use it?</h5>
+          workflows use it?
+        </h5>
 
         <p>
           Secure computation refers to cryptographic techniques for analyzing encrypted private data without disclosing sensitive information. Our workflows use these methods to ensure that each dataset remains private throughout the collaborative study. We use both
@@ -24,12 +25,15 @@
         </p>
       </div>
 
-      <h3 class="mt-5 my-4">Genome-Wide Association Study (GWAS)</h3>
-      <p>GWAS is an essential study design in genetics for identifying genetic variants that are correlated with a biological trait of interest, such as disease status. Analyzing a large cohort of individuals is important for detecting variants that are rare or weakly associated with the trait. Our workflows below perform a GWAS jointly over datasets held by a group of collaborators to increase the power of the study, while keeping the input datasets private.
-      </p>
+      <div>
+        <h3 class="mt-5 my-4">Genome-Wide Association Study (GWAS)</h3>
+        <p>
+          GWAS is an essential study design in genetics for identifying genetic variants that are correlated with a biological trait of interest, such as disease status. Analyzing a large cohort of individuals is important for detecting variants that are rare or weakly associated with the trait. Our workflows below perform a GWAS jointly over datasets held by a group of collaborators to increase the power of the study, while keeping the input datasets private.
+        </p>
+      </div>
 
-      <h4 class="my-4 fw-normal">MPC-GWAS</h4>
-      <div class="row">
+      <div>
+        <h4 class="my-4 fw-normal">MPC-GWAS</h4>
 
         <p>
           This workflow implements a collaborative GWAS protocol based on secure multiparty computation (MPC) as described in
@@ -45,41 +49,39 @@
         <p>
           This workflow currently supports joint analyses between pairs of collaborators. For studies involving more than two users, please use the SF-GWAS workflow.
         </p>
-
       </div>
 
-      <h4 class="my-4 fw-normal">SF-GWAS</h4>
-      <div class="row">
-        <div class="row">
-          <p>
-            This workflow implements a secure and federated (SF) protocol for collaborative GWAS, meaning that each input dataset remains with the data holder and only a smaller amount of intermediate results are exchanged in an encrypted form. Unlike MPC-GWAS, even the encrypted input dataset is never shared to minimize the computational overhead. Our federated GWAS algorithm is introduced in
-            <a class="text-decoration-none" href="https://www.nature.com/articles/s41467-021-25972-y">Truly Privacy-Preserving Federated Analytics for Precision Medicine with Multiparty Homomorphic Encryption</a>
-            (Nature Communications, 2021). Further improvements and extensions in a recent
-            <a class="text-decoration-none" href="https://www.biorxiv.org/content/10.1101/2022.11.30.518537v1">preprint</a>
-            are also incorporated to provide the state-of-the-art performance. Similar to MPC-GWAS, this GWAS pipeline includes quality control filters, population stratification analysis, and association tests.
-          </p>
+      <div>
+        <h4 class="my-4 fw-normal">SF-GWAS</h4>
 
-          <p>
-            Each user provides an input dataset including genotypes, covariates, and a target phenotype for a local cohort of individuals. The joint analysis protocol makes an efficient use of local computation on the unecrypted data while ensuring that only encrypted intermediate results are shared among the users.
-          </p>
-        </div>
+        <p>
+          This workflow implements a secure and federated (SF) protocol for collaborative GWAS, meaning that each input dataset remains with the data holder and only a smaller amount of intermediate results are exchanged in an encrypted form. Unlike MPC-GWAS, even the encrypted input dataset is never shared to minimize the computational overhead. Our federated GWAS algorithm is introduced in
+          <a class="text-decoration-none" href="https://www.nature.com/articles/s41467-021-25972-y">Truly Privacy-Preserving Federated Analytics for Precision Medicine with Multiparty Homomorphic Encryption</a>
+          (Nature Communications, 2021). Further improvements and extensions in a recent
+          <a class="text-decoration-none" href="https://www.biorxiv.org/content/10.1101/2022.11.30.518537v1">preprint</a>
+          are also incorporated to provide the state-of-the-art performance. Similar to MPC-GWAS, this GWAS pipeline includes quality control filters, population stratification analysis, and association tests.
+        </p>
+
+        <p>
+          Each user provides an input dataset including genotypes, covariates, and a target phenotype for a local cohort of individuals. The joint analysis protocol makes an efficient use of local computation on the unecrypted data while ensuring that only encrypted intermediate results are shared among the users.
+        </p>
       </div>
 
-      <h3 class="mt-5 my-4">Principal Component Analysis (PCA)</h3>
+      <div>
+        <h3 class="mt-5 my-4">Principal Component Analysis (PCA)</h3>
 
-      <p>PCA is a standard algorithm for dimensionality reduction. In genetics, PCA is commonly applied to the genotype data to identify the population structure of a given cohort. Coordinates of each individual in a reduced space output by PCA represent their ancestry background in relation to other individuals. This information is useful for genetic analyses, for example for constructing additional covariates in GWAS.
-      </p>
-
-      <h4 class="my-4 fw-normal">SF-PCA</h4>
-      <div class="row">
-        <div class="row">
-          <p>
-            This workflow allows a group of users to perform a PCA jointly on their private datasets to obtain a desired number of top principal components (PCs) without sharing the data. This corresponds to one of the steps in GWAS workflows described above, here provided as a standalone workflow, based on the secure and federated (SF) approach. Each user provides a matrix with the same number of columns (features) as the input. The workflow securely computes and returns the PCs of the pooled matrix while keeping any sensitive data encrypted at all times.
-          </p>
-        </div>
-
+        <p>PCA is a standard algorithm for dimensionality reduction. In genetics, PCA is commonly applied to the genotype data to identify the population structure of a given cohort. Coordinates of each individual in a reduced space output by PCA represent their ancestry background in relation to other individuals. This information is useful for genetic analyses, for example for constructing additional covariates in GWAS.
+        </p>
       </div>
+
+      <div>
+        <h4 class="my-4 fw-normal">SF-PCA</h4>
+
+        <p>
+          This workflow allows a group of users to perform a PCA jointly on their private datasets to obtain a desired number of top principal components (PCs) without sharing the data. This corresponds to one of the steps in GWAS workflows described above, here provided as a standalone workflow, based on the secure and federated (SF) approach. Each user provides a matrix with the same number of columns (features) as the input. The workflow securely computes and returns the PCs of the pooled matrix while keeping any sensitive data encrypted at all times.
+        </p>
+      </div>
+
     </div>
   </section>
-</div>
 {% endblock %}
