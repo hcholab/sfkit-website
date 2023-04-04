@@ -11,12 +11,12 @@ MPCGWAS_SHARED_PARAMETERS = {
     "NUM_SNPS": {
         "name": "Number of Single Nucleotide Polymorphisms",
         "description": "The number of SNPs (Single Nucleotide Polymorphisms) in the dataset.",
-        "value": 1000,
+        "value": 28021,
     },
     "NUM_COVS": {
         "name": "Number of Covariates",
         "description": "The number of covariate features in the dataset.",
-        "value": 2,
+        "value": 3,
     },
     "NUM_DIM_TO_REMOVE": {
         "name": "Number of PCs for Population Stratification",
@@ -31,12 +31,12 @@ MPCGWAS_SHARED_PARAMETERS = {
     "IMISS_UB": {
         "name": "Individual Missing Rate Upper Bound",
         "description": "The individual missing rate upper bound.",
-        "value": 0.05,
+        "value": 1.0,
     },
     "HET_LB": {
         "name": "Heterozygosity Lower Bound",
         "description": "The individual heterozygosity lower bound.",
-        "value": 0.2,
+        "value": 0.0,
     },
     "HET_UB": {
         "name": "Heterozygosity Upper Bound",
@@ -51,22 +51,22 @@ MPCGWAS_SHARED_PARAMETERS = {
     "MAF_LB": {
         "name": "Minor Allele Frequency Lower Bound",
         "description": "The minor allele frequency lower bound.",
-        "value": 0,
+        "value": 0.01,
     },
     "MAF_UB": {
         "name": "Minor Allele Frequency Upper Bound",
         "description": "The minor allele frequency upper bound.",
-        "value": 1,
+        "value": 0.99,
     },
     "HWE_UB": {
         "name": "Hardy Weinberg Equilibrium Upper Bound",
         "description": "The hardy weinberg equilibrium test statistic upper bound.",
-        "value": 100000,
+        "value": 28.374,
     },
     "LD_DIST_THRES": {
         "name": "LD Distance Threshold",
         "description": "The genomic distance threshold for selecting SNPs for principal component analysis.",
-        "value": 1,
+        "value": 100000,
     },
     "index": [  # index is used to order the parameters in the UI
         "NUM_SNPS",
@@ -93,17 +93,17 @@ MPCGWAS_ADVANCED_PARAMETERS = {
     "NUM_OVERSAMPLE": {
         "name": "Oversampling Parameter for PCA",
         "description": "An oversampling parameter for randomized principal component analysis: how many extra components should be extracted to improve the accuracy.",
-        "value": 5,
+        "value": 10,
     },
     "NUM_POWER_ITER": {
         "name": "Number of Power Iterations",
         "description": "The number of power iterations during the randomized PCA.",
-        "value": 10,
+        "value": 20,
     },
     "NBIT_K": {
         "name": "NBIT_K",
         "description": "Total number of bits used to represent data values",
-        "value": 60,
+        "value": 90,
     },
     "NBIT_F": {
         "name": "NBIT_F",
@@ -135,7 +135,7 @@ PCA_SHARED_PARAMETERS = {
     "num_columns": {
         "name": "Number of Columns",
         "description": "The number of columns in the dataset.",
-        "value": "",
+        "value": 28021,
     },
     "num_pcs_to_remove": {
         "name": "Number of Principal Components",
@@ -152,17 +152,17 @@ PCA_ADVANCED_PARAMETERS = {
     "iter_per_eigenval": {
         "name": "Iterations per Evaluation",
         "description": "The number of QR iterations per eigenvalue when performing eigendecomposition.",
-        "value": 1,
+        "value": 5,
     },
     "num_oversampling": {
         "name": "Oversampling Parameter for PCA",
         "description": "An oversampling parameter for randomized principal component analysis: how many extra components should be extracted to improve the accuracy.",
-        "value": 2,
+        "value": 10,
     },
     "num_power_iters": {
         "name": "Number of Power Iterations",
         "description": "The number of power iterations during the randomized PCA.",
-        "value": 10,
+        "value": 2,
     },
     "mpc_field_size": {
         "name": "MPC Field Size",
@@ -172,7 +172,7 @@ PCA_ADVANCED_PARAMETERS = {
     "mpc_data_bits": {
         "name": "MPC Data Bits",
         "description": "Total number of bits used to represent data values",
-        "value": 60,
+        "value": 90,
     },
     "mpc_frac_bits": {
         "name": "MPC Frac Bits",
@@ -193,7 +193,7 @@ SFGWAS_SHARED_PARAMETERS = {
     "num_snps": {
         "name": "Number of Single Nucleotide Polymorphisms",
         "description": "The number of SNPs in the dataset.",
-        "value": "",
+        "value": 28021,
     },
     "num_covs": {
         "name": "Number of Covariates",
@@ -233,7 +233,7 @@ SFGWAS_SHARED_PARAMETERS = {
     "maf_lb": {
         "name": "Minor Allele Frequency Lower Bound",
         "description": "The minor allele frequency lower bound.",
-        "value": 0.1,
+        "value": 0.01,
     },
     "hwe_ub": {
         "name": "Hardy Weinberg Equilibrium Upper Bound",
@@ -284,7 +284,7 @@ SFGWAS_ADVANCED_PARAMETERS = {
     "mpc_data_bits": {
         "name": "MPC Data Bits",
         "description": "Total number of bits used to represent data values",
-        "value": 60,
+        "value": 90,
     },
     "mpc_frac_bits": {
         "name": "MPC Frac Bits",
