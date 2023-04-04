@@ -51,7 +51,8 @@ if [[ $role != "0" ]]; then
     sfkit register_data --geno_binary_file_prefix ${geno_absolute_path} --data_path $(pwd)/data_path 
 fi
 
-# increase allowed number of open files; had an issue once with sfgwas where it seems that this was the problem
+# increase allowed number of open file and processes; had an issue once with sfgwas where it seems that this was the problem
 ulimit -n 1000000
+ulimit -u 1000000
 
 nohup sfkit run_protocol > output.log 2>&1 &
