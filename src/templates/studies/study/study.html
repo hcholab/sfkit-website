@@ -10,18 +10,32 @@
         <div class="col-lg-7 mx-auto">
           <div class="p-4 bg-light rounded text-center">
 
-            <ul class="nav nav-tabs" role="tablist">
-              <li class="nav-item">
-                <button class="nav-link {% if default_tab == 'main_study' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#main_study" type="button">
-                  Main
+            <div class="d-flex justify-content-between">
+              <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item">
+                  <button class="nav-link {% if default_tab == 'main_study' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#main_study" type="button">
+                    Main
+                  </button>
+                </li>
+                <li class="nav-item">
+                  <button class="nav-link {% if default_tab == 'chat_study' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#chat_study" type="button">
+                    Chat
+                  </button>
+                </li>
+              </ul>
+
+              <form action="{{ url_for('studies.restart_study', study_title=study['title']) }}" method="POST">
+                <button class="btn btn-secondary" type="submit" onclick="loading();">
+                  <div class="loading" style="display:none">
+                    <span class="spinner-grow spinner-grow-sm" role="status"></span>
+                    Restarting Study...
+                  </div>
+                  <div class="normal-content">
+                    Restart Study
+                  </div>
                 </button>
-              </li>
-              <li class="nav-item">
-                <button class="nav-link {% if default_tab == 'chat_study' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#chat_study" type="button">
-                  Chat
-                </button>
-              </li>
-            </ul>
+              </form>
+            </div>
 
             <div class="row tab-content">
 

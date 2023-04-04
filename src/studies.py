@@ -25,7 +25,7 @@ from src.auth import login_required
 from src.utils import constants
 from src.utils.auth_functions import create_user, update_user
 from src.utils.generic_functions import add_notification, redirect_with_flash
-from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
+from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, create_instance_name
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 from src.utils.google_cloud.google_cloud_storage import download_blob_to_filename
 from src.utils.gwas_functions import valid_study_title
@@ -221,6 +221,31 @@ def create_study(study_type: str, setup_configuration: str) -> Response:
     make_auth_key(title, "Broad")
 
     return response
+
+
+@bp.route("/restart_study/<study_title>", methods=("POST",))
+@login_required
+def restart_study(study_title: str) -> Response:
+    db = current_app.config["DATABASE"]
+    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref_dict: dict = doc_ref.get().to_dict()
+
+    for participant in doc_ref_dict["personal_parameters"].values():
+        if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
+            google_cloud_compute = GoogleCloudCompute(study_title.replace(" ", "").lower(), gcp_project)
+            for instance in google_cloud_compute.list_instances():
+                if instance[:-1] == create_instance_name(google_cloud_compute.study_title, ""):
+                    google_cloud_compute.delete_instance(instance)
+    print("Successfully Deleted gcp instances")
+
+    for participant in doc_ref_dict["participants"]:
+        doc_ref_dict["status"][participant] = "ready to begin protocol" if participant == "Broad" else ""
+        doc_ref_dict["personal_parameters"][participant]["PUBLIC_KEY"]["value"] = ""
+    doc_ref_dict["tasks"] = {}
+
+    doc_ref.set(doc_ref_dict)
+
+    return redirect(url_for("studies.study", study_title=study_title))
 
 
 @bp.route("/delete_study/<study_title>", methods=("POST",))
