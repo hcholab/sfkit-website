@@ -334,7 +334,7 @@ DEFAULT_USER_PARAMETERS = {
     },
     "GENO_BINARY_FILE_PREFIX": {
         "name": "Genotype Binary File Prefix",
-        "description": "Path to the genotype binary file prefix (e.g. 'geno/ch%d').",
+        "description": "Path to the genotype binary file prefix (e.g. 'geno/ch%d'). This path helps sfkit locate your genotype data.",
         "value": "",
     },
     "NUM_INDS": {

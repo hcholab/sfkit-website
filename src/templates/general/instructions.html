@@ -421,6 +421,9 @@
       var num_rows = parseInt($('#num_rows_' + workflow).val()) || 0;
       var num_cols = parseInt($('#num_cols_' + workflow).val()) || 0;
       var selection = Math.max(num_rows, num_cols, 1);
+      if (num_rows == 0 && num_cols == 0) {
+        base = "The default recommendation is an ";
+      }
       $('#recommendation_' + workflow).text(base + recommendations[selection]);
     }
 

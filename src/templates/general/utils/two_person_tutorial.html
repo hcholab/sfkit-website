@@ -3,7 +3,10 @@
   <p>
     This two-person tutorial is designed to guide you and a partner through the process of running a study using real or partially real data with the
     <i>auto-configured</i>
-    option. You'll both download sample data, configure your respective parts of the study, and execute a workflow together.
+    option. You'll both download sample data, configure your respective parts of the study, and execute a workflow together. For the purposes of this tutorial, we will refer to the two users as "User 1" and "User 2".
+  </p>
+  <p class="text-muted">
+    Suggestion: We do recommend that you go through Tutorial 1 first, as this tutorial will assume you have some familiarity with the platform.
   </p>
   <span class="text-muted">
     (Note: You can complete this tutorial on your own, but it's designed for two separate users. To achieve this, you can use various methods such as opening an incognito window for the second participant, using two different browser profiles, or using two distinct browsers.)
@@ -15,7 +18,7 @@
   <p>For this tutorial, we will use simulated data based on the
     <a href="https://www.internationalgenome.org/data/" class="text-decoration-none" target="_blank">1000 Genomes Dataset</a>. The genotypes are from real data, while the covariates and phenotypes are simulated for an illustrative GWAS analysis.</p>
   <p>
-    To begin, each participant should download a set of sample data by clicking the appropriate link below. Choose a workflow, and ensure each participant downloads one set of data.
+    To begin, each user should download a set of sample data by clicking the appropriate link below. Choose a workflow, and ensure each participant downloads one set of data.
     <span class="text-muted">Note: you will need to unzip the data before uploading it to GCP.</span>
   </p>
 
@@ -64,7 +67,15 @@
 <h4 class="my-4 fw-normal">Set up Your Study</h4>
 <div class="row">
   <p>
-    Follow the steps in the primary tutorial to create your study. However, don't select "demo" this time! Each user will need to add their number of individuals to the parameters (the second user will do this when they join). Once this is all done, the parameters should like like the following:
+    User 1 should follow the steps in
+    <a href="{{ url_for('general.tutorial') }}" class="text-decoration-none" target="_blank">
+      Tutorial 1
+    </a>
+    to
+    <a href="{{ url_for('studies.index') }}" class="text-decoration-none" target="_blank">
+      create
+    </a>
+    their study. However, don't select "demo" this time (you can freely choose the other options)! Each user will need to add their number of individuals (1252 each for this tutorial) to the parameters (User 2 will do this when they join). Once this is all done, the parameters should like like the following:
   </p>
 
   <div class="row p-4 bg-light rounded">
@@ -83,27 +94,27 @@
       <div class="container tab-pane fade" id="parameters-mpcgwas">
         <div class="row justify-content-center mt-2">
           <div class="col-md-6 mb-4 mb-md-0">
-            <img class="img-fluid" src="static/images/sample_parameters/mpcgwas1.png" alt="">
+            <img class="img-fluid border border-secondary" src="static/images/sample_parameters/mpcgwas1.png" alt="">
           </div>
           <div class="col-md-6">
-            <img class="img-fluid" src="static/images/sample_parameters/mpcgwas2.png" alt="">
+            <img class="img-fluid border border-secondary" src="static/images/sample_parameters/mpcgwas2.png" alt="">
           </div>
         </div>
       </div>
       <div class="container tab-pane fade show active" id="parameters-sfgwas">
         <div class="row justify-content-center mt-2">
           <div class="col-md-6 mb-4 mb-md-0">
-            <img class="img-fluid" src="static/images/sample_parameters/sfgwas1.png" alt="">
+            <img class="img-fluid border border-secondary" src="static/images/sample_parameters/sfgwas1.png" alt="">
           </div>
           <div class="col-md-6">
-            <img class="img-fluid" src="static/images/sample_parameters/sfgwas2.png" alt="">
+            <img class="img-fluid border border-secondary" src="static/images/sample_parameters/sfgwas2.png" alt="">
           </div>
         </div>
       </div>
       <div class="container tab-pane fade" id="parameters-sfpca">
         <div class="row justify-content-center mt-2">
           <div class="col-md-6">
-            <img class="img-fluid" src="static/images/sample_parameters/sfpca.png" alt="">
+            <img class="img-fluid border border-secondary" src="static/images/sample_parameters/sfpca.png" alt="">
           </div>
         </div>
       </div>
@@ -112,37 +123,42 @@
 
   <div class="mt-4">
     <p>
-      The second participant can then click the "Request to Join Study" button in the Studies page to request to join your study.
+      User 2 can then click the "Request to Join Study" button in the Studies page to request to join User 1's study.
     </p>
     <div class="text-center">
-      <img class="img-fluid" style="max-width: 65%" src="static/images/tutorial/request_join.png" alt="">
+      <img class="img-fluid border border-secondary" style="max-width: 65%" src="static/images/tutorial/request_join.png" alt="">
     </div>
-    <p>Once they have done so, you can click the "Approve Request" button to accept them into your study.</p>
+    <p>Once they have done so, User 1 can click the "Approve Request" button to accept User 2 into their study.</p>
     <div class="text-center">
-      <img class="img-fluid" style="max-width: 50%" src="static/images/tutorial/approve_request.png" alt="">
+      <img class="img-fluid border border-secondary" style="max-width: 50%" src="static/images/tutorial/approve_request.png" alt="">
     </div>
     <p>
-      <span class="text-muted">(Alternatively, the study creator can invite another participant with the "Invite New Study Participant" button to send an invite link via email.)</span>
+      <span class="text-muted">(Alternatively, User 1 can invite User 2 with the "Invite New Study Participant" button to send an invite link via email.)</span>
     </p>
     <p>
-      Then follow the instructions on your study page to configure your study. Note that this will require you to use your own GCP projects, in contrast to the first tutorial.
-      <span class="text-muted">(If you use a GCP's free trial, you can create a new project for free. That said, this free GCP project has limited resource quotas, so you may need to use a different GCP project for each study participant.)</span>
+      Then both users will follow the instructions on the study page to configure their study. Note that this will require the users to use their own GCP projects, in contrast to the first tutorial. If you are unfamiliar with Google Cloud, Google has great documentation and instructions:
+      <a href="https://cloud.google.com/" target="_blank" class="text-decoration-none">https://cloud.google.com/</a>.
+      <span class="text-muted">(If you use a GCP's free trial, you can create a new project for free. That said, this free GCP project has limited resource quotas, so you may need to use a different GCP project for each user. The expected GCP resource cost of this tutorial is
+      <$1.)</span>
+    </p>
+    <p class="text-muted">
+      Note: You need to click the blue "Save" and "Confirm" buttons for your configuration changes to take effect.
     </p>
   </div>
 </div>
 <h4 class="my-4 fw-normal">Execute the Workflow</h4>
 <div class="row">
   <p>
-    Once both participants have configured their parts of the study, each participant should click the
+    Once both users have configured their parts of the study, each user should click the
     <span class="btn btn-success btn-sm" style="pointer-events: none;">Begin MPCGWAS Workflow</span>
-    button (or the equivalent for a different workflow) on their respective study pages (this is the same as in Tutorial 1). The study will run, and you'll be able to see its status on the study page.
+    button (or the equivalent for a different workflow) on their respective study pages (this is the same as in Tutorial 1). The study will run, and you'll be able to see its status on the study page. You may also inspect the newly created VM in your GCP project.
   </p>
 </div>
 
 <h4 class="my-4 fw-normal">Results</h4>
 <div class="row">
   <p>
-    The expected runtime for this tutorial is approximately 2 hours (feel free to leave the study page and come back). When the study is complete, each participant will be able to download the results file with the association statistics (or principal components, in the case of the PCA workflow) by clicking the "Download results" link on their respective study pages.
+    The expected runtime for this tutorial is approximately 2 hours (feel free to leave the study page and come back). When the study is complete, each user will be able to download the results file with the association statistics (or principal components, in the case of the PCA workflow) by clicking the "Download results" link on their respective study pages.
   </p>
 
   <div class="row p-4 bg-light rounded">
@@ -160,17 +176,17 @@
     <div class="row tab-content">
       <div class="container tab-pane fade" id="results-mpcgwas">
         <div class="text-center">
-          <img class="img-fluid" style="max-width: 75%" src="static/images/tutorial/results_mpcgwas_1kg.png" alt="">
+          <img class="img-fluid border border-secondary" style="max-width: 75%" src="static/images/tutorial/results_mpcgwas_1kg.png" alt="">
         </div>
       </div>
       <div class="container tab-pane fade show active" id="results-sfgwas">
         <div class="text-center">
-          <img class="img-fluid" style="max-width: 75%" src="static/images/tutorial/results_sfgwas_1kg.png" alt="">
+          <img class="img-fluid border border-secondary" style="max-width: 75%" src="static/images/tutorial/results_sfgwas_1kg.png" alt="">
         </div>
       </div>
       <div class="container tab-pane fade" id="results-sfpca">
         <div class="text-center">
-          <img class="img-fluid" style="max-width: 75%" src="static/images/tutorial/results_sfpca_1kg.png" alt="">
+          <img class="img-fluid border border-secondary" style="max-width: 75%" src="static/images/tutorial/results_sfpca_1kg.png" alt="">
         </div>
       </div>
     </div>
@@ -180,6 +196,6 @@
 <h4 class="my-4 fw-normal">Conclusion</h4>
 <div class="row">
   <p>
-    Congratulations! You have successfully completed the two-person tutorial. You should now have a better understanding of how to configure and execute a study with a partner using our platform. Feel free to explore other workflows and data types or to use the platform for your own research projects.
+    Congratulations! You have successfully completed Tutorial 2. You should now have a better understanding of how to configure and execute a study with a partner using our platform. Feel free to explore other workflows and data types or to use the platform for your own research projects.
   </p>
 </div>
