@@ -80,29 +80,39 @@ def setup_gcp(doc_ref: DocumentReference, role: str) -> None:
     doc_ref.set(doc_ref_dict)
 
     gcloudCompute = GoogleCloudCompute(study_title, user_parameters["GCP_PROJECT"]["value"])
-    gcloudCompute.setup_networking(doc_ref_dict, role)
 
-    metadata = [
-        {"key": "data_path", "value": sanitize_path(user_parameters["DATA_PATH"]["value"])},
-        {"key": "geno_binary_file_prefix", "value": user_parameters["GENO_BINARY_FILE_PREFIX"]["value"]},
-        {"key": "ports", "value": user_parameters["PORTS"]["value"]},
-        {"key": "auth_key", "value": user_parameters["AUTH_KEY"]["value"]},
-        {"key": "demo", "value": doc_ref_dict["demo"]},
-    ]
+    try:
+        gcloudCompute.setup_networking(doc_ref_dict, role)
 
-    gcloudCompute.setup_instance(
-        name=create_instance_name(doc_ref_dict["title"], role),
-        role=role,
-        metadata=metadata,
-        num_cpus=int(user_parameters["NUM_CPUS"]["value"]),
-        boot_disk_size=int(user_parameters["BOOT_DISK_SIZE"]["value"]),
-    )
+        metadata = [
+            {"key": "data_path", "value": sanitize_path(user_parameters["DATA_PATH"]["value"])},
+            {"key": "geno_binary_file_prefix", "value": user_parameters["GENO_BINARY_FILE_PREFIX"]["value"]},
+            {"key": "ports", "value": user_parameters["PORTS"]["value"]},
+            {"key": "auth_key", "value": user_parameters["AUTH_KEY"]["value"]},
+            {"key": "demo", "value": doc_ref_dict["demo"]},
+        ]
 
-    doc_ref_dict = doc_ref.get().to_dict() or {}
-    if doc_ref_dict["tasks"][user][-1] == "Setting up networking and creating VM instance":
-        doc_ref_dict["tasks"][user][-1] += " completed"
-    doc_ref_dict["tasks"][user].append("Configuring your VM instance")
-    doc_ref.set(doc_ref_dict)
+        gcloudCompute.setup_instance(
+            name=create_instance_name(doc_ref_dict["title"], role),
+            role=role,
+            metadata=metadata,
+            num_cpus=int(user_parameters["NUM_CPUS"]["value"]),
+            boot_disk_size=int(user_parameters["BOOT_DISK_SIZE"]["value"]),
+        )
+    except Exception as e:
+        print(e)
+        doc_ref_dict["status"][
+            user
+        ] = "FAILED - sfkit failed to set up your networking and VM instance. Please restart the study and double-check your parameters and configuration. If the problem persists, please contact us."
+        doc_ref.set(doc_ref_dict)
+        return
+    else:
+        doc_ref_dict = doc_ref.get().to_dict() or {}
+        if doc_ref_dict["tasks"][user][-1] == "Setting up networking and creating VM instance":
+            doc_ref_dict["tasks"][user][-1] += " completed"
+        doc_ref_dict["tasks"][user].append("Configuring your VM instance")
+        doc_ref.set(doc_ref_dict)
+        return
 
 
 def generate_ports(doc_ref: DocumentReference, role: str) -> None:
@@ -124,6 +134,6 @@ def add_file_to_zip(zip_file, filepath: str, archive_name: Optional[str] = None)
 
 def sanitize_path(path: str) -> str:
     # remove trailing slash if present
-    if path[-1] == "/":
+    if path and path[-1] == "/":
         path = path[:-1]
     return path
