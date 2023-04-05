@@ -1,6 +1,6 @@
 <div>
   <p>Log into
-    <a class="text-decoration-none" href="https://console.cloud.google.com">https://console.cloud.google.com</a>. Then click the icon in the top right to "Activate Cloud Shell". Once the Terminal is ready, please copy and run the following:
+    <a class="text-decoration-none" href="https://console.cloud.google.com" target="_blank">https://console.cloud.google.com</a>. Then click the icon in the top right to "Activate Cloud Shell". Once the Terminal is ready, please copy and run the following:
   </p>
   <div class="p-2 bg-light rounded">
     <button id="copy-button" data-bs-toggle="tooltip" data-bs-trigger='manual' style="position:relative;float:right" type="button" class="btn btn-outline-secondary btn-sm">
@@ -42,7 +42,7 @@
       <div>
         <h4>That shell command looks complicated though. What exactly is it doing?</h4>
         <p>The shell command is actually 2 commands put together. The first part creates a custom google IAM
-          <a class="text-decoration-none" href="https://cloud.google.com/iam/docs/understanding-roles">role</a>
+          <a class="text-decoration-none" href="https://cloud.google.com/iam/docs/understanding-roles" target="_blank">role</a>
           that has permissions to set up a VM for the protocol.</p>
         <img class="img-fluid w-50" src="../static/images/top_part.png" alt="">
         <p class="mt-3">The second part assigns that role to this website (or, to be precise, to the Broad-managed GCP service account that runs this website).</p>
@@ -53,54 +53,54 @@
         <p>Let's go through the list, shall we?
           <ul>
             <li>
-              <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/disks/create">compute.disks.create</a>
+              <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/disks/create" target="_blank">compute.disks.create</a>
               is needed to create a Compute Engine disk for the VM. This disk stores information such as the operating system, and so is required to create the virtual machine.
             </li>
             <li>
-              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/firewalls/insert">compute.firewalls.create</a>,
-              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/firewalls/list">compute.firewalls.list</a>
-              <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/firewall-policies/rules/create">
+              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/firewalls/insert" target="_blank">compute.firewalls.create</a>,
+              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/firewalls/list" target="_blank">compute.firewalls.list</a>
+              <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/firewall-policies/rules/create" target="_blank">
                 compute.firewallPolicies.create
               </a>
               and
-              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/firewallPolicies/get">
+              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/firewallPolicies/get" target="_blank">
                 compute.firewallPolicies.get
               </a>
               are needed to set up the
-              <a class="text-decoration-none" href="https://cloud.google.com/firewalls">firewall</a>
+              <a class="text-decoration-none" href="https://cloud.google.com/firewalls" target="_blank">firewall</a>
               rules for the VM so that it can interact with the other study participants' VMs during the protocol.
             </li>
             <li>
-              <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/instances/create">compute.instances.create</a>,
-              <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/instances/delete">compute.instances.delete</a>,
-              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/get">compute.instances.get</a>,
-              <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/instances/list">compute.instances.list</a>,
-              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/setMetadata">compute.instances.setMetadata</a>,
-              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/setServiceAccount">compute.instances.setServiceAccount</a>,
-              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/setTags">compute.instances.setTags</a>, and
-              <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/instances/stop">compute.instances.stop</a>
+              <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/instances/create" target="_blank">compute.instances.create</a>,
+              <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/instances/delete" target="_blank">compute.instances.delete</a>,
+              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/get" target="_blank">compute.instances.get</a>,
+              <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/instances/list" target="_blank">compute.instances.list</a>,
+              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/setMetadata" target="_blank">compute.instances.setMetadata</a>,
+              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/setServiceAccount" target="_blank">compute.instances.setServiceAccount</a>,
+              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/instances/setTags" target="_blank">compute.instances.setTags</a>, and
+              <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/instances/stop" target="_blank">compute.instances.stop</a>
               are needed to set up the
-              <a class="text-decoration-none" href="https://cloud.google.com/compute">virtual machine</a>. This includes creating it, setting the metadata associated with it, and so on.
+              <a class="text-decoration-none" href="https://cloud.google.com/compute" target="_blank">virtual machine</a>. This includes creating it, setting the metadata associated with it, and so on.
             </li>
             <li>
               compute.networks.access,
-              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/networks/addPeering">compute.networks.addPeering</a>,
-              <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/networks/create">compute.networks.create</a>,
-              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/networks/get">compute.networks.get</a>,
-              <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/networks/list">compute.networks.list</a>,
-              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/networks/removePeering">compute.networks.removePeering</a>, and compute.networks.updatePolicy are needed to set up the
-              <a class="text-decoration-none" href="https://cloud.google.com/vpc/docs/vpc">VPC (Virtual Private Cloud) network</a>
+              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/networks/addPeering" target="_blank">compute.networks.addPeering</a>,
+              <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/networks/create" target="_blank">compute.networks.create</a>,
+              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/networks/get" target="_blank">compute.networks.get</a>,
+              <a class="text-decoration-none" href="https://cloud.google.com/sdk/gcloud/reference/compute/networks/list" target="_blank">compute.networks.list</a>,
+              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/networks/removePeering" target="_blank">compute.networks.removePeering</a>, and compute.networks.updatePolicy are needed to set up the
+              <a class="text-decoration-none" href="https://cloud.google.com/vpc/docs/vpc" target="_blank">VPC (Virtual Private Cloud) network</a>
               that the VM will be in. This includes
-              <a class="text-decoration-none" href="https://cloud.google.com/vpc/docs/vpc-peering">VPC Network Peering</a>, which allows the VM to connect to the other study participants' VMs in a seamless fashion.
+              <a class="text-decoration-none" href="https://cloud.google.com/vpc/docs/vpc-peering" target="_blank">VPC Network Peering</a>, which allows the VM to connect to the other study participants' VMs in a seamless fashion.
             </li>
             <li>compute.subnetworks.create,
-              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/subnetworks/delete">compute.subnetworks.delete</a>,
-              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/subnetworks/list">compute.subnetworks.list</a>, and compute.subnetworks.use, and compute.subnetworks.useExternalIp are needed to set up the
-              <a class="text-decoration-none" href="https://cloud.google.com/vpc/docs/vpc#vpc_networks_and_subnets">subnet</a>
+              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/subnetworks/delete" target="_blank">compute.subnetworks.delete</a>,
+              <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1/subnetworks/list" target="_blank">compute.subnetworks.list</a>, and compute.subnetworks.use, and compute.subnetworks.useExternalIp are needed to set up the
+              <a class="text-decoration-none" href="https://cloud.google.com/vpc/docs/vpc#vpc_networks_and_subnets" target="_blank">subnet</a>
               that the VM will be in. This includes creating and using these subnets.
             </li>
             <li>
-              <a class="text-decoration-none" href="https://cloud.google.com/iam/docs/service-accounts-actas">iam.serviceAccounts.actAs</a>
+              <a class="text-decoration-none" href="https://cloud.google.com/iam/docs/service-accounts-actas" target="_blank">iam.serviceAccounts.actAs</a>
               is needed to act as a service account to do the various setup for the network and VM as described.</li>
           </ul>
         </p>
