@@ -83,7 +83,7 @@ def setup_gcp(doc_ref: DocumentReference, role: str) -> None:
     gcloudCompute.setup_networking(doc_ref_dict, role)
 
     metadata = [
-        {"key": "data_path", "value": user_parameters["DATA_PATH"]["value"]},
+        {"key": "data_path", "value": sanitize_path(user_parameters["DATA_PATH"]["value"])},
         {"key": "geno_binary_file_prefix", "value": user_parameters["GENO_BINARY_FILE_PREFIX"]["value"]},
         {"key": "ports", "value": user_parameters["PORTS"]["value"]},
         {"key": "auth_key", "value": user_parameters["AUTH_KEY"]["value"]},
@@ -120,3 +120,10 @@ def generate_ports(doc_ref: DocumentReference, role: str) -> None:
 def add_file_to_zip(zip_file, filepath: str, archive_name: Optional[str] = None) -> None:
     with open(filepath, "rb") as f:
         zip_file.writestr(archive_name or os.path.basename(filepath), f.read())
+
+
+def sanitize_path(path: str) -> str:
+    # remove trailing slash if present
+    if path[-1] == "/":
+        path = path[:-1]
+    return path

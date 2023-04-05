@@ -25,7 +25,7 @@
               </ul>
 
               <form action="{{ url_for('studies.restart_study', study_title=study['title']) }}" method="POST">
-                <button class="btn btn-secondary" type="submit" onclick="loading();">
+                <button class="btn btn-secondary" type="submit" onclick="loading(this);">
                   <div class="loading" style="display:none">
                     <span class="spinner-grow spinner-grow-sm" role="status"></span>
                     Restarting Study...
@@ -97,7 +97,7 @@
                       </div>
                       <div class="mt-2">
                         <form action="{{ url_for('studies.start_protocol', study_title=study['title']) }}" method="POST">
-                          <button class="mt-2 btn btn-success" type="submit" onclick="loading();">
+                          <button class="mt-2 btn btn-success" type="submit" onclick="loading(this);">
                             <div class="loading" style="display:none">
                               <span class="spinner-grow spinner-grow-sm" role="status"></span>
                               Loading...
@@ -172,9 +172,13 @@
 
 {% block javascript %}
   <script>
-    function loading() {
-      $(".loading").show();
-      $(".normal-content").hide();
+    function loading(btn) {
+      $(btn)
+        .find(".loading")
+        .show();
+      $(btn)
+        .find(".normal-content")
+        .hide();
     }
   </script>
 
