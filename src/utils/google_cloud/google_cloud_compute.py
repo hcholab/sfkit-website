@@ -400,7 +400,10 @@ class GoogleCloudCompute:
     def return_result_or_error(self, result: dict[str, str]) -> dict[str, str]:
         print("done.")
         if "error" in result:
-            raise RuntimeError(result["error"])
+            if "RESOURCE_NOT_FOUND" in str(result):
+                return result
+            else:
+                raise RuntimeError(result["error"])
         return result
 
     def get_vm_external_ip_address(self, instance: str, zone: str = constants.SERVER_ZONE) -> str:

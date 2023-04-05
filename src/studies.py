@@ -230,12 +230,17 @@ def restart_study(study_title: str) -> Response:
     doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
     doc_ref_dict: dict = doc_ref.get().to_dict()
 
+    threads = []
     for participant in doc_ref_dict["personal_parameters"].values():
         if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
             google_cloud_compute = GoogleCloudCompute(study_title.replace(" ", "").lower(), gcp_project)
             for instance in google_cloud_compute.list_instances():
                 if instance[:-1] == create_instance_name(google_cloud_compute.study_title, ""):
-                    google_cloud_compute.delete_instance(instance)
+                    t = Thread(target=google_cloud_compute.delete_instance, args=(instance,))
+                    t.start()
+                    threads.append(t)
+    for t in threads:
+        t.join()
     print("Successfully Deleted gcp instances")
 
     for participant in doc_ref_dict["participants"]:
