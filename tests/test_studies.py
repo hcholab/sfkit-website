@@ -25,7 +25,7 @@ def test_index(client):
 def test_study(client, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     auth.login()
-    client.post("create_study/MPCGWAS/website", data=test_create_data)
+    client.post("create_study/MPC-GWAS/website", data=test_create_data)
     response = client.get("/study/testtitle")
     assert response.status_code == 200
     assert b"parameters" in response.data
@@ -37,11 +37,11 @@ def test_choose_study_type(client, auth, mocker):
     auth.login()
 
     response = client.post(
-        "choose_study_type", data={"CHOOSE_STUDY_TYPE": "MPCGWAS", "SETUP_CONFIGURATION": "website"}
+        "choose_study_type", data={"CHOOSE_STUDY_TYPE": "MPC-GWAS", "SETUP_CONFIGURATION": "website"}
     )
 
     assert response.status_code == 302  # 302 is a redirect
-    assert response.headers.get("Location") == "/create_study/MPCGWAS/website"
+    assert response.headers.get("Location") == "/create_study/MPC-GWAS/website"
 
 
 def test_create_study(client, auth, mocker):
@@ -49,17 +49,17 @@ def test_create_study(client, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     auth.login()
 
-    response = client.get("create_study/MPCGWAS/website")
+    response = client.get("create_study/MPC-GWAS/website")
     assert response.status_code == 200
 
-    response = client.post("create_study/MPCGWAS/website", data=test_create_data)
+    response = client.post("create_study/MPC-GWAS/website", data=test_create_data)
     assert response.status_code == 302
     assert response.headers.get("Location") == "/parameters/testtitle"
 
     # again to assert that the study is not created twice
-    response = client.post("create_study/MPCGWAS/website", data=test_create_data)
+    response = client.post("create_study/MPC-GWAS/website", data=test_create_data)
     assert response.status_code == 302
-    assert response.headers.get("Location") == "/create_study/MPCGWAS/website"
+    assert response.headers.get("Location") == "/create_study/MPC-GWAS/website"
 
 
 def test_delete_study(client, app, auth, mocker):
@@ -67,18 +67,18 @@ def test_delete_study(client, app, auth, mocker):
     mocker.patch("src.studies.GoogleCloudCompute", MockGoogleCloudCompute)
     auth.login()
 
-    client.post("create_study/MPCGWAS/website", data=test_create_data)
+    client.post("create_study/MPC-GWAS/website", data=test_create_data)
     response = client.post("delete_study/testtitle")
     assert response.status_code == 302
     assert response.headers.get("Location") == "/index"
 
-    client.post("create_study/MPCGWAS/website", data=test_create_data)
+    client.post("create_study/MPC-GWAS/website", data=test_create_data)
 
 
 def test_request_join_study(client, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     auth.login()
-    client.post("create_study/MPCGWAS/website", data=test_create_data)
+    client.post("create_study/MPC-GWAS/website", data=test_create_data)
     response = client.post("request_join_study/testtitle", data={"message": "hi"})
     assert response.status_code == 302
     assert response.headers.get("Location") == "/index"
@@ -92,7 +92,7 @@ def test_invite_participant(client, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     mocker.patch("src.studies.email", return_value=200)
     auth.login()
-    client.post("create_study/MPCGWAS/website", data=test_create_data)
+    client.post("create_study/MPC-GWAS/website", data=test_create_data)
     response = client.post("invite_participant/testtitle", data={"invite_participant_email": "b@b.com"})
     assert response.status_code == 302
     assert response.headers.get("Location") == "/study/testtitle"
@@ -112,7 +112,7 @@ def test_invite_participant(client, auth, mocker):
 def test_approve_join_study(client, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     auth.login()
-    client.post("create_study/MPCGWAS/website", data=test_create_data)
+    client.post("create_study/MPC-GWAS/website", data=test_create_data)
 
     auth.logout()
     auth.login("b@b.com", "b")
@@ -128,7 +128,7 @@ def test_accept_invitation(client, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     mocker.patch("src.studies.email", return_value=200)
     auth.login()
-    client.post("create_study/MPCGWAS/website", data=test_create_data)
+    client.post("create_study/MPC-GWAS/website", data=test_create_data)
     client.post("invite_participant/testtitle", data={"invite_participant_email": "b@b.com"})
 
     auth.logout()
@@ -141,7 +141,7 @@ def test_accept_invitation(client, auth, mocker):
 def test_study_information(client, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     auth.login()
-    client.post("create_study/MPCGWAS/website", data=test_create_data)
+    client.post("create_study/MPC-GWAS/website", data=test_create_data)
 
     response = client.post(
         "study/testtitle/study_information",
@@ -154,7 +154,7 @@ def test_study_information(client, auth, mocker):
 def test_parameters(client, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     auth.login()
-    client.post("create_study/MPCGWAS/website", data=test_create_data)
+    client.post("create_study/MPC-GWAS/website", data=test_create_data)
 
     response = client.get("parameters/testtitle")
     assert response.status_code == 200
@@ -175,7 +175,7 @@ def test_parameters(client, auth, mocker):
 def test_download_key_file(client, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     auth.login()
-    client.post("create_study/MPCGWAS/website", data=test_create_data)
+    client.post("create_study/MPC-GWAS/website", data=test_create_data)
 
     response = client.get("study/testtitle/download_key_file")
     assert response.status_code == 200
@@ -193,7 +193,7 @@ def test_download_key_file(client, auth, mocker):
 #     mocker.patch("src.studies.download_blob")
 #     # mock open to return a mock file
 #     auth.login()
-#     client.post("create_study/MPCGWAS/website", data=test_create_data)
+#     client.post("create_study/MPC-GWAS/website", data=test_create_data)
 
 #     mocker.patch("src.studies.open", return_value=StringIO(""))
 #     response = client.get("study/testtitle/download_results_file")
@@ -207,7 +207,7 @@ def test_download_key_file(client, auth, mocker):
 def test_personal_parameters(client, auth, mocker):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     auth.login()
-    client.post("create_study/MPCGWAS/website", data=test_create_data)
+    client.post("create_study/MPC-GWAS/website", data=test_create_data)
     client.post("personal_parameters/testtitle", data={"NUM_INDS": "NUM_INDS"})
     client.post("personal_parameters/testtitle", data={"NUM_CPUS": "42"})
 
@@ -221,7 +221,7 @@ def test_start_protocol(client, auth, app, mocker):
     mocker.patch("src.studies.make_auth_key")
 
     auth.login()
-    client.post("create_study/MPCGWAS/website", data=test_create_data)
+    client.post("create_study/MPC-GWAS/website", data=test_create_data)
     doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
     doc_ref_dict = doc_ref.get().to_dict()
 
@@ -268,7 +268,7 @@ def test_start_protocol(client, auth, app, mocker):
     auth.login("a@a.com", "a")
     client.post("study/testtitle/start_protocol")
 
-    doc_ref_dict["status"]["a@a.com"] = "running protocol SFGWAS"
+    doc_ref_dict["status"]["a@a.com"] = "running protocol SF-GWAS"
     doc_ref.set(doc_ref_dict)
     client.post("study/testtitle/start_protocol")
 
@@ -277,7 +277,7 @@ def test_start_protocol(client, auth, app, mocker):
 #     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
 #     mocker.patch("src.studies.GoogleCloudCompute", MockGoogleCloudCompute)
 #     auth.login()
-#     client.post("create_study/MPCGWAS/website", data=test_create_data)
+#     client.post("create_study/MPC-GWAS/website", data=test_create_data)
 #     doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
 #     setup_gcp(doc_ref, "1")
 

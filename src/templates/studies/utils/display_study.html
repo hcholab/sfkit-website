@@ -30,7 +30,7 @@
   {% elif study['requested_participants'] and g.user['id'] in study['requested_participants'] %}
     <button type="button" class="btn btn-secondary btn-sm" disabled="true">Pending Approval from Study Owner</button>
   {% elif g.user['id'] not in study['participants'] %}
-    {% if study["study_type"] == "MPCGWAS" and study["participants"] | length == 3 %}
+    {% if study["study_type"] == "MPC-GWAS" and study["participants"] | length == 3 %}
       <p>(This study is full)</p>
     {% else %}
       <div>

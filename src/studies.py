@@ -96,7 +96,7 @@ def study(study_title: str) -> Response:
         shared = f"{study_title}/p{role}"
         os.makedirs(f"{base}/{shared}", exist_ok=True)
 
-        if study_type in {"SFGWAS", "MPCGWAS"}:
+        if study_type in {"SF-GWAS", "MPC-GWAS"}:
             if not os.path.exists(f"{base}/{shared}/manhattan.png"):
                 download_blob_to_filename(
                     "sfkit",
@@ -176,9 +176,6 @@ def choose_study_type() -> Response:
 @login_required
 def create_study(study_type: str, setup_configuration: str) -> Response:
     if request.method == "GET":
-        # add "-" before "GWAS" in study type for display purposes
-        study_type = study_type.split("GWAS")[0] + "-GWAS"
-
         return make_response(
             render_template(
                 "studies/create_study.html", study_type=study_type, setup_configuration=setup_configuration

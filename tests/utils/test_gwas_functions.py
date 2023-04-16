@@ -20,14 +20,14 @@ test_create_data2 = {
 def test_valid_study_title(client, app, auth, mocker):
     setup_mocking(mocker)
     with app.app_context():
-        assert gwas_functions.valid_study_title("testtitle", "MPCGWAS", "user")[0] == True
-        assert gwas_functions.valid_study_title("test_title", "MPCGWAS", "user")[0] == False
+        assert gwas_functions.valid_study_title("testtitle", "MPC-GWAS", "user")[0] == True
+        assert gwas_functions.valid_study_title("test_title", "MPC-GWAS", "user")[0] == False
 
         auth.login()
-        client.post("create_study/MPCGWAS/website", data=test_create_data)
-        client.post("create_study/MPCGWAS/website", data=test_create_data2)
+        client.post("create_study/MPC-GWAS/website", data=test_create_data)
+        client.post("create_study/MPC-GWAS/website", data=test_create_data2)
 
-        assert gwas_functions.valid_study_title("testtitle2", "MPCGWAS", "user")[0] == False
+        assert gwas_functions.valid_study_title("testtitle2", "MPC-GWAS", "user")[0] == False
 
 
 def setup_mocking(mocker):

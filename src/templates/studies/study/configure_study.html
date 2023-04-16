@@ -37,7 +37,7 @@
   {% call instruction_step(i.value, "Prepare Project", collapsed = "", show = "show") %}
   <div>
     {% set i.value = i.value + 1 %}
-    {# {% if study_type == "MPCGWAS" %}
+    {# {% if study_type == "MPC-GWAS" %}
       <p>0. If you don't already have them, you will need to install
         <a class="text-decoration-none" href="https://git-scm.com/book/en/v2/Getting-Started-Installing-Git">Git</a>
         and
@@ -107,7 +107,7 @@
           <p class="mt-3 text-start text-muted">
             {{parameters['DATA_PATH']['description']}}
           </p>
-          {% if study_type == "SFGWAS" %}
+          {% if study_type == "SF-GWAS" %}
             <label for="GENO_BINARY_FILE_PREFIX" class="col-sm-3 col-form-label text-start">
               {{parameters['GENO_BINARY_FILE_PREFIX']['name']}}
             </label>

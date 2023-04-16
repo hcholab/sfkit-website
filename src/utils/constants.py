@@ -302,15 +302,15 @@ SFGWAS_ADVANCED_PARAMETERS = {
 }
 
 SHARED_PARAMETERS = {
-    "MPCGWAS": MPCGWAS_SHARED_PARAMETERS,
+    "MPC-GWAS": MPCGWAS_SHARED_PARAMETERS,
     "PCA": PCA_SHARED_PARAMETERS,
-    "SFGWAS": SFGWAS_SHARED_PARAMETERS,
+    "SF-GWAS": SFGWAS_SHARED_PARAMETERS,
 }
 
 ADVANCED_PARAMETERS = {
-    "MPCGWAS": MPCGWAS_ADVANCED_PARAMETERS,
+    "MPC-GWAS": MPCGWAS_ADVANCED_PARAMETERS,
     "PCA": PCA_ADVANCED_PARAMETERS,
-    "SFGWAS": SFGWAS_ADVANCED_PARAMETERS,
+    "SF-GWAS": SFGWAS_ADVANCED_PARAMETERS,
 }
 
 
@@ -422,11 +422,11 @@ def default_user_parameters(study_type: str, demo: bool = False) -> dict:
     parameters = deepcopy(DEFAULT_USER_PARAMETERS)
     if demo:
         parameters["GCP_PROJECT"]["value"] = SERVER_GCP_PROJECT
-        if study_type == "MPCGWAS":
+        if study_type == "MPC-GWAS":
             parameters["NUM_INDS"]["value"] = "1000"
         elif study_type == "PCA":
             parameters["NUM_INDS"]["value"] = "2504"
-        elif study_type == "SFGWAS":
+        elif study_type == "SF-GWAS":
             parameters["NUM_INDS"]["value"] = "2000"
     parameters["PORTS"]["value"] = "null,8060,8080"
     return parameters

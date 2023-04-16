@@ -61,7 +61,7 @@ def test_get_username(client, app):
 # def test_update_firestore(client, app, auth, mocker):
 #     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
 #     auth.login()
-#     client.post("/create_study/MPCGWAS/website", data=test_create_data)
+#     client.post("/create_study/MPC-GWAS/website", data=test_create_data)
 
 #     doc_ref = app.config["DATABASE"].collection("users").document("auth_keys")
 #     doc_ref.set({"auth_key": {"study_title": "testtitle", "username": "a@a.com"}})
@@ -106,7 +106,7 @@ def test_create_cp0_success(client, app, auth, mocker):
     # patch setup_gcp
     mocker.patch("src.api.setup_gcp", return_value=None)
     auth.login()
-    client.post("/create_study/MPCGWAS/website", data=test_create_data)
+    client.post("/create_study/MPC-GWAS/website", data=test_create_data)
 
     response = client.get("/create_cp0", headers={"Authorization": "auth_key"})
 
