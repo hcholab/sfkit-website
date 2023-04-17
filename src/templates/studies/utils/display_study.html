@@ -11,9 +11,9 @@
   <div>
     <h3 class="h3 mb-0">
       {% if g.user['id'] in study['participants'] or g.user['id'] == "developer" %}
-        <a class="text-decoration-none" href="{{ url_for('studies.study', study_title=study['title']) }}">{{ study['title'] }}</a>
+        <a class="text-decoration-none" href="{{ url_for('studies.study', study_title=study['title']) }}">{{ study['raw_title'] }}</a>
       {% else %}
-        {{ study['title'] }}
+        {{ study['raw_title'] }}
       {% endif %}
     </h3>
     {% include 'studies/utils/study_configuration_badge.html' %}
@@ -34,7 +34,7 @@
       <p>(This study is full)</p>
     {% else %}
       <div>
-        {% set study_id = study['title'] | replace(' ', '') %}
+        {% set study_id = study['title'] %}
         <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#requestJoinStudyModal{{ study_id }}">Request to Join Study</button>
         <div class="modal fade" id="requestJoinStudyModal{{ study_id }}" tabindex="-1">
           <div class="modal-dialog">
@@ -42,7 +42,7 @@
               <form action="{{ url_for('studies.request_join_study', study_title=study['title']) }}" method="post">
                 <div class="modal-header">
                   <h5 class="modal-title" id="requestJoinStudyModalLabel{{ study_id }}">Request to Join
-                    <i>{{study['title']}}</i>
+                    <i>{{study['raw_title']}}</i>
                     Study</h5>
                   <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>

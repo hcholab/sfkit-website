@@ -27,8 +27,15 @@ from src.utils.generic_functions import add_notification, redirect_with_flash
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, create_instance_name
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 from src.utils.google_cloud.google_cloud_storage import download_blob_to_filename
-from src.utils.gwas_functions import valid_study_title
-from src.utils.studies_functions import add_file_to_zip, email, is_developer, is_participant, make_auth_key, setup_gcp
+from src.utils.studies_functions import (
+    add_file_to_zip,
+    email,
+    is_developer,
+    is_participant,
+    make_auth_key,
+    setup_gcp,
+    valid_study_title,
+)
 
 bp = Blueprint("studies", __name__)
 
@@ -181,14 +188,18 @@ def create_study(study_type: str, setup_configuration: str) -> Response:
     demo: bool = request.form.get("demo_study") == "on"
     user_id: str = g.user["id"]
 
-    (valid, response) = valid_study_title(title, study_type, setup_configuration)
-    if not valid:
+    (cleaned_study_title, response) = valid_study_title(title, study_type, setup_configuration)
+    if not cleaned_study_title:
         return response
 
-    doc_ref = current_app.config["DATABASE"].collection("studies").document(title.replace(" ", "").lower())
+    print(title)
+    print(cleaned_study_title)
+
+    doc_ref = current_app.config["DATABASE"].collection("studies").document(cleaned_study_title)
     doc_ref.set(
         {
-            "title": title,
+            "title": cleaned_study_title,
+            "raw_title": title,
             "study_type": study_type,
             "setup_configuration": setup_configuration,
             "private": request.form.get("private_study") == "on" or demo,
@@ -209,7 +220,7 @@ def create_study(study_type: str, setup_configuration: str) -> Response:
             "invited_participants": [],
         }
     )
-    make_auth_key(title, "Broad")
+    make_auth_key(cleaned_study_title, "Broad")
 
     return response
 

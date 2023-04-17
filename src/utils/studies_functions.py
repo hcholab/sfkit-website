@@ -1,14 +1,17 @@
 import os
+import re
 import secrets
 from typing import Optional
 
-from flask import current_app, g
+from flask import current_app, g, redirect, url_for
 from google.cloud.firestore_v1 import DocumentReference
 from python_http_client.exceptions import HTTPError
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Email, Mail
-from src.utils import constants
+from werkzeug import Response
 
+from src.utils import constants
+from src.utils.generic_functions import redirect_with_flash
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, create_instance_name
 
 
@@ -155,3 +158,46 @@ def is_participant(study) -> bool:
         and "id" in g.user
         and (g.user["id"] in study["participants"] or g.user["id"] in study.get("invited_participants", []))
     )
+
+
+def valid_study_title(study_title: str, study_type: str, setup_configuration: str) -> tuple[str, Response]:
+    cleaned_study_title = clean_study_title(study_title)
+
+    if not cleaned_study_title:
+        return (
+            "",
+            redirect_with_flash(
+                url=url_for("studies.create_study", study_type=study_type, setup_configuration=setup_configuration),
+                message="Failed to process title.  Please add letters and try again.",
+            ),
+        )
+
+    # validate that title is unique
+    db = current_app.config["DATABASE"]
+    studies = db.collection("studies").stream()
+    for study in studies:
+        if study.to_dict()["title"] == cleaned_study_title:
+            return (
+                "",
+                redirect_with_flash(
+                    url=url_for(
+                        "studies.create_study", study_type=study_type, setup_configuration=setup_configuration
+                    ),
+                    message="Title already exists.",
+                ),
+            )
+
+    return (cleaned_study_title, redirect(url_for("studies.parameters", study_title=cleaned_study_title)))
+
+
+def clean_study_title(s: str) -> str:
+    # input_string = "123abc-!@#$%^&*() def" # Output: "abc- def"
+
+    # Remove all characters that don't match the pattern
+    cleaned_str = re.sub(r"[^a-zA-Z0-9-]", "", s)
+
+    # If the first character is not an alphabet, remove it
+    while len(cleaned_str) > 0 and not cleaned_str[0].isalpha():
+        cleaned_str = cleaned_str[1:]
+
+    return cleaned_str.lower()
