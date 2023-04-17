@@ -2,11 +2,12 @@ import os
 import secrets
 from typing import Optional
 
-from flask import current_app
+from flask import current_app, g
 from google.cloud.firestore_v1 import DocumentReference
 from python_http_client.exceptions import HTTPError
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Email, Mail
+from src.utils import constants
 
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, create_instance_name
 
@@ -137,3 +138,20 @@ def sanitize_path(path: str) -> str:
     if path and path[-1] == "/":
         path = path[:-1]
     return path
+
+
+def is_developer() -> bool:
+    return (
+        os.environ.get("FLASK_DEBUG") == "development"
+        and g.user
+        and "id" in g.user
+        and g.user["id"] == constants.DEVELOPER_USER_ID
+    )
+
+
+def is_participant(study) -> bool:
+    return (
+        g.user
+        and "id" in g.user
+        and (g.user["id"] in study["participants"] or g.user["id"] in study.get("invited_participants", []))
+    )

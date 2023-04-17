@@ -18,7 +18,6 @@ from flask import (
     url_for,
 )
 from google.cloud import firestore
-
 from werkzeug import Response
 
 from src.auth import login_required
@@ -29,7 +28,7 @@ from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, crea
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 from src.utils.google_cloud.google_cloud_storage import download_blob_to_filename
 from src.utils.gwas_functions import valid_study_title
-from src.utils.studies_functions import add_file_to_zip, email, make_auth_key, setup_gcp
+from src.utils.studies_functions import add_file_to_zip, email, is_developer, is_participant, make_auth_key, setup_gcp
 
 bp = Blueprint("studies", __name__)
 
@@ -43,11 +42,7 @@ def index() -> Response:
     other_studies: list = []
 
     for study in all_studies:
-        if (
-            g.user
-            and "id" in g.user
-            and (g.user["id"] in study["participants"] or g.user["id"] in study.get("invited_participants", []))
-        ):
+        if is_developer() or is_participant(study):
             my_studies.append(study)
         elif not study["private"]:
             other_studies.append(study)
@@ -81,8 +76,7 @@ def study(study_title: str) -> Response:
 
     if user_id in doc_ref_dict["participants"]:
         role: int = doc_ref_dict["participants"].index(user_id)
-    elif os.environ.get("FLASK_DEBUG") == "development" and user_id == constants.DEVELOPER_USER_ID:
-        # allow developer to view study as participant
+    elif is_developer():
         role = 1
         user_id = doc_ref_dict["participants"][role]
     else:
