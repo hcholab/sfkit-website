@@ -87,8 +87,7 @@ function createTaskElement(task, status, sub_task = false) {
   }
 
   if (task.endsWith("completed") || status.includes("Finished protocol")) {
-    task = task.replace(" completed", "");
-    taskLine.append("<img src='../static/images/check.svg'> " + task);
+    taskLine.append("<img src='../static/images/check.svg'> " + task.replace(" completed", ""));
   } else {
     taskLine.append("<div class='spinner-grow ms-2 me-2' style='width: 16px; height: 16px;'></div> " + task);
   }

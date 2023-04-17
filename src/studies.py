@@ -222,11 +222,12 @@ def restart_study(study_title: str) -> Response:
     doc_ref_dict: dict = doc_ref.get().to_dict()
 
     threads = []
-    for participant in doc_ref_dict["personal_parameters"].values():
+    for role, v in enumerate(doc_ref_dict["participants"]):
+        participant = doc_ref_dict["personal_parameters"][v]
         if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
             google_cloud_compute = GoogleCloudCompute(study_title.replace(" ", "").lower(), gcp_project)
             for instance in google_cloud_compute.list_instances():
-                if instance[:-1] == create_instance_name(google_cloud_compute.study_title, ""):
+                if instance == create_instance_name(google_cloud_compute.study_title, str(role)):
                     t = Thread(target=google_cloud_compute.delete_instance, args=(instance,))
                     t.start()
                     threads.append(t)

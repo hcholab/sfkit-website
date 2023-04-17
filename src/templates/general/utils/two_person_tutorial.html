@@ -123,17 +123,23 @@
 
   <div class="mt-4">
     <p>
-      User 2 can then click the "Request to Join Study" button in the Studies page to request to join User 1's study.
+      User 2 can then click the
+      <button class="btn btn-outline-primary btn-sm" style="pointer-events: none;">Request to Join Study</button>
+      button in the Studies page to request to join User 1's study.
     </p>
-    <div class="text-center">
+    <div class="text-center mb-1">
       <img class="img-fluid border border-secondary" style="max-width: 65%" src="static/images/tutorial/request_join.png" alt="">
     </div>
-    <p>Once they have done so, User 1 can click the "Approve Request" button to accept User 2 into their study.</p>
-    <div class="text-center">
+    <p>Once they have done so, User 1 can click the
+      <button class="btn btn-outline-success btn-sm" style="pointer-events: none;">Approve Request</button>
+      button to accept User 2 into their study.</p>
+    <div class="text-center mb-1">
       <img class="img-fluid border border-secondary" style="max-width: 50%" src="static/images/tutorial/approve_request.png" alt="">
     </div>
     <p>
-      <span class="text-muted">(Alternatively, User 1 can invite User 2 with the "Invite New Study Participant" button to send an invite link via email.)</span>
+      <span class="text-muted">(Alternatively, User 1 can invite User 2 with the
+        <button class="btn btn-outline-primary btn-sm" style="pointer-events: none;">Invite New Study Participant</button>
+        button to send an invite link via email.)</span>
     </p>
     <p>
       Then both users will follow the instructions on the study page to configure their study. Note that this will require the users to use their own GCP projects, in contrast to the first tutorial. If you are unfamiliar with Google Cloud, Google has great documentation and instructions:
@@ -142,7 +148,11 @@
       <$1.)</span>
     </p>
     <p class="text-muted">
-      Note: You need to click the blue "Save" and "Confirm" buttons for your configuration changes to take effect.
+      Note: You need to click the
+      <button class="btn btn-primary btn-sm" style="pointer-events: none;">Save</button>
+      and
+      <button class="btn btn-primary btn-sm" style="pointer-events: none;">Confirm</button>
+      buttons for your configuration changes to take effect.
     </p>
   </div>
 </div>
@@ -150,7 +160,7 @@
 <div class="row">
   <p>
     Once both users have configured their parts of the study, each user should click the
-    <span class="btn btn-success btn-sm" style="pointer-events: none;">Begin MPC-GWAS Workflow</span>
+    <span class="btn btn-success btn-sm" style="pointer-events: none;">Begin SF-GWAS Workflow</span>
     button (or the equivalent for a different workflow) on their respective study pages (this is the same as in Tutorial 1). The study will run, and you'll be able to see its status on the study page. You may also inspect the newly created VM in your GCP project.
   </p>
 </div>
@@ -158,7 +168,7 @@
 <h4 class="my-4 fw-normal">Results</h4>
 <div class="row">
   <p>
-    The expected runtime for this tutorial is approximately 2 hours (feel free to leave the study page and come back). When the study is complete, each user will be able to download the results file with the association statistics (or principal components, in the case of the PCA workflow) by clicking the "Download results" link on their respective study pages.
+    The expected runtime for this tutorial is approximately 2 hours (feel free to leave the study page and come back). When the study is complete, each user will be able to download the results file with the association statistics (or principal components, in the case of the PCA workflow) by clicking the "<a class="text-decoration-none">Download results</a>" link on their respective study pages.
   </p>
 
   <div class="row p-4 bg-light rounded">
