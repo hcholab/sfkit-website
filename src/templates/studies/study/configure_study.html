@@ -53,13 +53,11 @@
       </div>
     {% endif %}
     <p>1. You should create a GCP (Google Cloud Platform) project that is dedicated to this study. If you are new to GCP, go to
-      <a href="https://console.cloud.google.com/" class="text-decoration-none" target="_blank">console.cloud.google.com</a>
-      and create an account and a project.
-      <p class="px-2 mb-0">1a. You need to have the
+      <a href="https://cloud.google.com/" class="text-decoration-none" target="_blank">https://cloud.google.com/</a>
+      to set up a project.
+      <p class="px-2">1a. You need to have the
         <code>gcloud.iam.roles.create</code>
-        permission in your GCP project. If you are the owner/creator of the project, this is automatically given.</p>
-      <p class="px-2 mt-0 mb-0">If you are within an organization such that you are not the owner, please talk to your administrator to get the appropriate role.</p>
-      <p class="px-2 mt-0">This could be "owner", but there are also other roles (such as "Project IAM Admin") that have this permission.</p>
+        permission in your GCP project. If you are the owner/creator of the project, this is automatically given. If you are within an organization such that you are not the owner, please talk to your administrator to get the appropriate role. This could be "owner", but there are also other roles (such as "Project IAM Admin") that have this permission.</p>
       <p class="px-2">1b. You need to enable the
         <a class="text-decoration-none" href="https://cloud.google.com/compute/docs/reference/rest/v1" target="_blank">Compute Engine API</a>
         in your GCP account. If you don't know how to enable an API, see the Google documentation
@@ -83,7 +81,7 @@
     <p>
       1. Upload a folder with your data (unzipped) to a google cloud storage bucket in your GCP (Google Cloud Platform) project. If you are unfamiliar with Google Cloud Storage, see the google documentation
       <a class="text-decoration-none" href="https://cloud.google.com/storage/docs/quickstart-console" target="_blank">here</a>
-      (The default configuration/settings for the bucket are fine. If you would like to choose a specific region, it is recommended that you choose us-central1 (Iowa), as the default.).
+      (the default configuration/settings for the bucket are fine).
     </p>
     <p>
       2. Please set the following user-specific parameters:

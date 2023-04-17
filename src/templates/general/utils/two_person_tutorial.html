@@ -28,10 +28,10 @@
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#data-mpcgwas" type="button">MPC-GWAS Workflow</button>
       </li>
       <li class="nav-item">
-        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#data-sfgwas" type="button">SF-GWAS Workflow</button>
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#data-sfgwas" type="button">SF-GWAS Workflow</button>
       </li>
       <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#data-sfpca" type="button">SF-PCA Workflow</button>
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#data-sfpca" type="button">SF-PCA Workflow</button>
       </li>
     </ul>
     <div class="tab-content">
@@ -43,7 +43,7 @@
           </div>
         </div>
       </div>
-      <div class="container tab-pane fade show active" id="data-sfgwas">
+      <div class="container tab-pane fade" id="data-sfgwas">
         <div class="row mt-4">
           <div class="d-flex justify-content-around align-items-center">
             <a class="btn btn-secondary" href="{{ url_for('general.sample_data', workflow_type='sfgwas', party_id='1') }}">Party 1 SF-GWAS Sample Data</a>
@@ -51,7 +51,7 @@
           </div>
         </div>
       </div>
-      <div class="container tab-pane fade" id="data-sfpca">
+      <div class="container tab-pane fade show active" id="data-sfpca">
         <div class="row mt-4">
           <div class="d-flex justify-content-around align-items-center">
             <a class="btn btn-secondary" href="{{ url_for('general.sample_data', workflow_type='pca', party_id='1') }}">Party 1 SF-PCA Sample Data</a>
@@ -84,10 +84,10 @@
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#parameters-mpcgwas" type="button">MPC-GWAS Workflow</button>
       </li>
       <li class="nav-item">
-        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#parameters-sfgwas" type="button">SF-GWAS Workflow</button>
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#parameters-sfgwas" type="button">SF-GWAS Workflow</button>
       </li>
       <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#parameters-sfpca" type="button">SF-PCA Workflow</button>
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#parameters-sfpca" type="button">SF-PCA Workflow</button>
       </li>
     </ul>
     <div class="row tab-content">
@@ -101,7 +101,7 @@
           </div>
         </div>
       </div>
-      <div class="container tab-pane fade show active" id="parameters-sfgwas">
+      <div class="container tab-pane fade" id="parameters-sfgwas">
         <div class="row justify-content-center mt-2">
           <div class="col-md-6 mb-4 mb-md-0">
             <img class="img-fluid border border-secondary" src="static/images/sample_parameters/sfgwas1.png" alt="">
@@ -111,7 +111,7 @@
           </div>
         </div>
       </div>
-      <div class="container tab-pane fade" id="parameters-sfpca">
+      <div class="container tab-pane fade show active" id="parameters-sfpca">
         <div class="row justify-content-center mt-2">
           <div class="col-md-6">
             <img class="img-fluid border border-secondary" src="static/images/sample_parameters/sfpca.png" alt="">
@@ -127,13 +127,13 @@
       <button class="btn btn-outline-primary btn-sm" style="pointer-events: none;">Request to Join Study</button>
       button in the Studies page to request to join User 1's study.
     </p>
-    <div class="text-center mb-1">
+    <div class="text-center mb-2">
       <img class="img-fluid border border-secondary" style="max-width: 65%" src="static/images/tutorial/request_join.png" alt="">
     </div>
     <p>Once they have done so, User 1 can click the
       <button class="btn btn-outline-success btn-sm" style="pointer-events: none;">Approve Request</button>
       button to accept User 2 into their study.</p>
-    <div class="text-center mb-1">
+    <div class="text-center mb-2">
       <img class="img-fluid border border-secondary" style="max-width: 50%" src="static/images/tutorial/approve_request.png" alt="">
     </div>
     <p>
@@ -142,25 +142,34 @@
         button to send an invite link via email.)</span>
     </p>
     <p>
-      Then both users will follow the instructions on the study page to configure their study. Note that this will require the users to use their own GCP projects, in contrast to the first tutorial. If you are unfamiliar with Google Cloud, Google has great documentation and instructions:
-      <a href="https://cloud.google.com/" target="_blank" class="text-decoration-none">https://cloud.google.com/</a>.
-      <span class="text-muted">(If you use a GCP's free trial, you can create a new project for free. That said, this free GCP project has limited resource quotas, so you may need to use a different GCP project for each user. The expected GCP resource cost of this tutorial is
+      Then both users will follow the instructions to
+      <button class="btn btn-primary btn-sm" style="pointer-events: none;">Configure Study</button>. Note that this will require the users to use their own GCP projects, in contrast to the first tutorial.
+      <span class="text-muted">(If you choose to use GCP's free trial, you can create a new project for free. That said, this free GCP project has limited resource quotas, so you may need to use a different GCP project for each user. The expected GCP resource cost of this tutorial is
       <$1.)</span>
     </p>
+    <div class="text-center mb-1">
+      <img class="img-fluid border border-secondary" style="max-width: 60%" src="static/images/tutorial/pca_prepare_project.png" alt="">
+    </div>
+    <p>Once the users have configured their GCP projects, they can upload their data to a GCP storage bucket.</p>
+    <div class="text-center mb-2">
+      <img class="img-fluid border border-secondary" style="max-width: 60%" src="static/images/tutorial/pca_upload_data.png" alt="">
+    </div>
     <p class="text-muted">
       Note: You need to click the
       <button class="btn btn-primary btn-sm" style="pointer-events: none;">Save</button>
-      and
-      <button class="btn btn-primary btn-sm" style="pointer-events: none;">Confirm</button>
-      buttons for your configuration changes to take effect.
+      button for your configuration changes to take effect.
     </p>
+    <p>For reference, your GCP storage bucket might look something like this:</p>
+    <div class="text-center">
+      <img class="img-fluid border border-secondary" style="max-width: 60%" src="static/images/tutorial/storage_bucket.png" alt="">
+    </div>
   </div>
 </div>
 <h4 class="my-4 fw-normal">Execute the Workflow</h4>
 <div class="row">
   <p>
     Once both users have configured their parts of the study, each user should click the
-    <span class="btn btn-success btn-sm" style="pointer-events: none;">Begin SF-GWAS Workflow</span>
+    <span class="btn btn-success btn-sm" style="pointer-events: none;">Begin PCA Workflow</span>
     button (or the equivalent for a different workflow) on their respective study pages (this is the same as in Tutorial 1). The study will run, and you'll be able to see its status on the study page. You may also inspect the newly created VM in your GCP project.
   </p>
 </div>
@@ -177,10 +186,10 @@
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#results-mpcgwas" type="button">MPC-GWAS Workflow</button>
       </li>
       <li class="nav-item">
-        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#results-sfgwas" type="button">SF-GWAS Workflow</button>
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#results-sfgwas" type="button">SF-GWAS Workflow</button>
       </li>
       <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#results-sfpca" type="button">SF-PCA Workflow</button>
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#results-sfpca" type="button">SF-PCA Workflow</button>
       </li>
     </ul>
     <div class="row tab-content">
@@ -189,12 +198,12 @@
           <img class="img-fluid border border-secondary" style="max-width: 75%" src="static/images/tutorial/results_mpcgwas_1kg.png" alt="">
         </div>
       </div>
-      <div class="container tab-pane fade show active" id="results-sfgwas">
+      <div class="container tab-pane fade" id="results-sfgwas">
         <div class="text-center">
           <img class="img-fluid border border-secondary" style="max-width: 75%" src="static/images/tutorial/results_sfgwas_1kg.png" alt="">
         </div>
       </div>
-      <div class="container tab-pane fade" id="results-sfpca">
+      <div class="container tab-pane fade show active" id="results-sfpca">
         <div class="text-center">
           <img class="img-fluid border border-secondary" style="max-width: 75%" src="static/images/tutorial/results_pca_1kg.png" alt="">
         </div>
