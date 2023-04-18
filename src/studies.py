@@ -70,7 +70,6 @@ def index() -> Response:
 @bp.route("/study/<study_title>", methods=("GET", "POST"))
 @login_required
 def study(study_title: str) -> Response:
-    study_title = study_title.replace(" ", "").lower()
     db = current_app.config["DATABASE"]
     user_id: str = g.user["id"]
     secret_access_code: str = ""  # for anonymous users
@@ -142,7 +141,6 @@ def anonymous_study(study_title: str, user_id: str, secret_access_code: str) -> 
 @bp.route("/study/<study_title>/send_message", methods=["POST"])
 @login_required
 def send_message(study_title: str) -> Response:
-    study_title = study_title.replace(" ", "").lower()
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title)
     doc_ref_dict: dict = doc_ref.get().to_dict()
@@ -229,14 +227,14 @@ def create_study(study_type: str, setup_configuration: str) -> Response:
 @login_required
 def restart_study(study_title: str) -> Response:
     db = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref = db.collection("studies").document(study_title)
     doc_ref_dict: dict = doc_ref.get().to_dict()
 
     threads = []
     for role, v in enumerate(doc_ref_dict["participants"]):
         participant = doc_ref_dict["personal_parameters"][v]
         if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
-            google_cloud_compute = GoogleCloudCompute(study_title.replace(" ", "").lower(), gcp_project)
+            google_cloud_compute = GoogleCloudCompute(study_title, gcp_project)
             for instance in google_cloud_compute.list_instances():
                 if instance == create_instance_name(google_cloud_compute.study_title, str(role)):
                     t = Thread(target=google_cloud_compute.delete_instance, args=(instance,))
@@ -260,14 +258,14 @@ def restart_study(study_title: str) -> Response:
 @login_required
 def delete_study(study_title: str) -> Response:
     db = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref = db.collection("studies").document(study_title)
     doc_ref_dict: dict = doc_ref.get().to_dict()
 
     def delete_gcp_stuff_background(doc_ref_dict: dict) -> None:
         # delete gcp stuff
         for participant in doc_ref_dict["personal_parameters"].values():
             if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
-                google_cloud_compute = GoogleCloudCompute(study_title.replace(" ", "").lower(), gcp_project)
+                google_cloud_compute = GoogleCloudCompute(study_title, gcp_project)
                 google_cloud_compute.delete_everything()
         print("Successfully Deleted gcp stuff")
 
@@ -281,7 +279,7 @@ def delete_study(study_title: str) -> Response:
 
     # save study to deleted studies collection
     db.collection("deleted_studies").document(
-        study_title.replace(" ", "").lower() + "-" + str(doc_ref_dict["created"]).replace(" ", "").lower()
+        f"{study_title}-" + str(doc_ref_dict["created"]).replace(" ", "").lower()
     ).set(doc_ref_dict)
 
     doc_ref.delete()
@@ -294,7 +292,7 @@ def request_join_study(study_title: str) -> Response:
         return create_user(redirect_url=url_for("studies.request_join_study", study_title=study_title))
 
     db = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref = db.collection("studies").document(study_title)
     doc_ref_dict: dict = doc_ref.get().to_dict()
 
     message: str = request.form.get("message", "")
@@ -325,7 +323,7 @@ def invite_participant(study_title: str) -> Response:
             url=url_for("studies.study", study_title=study_title), message="Email failed to send"
         )
 
-    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref = db.collection("studies").document(study_title)
     doc_ref_dict: dict = doc_ref.get().to_dict()
     doc_ref_dict["invited_participants"].append(invitee)
     doc_ref.set(
@@ -339,7 +337,7 @@ def invite_participant(study_title: str) -> Response:
 @login_required
 def approve_join_study(study_title: str, user_id: str) -> Response:
     db = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref = db.collection("studies").document(study_title)
     doc_ref_dict: dict = doc_ref.get().to_dict()
 
     del doc_ref_dict["requested_participants"][user_id]
@@ -359,7 +357,7 @@ def approve_join_study(study_title: str, user_id: str) -> Response:
 @login_required
 def accept_invitation(study_title: str) -> Response:
     db = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref = db.collection("studies").document(study_title)
     doc_ref_dict: dict = doc_ref.get().to_dict()
 
     if g.user["id"] not in doc_ref_dict["invited_participants"]:
@@ -387,7 +385,7 @@ def accept_invitation(study_title: str) -> Response:
 @bp.route("/study/<study_title>/study_information", methods=["POST"])
 @login_required
 def study_information(study_title: str) -> Response:
-    doc_ref = current_app.config["DATABASE"].collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref = current_app.config["DATABASE"].collection("studies").document(study_title)
 
     doc_ref.set(
         {
@@ -404,7 +402,7 @@ def study_information(study_title: str) -> Response:
 @login_required
 def parameters(study_title: str) -> Response:
     db = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref = db.collection("studies").document(study_title)
     doc_ref_dict = doc_ref.get().to_dict()
     if request.method == "GET":
         display_names = db.collection("users").document("display_names").get().to_dict()
@@ -430,7 +428,7 @@ def parameters(study_title: str) -> Response:
 @bp.route("/personal_parameters/<study_title>", methods=("GET", "POST"))
 def personal_parameters(study_title: str) -> Response:
     db = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref = db.collection("studies").document(study_title)
     parameters = doc_ref.get().to_dict().get("personal_parameters")
 
     for p in parameters[g.user["id"]]["index"]:
@@ -446,7 +444,7 @@ def personal_parameters(study_title: str) -> Response:
 @login_required
 def download_key_file(study_title: str) -> Response:
     db = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref = db.collection("studies").document(study_title)
     doc_ref_dict = doc_ref.get().to_dict()
     auth_key = doc_ref_dict["personal_parameters"][g.user["id"]]["AUTH_KEY"]["value"]
 
@@ -464,7 +462,6 @@ def download_key_file(study_title: str) -> Response:
 @bp.route("/study/<study_title>/download_results_file", methods=("GET",))
 @login_required
 def download_results_file(study_title: str) -> Response:
-    study_title = study_title.replace(" ", "").lower()
     doc_ref_dict = current_app.config["DATABASE"].collection("studies").document(study_title).get().to_dict()
     role: str = str(doc_ref_dict["participants"].index(g.user["id"]))
 
@@ -513,7 +510,7 @@ def download_results_file(study_title: str) -> Response:
 @login_required
 def start_protocol(study_title: str) -> Response:
     user_id: str = g.user["id"]
-    doc_ref = current_app.config["DATABASE"].collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref = current_app.config["DATABASE"].collection("studies").document(study_title)
     doc_ref_dict: dict = doc_ref.get().to_dict()
     num_inds: str = doc_ref_dict["personal_parameters"][user_id]["NUM_INDS"]["value"]
     gcp_project: str = doc_ref_dict["personal_parameters"][user_id]["GCP_PROJECT"]["value"]

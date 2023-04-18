@@ -187,9 +187,7 @@
     import {getStatusUpdates, getChatUpdates} from "/static/javascript/firestore.js";
 
     var doc_ref_dict = {{ study | tojson }};
-    var study_title = doc_ref_dict['title']
-      .toLowerCase()
-      .replace(/\s/g, '');
+    var study_title = doc_ref_dict['title'];
     var user_id = {{ user_id | tojson }};
 
     getStatusUpdates(window.firestoreDatabase, study_title, user_id);

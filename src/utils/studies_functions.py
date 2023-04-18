@@ -19,7 +19,7 @@ def email(inviter: str, recipient: str, invitation_message: str, study_title: st
     doc_ref_dict: dict = current_app.config["DATABASE"].collection("meta").document("sendgrid").get().to_dict()
     sg = SendGridAPIClient(api_key=doc_ref_dict.get("api_key", ""))
 
-    html_content = f"<p>Hello!<br>{inviter} has invited you to join the {study_title} study on the sfkit website.  Click <a href='https://sfkit.org/accept_invitation/{study_title.replace(' ', '').lower()}'>here</a> to accept the invitation. (Note: you will need to log in using this email address to accept the invitation.)"
+    html_content = f"<p>Hello!<br>{inviter} has invited you to join the {study_title} study on the sfkit website.  Click <a href='https://sfkit.org/accept_invitation/{study_title}'>here</a> to accept the invitation. (Note: you will need to log in using this email address to accept the invitation.)"
 
     if invitation_message:
         html_content += f"<br><br>Here is a message from {inviter}:<br>{invitation_message}"
@@ -48,7 +48,7 @@ def make_auth_key(study_title: str, user_id: str) -> str:
     Make auth_key.txt file for user
     """
     db = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(study_title.replace(" ", "").lower())
+    doc_ref = db.collection("studies").document(study_title)
     doc_ref_dict: dict = doc_ref.get().to_dict()
 
     auth_key = secrets.token_hex(16)
@@ -72,7 +72,7 @@ def setup_gcp(doc_ref: DocumentReference, role: str) -> None:
     generate_ports(doc_ref, role)
 
     doc_ref_dict = doc_ref.get().to_dict() or {}
-    study_title = doc_ref_dict["title"].replace(" ", "").lower()
+    study_title = doc_ref_dict["title"]
     user: str = doc_ref_dict["participants"][int(role)]
     user_parameters: dict = doc_ref_dict["personal_parameters"][user]
 
@@ -168,7 +168,7 @@ def valid_study_title(study_title: str, study_type: str, setup_configuration: st
             "",
             redirect_with_flash(
                 url=url_for("studies.create_study", study_type=study_type, setup_configuration=setup_configuration),
-                message="Failed to process title.  Please add letters and try again.",
+                message="Title processing failed. Please add letters and try again.",
             ),
         )
 
@@ -183,7 +183,7 @@ def valid_study_title(study_title: str, study_type: str, setup_configuration: st
                     url=url_for(
                         "studies.create_study", study_type=study_type, setup_configuration=setup_configuration
                     ),
-                    message="Title already exists.",
+                    message="Title processing failed. Entered title is either a duplicate or too similar to an existing one.",
                 ),
             )
 

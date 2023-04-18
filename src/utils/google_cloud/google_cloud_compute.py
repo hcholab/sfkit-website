@@ -17,7 +17,7 @@ class GoogleCloudCompute:
 
     def __init__(self, study_title: str, gcp_project: str) -> None:
         self.gcp_project: str = gcp_project
-        self.study_title: str = study_title.replace(" ", "").lower()
+        self.study_title: str = study_title
         self.network_name = f"{constants.NETWORK_NAME_ROOT}-{study_title}"
         self.firewall_name = f"{self.network_name}-vm-ingress"
         self.compute = googleapi.build("compute", "v1")
@@ -413,7 +413,7 @@ class GoogleCloudCompute:
 
 
 def create_instance_name(study_title: str, role: str) -> str:
-    return f"{study_title.replace(' ', '').lower()}-{constants.INSTANCE_NAME_ROOT}{role}"
+    return f"{study_title}-{constants.INSTANCE_NAME_ROOT}{role}"
 
 
 def create_subnet_name(network_name: str, role: str) -> str:

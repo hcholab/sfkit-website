@@ -19,7 +19,7 @@ def upload_file() -> Tuple[dict, int]:
 
     db = current_app.config["DATABASE"]
     user_dict = db.collection("users").document("auth_keys").get().to_dict()[auth_key]
-    study_title = user_dict["study_title"].replace(" ", "").lower()
+    study_title = user_dict["study_title"]
     username = user_dict["username"]
 
     print(f"upload_file: {study_title}, request: {request}, request.files: {request.files}")
@@ -60,7 +60,7 @@ def get_doc_ref_dict() -> Tuple[dict, int]:
     db = current_app.config["DATABASE"]
     study_title = db.collection("users").document("auth_keys").get().to_dict()[auth_key]["study_title"]
 
-    doc_ref_dict: dict = db.collection("studies").document(study_title.replace(" ", "").lower()).get().to_dict()
+    doc_ref_dict: dict = db.collection("studies").document(study_title).get().to_dict()
 
     return doc_ref_dict, 200
 
@@ -86,7 +86,6 @@ def update_firestore() -> Tuple[dict, int]:
     db = current_app.config["DATABASE"]
     username = db.collection("users").document("auth_keys").get().to_dict()[auth_key]["username"]
     study_title = db.collection("users").document("auth_keys").get().to_dict()[auth_key]["study_title"]
-    study_title = study_title.replace(" ", "").lower()
 
     msg: str = str(request.args.get("msg"))
     _, parameter = msg.split("::")
@@ -111,7 +110,6 @@ def create_cp0() -> Tuple[dict, int]:
 
     db = current_app.config["DATABASE"]
     study_title = db.collection("users").document("auth_keys").get().to_dict()[auth_key]["study_title"]
-    study_title = study_title.replace(" ", "").lower()
 
     doc_ref = current_app.config["DATABASE"].collection("studies").document(study_title)
     doc_ref_dict: dict = doc_ref.get().to_dict()
