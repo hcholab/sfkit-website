@@ -190,9 +190,6 @@ def create_study(study_type: str, setup_configuration: str) -> Response:
     if not cleaned_study_title:
         return response
 
-    print(title)
-    print(cleaned_study_title)
-
     doc_ref = current_app.config["DATABASE"].collection("studies").document(cleaned_study_title)
     doc_ref.set(
         {

@@ -1,5 +1,18 @@
 #!/bin/bash
 
+handle_error() {
+    error_type=${1:-"GCP startup script"}
+    auth_key=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/auth_key" -H "Metadata-Flavor: Google")
+
+    msg="update_firestore::status=FAILED - $error_type failed in an unknown manner. Please reach out if this problem persists."
+
+    encoded_msg=$(echo "$msg" | curl -Gso /dev/null -w %{url_effective} --data-urlencode @- "" | cut -c 3-)
+    curl -s -o /dev/null -w "%{http_code}" -H "Authorization: $auth_key" -H "Content-Type: application/json" "https://sfkit.org/update_firestore?msg=${encoded_msg}"
+    exit 1
+}
+
+trap handle_error ERR
+
 sudo -s
 
 if [[ -f startup_was_launched ]]; then exit 0; fi
@@ -55,4 +68,27 @@ fi
 ulimit -n 1000000
 ulimit -u 1000000
 
-nohup sfkit run_protocol > output.log 2>&1 &
+# Create run_protocol_wrapper.sh script
+cat > run_protocol_wrapper.sh << 'EOF'
+#!/bin/bash
+
+handle_error() {
+    error_type=${1:-"GCP startup script"}
+    auth_key=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/auth_key" -H "Metadata-Flavor: Google")
+
+    msg="update_firestore::status=FAILED - $error_type failed in an unknown manner. Please reach out if this problem persists."
+
+    encoded_msg=$(echo "$msg" | curl -Gso /dev/null -w %{url_effective} --data-urlencode @- "" | cut -c 3-)
+    curl -s -o /dev/null -w "%{http_code}" -H "Authorization: $auth_key" -H "Content-Type: application/json" "https://sfkit.org/update_firestore?msg=${encoded_msg}"
+    exit 1
+}
+
+trap 'handle_error "sfkit run_protocol"' ERR
+sfkit run_protocol > output.log 2>&1
+EOF
+
+# Make the script executable
+chmod +x run_protocol_wrapper.sh
+
+# Run the script using nohup
+nohup ./run_protocol_wrapper.sh &
