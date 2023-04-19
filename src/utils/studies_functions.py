@@ -112,8 +112,6 @@ def setup_gcp(doc_ref: DocumentReference, role: str) -> None:
         return
     else:
         doc_ref_dict = doc_ref.get().to_dict() or {}
-        if doc_ref_dict["tasks"][user][-1] == "Setting up networking and creating VM instance":
-            doc_ref_dict["tasks"][user][-1] += " completed"
         doc_ref_dict["tasks"][user].append("Configuring your VM instance")
         doc_ref.set(doc_ref_dict)
         return

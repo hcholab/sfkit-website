@@ -7,8 +7,7 @@ export function getFirestoreDatabase(custom_token, firebase_api_key) {
   const auth = getAuth(app);
   signInWithCustomToken(auth, custom_token);
 
-  const db = getFirestore(app);
-  return db;
+  return getFirestore(app);
 }
 
 export function readNotifications(db, user_id) {
@@ -79,15 +78,15 @@ function addNotificationToList(notification) {
   document.getElementById("notification_list").appendChild(li);
 }
 
-function createTaskElement(task, status, sub_task = false) {
+function createTaskElement(task, showCheck, sub_task = false) {
   let taskLine = $("<p></p>");
 
   if (sub_task) {
     taskLine = $("<p class='ms-5'></p>");
   }
 
-  if (task.endsWith("completed") || status.includes("Finished protocol")) {
-    taskLine.append("<img src='../static/images/check.svg'> " + task.replace(" completed", ""));
+  if (showCheck) {
+    taskLine.append("<img src='../static/images/check.svg'> " + task);
   } else {
     taskLine.append("<div class='spinner-grow ms-2 me-2' style='width: 16px; height: 16px;'></div> " + task);
   }
@@ -111,25 +110,30 @@ function createSubTaskContainer() {
 function renderTasks(tasks, taskDiv, status) {
   let subTaskContainers = [];
   let isSubTask = false;
+  const finishedProtocol = status.includes("Finished protocol");
 
   tasks.forEach((task, index) => {
-    if (task.startsWith("sub-task ")) {
-      task = task.replace("sub-task ", "");
+    const showCheck = finishedProtocol || index < tasks.length - 1;
+
+    if (task.startsWith("sub-task: ")) {
+      let task_cleaned = task.replace("sub-task: ", "");
       if (!isSubTask) {
         isSubTask = true;
         let {container, subTaskContainer, toggleButton} = createSubTaskContainer();
         taskDiv.append(container);
         subTaskContainers.push({subTaskContainer, toggleButton});
       }
-      subTaskContainers[subTaskContainers.length - 1].subTaskContainer.append(createTaskElement(task, status, true));
+      subTaskContainers[subTaskContainers.length - 1].subTaskContainer.append(createTaskElement(task_cleaned, showCheck, true));
     } else {
       isSubTask = false;
-      taskDiv.append(createTaskElement(task, status));
+      taskDiv.append(createTaskElement(task, showCheck));
     }
   });
 }
 
 export function getStatusUpdates(db, study_title, user_id) {
+  let prevStatus;
+
   onSnapshot(doc(db, "studies", study_title), doc => {
     let status = doc.data()["status"][user_id];
 
@@ -150,17 +154,21 @@ export function getStatusUpdates(db, study_title, user_id) {
     }
 
     if (status.includes("Finished protocol")) {
-      document.getElementById("download-div").style.display = "block";
+      if (prevStatus !== undefined && prevStatus !== status) {
+        location.reload();
+      }
+      prevStatus = status;
 
+      document.getElementById("download-div").style.display = "block";
       document.getElementById("manhattan-div").style.display = "block";
 
       const imageElement = document.getElementById("my-image");
 
       const role = doc.data()["participants"].indexOf(user_id).toString();
-      imageElement.src = "/static/results/" + study_title + "/p" + role + "/manhattan.png";
+      imageElement.src = `/static/results/${study_title}/p${role}/manhattan.png`;
 
       if (doc.data()["study_type"] === "PCA") {
-        imageElement.src = "/static/results/" + study_title + "/p" + role + "/pca_plot.png";
+        imageElement.src = `/static/results/${study_title}/p${role}/pca_plot.png`;
       }
 
       const labelElement = document.getElementById("image-label");

@@ -71,19 +71,9 @@ def update_status(transaction, doc_ref, username, status) -> None:
 def update_tasks(transaction, doc_ref, username, task) -> None:
     doc_ref_dict: dict = doc_ref.get(transaction=transaction).to_dict()
 
-    if "tasks" not in doc_ref_dict:
-        doc_ref_dict["tasks"] = {}
-    if username not in doc_ref_dict["tasks"]:
-        doc_ref_dict["tasks"][username] = []
+    doc_ref_dict.setdefault("tasks", {}).setdefault(username, [])
 
-    if len(doc_ref_dict["tasks"][username]) == 0:
-        doc_ref_dict["tasks"][username].append(task)
-    elif task in doc_ref_dict["tasks"][username]:
-        pass
-    elif " completed" in task and task.split(" completed")[0] in doc_ref_dict["tasks"][username]:
-        index = doc_ref_dict["tasks"][username].index(task.split(" completed")[0])
-        doc_ref_dict["tasks"][username][index] += " completed"
-    else:
+    if task not in doc_ref_dict["tasks"][username]:
         doc_ref_dict["tasks"][username].append(task)
 
     transaction.update(doc_ref, doc_ref_dict)
