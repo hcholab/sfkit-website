@@ -9,13 +9,38 @@
     {% endif %}
   </small>
   <div>
-    <h3 class="h3 mb-0">
+    <h3 class="h3 mb-0 d-inline-block">
       {% if g.user['id'] in study['participants'] or g.user['id'] == "developer" %}
         <a class="text-decoration-none" href="{{ url_for('studies.study', study_title=study['title']) }}">{{ study['raw_title'] }}</a>
       {% else %}
         {{ study['raw_title'] }}
       {% endif %}
     </h3>
+    {% if study['study_information'] | length > 0 %}
+      <button type="button" class="btn btn-sm btn-outline-secondary ms-1 mb-2" data-bs-toggle="modal" data-bs-target="#infoModal{{ study['title'] }}">
+        <i class="bi bi-info-square"></i>
+        Info
+      </button>
+      <div class="modal fade" id="infoModal{{ study['title'] }}" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">{{ study['raw_title'] }}
+                - Study Information</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <div class="text-start" style="white-space: pre-wrap;">
+                {{- study['study_information'] -}}
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
     {% include 'studies/utils/study_configuration_badge.html' %}
   </div>
   <div class="my-2">{{ study['description'] }}</div>
