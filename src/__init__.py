@@ -7,6 +7,9 @@ from flask_bootstrap import Bootstrap
 from google.cloud import firestore
 
 from src import api, auth, general, studies
+from src.utils import logging
+
+logger = logging.setup_logging(__name__)
 
 
 def create_app() -> Flask:
@@ -30,5 +33,5 @@ def initialize_firebase_admin() -> None:
     if os.path.exists(".serviceAccountKey.json"):
         firebase_admin.initialize_app(firebase_admin.credentials.Certificate(".serviceAccountKey.json"))
     else:
-        print("Using default service account for the firebase_admin")
+        logger.info("No service account key found, using default service account for the firebase_admin")
         firebase_admin.initialize_app()

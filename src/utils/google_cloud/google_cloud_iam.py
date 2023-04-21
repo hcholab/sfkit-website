@@ -1,6 +1,8 @@
 import googleapiclient.discovery as googleapi
 
-from src.utils import constants
+from src.utils import constants, logging
+
+logger = logging.setup_logging(__name__)
 
 
 class GoogleCloudIAM:
@@ -46,7 +48,7 @@ class GoogleCloudIAM:
 
     def give_minimal_required_gcp_permissions(self, user: str, member_type: str = "user") -> None:
         """Gives Cloud Build Viewer permissions to a user."""
-        print(f"Giving Cloud Build Viewer permissions to user: {user}")
+        logger.info(f"Giving Cloud Build Viewer permissions to user: {user}")
 
         policy = self.get_policy()
         policy = self.modify_policy_add_member(policy, "roles/cloudbuild.builds.viewer", f"{member_type}:{user}")
@@ -56,7 +58,7 @@ class GoogleCloudIAM:
 
     def test_permissions(self, project_id: str) -> bool:
         """Tests IAM permissions of the caller"""
-        print(f"Testing IAM permissions for project: {project_id}")
+        logger.info(f"Testing IAM permissions for project: {project_id}")
 
         desired_permissions = [
             "compute.disks.create",
@@ -97,5 +99,7 @@ class GoogleCloudIAM:
         if set(desired_permissions).issubset(set(returnedPermissions.get("permissions", {}))):
             return True
 
-        print(f"Missing permissions: {set(desired_permissions) - set(returnedPermissions.get('permissions', {}))}")
+        logger.info(
+            f"Missing permissions: {set(desired_permissions) - set(returnedPermissions.get('permissions', {}))}"
+        )
         return False

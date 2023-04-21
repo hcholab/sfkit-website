@@ -5,7 +5,10 @@ from flask import current_app
 from google.cloud import firestore
 from werkzeug import Request
 
+from src.utils import logging
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, create_instance_name
+
+logger = logging.setup_logging(__name__)
 
 
 def process_status(db, username, study_title, parameter, doc_ref, doc_ref_dict, gcp_project, role):
@@ -27,7 +30,7 @@ def process_task(db, username, parameter, doc_ref):
             update_tasks(db.transaction(), doc_ref, username, task)
             return {}, 200
         except Exception as e:
-            print(f"Failed to update task: {e}")
+            logger.error(f"Failed to update task: {e}")
             time.sleep(1)
 
     return {"error": "Failed to update task"}, 400
@@ -39,7 +42,7 @@ def process_parameter(db, username, parameter, doc_ref):
             if update_parameter(db.transaction(), username, parameter, doc_ref):
                 return {}, 200
         except Exception as e:
-            print(f"Failed to update parameter: {e}")
+            logger.error(f"Failed to update parameter: {e}")
             time.sleep(1)
 
     return {"error": "Failed to update parameter"}, 400
@@ -54,7 +57,7 @@ def update_parameter(transaction, username, parameter, doc_ref) -> bool:
     elif name in doc_ref_dict["parameters"]:
         doc_ref_dict["parameters"][name]["value"] = value
     else:
-        print(f"Parameter {name} not found")
+        logger.info(f"Parameter {name} not found")
         return False
     transaction.update(doc_ref, doc_ref_dict)
     return True
@@ -92,12 +95,12 @@ def stop_instance(study_title, doc_ref_dict, gcp_project, role):
 def verify_authorization_header(request: Request, authenticate_user: bool = True) -> str:
     auth_key = request.headers.get("Authorization")
     if not auth_key:
-        print("no authorization header")
+        logger.info("no authorization key provided")
         return ""
 
     doc = current_app.config["DATABASE"].collection("users").document("auth_keys").get().to_dict().get(auth_key)
     if not doc:
-        print("invalid authorization key")
+        logger.info("invalid authorization key")
         return ""
 
     return auth_key

@@ -1,12 +1,13 @@
-# sourcery skip: do-not-use-staticmethod, docstrings-for-classes, raise-specific-error, require-parameter-annotation, require-return-annotation, snake-case-functions
+from typing import Callable, Generator
 import pytest
+from pytest_mock import MockerFixture
 from src.utils import constants
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, create_instance_name
 
 patch_prefix = "src.utils.google_cloud.google_cloud_compute.GoogleCloudCompute"
 
 
-def test_setup_networking(mocker):
+def test_setup_networking(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     setup_mocking(mocker)
     mocker.patch(f"{patch_prefix}.create_network_if_it_does_not_already_exist", return_value=None)
     mocker.patch(f"{patch_prefix}.remove_conflicting_peerings", return_value=None)
@@ -24,30 +25,36 @@ def test_setup_networking(mocker):
         "role",
     )
 
+    google_cloud_compute.setup_networking(
+        {
+            "personal_parameters": {"Broad": {"GCP_PROJECT": {"value": "b"}}, "p": {"GCP_PROJECT": {"value": "b"}}},
+            "participants": ["Broad", "p"],
+            "setup_configuration": "user",
+        },
+        "role",
+    )
 
-def test_delete_everything(mocker):
-    # mock remove_conflicting_peerings
+
+def test_delete_everything(mocker: Callable[..., Generator[MockerFixture, None, None]]):
+    setup_mocking(mocker)
     mocker.patch(f"{patch_prefix}.remove_conflicting_peerings", return_value=None)
-    # mock list_instances
-    mocker.patch(f"{patch_prefix}.list_instances", side_effect=[["alpha-sfkit", "bad"]])
-    # mock delete_instance
+    mocker.patch(f"{patch_prefix}.list_instances", return_value=["alpha-sfkit", "bad", "name1"])
     mocker.patch(f"{patch_prefix}.delete_instance", return_value=None)
-    # mock delete_firewall
     mocker.patch(f"{patch_prefix}.delete_firewall", return_value=None)
-    # mock delete_subnet
     mocker.patch(f"{patch_prefix}.delete_subnet", return_value=None)
-    # mock delete_network
     mocker.patch(f"{patch_prefix}.delete_network", return_value=None)
 
-    setup_mocking(mocker)
-    # mock remove_conflicting_peerings
+    google_cloud_compute = GoogleCloudCompute("alpha", "")
+    google_cloud_compute.delete_everything()
+
     google_cloud_compute = GoogleCloudCompute("alpha", "broad-cho-priv1")
     google_cloud_compute.delete_everything()
 
-    # assert False
+    google_cloud_compute.firewall_name = "garbage"
+    google_cloud_compute.delete_everything()
 
 
-def test_create_network_if_it_does_not_already_exist(mocker):
+def test_create_network_if_it_does_not_already_exist(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     setup_mocking(mocker)
     mocker.patch(f"{patch_prefix}.wait_for_operation", return_value=None)
     mocker.patch(f"{patch_prefix}.create_firewall", return_value=None)
@@ -57,10 +64,9 @@ def test_create_network_if_it_does_not_already_exist(mocker):
     google_cloud_compute = GoogleCloudCompute("subnet0", "subnet")
     google_cloud_compute.create_network_if_it_does_not_already_exist({})
 
-    # assert False
 
-
-def test_delete_network(mocker):
+def test_delete_network(mocker: Callable[..., Generator[MockerFixture, None, None]]):
+    # sourcery skip: extract-duplicate-method
     setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("alpha", "broad-cho-priv1")
     google_cloud_compute.delete_network()
@@ -68,24 +74,32 @@ def test_delete_network(mocker):
     google_cloud_compute = GoogleCloudCompute("subnet0", "subnet")
     google_cloud_compute.delete_network()
 
+    google_cloud_compute = GoogleCloudCompute("subnet0", "")
+    google_cloud_compute.delete_network()
 
-def test_create_firewall(mocker):
+
+def test_create_firewall(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     setup_mocking(mocker)
     mocker.patch(f"{patch_prefix}.wait_for_operation", return_value=None)
     google_cloud_compute = GoogleCloudCompute("alpha", "broad-cho-priv1")
     google_cloud_compute.create_firewall({"participants": []})
 
     google_cloud_compute = GoogleCloudCompute("subnet0", "subnet")
-    google_cloud_compute.create_firewall({"participants": []})
+    google_cloud_compute.create_firewall(
+        {
+            "participants": ["user1", "user2"],
+            "personal_parameters": {"user1": {"IP_ADDRESS": {"value": 8000}}, "user2": {"IP_ADDRESS": {"value": ""}}},
+        }
+    )
 
 
-def test_delete_firewall(mocker):
+def test_delete_firewall(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("alpha", "broad-cho-priv1")
     google_cloud_compute.delete_firewall("test")
 
 
-def test_remove_conflicting_peerings(mocker):
+def test_remove_conflicting_peerings(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("alpha", "broad-cho-priv1")
     assert google_cloud_compute.remove_conflicting_peerings(["broad-cho-priv1"]) == True
@@ -93,8 +107,10 @@ def test_remove_conflicting_peerings(mocker):
     google_cloud_compute = GoogleCloudCompute("", "")
     assert google_cloud_compute.remove_conflicting_peerings(["broad-cho-priv1"]) == False
 
+    google_cloud_compute.remove_conflicting_peerings()
 
-def test_remove_conflicting_subnets(mocker):
+
+def test_remove_conflicting_subnets(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     setup_mocking(mocker)
     mocker.patch(f"{patch_prefix}.delete_subnet", return_value=None)
     google_cloud_compute = GoogleCloudCompute("alpha", "broad-cho-priv1")
@@ -106,7 +122,7 @@ def test_remove_conflicting_subnets(mocker):
     # assert False
 
 
-def test_delete_subnet(mocker):
+def test_delete_subnet(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     setup_mocking(mocker)
     mocker.patch(f"{patch_prefix}.list_instances", return_value=["name"])
     mocker.patch(f"{patch_prefix}.delete_instance", return_value=None)
@@ -121,7 +137,9 @@ def test_delete_subnet(mocker):
             raise e from e
 
 
-def test_create_subnet(mocker):  # sourcery skip: extract-duplicate-method
+def test_create_subnet(
+    mocker: Callable[..., Generator[MockerFixture, None, None]]
+):  # sourcery skip: extract-duplicate-method
     setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("alpha", "broad-cho-priv1")
     google_cloud_compute.create_subnet("0")
@@ -132,13 +150,13 @@ def test_create_subnet(mocker):  # sourcery skip: extract-duplicate-method
     google_cloud_compute.create_subnet("role")
 
 
-def test_create_peerings(mocker):
+def test_create_peerings(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("alpha", "broad-cho-priv1")
     google_cloud_compute.create_peerings(gcp_projects=["broad-cho-priv1", "peeringproject2", "project3"])
 
 
-def test_setup_instance(mocker):
+def test_setup_instance(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     setup_mocking(mocker)
     mocker.patch(f"{patch_prefix}.list_instances", return_value=[])
     mocker.patch(f"{patch_prefix}.delete_instance", return_value=None)
@@ -152,7 +170,7 @@ def test_setup_instance(mocker):
     google_cloud_compute.setup_instance("name", "role", ["metadata"])
 
 
-def test_create_instance(mocker):
+def test_create_instance(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     setup_mocking(mocker)
     mocker.patch(f"{patch_prefix}.wait_for_zone_operation", return_value=None)
     google_cloud_compute = GoogleCloudCompute("alpha", "broad-cho-priv1")
@@ -161,7 +179,13 @@ def test_create_instance(mocker):
     google_cloud_compute.create_instance("name", "role", metadata=["metadata"], num_cpus=64)
 
 
-def test_list_instances(mocker):
+def test_stop_instance(mocker: Callable[..., Generator[MockerFixture, None, None]]):
+    setup_mocking(mocker)
+    google_cloud_compute = GoogleCloudCompute("alpha", "broad-cho-priv1")
+    google_cloud_compute.stop_instance("name")
+
+
+def test_list_instances(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("alpha", "broad-cho-priv1")
     google_cloud_compute.list_instances()
@@ -170,13 +194,13 @@ def test_list_instances(mocker):
     google_cloud_compute.list_instances("name", "role")
 
 
-def test_delete_instance(mocker):
+def test_delete_instance(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("alpha", "broad-cho-priv1")
     google_cloud_compute.delete_instance(name="name")
 
 
-def test_wait_for_operation(mocker):
+def test_wait_for_operation(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("alpha", "broad-cho-priv1")
     google_cloud_compute.wait_for_operation(operation="operation")
@@ -187,7 +211,7 @@ def test_wait_for_operation(mocker):
         google_cloud_compute.wait_for_operation(operation="operation")
 
 
-def test_wait_for_zoneOperation(mocker):
+def test_wait_for_zoneOperation(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("alpha", "broad-cho-priv1")
     google_cloud_compute.wait_for_zone_operation(zone="zone", operation="operation")
@@ -198,7 +222,7 @@ def test_wait_for_zoneOperation(mocker):
         google_cloud_compute.wait_for_zone_operation(zone="zone", operation="operation")
 
 
-def test_wait_for_regionOperation(mocker):
+def test_wait_for_regionOperation(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("alpha", "broad-cho-priv1")
     google_cloud_compute.wait_for_region_operation(region="region", operation="operation")
@@ -209,7 +233,13 @@ def test_wait_for_regionOperation(mocker):
         google_cloud_compute.wait_for_region_operation("region", "operation")
 
 
-def test_vm_external_ip_address(mocker):
+def test_return_result_or_error(mocker: Callable[..., Generator[MockerFixture, None, None]]):
+    setup_mocking(mocker)
+    google_cloud_compute = GoogleCloudCompute("alpha", "broad-cho-priv1")
+    google_cloud_compute.return_result_or_error({"error": "RESOURCE_NOT_FOUND"})
+
+
+def test_vm_external_ip_address(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("alpha", "broad-cho-priv1")
     assert google_cloud_compute.get_vm_external_ip_address("zone", "name") == "1877.0.0.1"
@@ -220,6 +250,8 @@ def test_create_instance_name():
 
 
 def setup_mocking(mocker):
+    mocker.patch("src.utils.google_cloud.google_cloud_compute.create_instance_name", return_value="name")
+    mocker.patch("src.utils.google_cloud.google_cloud_compute.logger.error", return_value=None)
     mocker.patch("src.utils.google_cloud.google_cloud_compute.sleep", lambda x: None)
     mocker.patch("time.sleep", lambda x: None)
     mocker.patch("src.utils.google_cloud.google_cloud_compute.googleapi.build", return_value=MockCompute())
@@ -269,6 +301,8 @@ class MockInsertable:
         # sourcery skip: raise-specific-error
         if project == "":
             raise Exception("no instances")
+        if region == "":
+            raise Exception("list failed")
         return MockExecutable()
 
     def insert(self, project=None, zone=None, region=None, body=None):

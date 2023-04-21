@@ -1,5 +1,6 @@
 import os
 from time import sleep
+from typing import Optional
 
 import googleapiclient.discovery as googleapi
 import ipaddr
@@ -7,7 +8,9 @@ from tenacity import retry
 from tenacity.stop import stop_after_attempt
 from tenacity.wait import wait_fixed
 
-from src.utils import constants
+from src.utils import constants, logging
+
+logger = logging.setup_logging(__name__)
 
 
 class GoogleCloudCompute:
@@ -32,7 +35,7 @@ class GoogleCloudCompute:
         try:
             firewalls: list = self.compute.firewalls().list(project=self.gcp_project).execute()["items"]
         except Exception as e:
-            print(f"Error getting firewalls: {e}")
+            logger.error(f"Error getting firewalls: {e}")
             firewalls = []
         firewall_names: list[str] = [firewall["name"] for firewall in firewalls]
         for firewall_name in firewall_names:
@@ -46,7 +49,7 @@ class GoogleCloudCompute:
                 .execute()["items"]
             )
         except Exception as e:
-            print(f"Error getting subnets: {e}")
+            logger.error(f"Error getting subnets: {e}")
             subnets = []
         for subnet in subnets:
             if subnet["name"][:-1] == create_subnet_name(self.network_name, ""):
@@ -55,7 +58,7 @@ class GoogleCloudCompute:
         self.delete_network()
 
     def setup_networking(self, doc_ref_dict: dict, role: str) -> None:
-        print(f"Setting up networking for role {role}...")
+        logger.info(f"Setting up networking for role {role}...")
         gcp_projects: list = [constants.SERVER_GCP_PROJECT]
         gcp_projects.extend(
             doc_ref_dict["personal_parameters"][participant]["GCP_PROJECT"]["value"]
@@ -74,7 +77,7 @@ class GoogleCloudCompute:
         network_names: list[str] = [net["name"] for net in networks]
 
         if self.network_name not in network_names:
-            print(f"Creating new network {self.network_name}")
+            logger.info(f"Creating new network {self.network_name}")
             req_body = {
                 "name": self.network_name,
                 "autoCreateSubnetworks": False,
@@ -85,23 +88,23 @@ class GoogleCloudCompute:
 
             self.create_firewall(doc_ref_dict)
         else:
-            print(f"Network {self.network_name} already exists")
+            logger.info(f"Network {self.network_name} already exists")
 
     def delete_network(self) -> None:
         try:
             networks: list = self.compute.networks().list(project=self.gcp_project).execute()["items"]
         except Exception as e:
-            print(f"Error getting networks: {e}")
+            logger.error(f"Error getting networks: {e}")
             networks = []
         network_names: list[str] = [net["name"] for net in networks]
 
         if self.network_name in network_names:
-            print(f"Deleting network {self.network_name}")
+            logger.info(f"Deleting network {self.network_name}")
             operation = self.compute.networks().delete(project=self.gcp_project, network=self.network_name).execute()
             self.wait_for_operation(operation["name"])
 
     def create_firewall(self, doc_ref_dict) -> None:
-        print(f"Creating new firewalls for network {self.network_name}")
+        logger.info(f"Creating firewall {self.firewall_name}")
         network_url: str = ""
         for net in self.compute.networks().list(project=self.gcp_project).execute()["items"]:
             if net["name"] == self.network_name:
@@ -125,23 +128,27 @@ class GoogleCloudCompute:
         self.wait_for_operation(operation["name"])
 
     def delete_firewall(self, firewall_name: str) -> None:
-        print(f"Deleting firewall {firewall_name}")
+        logger.info(f"Deleting firewall {firewall_name}")
         operation = self.compute.firewalls().delete(project=self.gcp_project, firewall=firewall_name).execute()
         self.wait_for_operation(operation["name"])
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(10))
-    def remove_conflicting_peerings(self, gcp_projects: list = list()) -> bool:
-        # a peering is conflicting if it connects to a project that is not in the current study
+    def remove_conflicting_peerings(self, allowed_gcp_projects: Optional[list] = None) -> bool:
+        if allowed_gcp_projects is None:
+            allowed_gcp_projects = []
+
+        # a peering is conflicting if it connects to a project that is not in the allowed_gcp_projects list
         try:
             network_info = self.compute.networks().get(project=self.gcp_project, network=self.network_name).execute()
-        except Exception as e:  # googleapi.HttpError:
-            # print(f"Error getting network info: {e}")
+        except Exception as e:
+            logger.error(f"Error getting network info: {e}")
             return False
+
         peerings = [peer["name"].split("peering-")[1] for peer in network_info.get("peerings", [])]
 
         for other_project in peerings:
-            if other_project not in gcp_projects:
-                print(f"Deleting peering called {self.study_title}peering-{other_project}")
+            if other_project not in allowed_gcp_projects:
+                logger.info(f"Deleting peering called {self.study_title}peering-{other_project}")
                 body = {"name": f"{self.study_title}peering-{other_project}"}
                 self.compute.networks().removePeering(
                     project=self.gcp_project, network=self.network_name, body=body
@@ -168,7 +175,7 @@ class GoogleCloudCompute:
         for instance in self.list_instances(constants.SERVER_ZONE, subnetwork=subnet["selfLink"]):
             self.delete_instance(instance)
 
-        print(f"Deleting subnet {subnet['name']}")
+        logger.info(f"Deleting subnet {subnet['name']}")
         self.compute.subnetworks().delete(
             project=self.gcp_project,
             region=constants.SERVER_REGION,
@@ -186,7 +193,7 @@ class GoogleCloudCompute:
                 return
             sleep(2)
 
-        print(f"Failure to delete subnet {subnet['name']}")
+        logger.error(f"Failure to delete subnet {subnet['name']}")
         raise RuntimeError(f"Failure to delete subnet {subnet['name']}")
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(30))
@@ -200,7 +207,7 @@ class GoogleCloudCompute:
         )
         subnet_names = [subnet["name"] for subnet in subnets]
         if subnet_name not in subnet_names:
-            print(f"Creating new subnetwork {subnet_name}")
+            logger.info(f"Creating subnet {subnet_name}")
             network_url = ""
             for net in self.compute.networks().list(project=self.gcp_project).execute()["items"]:
                 if net["name"] == self.network_name:
@@ -218,13 +225,11 @@ class GoogleCloudCompute:
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(30))
     def create_peerings(self, gcp_projects: list) -> None:
-        # create peerings if they don't already exist
-        network_info = self.compute.networks().get(project=self.gcp_project, network=self.network_name).execute()
-        peerings = [peer["name"].split("peering-")[1] for peer in network_info.get("peerings", [])]
+        existing_peerings = self.get_existing_peerings()
         other_projects = [p for p in gcp_projects if p != self.gcp_project]
         for other_project in other_projects:
-            if other_project not in peerings:
-                print(f"Creating peering called {self.study_title}peering-{other_project}")
+            if other_project not in existing_peerings:
+                logger.info(f"Creating peering called {self.study_title}peering-{other_project}")
                 body = {
                     "networkPeering": {
                         "name": f"{self.study_title}peering-{other_project}",
@@ -237,6 +242,10 @@ class GoogleCloudCompute:
                     project=self.gcp_project, network=self.network_name, body=body
                 ).execute()
 
+    def get_existing_peerings(self) -> list:
+        network_info = self.compute.networks().get(project=self.gcp_project, network=self.network_name).execute()
+        return [peer["name"].split("peering-")[1] for peer in network_info.get("peerings", [])]
+
     def setup_instance(
         self,
         name: str,
@@ -248,7 +257,7 @@ class GoogleCloudCompute:
     ) -> str:
         if name in self.list_instances() and delete:
             self.delete_instance(name)
-            print("Waiting for instance to be deleted...")
+            logger.info(f"Waiting for instance {name} to be deleted")
 
             max_wait = 60
             while name in self.list_instances() and max_wait > 0:
@@ -275,7 +284,7 @@ class GoogleCloudCompute:
         boot_disk_size: int = 10,
         metadata: list = list(),
     ) -> None:
-        print(f"Creating VM instance with name {name} in project {self.gcp_project}")
+        logger.info(f"Creating VM instance with name {name} in project {self.gcp_project}")
 
         image_response = self.compute.images().getFromFamily(project="debian-cloud", family="debian-11").execute()
         # image_response = self.compute.images().getFromFamily(project="ubuntu-os-cloud", family="ubuntu-2110").execute()
@@ -343,7 +352,7 @@ class GoogleCloudCompute:
         self.wait_for_zone_operation(zone, operation["name"])
 
     def stop_instance(self, name: str, zone: str = constants.SERVER_ZONE) -> None:
-        print(f"Stopping VM instance with name {name}...")
+        logger.info(f"Stopping VM instance with name {name}...")
         operation = self.compute.instances().stop(project=self.gcp_project, zone=zone, instance=name).execute()
         self.wait_for_zone_operation(zone, operation["name"])
 
@@ -351,7 +360,7 @@ class GoogleCloudCompute:
         try:
             result = self.compute.instances().list(project=self.gcp_project, zone=zone).execute()
         except Exception as e:
-            print("Error listing instances:", e)
+            logger.error(f"Error listing instances: {e}")
             return []
         return [
             instance["name"]
@@ -360,12 +369,12 @@ class GoogleCloudCompute:
         ]
 
     def delete_instance(self, name: str, zone: str = constants.SERVER_ZONE) -> None:
-        print(f"Deleting VM instance with name {name}...")
+        logger.info(f"Deleting VM instance with name {name}...")
         operation = self.compute.instances().delete(project=self.gcp_project, zone=zone, instance=name).execute()
         self.wait_for_zone_operation(zone, operation["name"])
 
     def wait_for_operation(self, operation: str) -> dict[str, str]:
-        print("Waiting for operation to finish...", end="")
+        logger.info("Waiting for operation to finish...")
         while True:
             result = self.compute.globalOperations().get(project=self.gcp_project, operation=operation).execute()
 
@@ -374,7 +383,7 @@ class GoogleCloudCompute:
             sleep(1)
 
     def wait_for_zone_operation(self, zone: str, operation: str) -> dict[str, str]:
-        print("Waiting for operation to finish...", end="")
+        logger.info("Waiting for operation to finish...")
         while True:
             result = (
                 self.compute.zoneOperations().get(project=self.gcp_project, zone=zone, operation=operation).execute()
@@ -385,7 +394,7 @@ class GoogleCloudCompute:
             sleep(1)
 
     def wait_for_region_operation(self, region: str, operation: str) -> dict[str, str]:
-        print("Waiting for operation to finish...", end="")
+        logger.info("Waiting for operation to finish...")
         while True:
             result: dict[str, str] = (
                 self.compute.regionOperations()
@@ -398,7 +407,7 @@ class GoogleCloudCompute:
             sleep(1)
 
     def return_result_or_error(self, result: dict[str, str]) -> dict[str, str]:
-        print("done.")
+        logger.info("Operation finished.")
         if "error" in result:
             if "RESOURCE_NOT_FOUND" in str(result):
                 return result
@@ -407,7 +416,7 @@ class GoogleCloudCompute:
         return result
 
     def get_vm_external_ip_address(self, instance: str, zone: str = constants.SERVER_ZONE) -> str:
-        print("Getting the IP address for VM instance", instance)
+        logger.info(f"Getting the IP address for instance {instance}...")
         response = self.compute.instances().get(project=self.gcp_project, zone=zone, instance=instance).execute()
         return response["networkInterfaces"][0]["accessConfigs"][0]["natIP"]
 

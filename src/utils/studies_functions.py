@@ -1,29 +1,46 @@
 import os
 import re
 import secrets
+from html import escape
 from typing import Optional
 
 from flask import current_app, g, redirect, url_for
 from google.cloud.firestore_v1 import DocumentReference
+from jinja2 import Template
 from python_http_client.exceptions import HTTPError
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Email, Mail
 from werkzeug import Response
 
-from src.utils import constants
+from src.utils import constants, logging
 from src.utils.generic_functions import redirect_with_flash
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, create_instance_name
 
+logger = logging.setup_logging(__name__)
+
+email_template = Template(
+    """
+<p>Hello!<br>{{ inviter }} has invited you to join the {{ study_title }} study on the sfkit website.  Click <a href='https://sfkit.org/accept_invitation/{{ study_title }}'>here</a> to accept the invitation. (Note: you will need to log in using this email address to accept the invitation.){% if invitation_message %}<br><br>Here is a message from {{ inviter }}:<br>{{ invitation_message }}{% endif %}</p>
+"""
+)
+
 
 def email(inviter: str, recipient: str, invitation_message: str, study_title: str) -> int:
+    """
+    Sends an invitation email to the recipient.
+
+    :param inviter: The name of the person inviting the recipient.
+    :param recipient: The email address of the recipient.
+    :param invitation_message: A custom message from the inviter.
+    :param study_title: The title of the study the recipient is being invited to.
+    :return: The status code of the email sending operation.
+    """
     doc_ref_dict: dict = current_app.config["DATABASE"].collection("meta").document("sendgrid").get().to_dict()
     sg = SendGridAPIClient(api_key=doc_ref_dict.get("api_key", ""))
 
-    html_content = f"<p>Hello!<br>{inviter} has invited you to join the {study_title} study on the sfkit website.  Click <a href='https://sfkit.org/accept_invitation/{study_title}'>here</a> to accept the invitation. (Note: you will need to log in using this email address to accept the invitation.)"
-
-    if invitation_message:
-        html_content += f"<br><br>Here is a message from {inviter}:<br>{invitation_message}"
-    html_content += "</p>"
+    html_content = email_template.render(
+        inviter=escape(inviter), invitation_message=escape(invitation_message), study_title=escape(study_title)
+    )
 
     message = Mail(
         to_emails=recipient,
@@ -35,17 +52,21 @@ def email(inviter: str, recipient: str, invitation_message: str, study_title: st
 
     try:
         response = sg.send(message)
-        print("Email sent")
+        logger.info("Email sent")
         return response.status_code  # type: ignore
 
     except HTTPError as e:  # type: ignore
-        print("Email failed to send", e)
+        logger.error(f"Email failed to send: {e}")
         return e.status_code  # type: ignore
 
 
 def make_auth_key(study_title: str, user_id: str) -> str:
     """
-    Make auth_key.txt file for user
+    Generates an auth_key for the user and stores it in the database.
+
+    :param study_title: The title of the study.
+    :param user_id: The ID of the user.
+    :return: The generated auth_key.
     """
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title)
@@ -104,7 +125,7 @@ def setup_gcp(doc_ref: DocumentReference, role: str) -> None:
             boot_disk_size=int(user_parameters["BOOT_DISK_SIZE"]["value"]),
         )
     except Exception as e:
-        print(e)
+        logger.error(f"An error occurred during GCP setup: {e}")
         doc_ref_dict["status"][
             user
         ] = "FAILED - sfkit failed to set up your networking and VM instance. Please restart the study and double-check your parameters and configuration. If the problem persists, please contact us."
@@ -158,7 +179,13 @@ def is_participant(study) -> bool:
     )
 
 
+def is_study_title_unique(study_title: str, db) -> bool:
+    study_ref = db.collection("studies").where("title", "==", study_title).limit(1).stream()
+    return not list(study_ref)
+
+
 def valid_study_title(study_title: str, study_type: str, setup_configuration: str) -> tuple[str, Response]:
+    # sourcery skip: assign-if-exp, reintroduce-else, swap-if-else-branches, swap-if-expression, use-named-expression
     cleaned_study_title = clean_study_title(study_title)
 
     if not cleaned_study_title:
@@ -170,20 +197,14 @@ def valid_study_title(study_title: str, study_type: str, setup_configuration: st
             ),
         )
 
-    # validate that title is unique
-    db = current_app.config["DATABASE"]
-    studies = db.collection("studies").stream()
-    for study in studies:
-        if study.to_dict()["title"] == cleaned_study_title:
-            return (
-                "",
-                redirect_with_flash(
-                    url=url_for(
-                        "studies.create_study", study_type=study_type, setup_configuration=setup_configuration
-                    ),
-                    message="Title processing failed. Entered title is either a duplicate or too similar to an existing one.",
-                ),
-            )
+    if not is_study_title_unique(cleaned_study_title, current_app.config["DATABASE"]):
+        return (
+            "",
+            redirect_with_flash(
+                url=url_for("studies.create_study", study_type=study_type, setup_configuration=setup_configuration),
+                message="Title processing failed. Entered title is either a duplicate or too similar to an existing one.",
+            ),
+        )
 
     return (cleaned_study_title, redirect(url_for("studies.parameters", study_title=cleaned_study_title)))
 

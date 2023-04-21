@@ -21,7 +21,7 @@ from google.cloud import firestore
 from werkzeug import Response
 
 from src.auth import login_required
-from src.utils import constants
+from src.utils import constants, logging
 from src.utils.auth_functions import create_user, update_user
 from src.utils.generic_functions import add_notification, redirect_with_flash
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, create_instance_name
@@ -36,6 +36,8 @@ from src.utils.studies_functions import (
     setup_gcp,
     valid_study_title,
 )
+
+logger = logging.setup_logging(__name__)
 
 bp = Blueprint("studies", __name__)
 
@@ -134,7 +136,7 @@ def anonymous_study(study_title: str, user_id: str, secret_access_code: str) -> 
     try:
         return update_user(email, password, redirect_url)
     except Exception as e:
-        print(f"Failed in anonymous_study: {e}")
+        logger.error(f"Failed in anonymous_study: {e}")
         abort(404)
 
 
@@ -181,7 +183,7 @@ def create_study(study_type: str, setup_configuration: str) -> Response:
             )
         )
 
-    print(f"Creating study of type {study_type} with setup configuration {setup_configuration}")
+    logger.info(f"Creating study of type {study_type} with setup configuration {setup_configuration}")
     title: str = request.form["title"]
     demo: bool = request.form.get("demo_study") == "on"
     user_id: str = g.user["id"]
@@ -239,7 +241,7 @@ def restart_study(study_title: str) -> Response:
                     threads.append(t)
     for t in threads:
         t.join()
-    print("Successfully Deleted gcp instances")
+    logger.info("Successfully Deleted gcp instances")
 
     for participant in doc_ref_dict["participants"]:
         doc_ref_dict["status"][participant] = "ready to begin protocol" if participant == "Broad" else ""
@@ -264,7 +266,7 @@ def delete_study(study_title: str) -> Response:
             if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
                 google_cloud_compute = GoogleCloudCompute(study_title, gcp_project)
                 google_cloud_compute.delete_everything()
-        print("Successfully Deleted gcp stuff")
+        logger.info("Successfully Deleted gcp stuff")
 
     Thread(target=delete_gcp_stuff_background, args=(doc_ref_dict,)).start()
 
@@ -491,7 +493,7 @@ def download_results_file(study_title: str) -> Response:
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
         if result_success:
             add_file_to_zip(zip_file, f"{base}/{shared}/result.txt", "result.txt")
-        if plot_success:
+        else:  # plot_success
             add_file_to_zip(zip_file, f"{base}/{shared}/{plot_name}.png", f"{plot_name}.png")
 
     zip_buffer.seek(0)
@@ -548,7 +550,7 @@ def start_protocol(study_title: str) -> Response:
         doc_ref.set({"status": statuses}, merge=True)
 
     if "" in statuses.values():
-        print("Not all participants are ready.")
+        logger.info("Not all participants are ready.")
     elif statuses[user_id] == "ready to begin sfkit":
         for role in range(1, len(doc_ref_dict["participants"])):
             user = doc_ref_dict["participants"][role]

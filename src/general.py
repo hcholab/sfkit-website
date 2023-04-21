@@ -17,8 +17,11 @@ from google.cloud.firestore_v1 import CollectionReference
 from werkzeug import Response
 
 from src.auth import login_required
+from src.utils import logging
 from src.utils.generic_functions import add_notification, remove_notification
-from src.utils.google_cloud.google_cloud_storage import download_blob
+from src.utils.google_cloud.google_cloud_storage import download_blob_to_bytes
+
+logger = logging.setup_logging(__name__)
 
 bp = Blueprint("general", __name__)
 
@@ -103,7 +106,7 @@ def edit_profile() -> Response:
 def sample_data(workflow_type: str, party_id: str) -> Union[Response, Tuple[Response, int]]:
     filename: str = f"{workflow_type}_p{party_id}.zip"
     try:
-        file_data = download_blob("sfkit_1000_genomes", filename)
+        file_data = download_blob_to_bytes("sfkit_1000_genomes", filename) or b"Failed to download file"
         return send_file(
             io.BytesIO(file_data),
             as_attachment=True,
@@ -111,6 +114,6 @@ def sample_data(workflow_type: str, party_id: str) -> Union[Response, Tuple[Resp
             mimetype="application/zip",
         )
     except Exception as e:
-        print(f"Error downloading file {filename}")
-        print(e)
+        logger.error(f"Error downloading file {filename}")
+        logger.error(e)
         return jsonify({"error": "Failed to download file"}), 500

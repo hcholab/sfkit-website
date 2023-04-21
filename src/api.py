@@ -1,4 +1,3 @@
-import os
 from threading import Thread
 from typing import Tuple
 
@@ -6,7 +5,10 @@ from flask import Blueprint, current_app, request
 
 from src.studies import setup_gcp
 from src.utils.api_functions import process_parameter, process_status, process_task, verify_authorization_header
-from src.utils.google_cloud.google_cloud_storage import upload_blob
+from src.utils.google_cloud.google_cloud_storage import upload_blob_from_file
+from src.utils import logging
+
+logger = logging.setup_logging(__name__)
 
 bp = Blueprint("api", __name__)
 
@@ -22,15 +24,15 @@ def upload_file() -> Tuple[dict, int]:
     study_title = user_dict["study_title"]
     username = user_dict["username"]
 
-    print(f"upload_file: {study_title}, request: {request}, request.files: {request.files}")
+    logger.info(f"upload_file: {study_title}, request: {request}, request.files: {request.files}")
 
-    file = request.files["file"]
+    file = request.files.get("file", None)
 
     if not file:
-        print("no file")
+        logger.info("no file")
         return {"error": "no file"}, 400
 
-    print(f"filename: {file.filename}")
+    logger.info(f"filename: {file.filename}")
 
     doc_ref_dict: dict = db.collection("studies").document(study_title).get().to_dict()
     role: str = str(doc_ref_dict["participants"].index(username))
@@ -45,8 +47,8 @@ def upload_file() -> Tuple[dict, int]:
         file_path = f"{study_title}/p{role}/result.txt"
 
     # upload file to google cloud storage
-    upload_blob("sfkit", file, file_path)
-    print(f"uploaded file {file.filename} to {file_path}")
+    upload_blob_from_file("sfkit", file, file_path)
+    logger.info(f"uploaded file {file.filename} to {file_path}")
 
     return {}, 200
 

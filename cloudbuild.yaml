@@ -25,6 +25,7 @@ steps:
       - '--region=$_DEPLOY_REGION'
       - '--min-instances=1'
       - '--quiet'
+      - '--set-env-vars=CLOUD_RUN=True' 
     id: Deploy
     entrypoint: gcloud
 images:

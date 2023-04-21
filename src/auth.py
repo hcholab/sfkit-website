@@ -8,10 +8,13 @@ from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from werkzeug import Response
 
+from src.utils import constants, logging
 from src.utils.auth_functions import create_user, update_user
 from src.utils.generic_functions import redirect_with_flash
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 from src.utils.google_cloud.google_cloud_secret_manager import get_firebase_api_key
+
+logger = logging.setup_logging(__name__)
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -34,7 +37,7 @@ def load_logged_in_user() -> None:
             "The default Firebase app does not exist. Make sure to initialize the SDK by calling initialize_app().",
         ]
         if all(s not in str(e) for s in no_user_strings):
-            print(f'Error logging in user: "{e}"')
+            logger.error(f'Error logging in user: "{e}"')
         g.user = None
     else:
         try:
@@ -43,7 +46,7 @@ def load_logged_in_user() -> None:
             g.custom_token = firebase_auth.create_custom_token(user_dict["uid"]).decode("utf-8")
             g.firebase_api_key = get_firebase_api_key()
         except Exception as e:
-            print(f"Error creating custom token: {e}")
+            logger.error(f"Error creating custom token: {e}")
 
 
 @bp.after_app_request
@@ -136,9 +139,10 @@ def login_with_google_callback() -> Response:
         decoded_jwt_token = id_token.verify_oauth2_token(
             request.form["credential"],
             google_requests.Request(),
-            "419003787216-rcif34r976a9qm3818qgeqed7c582od6.apps.googleusercontent.com",
+            constants.GOOGLE_CLIENT_ID,
         )
-    except Exception as e:
+    except ValueError as e:
+        print("in valueerror")
         return redirect_with_flash(location="studies.index", message="Invalid Google account.", error=str(e))
 
     user_id = decoded_jwt_token["email"]

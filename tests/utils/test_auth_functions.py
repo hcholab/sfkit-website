@@ -1,12 +1,35 @@
-# sourcery skip: docstrings-for-classes, require-parameter-annotation, require-return-annotation
+from typing import Callable, Generator
+
 import pytest
 from conftest import MockFirebaseAdminAuth
+from flask import Flask
+from pytest_mock import MockerFixture
 from requests.models import Response as RequestsResponse
-from src.utils import auth_functions
 from werkzeug import Response
 
+from src.utils import auth_functions
 
-def test_update_user(mocker):
+
+def test_create_user(app: Flask, mocker: Callable[..., Generator[MockerFixture, None, None]]):
+    with app.app_context():
+        mocker.patch("src.utils.auth_functions.firebase_auth", MockFirebaseAdminAuth)
+        mocker.patch(
+            "src.utils.auth_functions.sign_in_with_email_and_password",
+            mock_sign_in_with_email_and_password,
+        )
+        mocker.patch("src.utils.auth_functions.redirect", mock_redirect)
+        mocker.patch("src.utils.auth_functions.url_for", mock_url_for)
+
+        response = auth_functions.create_user("test_id", "test_name", "/test-redirect-url")
+        assert "session=test_token" in response.headers["Set-Cookie"]
+
+        response = auth_functions.create_user(name="anonymous_user")
+        assert "session=test_token" in response.headers["Set-Cookie"]
+
+        response = auth_functions.create_user(name="UserNotFound")
+
+
+def test_update_user(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     mocker.patch("src.utils.auth_functions.firebase_auth", MockFirebaseAdminAuth)
     mocker.patch(
         "src.utils.auth_functions.sign_in_with_email_and_password",
@@ -19,11 +42,12 @@ def test_update_user(mocker):
     assert "session=test_token" in response.headers["Set-Cookie"]
 
 
-# def test_sign_in_with_email_and_password(mocker):
-#     mocker.patch("src.utils.auth_functions.post", mock_post)
-#     mocker.patch("src.utils.auth_functions.raise_detailed_error", mock_raise_detailed_error)
+def test_sign_in_with_email_and_password(mocker: Callable[..., Generator[MockerFixture, None, None]]):
+    mocker.patch("src.utils.auth_functions.get_firebase_api_key", return_value="")
+    mocker.patch("src.utils.auth_functions.post", mock_post)
+    mocker.patch("src.utils.auth_functions.raise_detailed_error", mock_raise_detailed_error)
 
-#     auth_functions.sign_in_with_email_and_password("email", "password")
+    auth_functions.sign_in_with_email_and_password("email", "password")
 
 
 def test_raise_detailed_error():
