@@ -1,7 +1,7 @@
 <h4 class="my-4 fw-normal">Introduction</h4>
 <div class="row">
   <p>
-    This two-person tutorial is designed to guide you and a partner through the process of running a study using real or partially real data with the
+    This two-person tutorial is designed to guide you and a partner through the process of running a study using real genomic data with the
     <i>auto-configured</i>
     option. You'll both download sample data, configure your respective parts of the study, and execute a workflow together. For the purposes of this tutorial, we will refer to the two users as "User 1" and "User 2".
   </p>
@@ -9,7 +9,7 @@
     Suggestion: We do recommend that you go through Tutorial 1 first, as this tutorial will assume you have some familiarity with the platform.
   </p>
   <span class="text-muted">
-    (Note: You can complete this tutorial on your own, but it's designed for two separate users. To achieve this, you can use various methods such as opening an incognito window for the second participant, using two different browser profiles, or using two distinct browsers.)
+    Note: You can complete this tutorial on your own, but it's designed for two separate users. To achieve this, you can use various methods such as opening an incognito window for the second participant, using two different browser profiles, or using two distinct browsers.
   </span>
 </div>
 
@@ -18,8 +18,9 @@
   <p>For this tutorial, we will use simulated data based on the
     <a href="https://www.internationalgenome.org/data/" class="text-decoration-none" target="_blank">1000 Genomes Dataset</a>. The genotypes are from real data, while the covariates and phenotypes are simulated for an illustrative GWAS analysis.</p>
   <p>
-    To begin, each user should download a set of sample data by clicking the appropriate link below. Choose a workflow, and ensure each participant downloads one set of data.
-    <span class="text-muted">Note: you will need to unzip the data before uploading it to GCP.</span>
+    To begin, each user should download a set of sample data by clicking the appropriate link below. Choose a workflow, and ensure each participant downloads one set of data. Explanation of the data format can be found in the
+    <a href="{{ url_for('general.instructions') }}#data_preparation" class="text-decoration-none" target="_blank">Data Preparation</a>
+    section of the Instructions page.
   </p>
 
   <div class="row p-4 bg-light rounded">
@@ -64,7 +65,7 @@
 
 </div>
 
-<h4 class="my-4 fw-normal">Set up Your Study</h4>
+<h4 class="my-4 fw-normal">Set Up Your Study</h4>
 <div class="row">
   <p>
     User 1 should follow the steps in
@@ -75,7 +76,9 @@
     <a href="{{ url_for('studies.index') }}" class="text-decoration-none" target="_blank">
       create
     </a>
-    their study. However, don't select "demo" this time (you can freely choose the other options)! Each user will need to add their number of individuals (1252 each for this tutorial) to the parameters (User 2 will do this when they join). Once this is all done, the parameters should like like the following:
+    their study. However, don't select "demo" this time (you can freely choose the other options)!
+  </p>
+  <p>For the parameters, each user will need to add their number of individuals (1252 each for this tutorial). User 2 will do this later when they join the study. Once this is all done, the parameters should like like the following:
   </p>
 
   <div class="row p-4 bg-light rounded">
@@ -144,15 +147,20 @@
     <p>
       Then both users will follow the instructions to
       <button class="btn btn-primary btn-sm" style="pointer-events: none;">Configure Study</button>. Note that this will require the users to use their own GCP projects, in contrast to the first tutorial.
-      <span class="text-muted">(If you choose to use GCP's free trial, you can create a new project for free. That said, this free GCP project has limited resource quotas, so you may need to use a different GCP project for each user. The expected GCP resource cost of this tutorial is
+      <span class="text-muted">(If you choose to use GCP's free trial, you can
+        <a href="https://cloud.google.com/" class="text-decoration-none" target="_blank">
+          create a new project for free
+        </a>
+        . That said, this free GCP project has limited resource quotas, so you may need to use a different GCP project for each user. The expected GCP resource cost of this tutorial is
       <$1.)</span>
     </p>
     <div class="text-center mb-1">
-      <img class="img-fluid border border-secondary" style="max-width: 60%" src="static/images/tutorial/pca_prepare_project.png" alt="">
+      <img class="img-fluid border border-secondary" style="max-width: 100%" src="static/images/tutorial/pca_prepare_project.png" alt="">
     </div>
-    <p>Once the users have configured their GCP projects, they can upload their data to a GCP storage bucket.</p>
+    <p>Once the users have configured their GCP projects, they can upload their data to a GCP storage bucket.
+      <span class="text-muted">Note: you will need to unzip your data before uploading it.</span></p>
     <div class="text-center mb-2">
-      <img class="img-fluid border border-secondary" style="max-width: 60%" src="static/images/tutorial/pca_upload_data.png" alt="">
+      <img class="img-fluid border border-secondary" style="max-width: 100%" src="static/images/tutorial/pca_upload_data.png" alt="">
     </div>
     <p class="text-muted">
       Note: You need to click the
@@ -161,7 +169,7 @@
     </p>
     <p>For reference, your GCP storage bucket might look something like this:</p>
     <div class="text-center">
-      <img class="img-fluid border border-secondary" style="max-width: 60%" src="static/images/tutorial/storage_bucket.png" alt="">
+      <img class="img-fluid border border-secondary" style="max-width: 75%" src="static/images/tutorial/storage_bucket.png" alt="">
     </div>
   </div>
 </div>
