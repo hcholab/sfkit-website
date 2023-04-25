@@ -1,4 +1,3 @@
-# sourcery skip: require-parameter-annotation, require-return-annotation
 from io import BytesIO
 from typing import Callable, Generator
 

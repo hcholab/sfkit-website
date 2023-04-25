@@ -102,10 +102,10 @@ def test_delete_firewall(mocker: Callable[..., Generator[MockerFixture, None, No
 def test_remove_conflicting_peerings(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("alpha", "broad-cho-priv1")
-    assert google_cloud_compute.remove_conflicting_peerings(["broad-cho-priv1"]) == True
+    assert google_cloud_compute.remove_conflicting_peerings(["broad-cho-priv1"])
 
     google_cloud_compute = GoogleCloudCompute("", "")
-    assert google_cloud_compute.remove_conflicting_peerings(["broad-cho-priv1"]) == False
+    assert not google_cloud_compute.remove_conflicting_peerings(["broad-cho-priv1"])
 
     google_cloud_compute.remove_conflicting_peerings()
 

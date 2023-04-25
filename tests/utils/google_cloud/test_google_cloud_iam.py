@@ -28,15 +28,13 @@ def test_test_permissions(mocker):
     )
 
     google_cloud_iam = GoogleCloudIAM()
-    assert google_cloud_iam.test_permissions("bad_project") == False
-    assert google_cloud_iam.test_permissions("project") == True
+    assert not google_cloud_iam.test_permissions("bad_project")
+    assert google_cloud_iam.test_permissions("project")
 
 
 class MockMakeMockIam:
     @staticmethod
-    def build(
-        api, version
-    ):  # sourcery skip: do-not-use-staticmethod, docstrings-for-classes, raise-specific-error, require-parameter-annotation, require-return-annotation, snake-case-functions
+    def build(api, version):  # sourcery skip: do-not-use-staticmethod, docstrings-for-classes, snake-case-functions
         return MockIam()
 
 

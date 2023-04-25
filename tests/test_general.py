@@ -74,7 +74,7 @@ def test_edit_profile(
 
     response = client.post("/edit_profile", data={"display_name": "test", "about": "test"})
     assert response.status_code == 302
-    assert response.headers.get("Location") == "/profile/a%40a.com"
+    assert response.headers.get("Location", "") in ["/profile/a%40a.com", "/profile/a@a.com"]
 
 
 def test_sample_data(client: FlaskClient, mocker: Callable[..., Generator[MockerFixture, None, None]]):

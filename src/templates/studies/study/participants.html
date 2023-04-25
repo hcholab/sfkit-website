@@ -8,12 +8,18 @@
         {% for participant in study['participants'] %}
           {% if participant != "Broad" %}
             <li class="list-group-item text-start">
-              <a class="text-decoration-none" href="{{url_for('general.profile', user_id=participant)}}">{{display_names.get(participant, participant)}}</a>
-              {% if participant == study["owner"] %}
-                <span class="badge rounded-pill bg-secondary">
-                  Creator
-                </span>
-              {% endif %}
+              <div class="d-flex justify-content-between">
+                <a class="text-decoration-none" href="{{url_for('general.profile', user_id=participant)}}">{{display_names.get(participant, participant)}}</a>
+                {% if participant == study["owner"] %}
+                  <span class="badge rounded-pill bg-secondary">
+                    Creator
+                  </span>
+                {% elif user_id == study["owner"] %}
+                  <span>
+                    <a href="{{ url_for('studies.remove_participant', study_title=study['title'], user_id=participant) }}" type="button" class="btn btn-sm btn-outline-danger">Remove</a>
+                  </span>
+                {% endif %}
+              </div>
             </li>
           {% endif %}
         {% endfor %}

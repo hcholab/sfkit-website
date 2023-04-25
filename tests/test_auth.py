@@ -1,19 +1,20 @@
-from typing import Callable, Generator
+from typing import Callable, Generator, Literal
 
 import pytest
 from conftest import MockFirebaseAdminAuth
-from flask import Response, jsonify, make_response, redirect, url_for
+from flask import Flask, jsonify, make_response, redirect, url_for
 from flask.testing import FlaskClient
 from pytest_mock import MockerFixture
 from werkzeug import Response
 
 from src.auth import load_logged_in_user
 from src.utils import logging
+from conftest import AuthActions
 
 logger = logging.setup_logging(__name__)
 
 
-def test_load_logged_in_user(mocker, app):
+def test_load_logged_in_user(mocker: Callable[..., Generator[MockerFixture, None, None]], app: Flask):
     with app.test_request_context():
         mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
         load_logged_in_user()
@@ -26,7 +27,7 @@ def test_load_logged_in_user(mocker, app):
         MockFirebaseAdminAuth.throw_verify_session_cookie_exception = False
 
 
-def test_remove_old_flash_messages(client, app):
+def test_remove_old_flash_messages(client: FlaskClient, app: Flask):
     # Add a sample route to test the after_app_request function
     @app.route("/test_route")
     def test_route():
@@ -36,28 +37,30 @@ def test_remove_old_flash_messages(client, app):
     response = client.get("/test_route")
     assert response.status_code == 200
     assert response.json == {"success": True}
-    assert "flash" not in response.headers.get("Set-Cookie", "")
+    assert "flash" not in str(response.headers.get("Set-Cookie", ""))
 
-    # Test case: with a flash cookie
-    client.set_cookie("localhost", "flash", "test_flash_message")
+    client.set_cookie(key="flash", value="test_flash_message", domain="localhost")
+
     response = client.get("/test_route")
     assert response.status_code == 200
     assert response.json == {"success": True}
-    assert "flash" in response.headers.get("Set-Cookie", "")
-    assert "flash=" in response.headers.get("Set-Cookie", "")
-    assert "flash=test_flash_message" not in response.headers.get("Set-Cookie", "")
+    assert "flash" in str(response.headers.get("Set-Cookie", ""))
+    assert "flash=" in str(response.headers.get("Set-Cookie", ""))
+    assert "flash=test_flash_message" not in str(response.headers.get("Set-Cookie", ""))
 
 
 @pytest.mark.parametrize(
     "path",
     ("/create_study/GWAS/website", "/delete_study/1", "/study/1"),
 )
-def test_login_required(client, path):
+def test_login_required(
+    client: FlaskClient, path: Literal["/create_study/GWAS/website", "/delete_study/1", "/study/1"]
+):
     response = client.post(path)
-    assert "auth/login" in response.headers.get("Location")
+    assert "auth/login" in str(response.headers.get("Location", ""))
 
 
-def test_register(client, mocker):
+def test_register(client: FlaskClient, mocker: Callable[..., Generator[MockerFixture, None, None]]):
     setup_mocking(mocker)
 
     response = client.get("/auth/register")
@@ -67,7 +70,7 @@ def test_register(client, mocker):
         "/auth/register",
         data={"username": "a@a.a", "password": "a", "password_check": "a"},
     )
-    assert "index" in response.headers.get("Location")
+    assert "index" in str(response.headers.get("Location", ""))
 
 
 @pytest.mark.parametrize(
@@ -78,7 +81,14 @@ def test_register(client, mocker):
         ("", "a", "a", "Error creating user"),
     ),
 )
-def test_register_validate_input(client, mocker, username, password, password_check, message):
+def test_register_validate_input(
+    client: FlaskClient,
+    mocker: Callable[..., Generator[MockerFixture, None, None]],
+    username,
+    password,
+    password_check,
+    message,
+):
     setup_mocking(mocker)
 
     response = client.post(
@@ -89,13 +99,13 @@ def test_register_validate_input(client, mocker, username, password, password_ch
     assert message in response.headers.get("Flash-Messages")
 
 
-def test_login(client, mocker):
+def test_login(client: FlaskClient, mocker: Callable[..., Generator[MockerFixture, None, None]]):
     setup_mocking(mocker)
 
     assert client.get("/auth/login").status_code == 200
 
     response = client.post("/auth/login", data={"username": "a@a.a", "password": "a"})
-    assert "index" in response.headers.get("Location")
+    assert "index" in str(response.headers.get("Location", ""))
 
 
 @pytest.mark.parametrize(
@@ -106,7 +116,14 @@ def test_login(client, mocker):
         ("bad", "BAD", "Error logging in."),
     ),
 )
-def test_login_validate_input(caplog, client, mocker, username, password, message):
+def test_login_validate_input(
+    caplog: pytest.LogCaptureFixture,
+    client: FlaskClient,
+    mocker: Callable[..., Generator[MockerFixture, None, None]],
+    username,
+    password,
+    message,
+):
     setup_mocking(mocker)
 
     response = client.post("/auth/login", data={"username": username, "password": password})
@@ -114,12 +131,15 @@ def test_login_validate_input(caplog, client, mocker, username, password, messag
     assert message in response.headers.get("Flash-Messages")
 
 
-def test_logout(client, auth):
+def test_logout(client: FlaskClient, auth: AuthActions):
     auth.login()
-    assert client.cookie_jar._cookies["localhost.local"]["/"]["session"].value == '"a@a.com"'
+    # assert client.cookie_jar._cookies["localhost.local"]["/"]["session"].value == '"a@a.com"'
+    cookie = client.get_cookie("session")
+    assert cookie is not None and cookie.value == '"a@a.com"'
 
     client.get("/auth/logout")
-    assert client.cookie_jar._cookies["localhost.local"]["/"]["session"].value == ""
+    cookie = client.get_cookie("session")
+    assert cookie is None or cookie.value in ("", None)
 
 
 def test_login_with_google_callback(client: FlaskClient, mocker: Callable[..., Generator[MockerFixture, None, None]]):
@@ -130,14 +150,14 @@ def test_login_with_google_callback(client: FlaskClient, mocker: Callable[..., G
     response = client.post(
         "/auth/login_with_google_callback", data={"credential": "good_token", "next": "studies.index"}
     )
-    assert "index" in response.headers.get("Location", "")
+    assert "index" in str(response.headers.get("Location", ""))
 
     # Invalid token case
     response = client.post(
         "/auth/login_with_google_callback", data={"credential": "bad_token", "next": "studies.index"}
     )
-    assert "index" in response.headers.get("Location", "")
-    assert "Invalid Google account." in response.headers.get("Flash-Messages", "")
+    assert "index" in str(response.headers.get("Location", ""))
+    assert "Invalid Google account." in str(response.headers.get("Flash-Messages", ""))
 
     # Test with a custom next redirect
     response = client.post(

@@ -41,7 +41,8 @@ def load_logged_in_user() -> None:
         g.user = None
     else:
         try:
-            # for use in accessing firebase from the frontend.  See https://firebase.google.com/docs/auth/admin/create-custom-tokens
+            # for use in accessing firebase from the frontend.
+            # See https://firebase.google.com/docs/auth/admin/create-custom-tokens
             # this is done when dynamically updating status of a running study, and for the notification system
             g.custom_token = firebase_auth.create_custom_token(user_dict["uid"]).decode("utf-8")
             g.firebase_api_key = get_firebase_api_key()
@@ -109,7 +110,7 @@ def login() -> Response:
     password = request.form["password"]
 
     try:
-        return update_user(email, password, redirect_url=request.form.get("next", ""))
+        return update_user(email, password, redirect_url=str(request.form.get("next", "")))
     except Exception as e:
         if ("INVALID_PASSWORD") in str(e):
             return redirect_with_flash(location="auth.login", message="Invalid password. Please try again.")
@@ -147,7 +148,7 @@ def login_with_google_callback() -> Response:
 
     user_id = decoded_jwt_token["email"]
     name = decoded_jwt_token["name"]
-    redirect_url = request.form.get("next", "")
+    redirect_url = str(request.form.get("next", ""))
 
     gcloudIAM = GoogleCloudIAM()
     gcloudIAM.give_minimal_required_gcp_permissions(user_id)

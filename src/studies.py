@@ -346,9 +346,26 @@ def approve_join_study(study_title: str, user_id: str) -> Response:
     }
     doc_ref_dict["status"] = doc_ref_dict["status"] | {user_id: ""}
 
-    doc_ref.set(doc_ref_dict, merge=True)
+    doc_ref.set(doc_ref_dict)
 
     add_notification(f"You have been accepted to {study_title}", user_id=user_id)
+    return redirect(url_for("studies.study", study_title=study_title))
+
+
+@bp.route("/remove_participant/<study_title>/<user_id>")
+@login_required
+def remove_participant(study_title: str, user_id: str) -> Response:
+    db = current_app.config["DATABASE"]
+    doc_ref = db.collection("studies").document(study_title)
+    doc_ref_dict: dict = doc_ref.get().to_dict()
+
+    doc_ref_dict["participants"].remove(user_id)
+    del doc_ref_dict["personal_parameters"][user_id]
+    del doc_ref_dict["status"][user_id]
+
+    doc_ref.set(doc_ref_dict)
+
+    add_notification(f"You have been removed from {study_title}", user_id)
     return redirect(url_for("studies.study", study_title=study_title))
 
 

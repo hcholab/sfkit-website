@@ -157,7 +157,8 @@ class GoogleCloudCompute:
         return True
 
     def remove_conflicting_subnets(self, gcp_projects: list) -> None:
-        # a subnet is conflicting if it has an IpCidrRange that does not match the expected ranges based on the roles of participants in the study
+        # a subnet is conflicting if it has an IpCidrRange that
+        # does not match the expected ranges based on the roles of participants in the study
         subnets = (
             self.compute.subnetworks()
             .list(project=self.gcp_project, region=constants.SERVER_REGION)

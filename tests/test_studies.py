@@ -270,13 +270,37 @@ def test_approve_join_study(
     auth.logout()
     auth.login()
     response = client.get("approve_join_study/testtitle/b@b.com")
-    assert "/study/testtitle" in response.headers.get("Location")  # type: ignore
+    assert "/study/testtitle" in str(response.headers.get("Location", ""))
+
+
+def test_remove_participant(
+    app, client: FlaskClient, auth: AuthActions, mocker: Callable[..., Generator[MockerFixture, None, None]]
+) -> None:
+    mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+    db = app.config["DATABASE"]
+    db.collection("studies").document("test_remove_participant").set(
+        {
+            "participants": ["a@a.com", "b@b.com"],
+            "personal_parameters": {"a@a.com": {}, "b@b.com": {}},
+            "status": {"a@a.com": "", "b@b.com": ""},
+        },
+        merge=True,
+    )
+
+    auth.login()
+    response = client.get("remove_participant/test_remove_participant/b@b.com")
+
+    assert "/study/test_remove_participant" in str(response.headers.get("Location", ""))
+    updated_study = db.collection("studies").document("test_remove_participant").get().to_dict()
+    assert "b@b.com" not in updated_study["participants"]
+    assert "b@b.com" not in updated_study["personal_parameters"]
+    assert "b@b.com" not in updated_study["status"]
 
 
 def test_accept_invitation(
     client: FlaskClient, auth: AuthActions, mocker: Callable[..., Generator[MockerFixture, None, None]]
 ):
-    # sourcery skip: extract-duplicate-method, inline-immediately-returned-variable
+    # sourcery skip: extract-duplicate-method
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     mocker.patch("src.studies.email", return_value=200)
     mocker.patch("src.studies.redirect_with_flash")

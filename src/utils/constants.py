@@ -93,7 +93,8 @@ MPCGWAS_ADVANCED_PARAMETERS = {
     },
     "NUM_OVERSAMPLE": {
         "name": "Oversampling Parameter for PCA",
-        "description": "An oversampling parameter for randomized principal component analysis: how many extra components should be extracted to improve the accuracy.",
+        "description": "An oversampling parameter for randomized principal component analysis: \
+            how many extra components should be extracted to improve the accuracy.",
         "value": 10,
     },
     "NUM_POWER_ITER": {
@@ -157,7 +158,8 @@ PCA_ADVANCED_PARAMETERS = {
     },
     "num_oversampling": {
         "name": "Oversampling Parameter for PCA",
-        "description": "An oversampling parameter for randomized principal component analysis: how many extra components should be extracted to improve the accuracy.",
+        "description": "An oversampling parameter for randomized principal component analysis: \
+            how many extra components should be extracted to improve the accuracy.",
         "value": 10,
     },
     "num_power_iters": {
@@ -269,7 +271,8 @@ SFGWAS_ADVANCED_PARAMETERS = {
     },
     "num_oversampling": {
         "name": "Oversampling Parameter for PCA",
-        "description": "An oversampling parameter for randomized principal component analysis: how many extra components should be extracted to improve the accuracy.",
+        "description": "An oversampling parameter for randomized principal component analysis: \
+            how many extra components should be extracted to improve the accuracy.",
         "value": 10,
     },
     "num_power_iters": {
@@ -318,24 +321,27 @@ ADVANCED_PARAMETERS = {
 DEFAULT_USER_PARAMETERS = {
     "PUBLIC_KEY": {
         "name": "Public Key",
-        "description": "Your public cryptographic key that you and the other participant will use to encrypt each of your data (combined with your respective private keys, of course).",
+        "description": "Your public cryptographic key that you and the other participant will use to \
+            encrypt each of your data (combined with your respective private keys, of course).",
         "value": "",
     },
     "GCP_PROJECT": {
         "name": "GCP Project ID",
-        "description": "The Project ID for the GCP project you're using (the one where you put your encrypted data and the VM instance will run).  \
-        If you don't have a dedicated GCP project for this workflow, you will need to make one.  Note that this Project ID MAY or MAY NOT be the same as your Project Name.",
+        "description": "The Project ID for the GCP project you're using (the one where you put your encrypted data \
+            and the VM instance will run). If you don't have a dedicated GCP project for this workflow, \
+                you will need to make one.  Note that this Project ID MAY or MAY NOT be the same as your Project Name.",
         "value": "",
     },
     "DATA_PATH": {
         "name": "GCP Path to Data",
-        "description": "The path to your data in the GCP bucket.  For example, if I put the 'for_gwas' folder in a bucket called 'secure-gwas-data', \
-            the path would be 'secure-gwas-data/for_gwas'.",
+        "description": "The path to your data in the GCP bucket.  For example, if I put the 'for_gwas' folder \
+            in a bucket called 'secure-gwas-data', the path would be 'secure-gwas-data/for_gwas'.",
         "value": "",
     },
     "GENO_BINARY_FILE_PREFIX": {
         "name": "Genotype Binary File Prefix",
-        "description": "Path to the genotype binary file prefix (e.g. 'geno/ch%d'). This path helps sfkit locate your genotype data.",
+        "description": "Path to the genotype binary file prefix (e.g. 'geno/ch%d'). \
+            This path helps sfkit locate your genotype data.",
         "value": "",
     },
     "NUM_INDS": {
@@ -350,7 +356,8 @@ DEFAULT_USER_PARAMETERS = {
     },
     "NUM_CPUS": {
         "name": "Number of CPUs",
-        "description": "The number of CPUs to allocate to the VM instance that will be running the protocol in your GCP account.",
+        "description": "The number of CPUs to allocate to the VM instance that \
+            will be running the protocol in your GCP account.",
         "value": 16,
     },
     "ZONE": {
@@ -365,7 +372,8 @@ DEFAULT_USER_PARAMETERS = {
     },
     "DATA_HASH": {
         "name": "Data Hash",
-        "description": "The hash of the data you are using.  This is used to ensure that you are using the same data that you uploaded.",
+        "description": "The hash of the data you are using.  \
+            This is used to ensure that you are using the same data that you uploaded.",
         "value": "",
     },
     "IP_ADDRESS": {
@@ -385,12 +393,14 @@ DEFAULT_USER_PARAMETERS = {
     },
     "SEND_RESULTS": {
         "name": "Visualize Results",
-        "description": "Whether or not to send the results of the protocol back to the website to be downloaded and visualized.",
+        "description": "Whether to send the results of the protocol to the website to be downloaded and visualized.",
         "value": "Yes",
     },
     "RESULTS_PATH": {
         "name": "Results Path",
-        "description": "The path in a GCP bucket where you would like to send the results of the protocol. Leave blank if you don't want to send the results to a GCP bucket.  This could be in the same bucket as your data, or a different one.",
+        "description": "The path in a GCP bucket where you would like to send the results of the protocol. \
+            Leave blank if you don't want to send the results to a GCP bucket. \
+                This could be in the same bucket as your data, or a different one.",
         "value": "",
     },
     "DELETE_VM": {
