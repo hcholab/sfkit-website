@@ -21,6 +21,9 @@ bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 @bp.before_app_request
 def load_logged_in_user() -> None:
+    if flask.request.path.startswith("/static"):
+        return
+
     g.flash = flask.request.cookies.get("flash")
     try:
         # extract jwt for user from session cookie
@@ -53,7 +56,7 @@ def load_logged_in_user() -> None:
 @bp.after_app_request
 def remove_old_flash_messages(response: flask.Response) -> flask.Response:
     if flask.request.cookies.get("flash"):
-        response.set_cookie("flash", "")
+        response.delete_cookie("flash", path="/")
     return response
 
 
@@ -130,7 +133,7 @@ def login() -> Response:
 @bp.route("/logout")
 def logout() -> Response:
     response = redirect(url_for("auth.login"))
-    response.set_cookie("session", "")
+    response.delete_cookie("session", path="/")
     return response
 
 

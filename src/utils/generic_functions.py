@@ -22,7 +22,7 @@ def redirect_with_flash(url: str = "", location: str = "", message: str = "", er
 
 
 def flash(response: Response, message: str) -> Response:
-    response.set_cookie("flash", message)
+    response.set_cookie(key="flash", value=message, path="/")
     return response
 
 

@@ -1,6 +1,7 @@
 import io
 import os
 import time
+from typing import Any, Dict
 import zipfile
 from datetime import datetime
 from threading import Thread
@@ -294,7 +295,7 @@ def request_join_study(study_title: str) -> Response:
     doc_ref = db.collection("studies").document(study_title)
     doc_ref_dict: dict = doc_ref.get().to_dict()
 
-    message: str = request.form.get("message", "")
+    message: str = str(request.form.get("message", ""))
 
     if not doc_ref_dict["requested_participants"]:
         doc_ref_dict["requested_participants"] = {g.user["id"]: message}
@@ -315,7 +316,7 @@ def invite_participant(study_title: str) -> Response:
 
     inviter: str = doc_ref_dict.get(g.user["id"], g.user["id"])
     invitee: str = request.form["invite_participant_email"]
-    message: str = request.form.get("invite_participant_message", "")
+    message: str = str(request.form.get("invite_participant_message", ""))
 
     if email(inviter, invitee, message, study_title) >= 400:
         return redirect_with_flash(
@@ -526,12 +527,13 @@ def download_results_file(study_title: str) -> Response:
 @login_required
 def start_protocol(study_title: str) -> Response:
     user_id: str = g.user["id"]
-    doc_ref = current_app.config["DATABASE"].collection("studies").document(study_title)
-    doc_ref_dict: dict = doc_ref.get().to_dict()
+    db: firestore.Client = current_app.config["DATABASE"]
+    doc_ref: firestore.DocumentReference = db.collection("studies").document(study_title)
+    doc_ref_dict: Dict[str, Any] = doc_ref.get().to_dict() or {}
     num_inds: str = doc_ref_dict["personal_parameters"][user_id]["NUM_INDS"]["value"]
     gcp_project: str = doc_ref_dict["personal_parameters"][user_id]["GCP_PROJECT"]["value"]
     data_path: str = doc_ref_dict["personal_parameters"][user_id]["DATA_PATH"]["value"]
-    statuses: dict = doc_ref_dict["status"]
+    statuses: Dict[str, str] = doc_ref_dict["status"]
     demo: bool = doc_ref_dict["demo"]
 
     if statuses[user_id] == "":
@@ -561,7 +563,7 @@ def start_protocol(study_title: str) -> Response:
                 message="You have not given the website the necessary GCP permissions for the project you have entered.  Please click on 'Configure Study' to double-check that your project ID is correct and that you have given the website the necessary permissions (and they are not expired) in that GCP project.",
             )
 
-        doc_ref_dict = doc_ref.get().to_dict()
+        doc_ref_dict = doc_ref.get().to_dict() or {}
         statuses = doc_ref_dict["status"]
         statuses[user_id] = "ready to begin sfkit"
         doc_ref.set({"status": statuses}, merge=True)
@@ -571,7 +573,7 @@ def start_protocol(study_title: str) -> Response:
     elif statuses[user_id] == "ready to begin sfkit":
         for role in range(1, len(doc_ref_dict["participants"])):
             user = doc_ref_dict["participants"][role]
-            doc_ref_dict = doc_ref.get().to_dict()
+            doc_ref_dict = doc_ref.get().to_dict() or {}
             statuses = doc_ref_dict["status"]
             statuses[user] = "setting up your vm instance"
             doc_ref.set({"status": statuses}, merge=True)
