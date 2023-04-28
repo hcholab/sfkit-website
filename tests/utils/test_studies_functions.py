@@ -12,7 +12,13 @@ from python_http_client.exceptions import HTTPError
 
 from src.utils import studies_functions as sf
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute
-from src.utils.studies_functions import add_file_to_zip, clean_study_title, is_study_title_unique
+from src.utils.studies_functions import (
+    add_file_to_zip,
+    check_conditions,
+    clean_study_title,
+    is_study_title_unique,
+    update_status_and_start_setup,
+)
 
 
 def test_email(
@@ -201,3 +207,68 @@ def test_setup_gcp(doc_ref_mock: MagicMock, mocker: Callable[..., Generator[Mock
 
     gcloud_compute_mock.setup_networking.assert_called_once()
     logger_error_mock.assert_called_once_with("An error occurred during GCP setup: GCP setup error")
+
+
+def test_update_status_and_start_setup(app, mocker):
+    with app.test_request_context():
+        # Mock external functions
+        mocker.patch("src.utils.studies_functions.setup_gcp", lambda *args, **kwargs: None)
+        mocker.patch("src.utils.studies_functions.make_auth_key")
+        mocker.patch("src.utils.studies_functions.Thread.start")
+        mocker.patch("src.utils.studies_functions.time.sleep")
+
+        # Test input
+        doc_ref = MagicMock()
+        doc_ref_dict = {
+            "participants": ["Broad", "user1", "user2"],
+            "status": {
+                "Broad": "ready to begin sfkit",
+                "user1": "ready to begin sfkit",
+                "user2": "ready to begin sfkit",
+            },
+        }
+        user_id = "user1"
+
+        update_status_and_start_setup(doc_ref, doc_ref_dict, user_id)
+
+
+def test_check_conditions(mocker: Callable[..., Generator[MockerFixture, None, None]]):
+    mock_iam = MagicMock()
+    mock_iam.test_permissions.return_value = False
+    mocker.patch("src.utils.studies_functions.GoogleCloudIAM", return_value=mock_iam)
+
+    case = {
+        "doc_ref_dict": {
+            "participants": ["Broad", "a@a.com"],
+            "personal_parameters": {
+                "a@a.com": {
+                    "NUM_INDS": {"value": ""},
+                    "GCP_PROJECT": {"value": ""},
+                    "DATA_PATH": {"value": ""},
+                },
+            },
+            "demo": False,
+        },
+        "user_id": "a@a.com",
+    }
+
+    assert "Non-demo studies" in check_conditions(**case)
+
+    case["doc_ref_dict"]["participants"].append("b@b.com")
+    assert "You have not set" in check_conditions(**case)
+
+    case["doc_ref_dict"]["personal_parameters"]["a@a.com"]["NUM_INDS"]["value"] = "1"
+    assert "Your GCP project" in check_conditions(**case)
+
+    case["doc_ref_dict"]["personal_parameters"]["a@a.com"]["GCP_PROJECT"]["value"] = "broad-cho-priv1"
+    assert "This project ID" in check_conditions(**case)
+
+    case["doc_ref_dict"]["personal_parameters"]["a@a.com"]["GCP_PROJECT"]["value"] = "TEST_GCP_PROJECT"
+    assert "Your data path" in check_conditions(**case)
+
+    case["doc_ref_dict"]["personal_parameters"]["a@a.com"]["DATA_PATH"]["value"] = "/data/path"
+    assert "You have not given" in check_conditions(**case)
+
+    mock_iam.test_permissions.return_value = True
+    mocker.patch("src.utils.studies_functions.GoogleCloudIAM", return_value=mock_iam)
+    assert check_conditions(**case) == ""

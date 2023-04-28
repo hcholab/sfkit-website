@@ -2,6 +2,8 @@ import os
 import re
 import secrets
 from html import escape
+from threading import Thread
+import time
 from typing import Optional
 
 from flask import current_app, g, redirect, url_for
@@ -15,6 +17,7 @@ from werkzeug import Response
 from src.utils import constants, logging
 from src.utils.generic_functions import redirect_with_flash
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, create_instance_name
+from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 
 logger = logging.setup_logging(__name__)
 
@@ -220,3 +223,42 @@ def clean_study_title(s: str) -> str:
         cleaned_str = cleaned_str[1:]
 
     return cleaned_str.lower()
+
+
+def check_conditions(doc_ref_dict, user_id) -> str:
+    # sourcery skip: assign-if-exp, reintroduce-else, swap-if-expression
+    participants = doc_ref_dict["participants"]
+    num_inds = doc_ref_dict["personal_parameters"][user_id]["NUM_INDS"]["value"]
+    gcp_project = doc_ref_dict["personal_parameters"][user_id]["GCP_PROJECT"]["value"]
+    data_path = doc_ref_dict["personal_parameters"][user_id]["DATA_PATH"]["value"]
+    demo = doc_ref_dict["demo"]
+
+    if not demo and len(participants) < 3:
+        return "Non-demo studies require at least 2 participants to run the protocol."
+    if not demo and not num_inds:
+        return "You have not set the number of individuals/rows in your data. Please click on the 'Study Parameters' button to set this value and any other parameters you wish to change before running the protocol."
+    if not gcp_project:
+        return "Your GCP project ID is not set. Please follow the instructions in the 'Configure Study' button before running the protocol."
+    if not demo and "broad-cho-priv1" in gcp_project and os.environ.get("FLASK_DEBUG") != "development":
+        return "This project ID is only allowed for a demo study. Please follow the instructions in the 'Configure Study' button to set up your own GCP project before running the protocol."
+    if not demo and not data_path:
+        return "Your data path is not set. Please follow the instructions in the 'Configure Study' button before running the protocol."
+    if not GoogleCloudIAM().test_permissions(gcp_project):
+        return "You have not given the website the necessary GCP permissions for the project you have entered. Please click on 'Configure Study' to double-check that your project ID is correct and that you have given the website the necessary permissions (and they are not expired) in that GCP project."
+    return ""
+
+
+def update_status_and_start_setup(doc_ref, doc_ref_dict, study_title):
+    participants = doc_ref_dict["participants"]
+    statuses = doc_ref_dict["status"]
+
+    for role in range(1, len(participants)):
+        user = participants[role]
+        statuses[user] = "setting up your vm instance"
+        doc_ref.set({"status": statuses}, merge=True)
+
+        make_auth_key(study_title, user)
+
+        Thread(target=setup_gcp, args=(doc_ref, str(role))).start()
+
+        time.sleep(1)

@@ -3,10 +3,10 @@ from typing import Tuple
 
 from flask import Blueprint, current_app, request
 
-from src.studies import setup_gcp
+from src.utils import logging
 from src.utils.api_functions import process_parameter, process_status, process_task, verify_authorization_header
 from src.utils.google_cloud.google_cloud_storage import upload_blob_from_file
-from src.utils import logging
+from src.utils.studies_functions import setup_gcp
 
 logger = logging.setup_logging(__name__)
 

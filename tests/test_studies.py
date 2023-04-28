@@ -421,75 +421,32 @@ def test_download_results_file(
 def test_start_protocol(
     client: FlaskClient, auth: AuthActions, app: Flask, mocker: Callable[..., Generator[MockerFixture, None, None]]
 ):
-    # sourcery skip: docstrings-for-classes, no-long-functions, require-parameter-annotation, require-return-annotation
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
-    mocker.patch("src.studies.setup_gcp", lambda *args, **kwargs: None)
-    mocker.patch("src.studies.GoogleCloudIAM", MockGoogleCloudIAM)
+    mocker.patch("src.studies.check_conditions", return_value="fail")
+    mocker.patch("src.studies.update_status_and_start_setup")
     mocker.patch("src.studies.redirect_with_flash")
-    mocker.patch("src.studies.time.sleep")
-    mocker.patch("src.studies.make_auth_key")
 
     auth.login()
     client.post("create_study/MPC-GWAS/website", data=test_create_data)
-    doc_ref = app.config["DATABASE"].collection("studies").document("testtitle")
+
+    client.post("study/testtitle/start_protocol")
+
+    mocker.patch("src.studies.check_conditions", return_value="")
+    client.post("study/testtitle/start_protocol")
+
+    db = app.config["DATABASE"]
+    doc_ref = db.collection("studies").document("testtitle")
     doc_ref_dict = doc_ref.get().to_dict()
+    doc_ref_dict["status"]["a@a.com"] = "other"
+    doc_ref.set(doc_ref_dict)
 
     client.post("study/testtitle/start_protocol")
 
-    doc_ref_dict["personal_parameters"]["a@a.com"]["NUM_INDS"]["value"] = 100
-    doc_ref.set(doc_ref_dict)
-    client.post("study/testtitle/start_protocol")
-
-    doc_ref_dict["personal_parameters"]["a@a.com"]["GCP_PROJECT"]["value"] = "BAD"
-    doc_ref.set(doc_ref_dict)
-    client.post("study/testtitle/start_protocol")
-
-    doc_ref_dict["personal_parameters"]["a@a.com"]["DATA_PATH"]["value"] = "TEST_DATA_PATH"
-    doc_ref.set(doc_ref_dict)
-    client.post("study/testtitle/start_protocol")
-
-    doc_ref_dict["personal_parameters"]["a@a.com"]["GCP_PROJECT"]["value"] = "TEST_GCP_PROJECT"
-    doc_ref.set(doc_ref_dict)
-    client.post("study/testtitle/start_protocol")
-
-    mocker.patch("os.environ.get", side_effect=lambda key: "not_development" if key == "FLASK_DEBUG" else None)
-    doc_ref_dict["demo"] = False
-    doc_ref_dict["personal_parameters"]["a@a.com"]["GCP_PROJECT"]["value"] = "broad-cho-priv1-test"
-    doc_ref.set(doc_ref_dict)
-    client.post("study/testtitle/start_protocol")
-    mocker.patch("os.environ.get", side_effect=None)
-    doc_ref_dict["personal_parameters"]["a@a.com"]["GCP_PROJECT"]["value"] = "TEST_GCP_PROJECT"
-    doc_ref_dict["demo"] = True
-    doc_ref.set(doc_ref_dict)
-
-    doc_ref_dict["status"]["a@a.com"] = "ready to begin sfkit"
-    doc_ref.set(doc_ref_dict)
-    client.post("study/testtitle/start_protocol")
-
-    doc_ref_dict["status"]["Broad"] = "ready to begin sfkit"
+    doc_ref_dict["status"]["b@b.com"] = ""
     doc_ref.set(doc_ref_dict)
     client.post("study/testtitle/start_protocol")
 
     auth.logout()
-    auth.login("b@b.com", "b")
-    client.post("request_join_study/testtitle", data={"message": "hi"})
-    auth.logout()
-    auth.login()
-    client.get("approve_join_study/testtitle/b@b.com")
-    auth.logout()
-    auth.login("b@b.com", "b")
-    doc_ref_dict = doc_ref.get().to_dict()
-    doc_ref_dict["personal_parameters"]["b@b.com"] = doc_ref_dict["personal_parameters"]["a@a.com"].copy()
-    doc_ref.set(doc_ref_dict)
-    client.post("study/testtitle/start_protocol")
-
-    auth.logout()
-    auth.login("a@a.com", "a")
-    client.post("study/testtitle/start_protocol")
-
-    doc_ref_dict["status"]["a@a.com"] = "running protocol SF-GWAS"
-    doc_ref.set(doc_ref_dict)
-    client.post("study/testtitle/start_protocol")
 
 
 class MockGoogleCloudCompute:

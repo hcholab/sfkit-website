@@ -26,6 +26,11 @@ def test_load_logged_in_user(mocker: Callable[..., Generator[MockerFixture, None
         MockFirebaseAdminAuth.throw_create_custom_token_exception = False
         MockFirebaseAdminAuth.throw_verify_session_cookie_exception = False
 
+    # Test case for when path starts with "/static"
+    with app.test_request_context(path="/static/some_resource"):
+        mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
+        load_logged_in_user()
+
 
 def test_remove_old_flash_messages(client: FlaskClient, app: Flask):
     # Add a sample route to test the after_app_request function

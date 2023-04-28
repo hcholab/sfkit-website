@@ -1,7 +1,5 @@
 import io
 import os
-import time
-from typing import Any, Dict, List
 import zipfile
 from datetime import datetime
 from threading import Thread
@@ -26,15 +24,15 @@ from src.utils import constants, logging
 from src.utils.auth_functions import create_user, update_user
 from src.utils.generic_functions import add_notification, redirect_with_flash
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, create_instance_name
-from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 from src.utils.google_cloud.google_cloud_storage import download_blob_to_filename
 from src.utils.studies_functions import (
     add_file_to_zip,
+    check_conditions,
     email,
     is_developer,
     is_participant,
     make_auth_key,
-    setup_gcp,
+    update_status_and_start_setup,
     valid_study_title,
 )
 
@@ -526,68 +524,22 @@ def download_results_file(study_title: str) -> Response:
 @bp.route("/study/<study_title>/start_protocol", methods=["POST"])
 @login_required
 def start_protocol(study_title: str) -> Response:
-    user_id: str = g.user["id"]
-    db: firestore.Client = current_app.config["DATABASE"]
-    doc_ref: firestore.DocumentReference = db.collection("studies").document(study_title)
-    doc_ref_dict: Dict[str, Any] = doc_ref.get().to_dict() or {}
-    participants: List[str] = doc_ref_dict["participants"]
-    num_inds: str = doc_ref_dict["personal_parameters"][user_id]["NUM_INDS"]["value"]
-    gcp_project: str = doc_ref_dict["personal_parameters"][user_id]["GCP_PROJECT"]["value"]
-    data_path: str = doc_ref_dict["personal_parameters"][user_id]["DATA_PATH"]["value"]
-    statuses: Dict[str, str] = doc_ref_dict["status"]
-    demo: bool = doc_ref_dict["demo"]
+    user_id = g.user["id"]
+    db = current_app.config["DATABASE"]
+    doc_ref = db.collection("studies").document(study_title)
+    doc_ref_dict = doc_ref.get().to_dict() or {}
+    statuses = doc_ref_dict["status"]
 
     if statuses[user_id] == "":
-        if not demo and len(participants) < 3:  # need at least 2 participants excluding Broad
-            return redirect_with_flash(
-                url=url_for("studies.study", study_title=study_title),
-                message="Non-demo studies require at least 2 participants to run the protocol.",
-            )
-        if not demo and not num_inds:
-            return redirect_with_flash(
-                url=url_for("studies.study", study_title=study_title),
-                message="Your have not set the number of individuals/rows in your data.  Please click on the 'Study Parameters' button to set this value and any other parameters you wish to change before running the protocol.",
-            )
-        if not gcp_project:
-            return redirect_with_flash(
-                url=url_for("studies.study", study_title=study_title),
-                message="Your GCP project ID is not set.  Please follow the instructions in the 'Configure Study' button before running the protocol.",
-            )
-        if not demo and "broad-cho-priv1" in gcp_project and os.environ.get("FLASK_DEBUG") != "development":
-            return redirect_with_flash(
-                url=url_for("studies.study", study_title=study_title),
-                message="This project ID is only allowed for a demo study.  Please follow the instructions in the 'Configure Study' button to set up your own GCP project before running the protocol.",
-            )
-        if not demo and not data_path:
-            return redirect_with_flash(
-                url=url_for("studies.study", study_title=study_title),
-                message="Your data path is not set.  Please follow the instructions in the 'Configure Study' button before running the protocol.",
-            )
-        if not GoogleCloudIAM().test_permissions(gcp_project):
-            return redirect_with_flash(
-                url=url_for("studies.study", study_title=study_title),
-                message="You have not given the website the necessary GCP permissions for the project you have entered.  Please click on 'Configure Study' to double-check that your project ID is correct and that you have given the website the necessary permissions (and they are not expired) in that GCP project.",
-            )
+        if message := check_conditions(doc_ref_dict, user_id):
+            return redirect_with_flash(url=url_for("studies.study", study_title=study_title), message=message)
 
-        doc_ref_dict = doc_ref.get().to_dict() or {}
-        statuses = doc_ref_dict["status"]
         statuses[user_id] = "ready to begin sfkit"
         doc_ref.set({"status": statuses}, merge=True)
 
     if "" in statuses.values():
         logger.info("Not all participants are ready.")
     elif statuses[user_id] == "ready to begin sfkit":
-        for role in range(1, len(doc_ref_dict["participants"])):
-            user = doc_ref_dict["participants"][role]
-            doc_ref_dict = doc_ref.get().to_dict() or {}
-            statuses = doc_ref_dict["status"]
-            statuses[user] = "setting up your vm instance"
-            doc_ref.set({"status": statuses}, merge=True)
-
-            make_auth_key(study_title, user)
-
-            Thread(target=setup_gcp, args=(doc_ref, str(role))).start()
-
-            time.sleep(1)
+        update_status_and_start_setup(doc_ref, doc_ref_dict, study_title)
 
     return redirect(url_for("studies.study", study_title=study_title))
