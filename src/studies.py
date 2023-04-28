@@ -1,7 +1,7 @@
 import io
 import os
 import time
-from typing import Any, Dict
+from typing import Any, Dict, List
 import zipfile
 from datetime import datetime
 from threading import Thread
@@ -530,6 +530,7 @@ def start_protocol(study_title: str) -> Response:
     db: firestore.Client = current_app.config["DATABASE"]
     doc_ref: firestore.DocumentReference = db.collection("studies").document(study_title)
     doc_ref_dict: Dict[str, Any] = doc_ref.get().to_dict() or {}
+    participants: List[str] = doc_ref_dict["participants"]
     num_inds: str = doc_ref_dict["personal_parameters"][user_id]["NUM_INDS"]["value"]
     gcp_project: str = doc_ref_dict["personal_parameters"][user_id]["GCP_PROJECT"]["value"]
     data_path: str = doc_ref_dict["personal_parameters"][user_id]["DATA_PATH"]["value"]
@@ -537,6 +538,11 @@ def start_protocol(study_title: str) -> Response:
     demo: bool = doc_ref_dict["demo"]
 
     if statuses[user_id] == "":
+        if not demo and len(participants) < 3:  # need at least 2 participants excluding Broad
+            return redirect_with_flash(
+                url=url_for("studies.study", study_title=study_title),
+                message="Non-demo studies require at least 2 participants to run the protocol.",
+            )
         if not demo and not num_inds:
             return redirect_with_flash(
                 url=url_for("studies.study", study_title=study_title),

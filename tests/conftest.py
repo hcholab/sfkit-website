@@ -51,13 +51,13 @@ class AuthActions:
         """
         Log in a user for testing purposes.
         """
-        self._client.set_cookie(key="session", value=email, domain="localhost")
+        self._client.set_cookie(key="session", value=email, path="/", domain="localhost")
 
     def logout(self):
         """
         Log out a user for testing purposes.
         """
-        self._client.delete_cookie(key="session", domain="localhost")
+        self._client.delete_cookie(key="session", path="/", domain="localhost")
 
 
 class MockFirebaseAdminAuth:

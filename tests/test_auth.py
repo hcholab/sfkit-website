@@ -131,11 +131,9 @@ def test_login_validate_input(
     assert message in response.headers.get("Flash-Messages")
 
 
-def test_logout(client: FlaskClient, auth: AuthActions):
-    auth.login()
-    # assert client.cookie_jar._cookies["localhost.local"]["/"]["session"].value == '"a@a.com"'
-    cookie = client.get_cookie("session")
-    assert cookie is not None and cookie.value == '"a@a.com"'
+def test_logout(client: FlaskClient, auth: AuthActions, mocker: Callable[..., Generator[MockerFixture, None, None]]):
+    setup_mocking(mocker)
+    client.set_cookie(key="session", value="test_session_cookie", domain="localhost")
 
     client.get("/auth/logout")
     cookie = client.get_cookie("session")

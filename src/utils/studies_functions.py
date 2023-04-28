@@ -55,7 +55,7 @@ def email(inviter: str, recipient: str, invitation_message: str, study_title: st
         logger.info("Email sent")
         return response.status_code  # type: ignore
 
-    except HTTPError as e:  # type: ignore
+    except HTTPError as e:
         logger.error(f"Email failed to send: {e}")
         return e.status_code  # type: ignore
 
