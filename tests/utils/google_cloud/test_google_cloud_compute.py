@@ -158,7 +158,7 @@ def test_create_peerings(mocker: Callable[..., Generator[MockerFixture, None, No
 
 def test_setup_instance(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     setup_mocking(mocker)
-    mocker.patch(f"{patch_prefix}.list_instances", return_value=[])
+    mocker.patch(f"{patch_prefix}.list_instances", return_value=["name"])
     mocker.patch(f"{patch_prefix}.delete_instance", return_value=None)
     mocker.patch(f"{patch_prefix}.create_instance", return_value=None)
     mocker.patch(f"{patch_prefix}.get_vm_external_ip_address", return_value=None)
@@ -166,17 +166,25 @@ def test_setup_instance(mocker: Callable[..., Generator[MockerFixture, None, Non
 
     google_cloud_compute.setup_instance("name", "role", ["metadata"])
 
-    mocker.patch(f"{patch_prefix}.list_instances", return_value=["name"])
+    mocker.patch(f"{patch_prefix}.list_instances", return_value=[])
     google_cloud_compute.setup_instance("name", "role", ["metadata"])
+
+    mocker.patch(f"{patch_prefix}.create_instance", side_effect=Exception("test"))
+    with pytest.raises(Exception) as _:
+        google_cloud_compute.setup_instance("name", "role", ["metadata"])
+
+    mocker.patch(f"{patch_prefix}.create_instance", side_effect=Exception("zonesAvailable': 'us-east1-b, us-east1-c"))
+    with pytest.raises(Exception) as _:
+        google_cloud_compute.setup_instance("name", "role", ["metadata"])
 
 
 def test_create_instance(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     setup_mocking(mocker)
     mocker.patch(f"{patch_prefix}.wait_for_zone_operation", return_value=None)
     google_cloud_compute = GoogleCloudCompute("alpha", "broad-cho-priv1")
-    google_cloud_compute.create_instance("name", "role")
-    google_cloud_compute.create_instance("name", "role", metadata=["metadata"])
-    google_cloud_compute.create_instance("name", "role", metadata=["metadata"], num_cpus=64)
+    google_cloud_compute.create_instance("name", "role", 16, 16, [])
+    google_cloud_compute.create_instance("name", "role", 16, 16, ["metadata"])
+    google_cloud_compute.create_instance("name", "role", 64, 64, ["metadata"])
 
 
 def test_stop_instance(mocker: Callable[..., Generator[MockerFixture, None, None]]):
@@ -191,7 +199,7 @@ def test_list_instances(mocker: Callable[..., Generator[MockerFixture, None, Non
     google_cloud_compute.list_instances()
 
     google_cloud_compute = GoogleCloudCompute("", "")
-    google_cloud_compute.list_instances("name", "role")
+    google_cloud_compute.list_instances("subnetwork")
 
 
 def test_delete_instance(mocker: Callable[..., Generator[MockerFixture, None, None]]):
@@ -242,7 +250,7 @@ def test_return_result_or_error(mocker: Callable[..., Generator[MockerFixture, N
 def test_vm_external_ip_address(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("alpha", "broad-cho-priv1")
-    assert google_cloud_compute.get_vm_external_ip_address("zone", "name") == "1877.0.0.1"
+    assert google_cloud_compute.get_vm_external_ip_address("name") == "1877.0.0.1"
 
 
 def test_create_instance_name():

@@ -1,4 +1,5 @@
 import os
+import re
 from time import sleep
 from typing import Optional
 
@@ -23,6 +24,7 @@ class GoogleCloudCompute:
         self.study_title: str = study_title
         self.network_name = f"{constants.NETWORK_NAME_ROOT}-{study_title}"
         self.firewall_name = f"{self.network_name}-vm-ingress"
+        self.zone = constants.SERVER_ZONE
         self.compute = googleapi.build("compute", "v1")
 
     def delete_everything(self) -> None:
@@ -173,7 +175,7 @@ class GoogleCloudCompute:
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(30))
     def delete_subnet(self, subnet: dict) -> None:
-        for instance in self.list_instances(constants.SERVER_ZONE, subnetwork=subnet["selfLink"]):
+        for instance in self.list_instances(subnetwork=subnet["selfLink"]):
             self.delete_instance(instance)
 
         logger.info(f"Deleting subnet {subnet['name']}")
@@ -266,34 +268,28 @@ class GoogleCloudCompute:
                 max_wait -= 1
 
         if name not in self.list_instances():
-            self.create_instance(
-                name=name,
-                role=role,
-                num_cpus=num_cpus,
-                boot_disk_size=boot_disk_size,
-                metadata=metadata,
-            )
+            try:
+                self.create_instance(name, role, num_cpus, boot_disk_size, metadata)
+            except Exception as e:
+                if zone_group := re.search(r"zonesAvailable': '(.*?),", str(e)):
+                    self.zone = zone_group[1]
+                    logger.info(f"Retrying instance creation in zone {self.zone}")
+                    self.create_instance(name, role, num_cpus, boot_disk_size, metadata)
+                else:
+                    raise e
 
         return self.get_vm_external_ip_address(name)
 
-    def create_instance(
-        self,
-        name: str,
-        role: str,
-        zone: str = constants.SERVER_ZONE,
-        num_cpus: int = 16,
-        boot_disk_size: int = 10,
-        metadata: list = list(),
-    ) -> None:
+    def create_instance(self, name: str, role: str, num_cpus: int, boot_disk_size: int, metadata: list) -> None:
         logger.info(f"Creating VM instance with name {name} in project {self.gcp_project}")
 
         image_response = self.compute.images().getFromFamily(project="debian-cloud", family="debian-11").execute()
         # image_response = self.compute.images().getFromFamily(project="ubuntu-os-cloud", family="ubuntu-2110").execute()
         source_disk_image = image_response["selfLink"]
         if num_cpus <= 16:
-            machine_type = f"zones/{zone}/machineTypes/e2-highmem-{num_cpus}"
+            machine_type = f"zones/{self.zone}/machineTypes/e2-highmem-{num_cpus}"
         else:
-            machine_type = f"zones/{zone}/machineTypes/n2-highmem-{num_cpus}"
+            machine_type = f"zones/{self.zone}/machineTypes/n2-highmem-{num_cpus}"
 
         instance_body = {
             "name": name,
@@ -349,17 +345,19 @@ class GoogleCloudCompute:
             metadata_config["items"] += metadata
         instance_body["metadata"] = metadata_config
 
-        operation = self.compute.instances().insert(project=self.gcp_project, zone=zone, body=instance_body).execute()
-        self.wait_for_zone_operation(zone, operation["name"])
+        operation = (
+            self.compute.instances().insert(project=self.gcp_project, zone=self.zone, body=instance_body).execute()
+        )
+        self.wait_for_zone_operation(self.zone, operation["name"])
 
-    def stop_instance(self, name: str, zone: str = constants.SERVER_ZONE) -> None:
+    def stop_instance(self, name: str) -> None:
         logger.info(f"Stopping VM instance with name {name}...")
-        operation = self.compute.instances().stop(project=self.gcp_project, zone=zone, instance=name).execute()
-        self.wait_for_zone_operation(zone, operation["name"])
+        operation = self.compute.instances().stop(project=self.gcp_project, zone=self.zone, instance=name).execute()
+        self.wait_for_zone_operation(self.zone, operation["name"])
 
-    def list_instances(self, zone: str = constants.SERVER_ZONE, subnetwork: str = "") -> list[str]:
+    def list_instances(self, subnetwork: str = "") -> list[str]:
         try:
-            result = self.compute.instances().list(project=self.gcp_project, zone=zone).execute()
+            result = self.compute.instances().list(project=self.gcp_project, zone=self.zone).execute()
         except Exception as e:
             logger.error(f"Error listing instances: {e}")
             return []
@@ -369,10 +367,10 @@ class GoogleCloudCompute:
             if subnetwork in instance["networkInterfaces"][0]["subnetwork"]
         ]
 
-    def delete_instance(self, name: str, zone: str = constants.SERVER_ZONE) -> None:
+    def delete_instance(self, name: str) -> None:
         logger.info(f"Deleting VM instance with name {name}...")
-        operation = self.compute.instances().delete(project=self.gcp_project, zone=zone, instance=name).execute()
-        self.wait_for_zone_operation(zone, operation["name"])
+        operation = self.compute.instances().delete(project=self.gcp_project, zone=self.zone, instance=name).execute()
+        self.wait_for_zone_operation(self.zone, operation["name"])
 
     def wait_for_operation(self, operation: str) -> dict[str, str]:
         logger.info("Waiting for operation to finish...")
@@ -416,9 +414,9 @@ class GoogleCloudCompute:
                 raise RuntimeError(result["error"])
         return result
 
-    def get_vm_external_ip_address(self, instance: str, zone: str = constants.SERVER_ZONE) -> str:
+    def get_vm_external_ip_address(self, instance: str) -> str:
         logger.info(f"Getting the IP address for instance {instance}...")
-        response = self.compute.instances().get(project=self.gcp_project, zone=zone, instance=instance).execute()
+        response = self.compute.instances().get(project=self.gcp_project, zone=self.zone, instance=instance).execute()
         return response["networkInterfaces"][0]["accessConfigs"][0]["natIP"]
 
 
