@@ -1,16 +1,20 @@
+<div>
+  <b class="text-muted">
+    Note: This tutorial uses the
+    <i>auto-configured</i>
+    option. There is an equivalent tutorial for the
+    <i>user-configured</i>
+    option in the
+    <a class="text-decoration-none" href="https://sfkit.readthedocs.io/en/latest/tutorial.html" target="_blank">sfkit CLI documentation</a>.
+  </b>
+</div>
 <h4 class="my-4 fw-normal">Introduction</h4>
 <div class="row">
   <p>
-    This stand-alone tutorial can be run alone and will walk you through process of creating and executing a study on this platform. For the purpose of this tutorial, we will use the MPC-GWAS workflow with the
-    <i>auto-configured</i>
-    option. That said, this same tutorial can be followed with any of the workflows.
+    This stand-alone tutorial can be run alone and will walk you through process of creating and executing a study on this platform. We will showcase the MPC-GWAS workflow, but the same tutorial can be followed with any of the workflows.
   </p>
   <p>
-    The purpose of a GWAS study is to identify genetic variants that are associated with a trait of interest. In this tutorial, we will use a simulated dataset to demonstrate the process of running a GWAS study with multiple participants. This tutorial uses a simulated dataset of genotypes, phenotypes, and covariates.
-  </p>
-  <p class="text-muted">
-    Note: There is also a tutorial for the user-configured option. That is available on the
-    <a class="text-decoration-none" href="https://sfkit.readthedocs.io/en/latest/tutorial.html" target="_blank">sfkit CLI documentation website</a>.
+    The purpose of a GWAS study is to identify genetic variants that are associated with a trait of interest. In this tutorial, we will use a simulated dataset of genotypes, phenotypes, and covariates to demonstrate the process of running a GWAS study with multiple participants.
   </p>
 </div>
 
@@ -34,7 +38,7 @@
     <span class="text-muted">(In a real study, you could also choose to join someone else's study instead.)</span>
   </p>
   <p class="text-muted">
-    Suggestion: We recommend following the tutorial steps in a separate browser tab. This way, you can easily switch between reading the instructions and performing the actions needed to create and run the study.
+    Tip: We recommend following the tutorial steps in a separate browser tab. This way, you can easily switch between reading the instructions and performing the actions needed to create and run the study.
   </p>
 </div>
 
@@ -58,7 +62,10 @@
 
 <div class="row">
   <p>
-    You are given the option to choose among any of the 3 workflows and 2 configuration options. More details about these choices are available in the "Instructions" page. For this tutorial, you can leave the defaults and then click
+    You are given the option to choose among any of the 3 workflows and 2 configuration options. More details about these choices are available in the
+    <a class="text-decoration-none" target="_blank" href="{{url_for('general.workflows')}}">workflows</a>
+    and
+    <a class="text-decoration-none" target="_blank" href="{{url_for('general.instructions')}}">instructions</a>. pages. For this tutorial, you can leave the defaults and then click
     <span class="btn btn-primary btn-sm" style="pointer-events: none;">Confirm</span>
     to continue.
   </p>
@@ -74,7 +81,7 @@
   <p>
     On the next page, you will be asked to provide a name for your study. Pick any unique study title, and you can leave the description and study information blank. Be sure to check the "Demo Study" option. Then proceed by clicking
     <span class="btn btn-primary btn-sm" style="pointer-events: none;">Confirm</span>
-    again. You will now be taken to a page to set the "Shared Study Parameters". For the demo, you can leave all of the parameters as they are. In a real study, you would set them parameters according to your data and preferences. Click
+    again. You will now be taken to a page to set the "Shared Study Parameters". For the demo, you can leave all of the parameters as they are. In a real study, you would set the parameters according to your data and preferences. Click
     <span class="btn btn-primary btn-sm" style="pointer-events: none;">Submit</span>
     to proceed.
   </p>
@@ -195,7 +202,9 @@
 
 <div class="mt-2">
   <p>
-    When the study is complete, you can click the "<a class="text-decoration-none">Download results</a>" link to download the results file with the association statistics.
+    When the study is complete, you can click the
+    <a class="text-decoration-none">Download results</a>
+    link to download the results file with the association statistics.
   </p>
 </div>
 

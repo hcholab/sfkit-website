@@ -1,7 +1,9 @@
-# sfkit Website
+## sfkit Website
 
-This is a web portal to fascilitate privacy preserving and secure genomics analysis with multiple parties.
+This is a web portal designed to facilitate privacy preserving and secure genomics analyses with multiple parties.
 
-The application is created using the [Flask](https://flask.palletsprojects.com/) framework, and is hosted [here](https://sfkit.org/).
+The application is hosted on [sfkit.org](https://sfkit.org/), where you can find more information, instructions, and tutorials. 
 
-For questions or concerns, you can contact us at support@sfkit.org.
+The repository for the companion command-line interface can be found at [github.com/hcholab/sfkit](https://github.com/hcholab/sfkit).
+
+For questions or concerns, you can contact us at [support@sfkit.org](mailto:support@sfkit.org).
