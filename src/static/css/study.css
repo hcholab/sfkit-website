@@ -5,3 +5,11 @@
 .toggle-sub-task.rotate {
     transform: rotate(-90deg);
 }
+
+.bg-auto-cfg {
+    background-color:rgb(75, 237, 86);
+}
+
+.bg-user-cfg {
+    background-color: rgb(255, 190, 70);
+}

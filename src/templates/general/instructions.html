@@ -16,11 +16,11 @@
         </h5>
 
         <p>In an
-          <b>auto-configured</b>
+          <span class="badge text-dark bg-auto-cfg">auto-configured</span>
           mode, once the study is configured and launched on the website, sfkit will automatically create the computing environment and deploy the joint analysis protocol in the Google Cloud Platform (GCP). To allow this automation, sfkit will ask for a minimal set of permissions for your GCP project.</p>
 
         <p>In a
-          <b>user-configured</b>
+          <span class="badge text-dark bg-user-cfg">user-configured</span>
           mode, once the study is configured, you can easily run the protocol on your own machine (and your collaborators on their machines) using the sfkit command-line interface (CLI).
         </p>
       </div>
@@ -37,7 +37,9 @@
               A Google Cloud Platform (GCP) account that can create and manage virtual machines (VMs) in the cloud.
             </li>
             <li>
-              A machine of your own with a nework connection, if you are running a user-configured study.
+              A machine of your own with a nework connection, if you are running a
+              <span class="badge text-dark bg-user-cfg">user-configured</span>
+              study.
             </li>
           </ol>
 
@@ -156,7 +158,11 @@
               for the study.
             </li>
             <li>
-              Specify whether you want the study to be auto-configured or user-configured (described below).
+              Specify whether you want the study to be
+              <span class="badge text-dark bg-auto-cfg">auto-configured</span>
+              or
+              <span class="badge text-dark bg-user-cfg">user-configured</span>
+              (described below).
             </li>
             <li>
               Edit your study parameters.
@@ -173,10 +179,12 @@
         <div class="row p-4 bg-light rounded">
           <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item">
-              <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#Auto-configured" type="button">Auto-configured</button>
+              <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#Auto-configured" type="button">
+                <span class="badge text-dark bg-auto-cfg">auto-configured</span></button>
             </li>
             <li class="nav-item">
-              <button class="nav-link" data-bs-toggle="tab" data-bs-target="#User-configured" type="button">User-configured</button>
+              <button class="nav-link" data-bs-toggle="tab" data-bs-target="#User-configured" type="button">
+                <span class="badge text-dark bg-user-cfg">user-configured</span></button>
             </li>
           </ul>
           <div class="row tab-content">
@@ -262,7 +270,9 @@
           <div class="card card-body">
             <p>
               2.
-              <b>Networking</b>: Setup the networking for the machine. If you are running a user-configured study, you will be asked for the designated ports to use for the secure connections used by the protocol. Then, your IP address and ports will be shared with your collaborators via the sfkit portal.
+              <b>Networking</b>: Setup the networking for the machine. If you are running a
+              <span class="badge text-dark bg-user-cfg">user-configured</span>
+              study, you will be asked for the designated ports to use for the secure connections used by the protocol. Then, your IP address and ports will be shared with your collaborators via the sfkit portal.
             </p>
           </div>
         </div>
