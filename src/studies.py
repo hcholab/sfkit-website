@@ -461,10 +461,9 @@ def download_key_file(study_title: str) -> Response:
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title)
     doc_ref_dict = doc_ref.get().to_dict()
-    auth_key = doc_ref_dict["personal_parameters"][g.user["id"]]["AUTH_KEY"]["value"]
-
-    if not auth_key:
-        auth_key = make_auth_key(study_title, g.user["id"])
+    auth_key = doc_ref_dict["personal_parameters"][g.user["id"]]["AUTH_KEY"]["value"] or make_auth_key(
+        study_title, g.user["id"]
+    )
 
     return send_file(
         io.BytesIO(auth_key.encode()),

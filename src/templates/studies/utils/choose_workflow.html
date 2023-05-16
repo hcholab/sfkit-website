@@ -1,0 +1,76 @@
+<div class="modal fade" id="chooseWorkflow" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="chooseWorkflowLabel">Choose Workflow and Configuration</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="post" action="{{url_for('studies.choose_study_type')}}">
+        <div class="modal-body">
+          <div>
+            <p>
+              Which workflow would you like to run?
+            </p>
+
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="CHOOSE_STUDY_TYPE" id="mpcgwas" value="MPC-GWAS" checked="checked">
+              <label class="form-check-label" for="mpcgwas">
+                MPC-GWAS
+              </label>
+            </div>
+
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="CHOOSE_STUDY_TYPE" id="sfgwas" value="SF-GWAS">
+              <label class="form-check-label" for="sfgwas">
+                SF-GWAS
+              </label>
+            </div>
+
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="CHOOSE_STUDY_TYPE" id="pca" value="PCA">
+              <label class="form-check-label" for="pca">
+                SF-PCA
+              </label>
+            </div>
+            <div class="mt-2">
+              <small class="text-muted">
+                Note: If you are unsure which workflow to choose, you can read more about them on the
+                <a class="text-decoration-none" href="{{url_for('general.workflows')}}">Workflows</a>
+                page.
+              </small>
+            </div>
+          </div>
+          <hr>
+          <div>
+            <p>
+              How do you want to have your GCP project configured?
+            </p>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="SETUP_CONFIGURATION" id="website" value="website" checked="checked">
+              <label class="form-check-label" for="website">
+                <span class="badge text-dark bg-auto-cfg">auto-configured</span>
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="SETUP_CONFIGURATION" id="user" value="user">
+              <label class="form-check-label" for="user">
+                <span class="badge text-dark bg-user-cfg">user-configured</span>
+              </label>
+            </div>
+            <div class="mt-2">
+              <small class="text-muted">
+                Note: If you are unsure which configuration to choose, you can read more about them on the
+                <a class="text-decoration-none" href="{{url_for('general.instructions')}}">Instructions</a>
+                page.
+              </small>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Confirm</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
