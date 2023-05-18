@@ -7,9 +7,14 @@
 }
 
 .bg-auto-cfg {
-    background-color:rgb(75, 237, 86);
+    background-color: #3a6351; /* Dark muted green */
 }
 
 .bg-user-cfg {
-    background-color: rgb(255, 190, 70);
+    background-color: #8b6d51; /* Muted, desaturated orange */
+}
+
+.card {
+    border-radius: 15px; /* Adjust as needed */
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); /* Optional: adds a subtle shadow effect */
 }

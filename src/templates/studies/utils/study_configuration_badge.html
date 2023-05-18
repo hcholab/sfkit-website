@@ -1,6 +1,6 @@
 <div>
   {% if study["setup_configuration"] == "website" %}
-    <span class="badge text-dark bg-auto-cfg">
+    <span class="badge bg-auto-cfg">
       auto-configured
       <span type="button" data-bs-toggle="modal" data-bs-target="#{{ study['title']}}{{ study['setup_configuration']}}Modal">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-question-circle" viewbox="0 0 16 16">
@@ -10,7 +10,7 @@
       </span>
     </span>
   {% else %}
-    <span class="badge text-dark bg-user-cfg">
+    <span class="badge bg-user-cfg">
       user-configured
       <span type="button" data-bs-toggle="modal" data-bs-target="#{{ study['title']}}{{ study['setup_configuration']}}Modal">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-question-circle" viewbox="0 0 16 16">
@@ -30,7 +30,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="websiteLabel">
-            <span class="badge text-dark bg-auto-cfg">auto-configured</span>
+            <span class="badge bg-auto-cfg">auto-configured</span>
             Study</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
@@ -51,7 +51,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="userLabel">
-            <span class="badge text-dark bg-user-cfg">user-configured</span>
+            <span class="badge bg-user-cfg">user-configured</span>
             Study</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
