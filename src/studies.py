@@ -245,6 +245,7 @@ def restart_study(study_title: str) -> Response:
     for participant in doc_ref_dict["participants"]:
         doc_ref_dict["status"][participant] = "ready to begin protocol" if participant == "Broad" else ""
         doc_ref_dict["personal_parameters"][participant]["PUBLIC_KEY"]["value"] = ""
+        doc_ref_dict["personal_parameters"][participant]["IP_ADDRESS"]["value"] = ""
     doc_ref_dict["tasks"] = {}
 
     doc_ref.set(doc_ref_dict)
