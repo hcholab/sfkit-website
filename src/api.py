@@ -13,6 +13,12 @@ logger = logging.setup_logging(__name__)
 bp = Blueprint("api", __name__)
 
 
+@bp.route("/printip", methods=["GET"])
+def printip():
+    print(request.headers)
+    return f"Hello, your IP is: {request.remote_addr} and your port is: {request.environ['REMOTE_PORT']}"
+
+
 @bp.route("/upload_file", methods=["POST"])
 def upload_file() -> Tuple[dict, int]:
     auth_key = verify_authorization_header(request)
