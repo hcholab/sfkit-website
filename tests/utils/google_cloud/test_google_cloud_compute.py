@@ -1,8 +1,12 @@
 from typing import Callable, Generator
+from unittest.mock import patch
+
 import pytest
+from googleapiclient.errors import HttpError
 from pytest_mock import MockerFixture
+
 from src.utils import constants
-from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, create_instance_name
+from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, format_instance_name
 
 patch_prefix = "src.utils.google_cloud.google_cloud_compute.GoogleCloudCompute"
 
@@ -10,6 +14,7 @@ patch_prefix = "src.utils.google_cloud.google_cloud_compute.GoogleCloudCompute"
 def test_setup_networking(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     setup_mocking(mocker)
     mocker.patch(f"{patch_prefix}.create_network_if_it_does_not_already_exist", return_value=None)
+    mocker.patch(f"{patch_prefix}.create_firewall", return_value=None)
     mocker.patch(f"{patch_prefix}.remove_conflicting_peerings", return_value=None)
     mocker.patch(f"{patch_prefix}.remove_conflicting_subnets", return_value=None)
     mocker.patch(f"{patch_prefix}.create_subnet", return_value=None)
@@ -81,14 +86,45 @@ def test_delete_network(mocker: Callable[..., Generator[MockerFixture, None, Non
 def test_create_firewall(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     setup_mocking(mocker)
     mocker.patch(f"{patch_prefix}.wait_for_operation", return_value=None)
+
+    # Scenario: no existing firewall, no participants
     google_cloud_compute = GoogleCloudCompute("alpha", "broad-cho-priv1")
     google_cloud_compute.create_firewall({"participants": []})
 
+    # Scenario: no existing firewall, participant with no IP
     google_cloud_compute = GoogleCloudCompute("subnet0", "subnet")
     google_cloud_compute.create_firewall(
         {
             "participants": ["user1", "user2"],
-            "personal_parameters": {"user1": {"IP_ADDRESS": {"value": 8000}}, "user2": {"IP_ADDRESS": {"value": ""}}},
+            "personal_parameters": {"user1": {"IP_ADDRESS": {"value": ""}}, "user2": {"IP_ADDRESS": {"value": ""}}},
+        }
+    )
+
+    # Scenario: no existing firewall, participant with IP
+    google_cloud_compute = GoogleCloudCompute("subnet1", "subnet")
+    google_cloud_compute.create_firewall(
+        {
+            "participants": ["user1", "user2"],
+            "personal_parameters": {
+                "user1": {"IP_ADDRESS": {"value": "10.0.0.1"}},
+                "user2": {"IP_ADDRESS": {"value": ""}},
+            },
+        }
+    )
+
+    # Scenario: existing firewall
+    google_cloud_compute = GoogleCloudCompute("subnet1", "subnet")
+    firewalls_mock = mocker.patch.object(google_cloud_compute.compute, "firewalls")
+    firewalls_list_mock = mocker.MagicMock()
+    firewalls_mock.return_value.list.return_value = firewalls_list_mock
+    firewalls_list_mock.execute.return_value = {"items": [{"name": google_cloud_compute.firewall_name}]}
+    google_cloud_compute.create_firewall(
+        {
+            "participants": ["user1", "user2"],
+            "personal_parameters": {
+                "user1": {"IP_ADDRESS": {"value": "10.0.0.1"}},
+                "user2": {"IP_ADDRESS": {"value": ""}},
+            },
         }
     )
 
@@ -96,7 +132,13 @@ def test_create_firewall(mocker: Callable[..., Generator[MockerFixture, None, No
 def test_delete_firewall(mocker: Callable[..., Generator[MockerFixture, None, None]]):
     setup_mocking(mocker)
     google_cloud_compute = GoogleCloudCompute("alpha", "broad-cho-priv1")
-    google_cloud_compute.delete_firewall("test")
+    google_cloud_compute.delete_firewall()
+
+    with patch.object(MockInsertable, "delete", new=raise_http_error("notFound")):
+        google_cloud_compute.delete_firewall()
+
+    with patch.object(MockInsertable, "delete", new=raise_http_error("nothing")), pytest.raises(HttpError):
+        google_cloud_compute.delete_firewall("test")
 
 
 def test_remove_conflicting_peerings(mocker: Callable[..., Generator[MockerFixture, None, None]]):
@@ -253,12 +295,12 @@ def test_vm_external_ip_address(mocker: Callable[..., Generator[MockerFixture, N
     assert google_cloud_compute.get_vm_external_ip_address("name") == "1877.0.0.1"
 
 
-def test_create_instance_name():
-    assert create_instance_name("testtitle", "1") == "testtitle-sfkit1"
+def test_format_instance_name():
+    assert format_instance_name("testtitle", "1") == "testtitle-sfkit1"
 
 
 def setup_mocking(mocker):
-    mocker.patch("src.utils.google_cloud.google_cloud_compute.create_instance_name", return_value="name")
+    mocker.patch("src.utils.google_cloud.google_cloud_compute.format_instance_name", return_value="name")
     mocker.patch("src.utils.google_cloud.google_cloud_compute.logger.error", return_value=None)
     mocker.patch("src.utils.google_cloud.google_cloud_compute.sleep", lambda x: None)
     mocker.patch("time.sleep", lambda x: None)
@@ -399,3 +441,16 @@ class MockExecutable:
             res["error"] = "fake error"
         MockExecutable.networkName1 = constants.NETWORK_NAME_ROOT
         return res
+
+
+class MockResponse:
+    def __init__(self, reason=""):
+        self.reason = reason
+        self.status = 404
+
+
+def raise_http_error(reason):
+    def _raise_error(self, **kwargs):
+        raise HttpError(MockResponse(reason=reason), b"")
+
+    return _raise_error

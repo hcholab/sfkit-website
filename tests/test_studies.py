@@ -170,7 +170,7 @@ def test_restart_study(
 ):
     mocker.patch("src.auth.firebase_auth", MockFirebaseAdminAuth)
     mocker.patch("src.studies.GoogleCloudCompute", MockGoogleCloudCompute)
-    mocker.patch("src.studies.create_instance_name", return_value="blah")
+    mocker.patch("src.studies.format_instance_name", return_value="blah")
 
     # Log in and create a study
     auth.login()
@@ -202,6 +202,7 @@ def test_restart_study(
         else:
             assert doc_ref_dict_updated["status"][participant] == ""
         assert doc_ref_dict_updated["personal_parameters"][participant]["PUBLIC_KEY"]["value"] == ""
+        assert doc_ref_dict_updated["personal_parameters"][participant]["IP_ADDRESS"]["value"] == ""
     assert doc_ref_dict_updated["tasks"] == {}
 
     # Cleanup the created study
@@ -475,6 +476,9 @@ class MockGoogleCloudCompute:
         return ["blah", "testtitle-secure-gwas-instance-1"]
 
     def delete_instance(self, instance):
+        pass
+
+    def delete_firewall(self, firewall):
         pass
 
 

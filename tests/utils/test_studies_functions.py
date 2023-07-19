@@ -189,7 +189,7 @@ def test_setup_gcp(doc_ref_mock: MagicMock, mocker: Callable[..., Generator[Mock
         "src.utils.studies_functions.GoogleCloudCompute", return_value=gcloud_compute_mock
     )
     mocker.patch("src.utils.studies_functions.sanitize_path", return_value="/data/path")
-    mocker.patch("src.utils.studies_functions.create_instance_name", return_value="instance_name")
+    mocker.patch("src.utils.studies_functions.format_instance_name", return_value="instance_name")
     logger_error_mock = mocker.patch("src.utils.studies_functions.logger.error")
 
     # Test successful execution of setup_gcp

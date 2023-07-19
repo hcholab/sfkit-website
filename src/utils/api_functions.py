@@ -6,7 +6,7 @@ from google.cloud import firestore
 from werkzeug import Request
 
 from src.utils import logging
-from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, create_instance_name
+from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, format_instance_name
 
 logger = logging.setup_logging(__name__)
 
@@ -84,12 +84,12 @@ def update_tasks(transaction, doc_ref, username, task) -> None:
 
 def delete_instance(study_title, doc_ref_dict, gcp_project, role):
     gcloudCompute = GoogleCloudCompute(study_title, gcp_project)
-    gcloudCompute.delete_instance(create_instance_name(doc_ref_dict["title"], role))
+    gcloudCompute.delete_instance(format_instance_name(doc_ref_dict["title"], role))
 
 
 def stop_instance(study_title, doc_ref_dict, gcp_project, role):
     gcloudCompute = GoogleCloudCompute(study_title, gcp_project)
-    gcloudCompute.stop_instance(create_instance_name(doc_ref_dict["title"], role))
+    gcloudCompute.stop_instance(format_instance_name(doc_ref_dict["title"], role))
 
 
 def verify_authorization_header(request: Request, authenticate_user: bool = True) -> str:

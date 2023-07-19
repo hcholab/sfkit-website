@@ -2,6 +2,7 @@ import io
 import os
 import zipfile
 from datetime import datetime
+from multiprocessing import Process
 from threading import Thread
 
 from flask import (
@@ -23,7 +24,7 @@ from src.auth import login_required
 from src.utils import constants, logging
 from src.utils.auth_functions import create_user, update_user
 from src.utils.generic_functions import add_notification, redirect_with_flash
-from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, create_instance_name
+from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, format_instance_name
 from src.utils.google_cloud.google_cloud_storage import download_blob_to_filename
 from src.utils.studies_functions import (
     add_file_to_zip,
@@ -228,19 +229,23 @@ def restart_study(study_title: str) -> Response:
     doc_ref = db.collection("studies").document(study_title)
     doc_ref_dict: dict = doc_ref.get().to_dict()
 
-    threads = []
+    processes = []
     for role, v in enumerate(doc_ref_dict["participants"]):
         participant = doc_ref_dict["personal_parameters"][v]
         if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
             google_cloud_compute = GoogleCloudCompute(study_title, gcp_project)
             for instance in google_cloud_compute.list_instances():
-                if instance == create_instance_name(google_cloud_compute.study_title, str(role)):
-                    t = Thread(target=google_cloud_compute.delete_instance, args=(instance,))
-                    t.start()
-                    threads.append(t)
-    for t in threads:
-        t.join()
-    logger.info("Successfully Deleted gcp instances")
+                if instance == format_instance_name(google_cloud_compute.study_title, str(role)):
+                    p = Process(target=google_cloud_compute.delete_instance, args=(instance,))
+                    p.start()
+                    processes.append(p)
+
+            p = Process(target=google_cloud_compute.delete_firewall, args=(None,))
+            p.start()
+            processes.append(p)
+    for p in processes:
+        p.join()
+    logger.info("Successfully Deleted gcp instances and firewalls")
 
     for participant in doc_ref_dict["participants"]:
         doc_ref_dict["status"][participant] = "ready to begin protocol" if participant == "Broad" else ""

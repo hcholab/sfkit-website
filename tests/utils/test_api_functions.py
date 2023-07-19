@@ -134,7 +134,7 @@ def test_delete_instance(mocker: Callable[..., Generator[MockerFixture, None, No
     role = "test_role"
 
     mocker.patch("src.utils.api_functions.GoogleCloudCompute")
-    mocker.patch("src.utils.api_functions.create_instance_name")
+    mocker.patch("src.utils.api_functions.format_instance_name")
     delete_instance(study_title, doc_ref_dict, gcp_project, role)
 
 
@@ -145,7 +145,7 @@ def test_stop_instance(mocker: Callable[..., Generator[MockerFixture, None, None
     role = "test_role"
 
     mocker.patch("src.utils.api_functions.GoogleCloudCompute")
-    mocker.patch("src.utils.api_functions.create_instance_name")
+    mocker.patch("src.utils.api_functions.format_instance_name")
     stop_instance(study_title, doc_ref_dict, gcp_project, role)
 
 

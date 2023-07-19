@@ -16,7 +16,7 @@ from werkzeug import Response
 
 from src.utils import constants, logging
 from src.utils.generic_functions import redirect_with_flash
-from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, create_instance_name
+from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, format_instance_name
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 
 logger = logging.setup_logging(__name__)
@@ -121,7 +121,7 @@ def setup_gcp(doc_ref: DocumentReference, role: str) -> None:
         ]
 
         gcloudCompute.setup_instance(
-            name=create_instance_name(doc_ref_dict["title"], role),
+            name=format_instance_name(doc_ref_dict["title"], role),
             role=role,
             metadata=metadata,
             num_cpus=int(user_parameters["NUM_CPUS"]["value"]),

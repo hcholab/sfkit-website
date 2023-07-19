@@ -5,6 +5,7 @@ from typing import Optional
 
 import googleapiclient.discovery as googleapi
 import ipaddr
+from googleapiclient.errors import HttpError
 from tenacity import retry
 from tenacity.stop import stop_after_attempt
 from tenacity.wait import wait_fixed
@@ -31,7 +32,7 @@ class GoogleCloudCompute:
         self.remove_conflicting_peerings()
 
         for instance in self.list_instances():
-            if instance[:-1] == create_instance_name(self.study_title, ""):
+            if instance[:-1] == format_instance_name(self.study_title, ""):
                 self.delete_instance(instance)
 
         try:
@@ -68,6 +69,7 @@ class GoogleCloudCompute:
         )
 
         self.create_network_if_it_does_not_already_exist(doc_ref_dict)
+        self.create_firewall(doc_ref_dict)
         self.remove_conflicting_peerings(gcp_projects)
         self.remove_conflicting_subnets(gcp_projects)
         self.create_subnet(role)
@@ -87,8 +89,6 @@ class GoogleCloudCompute:
             }
             operation = self.compute.networks().insert(project=self.gcp_project, body=req_body).execute()
             self.wait_for_operation(operation["name"])
-
-            self.create_firewall(doc_ref_dict)
         else:
             logger.info(f"Network {self.network_name} already exists")
 
@@ -126,13 +126,30 @@ class GoogleCloudCompute:
             "allowed": [{"ports": ["8000-12000", "22"], "IPProtocol": "tcp"}],
         }
 
+        # Check if the firewall already exists
+        existing_firewalls = self.compute.firewalls().list(project=self.gcp_project).execute().get("items", [])
+
+        for firewall in existing_firewalls:
+            if firewall["name"] == self.firewall_name:
+                logger.info(f"Firewall {self.firewall_name} already exists. Skipping creation.")
+                return
+
+        # If the firewall doesn't already exist, create it
         operation = self.compute.firewalls().insert(project=self.gcp_project, body=firewall_body).execute()
         self.wait_for_operation(operation["name"])
 
-    def delete_firewall(self, firewall_name: str) -> None:
+    def delete_firewall(self, firewall_name: str = None) -> None:
+        if firewall_name is None:
+            firewall_name = self.firewall_name
         logger.info(f"Deleting firewall {firewall_name}")
-        operation = self.compute.firewalls().delete(project=self.gcp_project, firewall=firewall_name).execute()
-        self.wait_for_operation(operation["name"])
+        try:
+            operation = self.compute.firewalls().delete(project=self.gcp_project, firewall=firewall_name).execute()
+            self.wait_for_operation(operation["name"])
+        except HttpError as error:
+            if "resourceNotReady" in str(error) or "notFound" in str(error):
+                logger.info(f"Firewall {firewall_name} was already deleted.")
+            else:
+                raise
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(10))
     def remove_conflicting_peerings(self, allowed_gcp_projects: Optional[list] = None) -> bool:
@@ -420,7 +437,7 @@ class GoogleCloudCompute:
         return response["networkInterfaces"][0]["accessConfigs"][0]["natIP"]
 
 
-def create_instance_name(study_title: str, role: str) -> str:
+def format_instance_name(study_title: str, role: str) -> str:
     return f"{study_title}-{constants.INSTANCE_NAME_ROOT}{role}"
 
 
