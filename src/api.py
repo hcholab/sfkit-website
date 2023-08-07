@@ -10,7 +10,7 @@ from src.utils.studies_functions import setup_gcp
 
 logger = logging.setup_logging(__name__)
 
-bp = Blueprint("api", __name__)
+bp = Blueprint("api", __name__, url_prefix="/api")
 
 # @bp.route("/printip", methods=["GET"])
 # def printip():

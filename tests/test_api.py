@@ -37,25 +37,25 @@ def test_upload_file(client: FlaskClient, app: Flask, mocker: Callable[..., Gene
 
     for file_name, expected_file_name in files:
         data = {"file": (BytesIO(b"test_file_data"), file_name)}
-        response = client.post("/upload_file", data=data, headers=headers, content_type="multipart/form-data")
+        response = client.post("/api/upload_file", data=data, headers=headers, content_type="multipart/form-data")
         assert response.status_code == 200
 
     # Test the case when no file is provided
-    response = client.post("/upload_file", headers=headers, content_type="multipart/form-data")
+    response = client.post("/api/upload_file", headers=headers, content_type="multipart/form-data")
     assert response.status_code == 400
 
     mocker.patch("src.api.verify_authorization_header", return_value="")
-    client.post("/upload_file")
+    client.post("/api/upload_file")
 
 
 def test_get_doc_ref_dict(client: FlaskClient, app: Flask):
     doc_ref = app.config["DATABASE"].collection("users").document("auth_keys")
     doc_ref.set({"auth_key": {"study_title": "blah"}})
 
-    response = client.get("/get_doc_ref_dict", headers={"Authorization": "auth_key"})
+    response = client.get("/api/get_doc_ref_dict", headers={"Authorization": "auth_key"})
     assert response.status_code == 200
 
-    response = client.get("/get_doc_ref_dict")
+    response = client.get("/api/get_doc_ref_dict")
     assert response.status_code == 401
 
 
@@ -63,10 +63,10 @@ def test_get_username(client: FlaskClient, app: Flask):
     doc_ref = app.config["DATABASE"].collection("users").document("auth_keys")
     doc_ref.set({"auth_key": {"username": "blah"}})
 
-    response = client.get("/get_username", headers={"Authorization": "auth_key"})
+    response = client.get("/api/get_username", headers={"Authorization": "auth_key"})
     assert response.status_code == 200
 
-    response = client.get("/get_username")
+    response = client.get("/api/get_username")
     assert response.status_code == 401
 
 
@@ -87,22 +87,22 @@ def test_update_firestore(
     client.post("/create_study/MPC-GWAS/website", data=test_create_data)
 
     # Test process_status
-    response = client.get("/update_firestore?msg=update::statusnew_status", headers={"Authorization": "auth_key"})
+    response = client.get("/api/update_firestore?msg=update::statusnew_status", headers={"Authorization": "auth_key"})
     assert response.status_code == 200
 
     # Test process_task
-    response = client.get("/update_firestore?msg=update::tasknew_task", headers={"Authorization": "auth_key"})
+    response = client.get("/api/update_firestore?msg=update::tasknew_task", headers={"Authorization": "auth_key"})
     assert response.status_code == 200
 
     # Test process_parameter
     response = client.get(
-        "/update_firestore?msg=update::parameternew_parameter", headers={"Authorization": "auth_key"}
+        "/api/update_firestore?msg=update::parameternew_parameter", headers={"Authorization": "auth_key"}
     )
     assert response.status_code == 200
 
     # Test unauthorized request
     mocker.patch("src.api.verify_authorization_header", return_value="")
-    response = client.get("/update_firestore?msg=status::new_status")
+    response = client.get("/api/update_firestore?msg=status::new_status")
     assert response.status_code == 401
 
 
@@ -119,13 +119,13 @@ def test_create_cp0(
     doc_ref = app.config["DATABASE"].collection("users").document("auth_keys")
     doc_ref.set({"auth_key": {"study_title": "bad", "username": "a@a.com"}})
 
-    response = client.get("/create_cp0", headers={"Authorization": "auth_key"})
+    response = client.get("/api/create_cp0", headers={"Authorization": "auth_key"})
     assert response.status_code == 400
 
     doc_ref.set({"auth_key": {"study_title": "testtitle", "username": "a@a.com"}})
-    response = client.get("/create_cp0", headers={"Authorization": "auth_key"})
+    response = client.get("/api/create_cp0", headers={"Authorization": "auth_key"})
     assert response.status_code == 200
 
     mocker.patch("src.api.verify_authorization_header", return_value="")
-    response = client.get("/create_cp0")
+    response = client.get("/api/create_cp0")
     assert response.status_code == 401
