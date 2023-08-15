@@ -8,13 +8,13 @@ from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from werkzeug import Response
 
-from src.utils import constants, logging
+from src.utils import constants, custom_logging
 from src.utils.auth_functions import create_user, update_user
 from src.utils.generic_functions import redirect_with_flash
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 from src.utils.google_cloud.google_cloud_secret_manager import get_firebase_api_key
 
-logger = logging.setup_logging(__name__)
+logger = custom_logging.setup_logging(__name__)
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 

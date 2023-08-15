@@ -1,9 +1,9 @@
 from flask import current_app, g, redirect, url_for
 from werkzeug import Response
 
-from src.utils import logging
+from src.utils import custom_logging
 
-logger = logging.setup_logging(__name__)
+logger = custom_logging.setup_logging(__name__)
 
 
 def redirect_with_flash(url: str = "", location: str = "", message: str = "", error: str = "") -> Response:

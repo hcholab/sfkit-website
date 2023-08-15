@@ -4,9 +4,9 @@ from google.api_core.exceptions import GoogleAPIError
 from google.cloud import storage
 from werkzeug.datastructures import FileStorage
 
-from src.utils import logging
+from src.utils import custom_logging
 
-logger = logging.setup_logging(__name__)
+logger = custom_logging.setup_logging(__name__)
 
 
 def upload_blob_from_filename(bucket_name: str, source_file_name: str, destination_blob_name: str) -> bool:

@@ -1,7 +1,7 @@
 import os
 import logging
 from unittest.mock import MagicMock, patch
-from src.utils.logging import setup_logging
+from src.utils.custom_logging import setup_logging
 
 
 def test_setup_logging_local():
@@ -18,7 +18,7 @@ def test_setup_logging_cloud_run():
     # Mock the environment variable
     with patch.dict(os.environ, {"CLOUD_RUN": "True"}):
         # Mock the Google Cloud Logging client
-        with patch("src.utils.logging.gcp_logging.Client") as mock_client:
+        with patch("src.utils.custom_logging.gcp_logging.Client") as mock_client:
             mock_client_instance = MagicMock()
             mock_client.return_value = mock_client_instance
 

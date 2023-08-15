@@ -17,11 +17,11 @@ from google.cloud.firestore_v1 import CollectionReference
 from werkzeug import Response
 
 from src.auth import login_required
-from src.utils import logging
+from src.utils import custom_logging
 from src.utils.generic_functions import add_notification, remove_notification
 from src.utils.google_cloud.google_cloud_storage import download_blob_to_bytes
 
-logger = logging.setup_logging(__name__)
+logger = custom_logging.setup_logging(__name__)
 
 bp = Blueprint("general", __name__)
 

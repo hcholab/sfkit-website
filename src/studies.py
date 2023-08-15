@@ -21,7 +21,7 @@ from google.cloud import firestore
 from werkzeug import Response
 
 from src.auth import login_required
-from src.utils import constants, logging
+from src.utils import constants, custom_logging
 from src.utils.auth_functions import create_user, update_user
 from src.utils.generic_functions import add_notification, redirect_with_flash
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, format_instance_name
@@ -37,7 +37,7 @@ from src.utils.studies_functions import (
     valid_study_title,
 )
 
-logger = logging.setup_logging(__name__)
+logger = custom_logging.setup_logging(__name__)
 
 bp = Blueprint("studies", __name__)
 

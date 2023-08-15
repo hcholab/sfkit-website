@@ -10,9 +10,9 @@ from tenacity import retry
 from tenacity.stop import stop_after_attempt
 from tenacity.wait import wait_fixed
 
-from src.utils import constants, logging
+from src.utils import constants, custom_logging
 
-logger = logging.setup_logging(__name__)
+logger = custom_logging.setup_logging(__name__)
 
 
 class GoogleCloudCompute:

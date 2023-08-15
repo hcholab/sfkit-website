@@ -8,10 +8,10 @@ from pytest_mock import MockerFixture
 from werkzeug import Response
 
 from src.auth import load_logged_in_user
-from src.utils import logging
+from src.utils import custom_logging
 from conftest import AuthActions
 
-logger = logging.setup_logging(__name__)
+logger = custom_logging.setup_logging(__name__)
 
 
 def test_load_logged_in_user(mocker: Callable[..., Generator[MockerFixture, None, None]], app: Flask):

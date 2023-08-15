@@ -8,7 +8,7 @@ from mockfirestore import MockFirestore
 from pytest_mock import MockerFixture
 
 from src import create_app
-from src.utils.logging import setup_logging
+from src.utils.custom_logging import setup_logging
 
 logger = setup_logging(__name__)
 logger.setLevel(logging.DEBUG)

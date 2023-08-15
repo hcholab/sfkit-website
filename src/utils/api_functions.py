@@ -5,10 +5,10 @@ from flask import current_app
 from google.cloud import firestore
 from werkzeug import Request
 
-from src.utils import logging
+from src.utils import custom_logging
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, format_instance_name
 
-logger = logging.setup_logging(__name__)
+logger = custom_logging.setup_logging(__name__)
 
 
 def process_status(db, username, study_title, parameter, doc_ref, doc_ref_dict, gcp_project, role):

@@ -3,19 +3,14 @@ from typing import Tuple
 
 from flask import Blueprint, current_app, request
 
-from src.utils import logging
+from src.utils import custom_logging
 from src.utils.api_functions import process_parameter, process_status, process_task, verify_authorization_header
 from src.utils.google_cloud.google_cloud_storage import upload_blob_from_file
 from src.utils.studies_functions import setup_gcp
 
-logger = logging.setup_logging(__name__)
+logger = custom_logging.setup_logging(__name__)
 
 bp = Blueprint("api", __name__, url_prefix="/api")
-
-# @bp.route("/printip", methods=["GET"])
-# def printip():
-#     print(request.headers)
-#     return f"Hello, your IP is: {request.remote_addr} and your port is: {request.environ['REMOTE_PORT']}"
 
 
 @bp.route("/upload_file", methods=["POST"])

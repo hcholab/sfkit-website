@@ -7,9 +7,9 @@ from flask_bootstrap import Bootstrap
 from google.cloud import firestore
 
 from src import api, auth, general, studies
-from src.utils import logging
+from src.utils import custom_logging
 
-logger = logging.setup_logging(__name__)
+logger = custom_logging.setup_logging(__name__)
 
 
 def create_app() -> Flask:

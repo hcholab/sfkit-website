@@ -14,12 +14,12 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Email, Mail
 from werkzeug import Response
 
-from src.utils import constants, logging
+from src.utils import constants, custom_logging
 from src.utils.generic_functions import redirect_with_flash
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, format_instance_name
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 
-logger = logging.setup_logging(__name__)
+logger = custom_logging.setup_logging(__name__)
 
 email_template = Template(
     """
