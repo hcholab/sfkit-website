@@ -1,8 +1,8 @@
-black
 coverage 
 firebase_admin
 Flask
 Flask_Bootstrap
+Flask_Cors
 google-cloud-firestore
 google-cloud-iam
 google-cloud-logging

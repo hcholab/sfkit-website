@@ -16,7 +16,10 @@ from werkzeug import Response
 
 from src.utils import constants, custom_logging
 from src.utils.generic_functions import redirect_with_flash
-from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, format_instance_name
+from src.utils.google_cloud.google_cloud_compute import (
+    GoogleCloudCompute,
+    format_instance_name,
+)
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 
 logger = custom_logging.setup_logging(__name__)
@@ -28,7 +31,9 @@ email_template = Template(
 )
 
 
-def email(inviter: str, recipient: str, invitation_message: str, study_title: str) -> int:
+def email(
+    inviter: str, recipient: str, invitation_message: str, study_title: str
+) -> int:
     """
     Sends an invitation email to the recipient.
 
@@ -38,16 +43,26 @@ def email(inviter: str, recipient: str, invitation_message: str, study_title: st
     :param study_title: The title of the study the recipient is being invited to.
     :return: The status code of the email sending operation.
     """
-    doc_ref_dict: dict = current_app.config["DATABASE"].collection("meta").document("sendgrid").get().to_dict()
+    doc_ref_dict: dict = (
+        current_app.config["DATABASE"]
+        .collection("meta")
+        .document("sendgrid")
+        .get()
+        .to_dict()
+    )
     sg = SendGridAPIClient(api_key=doc_ref_dict.get("api_key", ""))
 
     html_content = email_template.render(
-        inviter=escape(inviter), invitation_message=escape(invitation_message), study_title=escape(study_title)
+        inviter=escape(inviter),
+        invitation_message=escape(invitation_message),
+        study_title=escape(study_title),
     )
 
     message = Mail(
         to_emails=recipient,
-        from_email=Email(doc_ref_dict.get("from_email", ""), doc_ref_dict.get("from_user", "")),
+        from_email=Email(
+            doc_ref_dict.get("from_email", ""), doc_ref_dict.get("from_user", "")
+        ),
         subject=f"sfkit: Invitation to join {study_title} study",
         html_content=html_content,
     )
@@ -107,14 +122,22 @@ def setup_gcp(doc_ref: DocumentReference, role: str) -> None:
     doc_ref_dict["tasks"][user].append("Setting up networking and creating VM instance")
     doc_ref.set(doc_ref_dict)
 
-    gcloudCompute = GoogleCloudCompute(study_title, user_parameters["GCP_PROJECT"]["value"])
+    gcloudCompute = GoogleCloudCompute(
+        study_title, user_parameters["GCP_PROJECT"]["value"]
+    )
 
     try:
         gcloudCompute.setup_networking(doc_ref_dict, role)
 
         metadata = [
-            {"key": "data_path", "value": sanitize_path(user_parameters["DATA_PATH"]["value"])},
-            {"key": "geno_binary_file_prefix", "value": user_parameters["GENO_BINARY_FILE_PREFIX"]["value"]},
+            {
+                "key": "data_path",
+                "value": sanitize_path(user_parameters["DATA_PATH"]["value"]),
+            },
+            {
+                "key": "geno_binary_file_prefix",
+                "value": user_parameters["GENO_BINARY_FILE_PREFIX"]["value"],
+            },
             {"key": "ports", "value": user_parameters["PORTS"]["value"]},
             {"key": "auth_key", "value": user_parameters["AUTH_KEY"]["value"]},
             {"key": "demo", "value": doc_ref_dict["demo"]},
@@ -153,7 +176,9 @@ def generate_ports(doc_ref: DocumentReference, role: str) -> None:
     doc_ref.set(doc_ref_dict, merge=True)
 
 
-def add_file_to_zip(zip_file, filepath: str, archive_name: Optional[str] = None) -> None:
+def add_file_to_zip(
+    zip_file, filepath: str, archive_name: Optional[str] = None
+) -> None:
     with open(filepath, "rb") as f:
         zip_file.writestr(archive_name or os.path.basename(filepath), f.read())
 
@@ -178,38 +203,71 @@ def is_participant(study) -> bool:
     return (
         g.user
         and "id" in g.user
-        and (g.user["id"] in study["participants"] or g.user["id"] in study.get("invited_participants", []))
+        and (
+            g.user["id"] in study["participants"]
+            or g.user["id"] in study.get("invited_participants", [])
+        )
     )
 
 
 def is_study_title_unique(study_title: str, db) -> bool:
-    study_ref = db.collection("studies").where("title", "==", study_title).limit(1).stream()
+    study_ref = (
+        db.collection("studies").where("title", "==", study_title).limit(1).stream()
+    )
     return not list(study_ref)
 
 
-def valid_study_title(study_title: str, study_type: str, setup_configuration: str) -> tuple[str, Response]:
-    # sourcery skip: assign-if-exp, reintroduce-else, swap-if-else-branches, swap-if-expression, use-named-expression
+from flask import jsonify
+
+
+def valid_study_title(
+    study_title: str, study_type: str, setup_configuration: str
+) -> tuple[str, Response]:
+    # sourcery skip: assign-if-exp, reintroduce-else, swap-if-else-branches, use-named-expression
     cleaned_study_title = clean_study_title(study_title)
 
     if not cleaned_study_title:
         return (
             "",
-            redirect_with_flash(
-                url=url_for("studies.create_study", study_type=study_type, setup_configuration=setup_configuration),
-                message="Title processing failed. Please add letters and try again.",
+            jsonify(
+                {
+                    "message": "Title processing failed. Please add letters and try again.",
+                    "redirect_url": url_for(
+                        "studies.create_study",
+                        study_type=study_type,
+                        setup_configuration=setup_configuration,
+                    ),
+                }
             ),
+            400,  # Bad Request
         )
 
     if not is_study_title_unique(cleaned_study_title, current_app.config["DATABASE"]):
         return (
             "",
-            redirect_with_flash(
-                url=url_for("studies.create_study", study_type=study_type, setup_configuration=setup_configuration),
-                message="Title processing failed. Entered title is either a duplicate or too similar to an existing one.",
+            jsonify(
+                {
+                    "message": "Title processing failed. Entered title is either a duplicate or too similar to an existing one.",
+                    "redirect_url": url_for(
+                        "studies.create_study",
+                        study_type=study_type,
+                        setup_configuration=setup_configuration,
+                    ),
+                }
             ),
+            400,  # Bad Request
         )
 
-    return (cleaned_study_title, redirect(url_for("studies.parameters", study_title=cleaned_study_title)))
+    return (
+        cleaned_study_title,
+        jsonify(
+            {
+                "message": "Title processed successfully",
+                "study_title": cleaned_study_title,
+            }
+        ),
+        200,
+    )  # OK
 
 
 def clean_study_title(s: str) -> str:
@@ -239,7 +297,11 @@ def check_conditions(doc_ref_dict, user_id) -> str:
         return "You have not set the number of individuals/rows in your data. Please click on the 'Study Parameters' button to set this value and any other parameters you wish to change before running the protocol."
     if not gcp_project:
         return "Your GCP project ID is not set. Please follow the instructions in the 'Configure Study' button before running the protocol."
-    if not demo and "broad-cho-priv1" in gcp_project and os.environ.get("FLASK_DEBUG") != "development":
+    if (
+        not demo
+        and "broad-cho-priv1" in gcp_project
+        and os.environ.get("FLASK_DEBUG") != "development"
+    ):
         return "This project ID is only allowed for a demo study. Please follow the instructions in the 'Configure Study' button to set up your own GCP project before running the protocol."
     if not demo and not data_path:
         return "Your data path is not set. Please follow the instructions in the 'Configure Study' button before running the protocol."

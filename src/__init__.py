@@ -3,11 +3,12 @@ import secrets
 
 import firebase_admin
 from flask import Flask
-from flask_bootstrap import Bootstrap
+from flask_cors import CORS
 from google.cloud import firestore
 
-from src import api, auth, general, studies
+from src import cli
 from src.utils import custom_logging
+from src.web import web, participants, study
 
 logger = custom_logging.setup_logging(__name__)
 
@@ -16,22 +17,24 @@ def create_app() -> Flask:
     initialize_firebase_admin()
 
     app = Flask(__name__)
-    app.config.from_mapping(SECRET_KEY=secrets.token_hex(16), DATABASE=firestore.Client())
+    CORS(app)
 
-    Bootstrap(app)
+    app.config.from_mapping(
+        SECRET_KEY=secrets.token_hex(16), DATABASE=firestore.Client()
+    )
 
-    app.register_blueprint(auth.bp)
-    app.register_blueprint(api.bp)
-    app.register_blueprint(general.bp)
-    app.register_blueprint(studies.bp)
+    app.register_blueprint(cli.bp)
+    app.register_blueprint(web.bp)
+    app.register_blueprint(participants.bp)
+    app.register_blueprint(study.bp)
 
     return app
 
 
 def initialize_firebase_admin() -> None:
-    # if .serviceAccountKey.json file exists, use it to initialize the app (for local testing)
-    if os.path.exists(".serviceAccountKey.json"):
-        firebase_admin.initialize_app(firebase_admin.credentials.Certificate(".serviceAccountKey.json"))
+    key: str = ".serviceAccountKey.json"
+    if os.path.exists(key):  # local testing
+        firebase_admin.initialize_app(firebase_admin.credentials.Certificate(key))
     else:
-        logger.info("No service account key found, using default service account for the firebase_admin")
+        logger.info("No service account key found, using default for firebase_admin")
         firebase_admin.initialize_app()
