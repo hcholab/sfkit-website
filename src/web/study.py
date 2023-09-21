@@ -1,7 +1,7 @@
 from datetime import datetime
 from multiprocessing import Process
 
-from flask import Blueprint, Response, current_app, jsonify, request
+from quart import Blueprint, Response, current_app, jsonify, request
 from google.cloud import firestore
 
 from src.auth import authenticate, verify_token
@@ -22,19 +22,19 @@ bp = Blueprint("study", __name__, url_prefix="/api")
 
 @bp.route("/study", methods=["GET"])
 @authenticate
-def study() -> Response:
+async def study() -> Response:
     title = request.args.get("title")
     db = current_app.config["DATABASE"]
 
     try:
-        study = db.collection("studies").document(title).get().to_dict()
+        study = (await db.collection("studies").document(title).get()).to_dict()
     except Exception as e:
         return jsonify({"error": "Failed to fetch study", "details": str(e)})
 
     try:
         display_names = (
-            db.collection("users").document("display_names").get().to_dict() or {}
-        )
+            await db.collection("users").document("display_names").get()
+        ).to_dict() or {}
     except Exception as e:
         return jsonify({"error": "Failed to fetch display names", "details": str(e)})
 
@@ -51,11 +51,11 @@ def study() -> Response:
 
 @bp.route("/restart_study", methods=["GET"])
 @authenticate
-def restart_study() -> Response:
+async def restart_study() -> Response:
     study_title = request.args.get("title")
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title)
-    doc_ref_dict: dict = doc_ref.get().to_dict()
+    doc_ref_dict: dict = (await doc_ref.get()).to_dict()
 
     processes = []
     for role, v in enumerate(doc_ref_dict["participants"]):
@@ -87,15 +87,15 @@ def restart_study() -> Response:
         doc_ref_dict["personal_parameters"][participant]["IP_ADDRESS"]["value"] = ""
     doc_ref_dict["tasks"] = {}
 
-    doc_ref.set(doc_ref_dict)
+    await doc_ref.set(doc_ref_dict)
 
     return jsonify({"message": "Successfully restarted study"})
 
 
 @bp.route("/create_study", methods=["POST"])
 @authenticate
-def create_study() -> Response:
-    data = request.json
+async def create_study() -> Response:
+    data = await request.json
     study_type = data.get("study_type")
     setup_configuration = data.get("setup_configuration")
     title = data.get("title")
@@ -109,7 +109,7 @@ def create_study() -> Response:
         f"Creating study of type {study_type} with setup configuration {setup_configuration}"
     )
 
-    (cleaned_study_title, response, status_code) = valid_study_title(
+    (cleaned_study_title, response, status_code) = await valid_study_title(
         title, study_type, setup_configuration
     )
     if not cleaned_study_title:
@@ -120,7 +120,7 @@ def create_study() -> Response:
         .collection("studies")
         .document(cleaned_study_title)
     )
-    doc_ref.set(
+    await doc_ref.set(
         {
             "title": cleaned_study_title,
             "raw_title": title,
@@ -144,7 +144,7 @@ def create_study() -> Response:
             "invited_participants": [],
         }
     )
-    make_auth_key(cleaned_study_title, "Broad")
+    await make_auth_key(cleaned_study_title, "Broad")
 
     return jsonify(
         {"message": "Study created successfully", "study_title": cleaned_study_title}
@@ -153,11 +153,11 @@ def create_study() -> Response:
 
 @bp.route("/delete_study", methods=["DELETE"])
 @authenticate
-def delete_study() -> Response:
+async def delete_study() -> Response:
     study_title = request.args.get("title")
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title)
-    doc_ref_dict: dict = doc_ref.get().to_dict()
+    doc_ref_dict: dict = (await doc_ref.get()).to_dict()
 
     processes = []
     for participant in doc_ref_dict["personal_parameters"].values():
@@ -174,30 +174,30 @@ def delete_study() -> Response:
     for participant in doc_ref_dict["personal_parameters"].values():
         if (auth_key := participant.get("AUTH_KEY").get("value")) != "":
             doc_ref_auth_keys = db.collection("users").document("auth_keys")
-            doc_ref_auth_keys.update({auth_key: firestore.DELETE_FIELD})
+            await doc_ref_auth_keys.update({auth_key: firestore.DELETE_FIELD})
 
-    db.collection("deleted_studies").document(
+    await db.collection("deleted_studies").document(
         f"{study_title}-" + str(doc_ref_dict["created"]).replace(" ", "").lower()
     ).set(doc_ref_dict)
 
-    doc_ref.delete()
+    await doc_ref.delete()
 
     return jsonify({"message": "Successfully deleted study"})
 
 
 @bp.route("/study_information", methods=["POST"])
 @authenticate
-def study_information() -> Response:
+async def study_information() -> Response:
     try:
         study_title = request.args.get("title")
-        data = request.json
+        data = await request.json
         description = data.get("description")
         study_information = data.get("information")
 
         doc_ref = (
             current_app.config["DATABASE"].collection("studies").document(study_title)
         )
-        doc_ref.set(
+        await doc_ref.set(
             {
                 "description": description,
                 "study_information": study_information,
@@ -213,16 +213,16 @@ def study_information() -> Response:
 
 @bp.route("/parameters", methods=["POST"])
 @authenticate
-def parameters() -> Response:
+async def parameters() -> Response:
     try:
-        user_id = verify_token(request.headers.get("Authorization").split(" ")[1])[
-            "sub"
-        ]
+        user_id = (
+            await verify_token(request.headers.get("Authorization").split(" ")[1])
+        )["sub"]
         study_title = request.args.get("title")
-        data = request.json
+        data = await request.json
         db = current_app.config["DATABASE"]
         doc_ref = db.collection("studies").document(study_title)
-        doc_ref_dict = doc_ref.get().to_dict()
+        doc_ref_dict = (await doc_ref.get()).to_dict()
 
         for p, value in data.items():
             if p in doc_ref_dict["parameters"]:
@@ -241,7 +241,7 @@ def parameters() -> Response:
                         "value"
                     ] = value
 
-        doc_ref.set(doc_ref_dict, merge=True)
+        await doc_ref.set(doc_ref_dict, merge=True)
 
         return jsonify({"message": "Parameters updated successfully"}), 200
     except Exception as e:

@@ -2,8 +2,8 @@ import os
 import secrets
 
 import firebase_admin
-from flask import Flask
-from flask_cors import CORS
+from quart import Quart
+from quart_cors import cors
 from google.cloud import firestore
 
 from src import cli
@@ -13,14 +13,14 @@ from src.web import web, participants, study
 logger = custom_logging.setup_logging(__name__)
 
 
-def create_app() -> Flask:
+def create_app() -> Quart:
     initialize_firebase_admin()
 
-    app = Flask(__name__)
-    CORS(app)
+    app = Quart(__name__)
+    app = cors(app)
 
     app.config.from_mapping(
-        SECRET_KEY=secrets.token_hex(16), DATABASE=firestore.Client()
+        SECRET_KEY=secrets.token_hex(16), DATABASE=firestore.AsyncClient()
     )
 
     app.register_blueprint(cli.bp)
@@ -38,3 +38,24 @@ def initialize_firebase_admin() -> None:
     else:
         logger.info("No service account key found, using default for firebase_admin")
         firebase_admin.initialize_app()
+
+
+# def initialize_firestore_async_client():
+#     key: str = ".serviceAccountKey.json"
+
+#     # If service account key exists, use it (local testing)
+#     if os.path.exists(key):
+#         with open(key) as json_file:
+#             json_data = json.load(json_file)
+#         return firestore.AsyncClient(
+#             project=json_data["project_id"],
+#             credentials=service_account.Credentials.from_service_account_info(
+#                 json_data
+#             ),
+#         )
+
+#     else:
+#         logger.info(
+#             "No service account key found, using Google Application Default Credentials"
+#         )
+#         return firestore.AsyncClient()

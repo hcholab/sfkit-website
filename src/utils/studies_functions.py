@@ -1,21 +1,21 @@
+import asyncio
 import os
 import re
 import secrets
+import time
 from html import escape
 from threading import Thread
-import time
 from typing import Optional
 
-from flask import current_app, g, redirect, url_for
 from google.cloud.firestore_v1 import DocumentReference
 from jinja2 import Template
 from python_http_client.exceptions import HTTPError
+from quart import current_app, g, jsonify, redirect, url_for
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Email, Mail
 from werkzeug import Response
 
 from src.utils import constants, custom_logging
-from src.utils.generic_functions import redirect_with_flash
 from src.utils.google_cloud.google_cloud_compute import (
     GoogleCloudCompute,
     format_instance_name,
@@ -31,7 +31,7 @@ email_template = Template(
 )
 
 
-def email(
+async def email(
     inviter: str, recipient: str, invitation_message: str, study_title: str
 ) -> int:
     """
@@ -44,12 +44,11 @@ def email(
     :return: The status code of the email sending operation.
     """
     doc_ref_dict: dict = (
-        current_app.config["DATABASE"]
+        await current_app.config["DATABASE"]
         .collection("meta")
         .document("sendgrid")
         .get()
-        .to_dict()
-    )
+    ).to_dict()
     sg = SendGridAPIClient(api_key=doc_ref_dict.get("api_key", ""))
 
     html_content = email_template.render(
@@ -78,7 +77,7 @@ def email(
         return e.status_code  # type: ignore
 
 
-def make_auth_key(study_title: str, user_id: str) -> str:
+async def make_auth_key(study_title: str, user_id: str) -> str:
     """
     Generates an auth_key for the user and stores it in the database.
 
@@ -88,13 +87,13 @@ def make_auth_key(study_title: str, user_id: str) -> str:
     """
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_title)
-    doc_ref_dict: dict = doc_ref.get().to_dict()
+    doc_ref_dict: dict = (await doc_ref.get()).to_dict()
 
     auth_key = secrets.token_hex(16)
     doc_ref_dict["personal_parameters"][user_id]["AUTH_KEY"]["value"] = auth_key
-    doc_ref.set(doc_ref_dict)
+    await doc_ref.set(doc_ref_dict)
 
-    current_app.config["DATABASE"].collection("users").document("auth_keys").set(
+    await current_app.config["DATABASE"].collection("users").document("auth_keys").set(
         {
             auth_key: {
                 "study_title": study_title,
@@ -107,10 +106,10 @@ def make_auth_key(study_title: str, user_id: str) -> str:
     return auth_key
 
 
-def setup_gcp(doc_ref: DocumentReference, role: str) -> None:
-    generate_ports(doc_ref, role)
+async def setup_gcp(doc_ref: DocumentReference, role: str) -> None:
+    await generate_ports(doc_ref, role)
 
-    doc_ref_dict = doc_ref.get().to_dict() or {}
+    doc_ref_dict = (await doc_ref.get()).to_dict() or {}
     study_title = doc_ref_dict["title"]
     user: str = doc_ref_dict["participants"][int(role)]
     user_parameters: dict = doc_ref_dict["personal_parameters"][user]
@@ -120,7 +119,7 @@ def setup_gcp(doc_ref: DocumentReference, role: str) -> None:
     if user not in doc_ref_dict["tasks"]:
         doc_ref_dict["tasks"][user] = []
     doc_ref_dict["tasks"][user].append("Setting up networking and creating VM instance")
-    doc_ref.set(doc_ref_dict)
+    await doc_ref.set(doc_ref_dict)
 
     gcloudCompute = GoogleCloudCompute(
         study_title, user_parameters["GCP_PROJECT"]["value"]
@@ -155,17 +154,17 @@ def setup_gcp(doc_ref: DocumentReference, role: str) -> None:
         doc_ref_dict["status"][
             user
         ] = "FAILED - sfkit failed to set up your networking and VM instance. Please restart the study and double-check your parameters and configuration. If the problem persists, please contact us."
-        doc_ref.set(doc_ref_dict)
+        await doc_ref.set(doc_ref_dict)
         return
     else:
-        doc_ref_dict = doc_ref.get().to_dict() or {}
+        doc_ref_dict = (await doc_ref.get()).to_dict() or {}
         doc_ref_dict["tasks"][user].append("Configuring your VM instance")
-        doc_ref.set(doc_ref_dict)
+        await doc_ref.set(doc_ref_dict)
         return
 
 
-def generate_ports(doc_ref: DocumentReference, role: str) -> None:
-    doc_ref_dict = doc_ref.get().to_dict() or {}
+async def generate_ports(doc_ref: DocumentReference, role: str) -> None:
+    doc_ref_dict = (await doc_ref.get()).to_dict() or {}
     user: str = doc_ref_dict["participants"][int(role)]
 
     base: int = 8000 + 200 * int(role)
@@ -173,7 +172,7 @@ def generate_ports(doc_ref: DocumentReference, role: str) -> None:
     ports = ",".join([str(p) for p in ports])
 
     doc_ref_dict["personal_parameters"][user]["PORTS"]["value"] = ports
-    doc_ref.set(doc_ref_dict, merge=True)
+    await doc_ref.set(doc_ref_dict, merge=True)
 
 
 def add_file_to_zip(
@@ -210,21 +209,20 @@ def is_participant(study) -> bool:
     )
 
 
-def is_study_title_unique(study_title: str, db) -> bool:
+async def is_study_title_unique(study_title: str, db) -> bool:
     study_ref = (
         db.collection("studies").where("title", "==", study_title).limit(1).stream()
     )
-    return not list(study_ref)
+    async for _ in study_ref:
+        return False
+    return True
 
 
-from flask import jsonify
-
-
-def valid_study_title(
+async def valid_study_title(
     study_title: str, study_type: str, setup_configuration: str
 ) -> tuple[str, Response]:
     # sourcery skip: assign-if-exp, reintroduce-else, swap-if-else-branches, use-named-expression
-    cleaned_study_title = clean_study_title(study_title)
+    cleaned_study_title = await clean_study_title(study_title)
 
     if not cleaned_study_title:
         return (
@@ -242,7 +240,9 @@ def valid_study_title(
             400,  # Bad Request
         )
 
-    if not is_study_title_unique(cleaned_study_title, current_app.config["DATABASE"]):
+    if not await is_study_title_unique(
+        cleaned_study_title, current_app.config["DATABASE"]
+    ):
         return (
             "",
             jsonify(
@@ -270,7 +270,7 @@ def valid_study_title(
     )  # OK
 
 
-def clean_study_title(s: str) -> str:
+async def clean_study_title(s: str) -> str:
     # input_string = "123abc-!@#$%^&*() def" # Output: "abc- def"
 
     # Remove all characters that don't match the pattern
@@ -310,17 +310,17 @@ def check_conditions(doc_ref_dict, user_id) -> str:
     return ""
 
 
-def update_status_and_start_setup(doc_ref, doc_ref_dict, study_title):
+async def update_status_and_start_setup(doc_ref, doc_ref_dict, study_title):
     participants = doc_ref_dict["participants"]
     statuses = doc_ref_dict["status"]
 
     for role in range(1, len(participants)):
         user = participants[role]
         statuses[user] = "setting up your vm instance"
-        doc_ref.set({"status": statuses}, merge=True)
+        await doc_ref.set({"status": statuses}, merge=True)
 
-        make_auth_key(study_title, user)
+        await make_auth_key(study_title, user)
 
-        Thread(target=setup_gcp, args=(doc_ref, str(role))).start()
+        asyncio.create_task(setup_gcp(doc_ref, str(role)))
 
         time.sleep(1)

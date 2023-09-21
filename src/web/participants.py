@@ -1,4 +1,4 @@
-from flask import Blueprint, Response, current_app, jsonify, request
+from quart import Blueprint, Response, current_app, jsonify, request
 
 from src.auth import authenticate, verify_token
 from src.utils import constants, custom_logging
@@ -13,26 +13,28 @@ bp = Blueprint("participants", __name__, url_prefix="/api")
 
 @bp.route("/invite_participant", methods=["POST"])
 @authenticate
-def invite_participant() -> Response:
+async def invite_participant() -> Response:
     try:
-        data = request.json
+        data = await request.json
         study_title = data.get("study_title")
         inviter = data.get("inviter_id")
         invitee = data.get("invitee_email")
         message = data.get("message", "")
 
         db = current_app.config["DATABASE"]
-        doc_ref_dict = db.collection("users").document("display_names").get().to_dict()
+        doc_ref_dict = (
+            await db.collection("users").document("display_names").get()
+        ).to_dict()
 
         inviter_name = doc_ref_dict.get(inviter, inviter)
 
-        if email(inviter_name, invitee, message, study_title) >= 400:
+        if await email(inviter_name, invitee, message, study_title) >= 400:
             return jsonify({"error": "Email failed to send"}), 400
 
         doc_ref = db.collection("studies").document(study_title)
-        doc_ref_dict = doc_ref.get().to_dict()
+        doc_ref_dict = (await doc_ref.get()).to_dict()
         doc_ref_dict["invited_participants"].append(invitee)
-        doc_ref.set(
+        await doc_ref.set(
             {"invited_participants": doc_ref_dict["invited_participants"]},
             merge=True,
         )
@@ -45,10 +47,10 @@ def invite_participant() -> Response:
 
 @bp.route("/remove_participant", methods=["POST"])
 @authenticate
-def remove_participant() -> Response:
+async def remove_participant() -> Response:
     db = current_app.config["DATABASE"]
 
-    data = request.get_json()
+    data = await request.get_json()
     study_title = data.get("title")
     user_id = data.get("userId")
 
@@ -56,7 +58,7 @@ def remove_participant() -> Response:
         return jsonify({"error": "Invalid input"}), 400
 
     doc_ref = db.collection("studies").document(study_title)
-    doc_ref_dict: dict = doc_ref.get().to_dict()
+    doc_ref_dict: dict = await doc_ref.get().to_dict()
 
     # Check if the user is a participant in the study
     if user_id not in doc_ref_dict.get("participants", []):
@@ -66,7 +68,7 @@ def remove_participant() -> Response:
     del doc_ref_dict["personal_parameters"][user_id]
     del doc_ref_dict["status"][user_id]
 
-    doc_ref.set(doc_ref_dict)
+    await doc_ref.set(doc_ref_dict)
 
     add_notification(f"You have been removed from {study_title}", user_id)
     return jsonify({"message": "Participant removed successfully"}), 200
@@ -74,14 +76,14 @@ def remove_participant() -> Response:
 
 @bp.route("/approve_join_study", methods=["POST"])
 @authenticate
-def approve_join_study() -> Response:
+async def approve_join_study() -> Response:
     db = current_app.config["DATABASE"]
 
     study_title = request.args.get("title")
     user_id = request.args.get("userId")
 
     doc_ref = db.collection("studies").document(study_title)
-    doc_ref_dict: dict = doc_ref.get().to_dict()
+    doc_ref_dict: dict = await doc_ref.get().to_dict()
 
     if user_id in doc_ref_dict.get("requested_participants", {}):
         del doc_ref_dict["requested_participants"][user_id]
@@ -94,7 +96,7 @@ def approve_join_study() -> Response:
     ) | {user_id: constants.default_user_parameters(doc_ref_dict["study_type"])}
     doc_ref_dict["status"] = doc_ref_dict.get("status", {}) | {user_id: ""}
 
-    doc_ref.set(doc_ref_dict)
+    await doc_ref.set(doc_ref_dict)
 
     add_notification(f"You have been accepted to {study_title}", user_id=user_id)
     return jsonify({"message": "User has been approved to join the study"}), 200
@@ -102,27 +104,27 @@ def approve_join_study() -> Response:
 
 @bp.route("/request_join_study", methods=["POST"])
 @authenticate
-def request_join_study() -> Response:
+async def request_join_study() -> Response:
     try:
         study_title = request.args.get("title")
-        data = request.get_json()
+        data = await request.get_json()
         message: str = data.get("message", "")
 
         db = current_app.config["DATABASE"]
         doc_ref = db.collection("studies").document(study_title)
-        doc_ref_dict: dict = doc_ref.get().to_dict()
+        doc_ref_dict: dict = await doc_ref.get().to_dict()
 
         if not doc_ref_dict:
             return jsonify({"error": "Study not found"}), 404
 
-        user_id = verify_token(request.headers.get("Authorization").split(" ")[1])[
-            "sub"
-        ]
+        user_id = (
+            await verify_token(request.headers.get("Authorization").split(" ")[1])
+        )["sub"]
 
         requested_participants = doc_ref_dict.get("requested_participants", {})
         requested_participants[user_id] = message
 
-        doc_ref.set(
+        await doc_ref.set(
             {"requested_participants": requested_participants},
             merge=True,
         )
@@ -137,10 +139,10 @@ def request_join_study() -> Response:
 # TODO: add endpoint to accept invitation to study
 # @bp.route("/accept_invitation/<study_title>", methods=["GET", "POST"])
 # @login_required
-# def accept_invitation(study_title: str) -> Response:
+# async def accept_invitation(study_title: str) -> Response:
 #     db = current_app.config["DATABASE"]
 #     doc_ref = db.collection("studies").document(study_title)
-#     doc_ref_dict: dict = doc_ref.get().to_dict()
+#     doc_ref_dict: dict = await doc_ref.get().to_dict()
 
 #     if g.user["id"] not in doc_ref_dict["invited_participants"]:
 #         return redirect_with_flash(
@@ -150,7 +152,7 @@ def request_join_study() -> Response:
 
 #     doc_ref_dict["invited_participants"].remove(g.user["id"])
 
-#     doc_ref.set(
+#     await doc_ref.set(
 #         {
 #             "invited_participants": doc_ref_dict["invited_participants"],
 #             "participants": doc_ref_dict["participants"] + [g.user["id"]],

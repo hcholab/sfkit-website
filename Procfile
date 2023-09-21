@@ -1,1 +1,1 @@
-web: waitress-serve --call --host='0.0.0.0' --port=$PORT src:create_app
+web: hypercorn 'src:create_app' --bind '0.0.0.0:$PORT'

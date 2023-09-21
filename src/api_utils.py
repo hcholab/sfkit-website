@@ -1,4 +1,4 @@
-from flask import current_app
+from quart import current_app
 from google.cloud.firestore_v1 import FieldFilter
 
 from src.utils import custom_logging
@@ -7,7 +7,7 @@ from src.utils import custom_logging
 logger = custom_logging.setup_logging(__name__)
 
 
-def get_studies(private_filter=None) -> list:
+async def get_studies(private_filter=None) -> list:
     db = current_app.config["DATABASE"]
     desired_keys = [
         "created",
@@ -30,7 +30,7 @@ def get_studies(private_filter=None) -> list:
             studies_query = studies_query.where(
                 filter=FieldFilter("private", "==", private_filter)
             )
-        studies = [doc.to_dict() for doc in studies_query.stream()]
+        studies = [doc.to_dict() async for doc in studies_query.stream()]
     except Exception as e:
         raise RuntimeError(
             {"error": "Failed to fetch studies", "details": str(e)}
@@ -39,12 +39,11 @@ def get_studies(private_filter=None) -> list:
     return studies
 
 
-def get_display_names() -> dict:
+async def get_display_names() -> dict:
     db = current_app.config["DATABASE"]
     try:
-        display_names = (
-            db.collection("users").document("display_names").get().to_dict() or {}
-        )
+        doc_ref = await db.collection("users").document("display_names").get()
+        display_names = doc_ref.to_dict() or {}
     except Exception as e:
         raise RuntimeError(
             {"error": "Failed to fetch display names", "details": str(e)}
@@ -53,11 +52,11 @@ def get_display_names() -> dict:
     return display_names
 
 
-def create_user(decoded_token: dict) -> None:
+async def create_user(decoded_token: dict) -> None:
     logger.info(f"Creating user {decoded_token['sub']}")
     db = current_app.config["DATABASE"]
     try:
-        db.collection("users").document(decoded_token["sub"]).set(
+        await db.collection("users").document(decoded_token["sub"]).set(
             {"about": "", "notifications": []}
         )
         display_name = decoded_token["sub"]
@@ -65,7 +64,7 @@ def create_user(decoded_token: dict) -> None:
             display_name = decoded_token["given_name"]
             if "family_name" in decoded_token:
                 display_name += " " + decoded_token["family_name"]
-        db.collection("users").document("display_names").set(
+        await db.collection("users").document("display_names").set(
             {decoded_token["sub"]: display_name}, merge=True
         )
     except Exception as e:

@@ -2,7 +2,7 @@ from functools import wraps
 
 import jwt
 import requests
-from flask import current_app, jsonify, request
+from quart import current_app, jsonify, request
 from src.api_utils import create_user
 
 from src.utils import constants
@@ -16,7 +16,7 @@ for key in jwks["keys"]:
     PUBLIC_KEYS[kid] = jwt.algorithms.RSAAlgorithm.from_jwk(key)
 
 
-def verify_token(token):
+async def verify_token(token):
     headers = jwt.get_unverified_header(token)
     kid = headers["kid"]
 
@@ -32,14 +32,13 @@ def verify_token(token):
             audience=constants.MICROSOFT_CLIENT_ID,
         )
 
-        if (
-            not current_app.config["DATABASE"]
+        if not (
+            await current_app.config["DATABASE"]
             .collection("users")
             .document(decoded_token["sub"])
             .get()
-            .exists
-        ):
-            create_user(decoded_token)
+        ).exists:
+            await create_user(decoded_token)
 
     except jwt.ExpiredSignatureError as e:
         raise ValueError("Token has expired") from e
@@ -53,7 +52,7 @@ def verify_token(token):
 
 def authenticate(f):
     @wraps(f)
-    def decorated_function(*args, **kwargs):
+    async def decorated_function(*args, **kwargs):
         auth_header = request.headers.get("Authorization")
         if not auth_header or "Bearer" not in auth_header:
             return jsonify({"message": "Authentication token required"}), 401
@@ -61,10 +60,10 @@ def authenticate(f):
         token = auth_header.split(" ")[1]
 
         try:
-            verify_token(token)
+            await verify_token(token)
         except Exception as e:
             return jsonify({"message": str(e)}), 401
 
-        return f(*args, **kwargs)
+        return await f(*args, **kwargs)
 
     return decorated_function
