@@ -6,6 +6,7 @@ google-cloud-iam
 google-cloud-logging
 google-cloud-secret-manager
 google-cloud-storage
+httpx
 ipaddr
 Jinja2
 mock-firestore

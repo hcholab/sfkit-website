@@ -6,7 +6,7 @@ from quart import Quart
 from quart_cors import cors
 from google.cloud import firestore
 
-from src import cli
+from src import cli, signaling
 from src.utils import custom_logging
 from src.web import web, participants, study
 
@@ -27,6 +27,7 @@ def create_app() -> Quart:
     app.register_blueprint(web.bp)
     app.register_blueprint(participants.bp)
     app.register_blueprint(study.bp)
+    app.register_blueprint(signaling.bp)
 
     return app
 

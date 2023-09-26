@@ -4,22 +4,19 @@ import re
 import secrets
 import time
 from html import escape
-from threading import Thread
 from typing import Optional
 
 from google.cloud.firestore_v1 import DocumentReference
 from jinja2 import Template
 from python_http_client.exceptions import HTTPError
-from quart import current_app, g, jsonify, redirect, url_for
+from quart import current_app, g, jsonify, url_for
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Email, Mail
 from werkzeug import Response
 
 from src.utils import constants, custom_logging
-from src.utils.google_cloud.google_cloud_compute import (
-    GoogleCloudCompute,
-    format_instance_name,
-)
+from src.utils.google_cloud.google_cloud_compute import (GoogleCloudCompute,
+                                                         format_instance_name)
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 
 logger = custom_logging.setup_logging(__name__)
