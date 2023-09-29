@@ -1,11 +1,10 @@
+from google.cloud import firestore
 from quart import Blueprint, Response, current_app, jsonify, request
 
 from src.auth import authenticate, verify_token
 from src.utils import constants, custom_logging
 from src.utils.generic_functions import add_notification
-from src.utils.studies_functions import (
-    email,
-)
+from src.utils.studies_functions import email
 
 logger = custom_logging.setup_logging(__name__)
 bp = Blueprint("participants", __name__, url_prefix="/api")
@@ -16,26 +15,25 @@ bp = Blueprint("participants", __name__, url_prefix="/api")
 async def invite_participant() -> Response:
     try:
         data = await request.json
-        study_title = data.get("study_title")
+        study_id = data.get("study_id")
         inviter = data.get("inviter_id")
         invitee = data.get("invitee_email")
         message = data.get("message", "")
 
-        db = current_app.config["DATABASE"]
-        doc_ref_dict = (
-            await db.collection("users").document("display_names").get()
-        ).to_dict()
+        db: firestore.AsyncClient = current_app.config["DATABASE"]
+        display_names = (await db.collection("users").document("display_names").get()).to_dict()
+        inviter_name = display_names.get(inviter, inviter)
 
-        inviter_name = doc_ref_dict.get(inviter, inviter)
+        doc_ref = db.collection("studies").document(study_id)
+        study_dict = (await doc_ref.get()).to_dict()
+        study_title = study_dict["title"]
 
         if await email(inviter_name, invitee, message, study_title) >= 400:
             return jsonify({"error": "Email failed to send"}), 400
 
-        doc_ref = db.collection("studies").document(study_title)
-        doc_ref_dict = (await doc_ref.get()).to_dict()
-        doc_ref_dict["invited_participants"].append(invitee)
+        study_dict["invited_participants"].append(invitee)
         await doc_ref.set(
-            {"invited_participants": doc_ref_dict["invited_participants"]},
+            {"invited_participants": study_dict["invited_participants"]},
             merge=True,
         )
 
@@ -51,13 +49,13 @@ async def remove_participant() -> Response:
     db = current_app.config["DATABASE"]
 
     data = await request.get_json()
-    study_title = data.get("title")
+    study_id = data.get("study_id")
     user_id = data.get("userId")
 
-    if not study_title or not user_id:
+    if not study_id or not user_id:
         return jsonify({"error": "Invalid input"}), 400
 
-    doc_ref = db.collection("studies").document(study_title)
+    doc_ref = db.collection("studies").document(study_id)
     doc_ref_dict: dict = await doc_ref.get().to_dict()
 
     # Check if the user is a participant in the study
@@ -70,7 +68,7 @@ async def remove_participant() -> Response:
 
     await doc_ref.set(doc_ref_dict)
 
-    add_notification(f"You have been removed from {study_title}", user_id)
+    add_notification(f"You have been removed from {doc_ref_dict['title']}", user_id)
     return jsonify({"message": "Participant removed successfully"}), 200
 
 
@@ -79,10 +77,10 @@ async def remove_participant() -> Response:
 async def approve_join_study() -> Response:
     db = current_app.config["DATABASE"]
 
-    study_title = request.args.get("title")
+    study_id = request.args.get("study_id")
     user_id = request.args.get("userId")
 
-    doc_ref = db.collection("studies").document(study_title)
+    doc_ref = db.collection("studies").document(study_id)
     doc_ref_dict: dict = await doc_ref.get().to_dict()
 
     if user_id in doc_ref_dict.get("requested_participants", {}):
@@ -98,7 +96,7 @@ async def approve_join_study() -> Response:
 
     await doc_ref.set(doc_ref_dict)
 
-    add_notification(f"You have been accepted to {study_title}", user_id=user_id)
+    add_notification(f"You have been accepted to {doc_ref_dict['title']}", user_id=user_id)
     return jsonify({"message": "User has been approved to join the study"}), 200
 
 
@@ -106,12 +104,12 @@ async def approve_join_study() -> Response:
 @authenticate
 async def request_join_study() -> Response:
     try:
-        study_title = request.args.get("title")
+        study_id = request.args.get("study_id")
         data = await request.get_json()
         message: str = data.get("message", "")
 
         db = current_app.config["DATABASE"]
-        doc_ref = db.collection("studies").document(study_title)
+        doc_ref = db.collection("studies").document(study_id)
         doc_ref_dict: dict = await doc_ref.get().to_dict()
 
         if not doc_ref_dict:
@@ -141,7 +139,7 @@ async def request_join_study() -> Response:
 # @login_required
 # async def accept_invitation(study_title: str) -> Response:
 #     db = current_app.config["DATABASE"]
-#     doc_ref = db.collection("studies").document(study_title)
+#     doc_ref = db.collection("studies").document(study_id)
 #     doc_ref_dict: dict = await doc_ref.get().to_dict()
 
 #     if g.user["id"] not in doc_ref_dict["invited_participants"]:

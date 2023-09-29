@@ -19,7 +19,7 @@ if [[ -f startup_was_launched ]]; then exit 0; fi
 touch startup_was_launched
 
 role=$(hostname | tail -c 2)
-study_title=$(hostname | awk -F'-secure-gwas' '{print $1}')
+study_id=$(hostname | awk -F'-secure-gwas' '{print $1}')
 ports=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/ports" -H "Metadata-Flavor: Google")
 geno_binary_file_prefix=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/geno_binary_file_prefix" -H "Metadata-Flavor: Google")
 data_path=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/data_path" -H "Metadata-Flavor: Google")

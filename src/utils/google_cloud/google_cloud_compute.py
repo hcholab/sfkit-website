@@ -20,10 +20,10 @@ class GoogleCloudCompute:
     Class to handle interactions with Google Cloud Compute Engine
     """
 
-    def __init__(self, study_title: str, gcp_project: str) -> None:
+    def __init__(self, study_id: str, gcp_project: str) -> None:
         self.gcp_project: str = gcp_project
-        self.study_title: str = study_title
-        self.network_name = f"{constants.NETWORK_NAME_ROOT}-{study_title}"
+        self.study_id: str = study_id
+        self.network_name = f"{constants.NETWORK_NAME_ROOT}-{study_id}"
         self.firewall_name = f"{self.network_name}-vm-ingress"
         self.zone = constants.SERVER_ZONE
         self.compute = googleapi.build("compute", "v1")
@@ -32,7 +32,7 @@ class GoogleCloudCompute:
         self.remove_conflicting_peerings()
 
         for instance in self.list_instances():
-            if instance[:-1] == format_instance_name(self.study_title, ""):
+            if instance[:-1] == format_instance_name(self.study_id, ""):
                 self.delete_instance(instance)
 
         try:
@@ -167,8 +167,8 @@ class GoogleCloudCompute:
 
         for other_project in peerings:
             if other_project not in allowed_gcp_projects:
-                logger.info(f"Deleting peering called {self.study_title}peering-{other_project}")
-                body = {"name": f"{self.study_title}peering-{other_project}"}
+                logger.info(f"Deleting peering called {self.study_id}peering-{other_project}")
+                body = {"name": f"{self.study_id}peering-{other_project}"}
                 self.compute.networks().removePeering(
                     project=self.gcp_project, network=self.network_name, body=body
                 ).execute()
@@ -192,6 +192,17 @@ class GoogleCloudCompute:
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(30))
     def delete_subnet(self, subnet: dict) -> None:
+        subnets = (
+            self.compute.subnetworks()
+            .list(project=self.gcp_project, region=constants.SERVER_REGION)
+            .execute()["items"]
+        )
+        subnet_names = [subnet["name"] for subnet in subnets]
+
+        if subnet["name"] not in subnet_names:
+            logger.info(f"Subnet {subnet['name']} does not exist. Skipping deletion.")
+            return
+
         for instance in self.list_instances(subnetwork=subnet["selfLink"]):
             self.delete_instance(instance)
 
@@ -249,10 +260,10 @@ class GoogleCloudCompute:
         other_projects = [p for p in gcp_projects if p != self.gcp_project]
         for other_project in other_projects:
             if other_project not in existing_peerings:
-                logger.info(f"Creating peering called {self.study_title}peering-{other_project}")
+                logger.info(f"Creating peering called {self.study_id}peering-{other_project}")
                 body = {
                     "networkPeering": {
-                        "name": f"{self.study_title}peering-{other_project}",
+                        "name": f"{self.study_id}peering-{other_project}",
                         "network": f"https://www.googleapis.com/compute/v1/projects/{other_project}/global/networks/{self.network_name}",
                         "exchangeSubnetRoutes": True,
                     }
@@ -437,8 +448,8 @@ class GoogleCloudCompute:
         return response["networkInterfaces"][0]["accessConfigs"][0]["natIP"]
 
 
-def format_instance_name(study_title: str, role: str) -> str:
-    return f"{study_title}-{constants.INSTANCE_NAME_ROOT}{role}"
+def format_instance_name(study_id: str, role: str) -> str:
+    return f"{constants.INSTANCE_NAME_ROOT}-{study_id}---p{role}"
 
 
 def create_subnet_name(network_name: str, role: str) -> str:

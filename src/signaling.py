@@ -53,11 +53,9 @@ ORIGIN = os.getenv("ORIGIN", f"ws://host.docker.internal:{PORT}")  # e.g. ws://s
 TERRA = os.getenv("TERRA", "y")
 
 # Header
-AUTH_HEADER = "Authorization"  # Only on NON-Terra;
-USER_ID_HEADER = "OIDC_CLAIM_USER_ID"  # Only on Terra (extracted from authorization header by Apache)
-STUDY_ID_HEADER = (
-    "X-MPC-Study-ID"  # Study ID sent in header # TODO: make UUID for study
-)
+AUTH_HEADER = "Authorization"  # Only need on NON-Terra;
+USER_ID_HEADER = "OIDC_CLAIM_USER_ID"  # Terra: This is VM ID; need to use SAM to get user id (https://sam.dsde-dev.broadinstitute.org/#/Users/getUserStatusInfo)
+STUDY_ID_HEADER = ("X-MPC-Study-ID") 
 
 @bp.websocket("/ice")
 async def handler():

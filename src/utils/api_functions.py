@@ -15,7 +15,7 @@ logger = custom_logging.setup_logging(__name__)
 
 
 async def process_status(
-    db, username, study_title, parameter, doc_ref, doc_ref_dict, gcp_project, role
+    db, username, study_id, parameter, doc_ref, doc_ref_dict, gcp_project, role
 ):
     status = parameter.split("=")[1]
     await update_status(db.transaction(), doc_ref, username, status)
@@ -26,12 +26,12 @@ async def process_status(
         if doc_ref_dict["personal_parameters"][username]["DELETE_VM"]["value"] == "Yes":
             Thread(
                 target=delete_instance,
-                args=(study_title, doc_ref_dict, gcp_project, role),
+                args=(study_id, gcp_project, role),
             ).start()
         else:
             Thread(
                 target=stop_instance,
-                args=(study_title, doc_ref_dict, gcp_project, role),
+                args=(study_id, gcp_project, role),
             ).start()
 
     return {}, 200
@@ -96,14 +96,14 @@ async def update_tasks(transaction, doc_ref, username, task) -> None:
     transaction.update(doc_ref, doc_ref_dict)
 
 
-async def delete_instance(study_title, doc_ref_dict, gcp_project, role):
-    gcloudCompute = GoogleCloudCompute(study_title, gcp_project)
-    await gcloudCompute.delete_instance(format_instance_name(doc_ref_dict["title"], role))
+async def delete_instance(study_id, gcp_project, role):
+    gcloudCompute = GoogleCloudCompute(study_id, gcp_project)
+    await gcloudCompute.delete_instance(format_instance_name(study_id, role))
 
 
-async def stop_instance(study_title, doc_ref_dict, gcp_project, role):
-    gcloudCompute = GoogleCloudCompute(study_title, gcp_project)
-    await gcloudCompute.stop_instance(format_instance_name(doc_ref_dict["title"], role))
+async def stop_instance(study_id, gcp_project, role):
+    gcloudCompute = GoogleCloudCompute(study_id, gcp_project)
+    await gcloudCompute.stop_instance(format_instance_name(study_id, role))
 
 
 async def verify_authorization_header(

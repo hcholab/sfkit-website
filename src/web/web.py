@@ -158,7 +158,7 @@ async def start_protocol() -> Response:
         "sub"
     ]
     db = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(request.args.get("title"))
+    doc_ref = db.collection("studies").document(request.args.get("study_id"))
     doc_ref_dict = (await doc_ref.get()).to_dict() or {}
     statuses = doc_ref_dict["status"]
 
@@ -173,7 +173,7 @@ async def start_protocol() -> Response:
         logger.info("Not all participants are ready.")
     elif statuses[user_id] == "ready to begin sfkit":
         await update_status_and_start_setup(
-            doc_ref, doc_ref_dict, request.args.get("title")
+            doc_ref, doc_ref_dict, request.args.get("study_id")
         )
 
     return jsonify({"message": "Protocol started successfully"}), 200
@@ -185,14 +185,14 @@ async def send_message() -> Response:
     db = current_app.config["DATABASE"]
 
     data = await request.get_json()
-    study_title = data.get("study_title")
+    study_id = data.get("study_id")
     message = data.get("message")
     sender = data.get("sender")
 
-    if not message or not sender or not study_title:
-        return jsonify({"error": "Message, sender, and study_title are required"}), 400
+    if not message or not sender or not study_id:
+        return jsonify({"error": "Message, sender, and study_id are required"}), 400
 
-    doc_ref = db.collection("studies").document(study_title)
+    doc_ref = db.collection("studies").document(study_id)
     doc_ref_dict: dict = (await doc_ref.get()).to_dict()
 
     new_message = {
@@ -215,15 +215,15 @@ async def download_results_file() -> Response:
     ]
 
     db = current_app.config["DATABASE"]
-    study_title = request.args.get("study_title")
+    study_id = request.args.get("study_id")
 
     doc_ref_dict = (
-        await db.collection("studies").document(study_title).get()
+        await db.collection("studies").document(study_id).get()
     ).to_dict()
     role: str = str(doc_ref_dict["participants"].index(user_id))
 
     base = "src/static/results"
-    shared = f"{study_title}/p{role}"
+    shared = f"{study_id}/p{role}"
     os.makedirs(f"{base}/{shared}", exist_ok=True)
 
     result_success = download_blob_to_filename(
@@ -259,7 +259,7 @@ async def download_results_file() -> Response:
     zip_buffer.seek(0)
     return await send_file(
         zip_buffer,
-        attachment_filename=f"{study_title}_p{role}_results.zip",
+        attachment_filename=f"{study_id}_p{role}_results.zip",
         mimetype="application/zip",
         as_attachment=True,
     )
@@ -271,15 +271,15 @@ async def fetch_plot_file() -> Response:  # sourcery skip: use-named-expression
     user_id = (await verify_token(request.headers.get("Authorization").split(" ")[1]))[
         "sub"
     ]
-    study_title = (await request.get_json()).get("study_title")
+    study_id = (await request.get_json()).get("study_id")
     db = current_app.config["DATABASE"]
-    doc_ref = await db.collection("studies").document(study_title).get()
+    doc_ref = await db.collection("studies").document(study_id).get()
     doc_ref_dict = doc_ref.to_dict()
     role: str = str(doc_ref_dict["participants"].index(user_id))
 
     plot_name = "manhattan" if "GWAS" in doc_ref_dict["study_type"] else "pca_plot"
 
-    plot = download_blob_to_bytes("sfkit", f"{study_title}/p{role}/{plot_name}.png")
+    plot = download_blob_to_bytes("sfkit", f"{study_id}/p{role}/{plot_name}.png")
     if plot:
         return await send_file(
             io.BytesIO(plot),

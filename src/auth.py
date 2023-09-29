@@ -16,6 +16,11 @@ for key in jwks["keys"]:
     PUBLIC_KEYS[kid] = jwt.algorithms.RSAAlgorithm.from_jwk(key)
 
 
+async def get_user_id(request) -> str:
+    return (await verify_token(request.headers.get("Authorization").split(" ")[1]))[
+        "sub"
+    ]
+
 async def verify_token(token):
     headers = jwt.get_unverified_header(token)
     kid = headers["kid"]

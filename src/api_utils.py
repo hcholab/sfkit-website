@@ -10,9 +10,9 @@ logger = custom_logging.setup_logging(__name__)
 async def get_studies(private_filter=None) -> list:
     db = current_app.config["DATABASE"]
     desired_keys = [
+        "study_id",
         "created",
         "title",
-        "raw_title",
         "study_information",
         "description",
         "requested_participants",

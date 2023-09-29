@@ -74,16 +74,16 @@ async def email(
         return e.status_code  # type: ignore
 
 
-async def make_auth_key(study_title: str, user_id: str) -> str:
+async def make_auth_key(study_id: str, user_id: str) -> str:
     """
     Generates an auth_key for the user and stores it in the database.
 
-    :param study_title: The title of the study.
+    :param study_id: The study_id (uuid) of the study.
     :param user_id: The ID of the user.
     :return: The generated auth_key.
     """
     db = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(study_title)
+    doc_ref = db.collection("studies").document(study_id)
     doc_ref_dict: dict = (await doc_ref.get()).to_dict()
 
     auth_key = secrets.token_hex(16)
@@ -93,7 +93,7 @@ async def make_auth_key(study_title: str, user_id: str) -> str:
     await current_app.config["DATABASE"].collection("users").document("auth_keys").set(
         {
             auth_key: {
-                "study_title": study_title,
+                "study_id": study_id,
                 "username": user_id,
             }
         },
@@ -107,7 +107,7 @@ async def setup_gcp(doc_ref: DocumentReference, role: str) -> None:
     await generate_ports(doc_ref, role)
 
     doc_ref_dict = (await doc_ref.get()).to_dict() or {}
-    study_title = doc_ref_dict["title"]
+    study_id = doc_ref_dict["study_id"]
     user: str = doc_ref_dict["participants"][int(role)]
     user_parameters: dict = doc_ref_dict["personal_parameters"][user]
 
@@ -119,7 +119,7 @@ async def setup_gcp(doc_ref: DocumentReference, role: str) -> None:
     await doc_ref.set(doc_ref_dict)
 
     gcloudCompute = GoogleCloudCompute(
-        study_title, user_parameters["GCP_PROJECT"]["value"]
+        study_id, user_parameters["GCP_PROJECT"]["value"]
     )
 
     try:
@@ -140,7 +140,7 @@ async def setup_gcp(doc_ref: DocumentReference, role: str) -> None:
         ]
 
         gcloudCompute.setup_instance(
-            name=format_instance_name(doc_ref_dict["title"], role),
+            name=format_instance_name(doc_ref_dict["study_id"], role),
             role=role,
             metadata=metadata,
             num_cpus=int(user_parameters["NUM_CPUS"]["value"]),
@@ -215,69 +215,69 @@ async def is_study_title_unique(study_title: str, db) -> bool:
     return True
 
 
-async def valid_study_title(
-    study_title: str, study_type: str, setup_configuration: str
-) -> tuple[str, Response]:
-    # sourcery skip: assign-if-exp, reintroduce-else, swap-if-else-branches, use-named-expression
-    cleaned_study_title = await clean_study_title(study_title)
+# async def valid_study_title(
+#     study_title: str, study_type: str, setup_configuration: str
+# ) -> tuple[str, Response]:
+#     # sourcery skip: assign-if-exp, reintroduce-else, swap-if-else-branches, use-named-expression
+#     cleaned_study_title = await clean_study_title(study_title)
 
-    if not cleaned_study_title:
-        return (
-            "",
-            jsonify(
-                {
-                    "message": "Title processing failed. Please add letters and try again.",
-                    "redirect_url": url_for(
-                        "studies.create_study",
-                        study_type=study_type,
-                        setup_configuration=setup_configuration,
-                    ),
-                }
-            ),
-            400,  # Bad Request
-        )
+#     if not cleaned_study_title:
+#         return (
+#             "",
+#             jsonify(
+#                 {
+#                     "message": "Title processing failed. Please add letters and try again.",
+#                     "redirect_url": url_for(
+#                         "studies.create_study",
+#                         study_type=study_type,
+#                         setup_configuration=setup_configuration,
+#                     ),
+#                 }
+#             ),
+#             400,  # Bad Request
+#         )
 
-    if not await is_study_title_unique(
-        cleaned_study_title, current_app.config["DATABASE"]
-    ):
-        return (
-            "",
-            jsonify(
-                {
-                    "message": "Title processing failed. Entered title is either a duplicate or too similar to an existing one.",
-                    "redirect_url": url_for(
-                        "studies.create_study",
-                        study_type=study_type,
-                        setup_configuration=setup_configuration,
-                    ),
-                }
-            ),
-            400,  # Bad Request
-        )
+#     if not await is_study_title_unique(
+#         cleaned_study_title, current_app.config["DATABASE"]
+#     ):
+#         return (
+#             "",
+#             jsonify(
+#                 {
+#                     "message": "Title processing failed. Entered title is either a duplicate or too similar to an existing one.",
+#                     "redirect_url": url_for(
+#                         "studies.create_study",
+#                         study_type=study_type,
+#                         setup_configuration=setup_configuration,
+#                     ),
+#                 }
+#             ),
+#             400,  # Bad Request
+#         )
 
-    return (
-        cleaned_study_title,
-        jsonify(
-            {
-                "message": "Title processed successfully",
-                "study_title": cleaned_study_title,
-            }
-        ),
-        200,
-    )  # OK
+#     return (
+#         cleaned_study_title,
+#         jsonify(
+#             {
+#                 "message": "Title processed successfully",
+#                 "study_title": cleaned_study_title,
+#             }
+#         ),
+#         200,
+#     )  # OK
 
 
-async def clean_study_title(s: str) -> str:
-    # input_string = "123abc-!@#$%^&*() def" # Output: "abc- def"
+# async def clean_study_title(s: str) -> str:
+#     # input_string = "123abc-!@#$%^&*() def" # Output: "abc- def"
 
-    # Remove all characters that don't match the pattern
-    cleaned_str = re.sub(r"[^a-zA-Z0-9-]", "", s)
+#     # Remove all characters that don't match the pattern
+#     cleaned_str = re.sub(r"[^a-zA-Z0-9-]", "", s)
 
-    # If the first character is not an alphabet, remove it
-    while len(cleaned_str) > 0 and not cleaned_str[0].isalpha():
-        cleaned_str = cleaned_str[1:]
+#     # If the first character is not an alphabet, remove it
+#     while len(cleaned_str) > 0 and not cleaned_str[0].isalpha():
+#         cleaned_str = cleaned_str[1:]
 
-    return cleaned_str.lower()
+#     return cleaned_str.lower()
 
 
 def check_conditions(doc_ref_dict, user_id) -> str:
@@ -307,7 +307,7 @@ def check_conditions(doc_ref_dict, user_id) -> str:
     return ""
 
 
-async def update_status_and_start_setup(doc_ref, doc_ref_dict, study_title):
+async def update_status_and_start_setup(doc_ref, doc_ref_dict, study_id):
     participants = doc_ref_dict["participants"]
     statuses = doc_ref_dict["status"]
 
@@ -316,7 +316,7 @@ async def update_status_and_start_setup(doc_ref, doc_ref_dict, study_title):
         statuses[user] = "setting up your vm instance"
         await doc_ref.set({"status": statuses}, merge=True)
 
-        await make_auth_key(study_title, user)
+        await make_auth_key(study_id, user)
 
         asyncio.create_task(setup_gcp(doc_ref, str(role)))
 

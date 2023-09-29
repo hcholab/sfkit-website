@@ -1,20 +1,16 @@
+import io
 from datetime import datetime
 from multiprocessing import Process
+import uuid
 
-from quart import Blueprint, Response, current_app, jsonify, request
 from google.cloud import firestore
+from quart import Blueprint, Response, current_app, jsonify, request, send_file
 
-from src.auth import authenticate, verify_token
+from src.auth import authenticate, get_user_id, verify_token
 from src.utils import constants, custom_logging
-from src.utils.google_cloud.google_cloud_compute import (
-    GoogleCloudCompute,
-    format_instance_name,
-)
-from src.utils.studies_functions import (
-    make_auth_key,
-    valid_study_title,
-)
-
+from src.utils.google_cloud.google_cloud_compute import (GoogleCloudCompute,
+                                                         format_instance_name)
+from src.utils.studies_functions import make_auth_key
 
 logger = custom_logging.setup_logging(__name__)
 bp = Blueprint("study", __name__, url_prefix="/api")
@@ -23,11 +19,11 @@ bp = Blueprint("study", __name__, url_prefix="/api")
 @bp.route("/study", methods=["GET"])
 @authenticate
 async def study() -> Response:
-    title = request.args.get("title")
+    study_id = request.args.get("study_id")
     db = current_app.config["DATABASE"]
 
     try:
-        study = (await db.collection("studies").document(title).get()).to_dict()
+        study = (await db.collection("studies").document(study_id).get()).to_dict()
     except Exception as e:
         return jsonify({"error": "Failed to fetch study", "details": str(e)})
 
@@ -52,19 +48,19 @@ async def study() -> Response:
 @bp.route("/restart_study", methods=["GET"])
 @authenticate
 async def restart_study() -> Response:
-    study_title = request.args.get("title")
+    study_id = request.args.get("study_id")
     db = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(study_title)
+    doc_ref = db.collection("studies").document(study_id)
     doc_ref_dict: dict = (await doc_ref.get()).to_dict()
 
     processes = []
     for role, v in enumerate(doc_ref_dict["participants"]):
         participant = doc_ref_dict["personal_parameters"][v]
         if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
-            google_cloud_compute = GoogleCloudCompute(study_title, gcp_project)
+            google_cloud_compute = GoogleCloudCompute(study_id, gcp_project)
             for instance in google_cloud_compute.list_instances():
                 if instance == format_instance_name(
-                    google_cloud_compute.study_title, str(role)
+                    google_cloud_compute.study_id, str(role)
                 ):
                     p = Process(
                         target=google_cloud_compute.delete_instance, args=(instance,)
@@ -98,32 +94,32 @@ async def create_study() -> Response:
     data = await request.json
     study_type = data.get("study_type")
     setup_configuration = data.get("setup_configuration")
-    title = data.get("title")
+    study_title = data.get("title")
     demo = data.get("demo_study")
-    user_id = data.get("user_id")
     private_study = data.get("private_study")
     description = data.get("description")
     study_information = data.get("study_information")
 
-    logger.info(
-        f"Creating study of type {study_type} with setup configuration {setup_configuration}"
-    )
+    user_id = await get_user_id(request)
 
-    (cleaned_study_title, response, status_code) = await valid_study_title(
-        title, study_type, setup_configuration
-    )
-    if not cleaned_study_title:
-        return response, status_code
+    logger.info(f"Creating {study_type} study with {setup_configuration} configuration")
 
-    doc_ref = (
-        current_app.config["DATABASE"]
-        .collection("studies")
-        .document(cleaned_study_title)
-    )
+    # TODO: check if user has already created a study with this title
+
+    # (cleaned_study_title, response, status_code) = await valid_study_title(
+    #     title, study_type, setup_configuration
+    # )
+    # if not cleaned_study_title:
+    #     return response, status_code
+
+    study_id = str(uuid.uuid4())
+    db: firestore.AsyncClient = current_app.config["DATABASE"]
+    doc_ref = db.collection("studies").document(study_id)
+
     await doc_ref.set(
         {
-            "title": cleaned_study_title,
-            "raw_title": title,
+            "study_id": study_id,
+            "title": study_title,
             "study_type": study_type,
             "setup_configuration": setup_configuration,
             "private": private_study or demo,
@@ -144,25 +140,25 @@ async def create_study() -> Response:
             "invited_participants": [],
         }
     )
-    await make_auth_key(cleaned_study_title, "Broad")
+    await make_auth_key(study_id, "Broad")
 
     return jsonify(
-        {"message": "Study created successfully", "study_title": cleaned_study_title}
+        {"message": "Study created successfully", "study_id": study_id}
     )
 
 
 @bp.route("/delete_study", methods=["DELETE"])
 @authenticate
 async def delete_study() -> Response:
-    study_title = request.args.get("title")
+    study_id = request.args.get("study_id")
     db = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(study_title)
+    doc_ref = db.collection("studies").document(study_id)
     doc_ref_dict: dict = (await doc_ref.get()).to_dict()
 
     processes = []
     for participant in doc_ref_dict["personal_parameters"].values():
         if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
-            google_cloud_compute = GoogleCloudCompute(study_title, gcp_project)
+            google_cloud_compute = GoogleCloudCompute(study_id, gcp_project)
             p = Process(target=google_cloud_compute.delete_everything)
             p.start()
             processes.append(p)
@@ -176,9 +172,7 @@ async def delete_study() -> Response:
             doc_ref_auth_keys = db.collection("users").document("auth_keys")
             await doc_ref_auth_keys.update({auth_key: firestore.DELETE_FIELD})
 
-    await db.collection("deleted_studies").document(
-        f"{study_title}-" + str(doc_ref_dict["created"]).replace(" ", "").lower()
-    ).set(doc_ref_dict)
+    await db.collection("deleted_studies").document(study_id).set(doc_ref_dict)
 
     await doc_ref.delete()
 
@@ -189,13 +183,13 @@ async def delete_study() -> Response:
 @authenticate
 async def study_information() -> Response:
     try:
-        study_title = request.args.get("title")
+        study_id = request.args.get("study_id")
         data = await request.json
         description = data.get("description")
         study_information = data.get("information")
 
         doc_ref = (
-            current_app.config["DATABASE"].collection("studies").document(study_title)
+            current_app.config["DATABASE"].collection("studies").document(study_id)
         )
         await doc_ref.set(
             {
@@ -218,10 +212,10 @@ async def parameters() -> Response:
         user_id = (
             await verify_token(request.headers.get("Authorization").split(" ")[1])
         )["sub"]
-        study_title = request.args.get("title")
+        study_id = request.args.get("study_id")
         data = await request.json
         db = current_app.config["DATABASE"]
-        doc_ref = db.collection("studies").document(study_title)
+        doc_ref = db.collection("studies").document(study_id)
         doc_ref_dict = (await doc_ref.get()).to_dict()
 
         for p, value in data.items():
@@ -247,3 +241,22 @@ async def parameters() -> Response:
     except Exception as e:
         current_app.logger.error(f"Failed to update parameters: {e}")
         return jsonify({"error": "Failed to update parameters"}), 500
+
+@bp.route("/download_auth_key", methods=["GET"])
+@authenticate
+async def download_auth_key() -> Response:
+    study_id = request.args.get("study_id")
+    db = current_app.config["DATABASE"]
+    doc_ref = db.collection("studies").document(study_id)
+    doc_ref_dict = (await doc_ref.get()).to_dict()
+    user_id = (await verify_token(request.headers.get("Authorization").split(" ")[1]))["sub"]
+    auth_key = doc_ref_dict["personal_parameters"][user_id]["AUTH_KEY"]["value"] or await make_auth_key(
+        study_id, user_id
+    )
+
+    return await send_file(
+        io.BytesIO(auth_key.encode()),
+        attachment_filename="auth_key.txt",
+        mimetype="text/plain",
+        as_attachment=True,
+    )

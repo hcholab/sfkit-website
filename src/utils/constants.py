@@ -4,7 +4,7 @@ SERVER_GCP_PROJECT = "broad-cho-priv1"
 SERVER_REGION = "us-central1"
 SERVER_ZONE = f"{SERVER_REGION}-a"
 NETWORK_NAME_ROOT = "sfkit"
-INSTANCE_NAME_ROOT = NETWORK_NAME_ROOT
+INSTANCE_NAME_ROOT = "sfkit"
 DEVELOPER_USER_ID = "developer"
 GOOGLE_CLIENT_ID = (
     "419003787216-rcif34r976a9qm3818qgeqed7c582od6.apps.googleusercontent.com"
