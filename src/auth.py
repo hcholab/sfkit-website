@@ -1,25 +1,26 @@
 from functools import wraps
 
+from google.cloud import firestore
 import jwt
+from jwt import algorithms
 import requests
 from quart import current_app, jsonify, request
-from src.api_utils import create_user
 
+from src.api_utils import add_user_to_db
 from src.utils import constants
 
+# Prepare public keys from Microsoft's JWKS endpoint for token verification
 JWKS_URL = "https://sfkitdevb2c.b2clogin.com/sfkitdevb2c.onmicrosoft.com/discovery/v2.0/keys?p=B2C_1_signupsignin1"
 jwks = requests.get(JWKS_URL).json()
 PUBLIC_KEYS = {}
 
 for key in jwks["keys"]:
     kid = key["kid"]
-    PUBLIC_KEYS[kid] = jwt.algorithms.RSAAlgorithm.from_jwk(key)
+    PUBLIC_KEYS[kid] = algorithms.RSAAlgorithm.from_jwk(key)
 
 
 async def get_user_id(request) -> str:
-    return (await verify_token(request.headers.get("Authorization").split(" ")[1]))[
-        "sub"
-    ]
+    return (await verify_token(request.headers.get("Authorization").split(" ")[1]))["sub"]
 
 async def verify_token(token):
     headers = jwt.get_unverified_header(token)
@@ -37,13 +38,9 @@ async def verify_token(token):
             audience=constants.MICROSOFT_CLIENT_ID,
         )
 
-        if not (
-            await current_app.config["DATABASE"]
-            .collection("users")
-            .document(decoded_token["sub"])
-            .get()
-        ).exists:
-            await create_user(decoded_token)
+        db: firestore.AsyncClient = current_app.config["DATABASE"]
+        if not (await db.collection("users").document(decoded_token["sub"]).get()).exists:
+            await add_user_to_db(decoded_token)
 
     except jwt.ExpiredSignatureError as e:
         raise ValueError("Token has expired") from e

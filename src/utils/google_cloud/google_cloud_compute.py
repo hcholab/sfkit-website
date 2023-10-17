@@ -29,6 +29,14 @@ class GoogleCloudCompute:
         self.compute = googleapi.build("compute", "v1")
 
     def delete_everything(self) -> None:
+        logger.info(f"Deleting gcp resources for study {self.study_id}...")
+        # if the network doesn't exist, there's nothing to delete
+        try: 
+            self.compute.networks().get(project=self.gcp_project, network=self.network_name).execute()
+        except Exception as e:
+            logger.info(f"Cannot find network {self.network_name}; skipping deletion.")
+            return
+        
         self.remove_conflicting_peerings()
 
         for instance in self.list_instances():

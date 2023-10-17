@@ -53,8 +53,7 @@ ORIGIN = os.getenv("ORIGIN", f"ws://host.docker.internal:{PORT}")  # e.g. ws://s
 TERRA = os.getenv("TERRA", "y")
 
 # Header
-AUTH_HEADER = "Authorization"  # Only need on NON-Terra;
-USER_ID_HEADER = "OIDC_CLAIM_USER_ID"  # Terra: This is VM ID; need to use SAM to get user id (https://sam.dsde-dev.broadinstitute.org/#/Users/getUserStatusInfo)
+AUTH_HEADER = "Authorization"  # In Terra, this is machine ID, in non-terra, this is a JWT?
 STUDY_ID_HEADER = ("X-MPC-Study-ID") 
 
 @bp.websocket("/ice")
@@ -137,11 +136,20 @@ async def handler():
 
 
 async def _get_user_id():
+    # sourcery skip: assign-if-exp, reintroduce-else, remove-unnecessary-else, swap-if-else-branches
     if TERRA:
-        # when running as a Terra service behind Apache proxy,
-        # the proxy will take care of extracting JWT "sub" claim
-        # into this header automatically
-        return websocket.headers.get(USER_ID_HEADER)
+        auth_header = websocket.headers.get(AUTH_HEADER)
+        async with httpx.AsyncClient() as client:
+            res = await client.get(
+                "https://sam.dsde-dev.broadinstitute.org/register/user/v2/self/info",
+                headers={
+                    "Authorization": auth_header,
+                },
+            )
+            if res.is_error: 
+                return None
+            return res.json()["userSubjectId"] # TODO: do same logic for authorization for other endpoints
+
     else: # try to extract from auth header (azure, google)
         return await _get_subject_id()
 

@@ -52,13 +52,11 @@ async def get_display_names() -> dict:
     return display_names
 
 
-async def create_user(decoded_token: dict) -> None:
+async def add_user_to_db(decoded_token: dict) -> None:
     logger.info(f"Creating user {decoded_token['sub']}")
     db = current_app.config["DATABASE"]
     try:
-        await db.collection("users").document(decoded_token["sub"]).set(
-            {"about": "", "notifications": []}
-        )
+        await db.collection("users").document(decoded_token["sub"]).set({"about": "", "notifications": []})
         display_name = decoded_token["sub"]
         if "given_name" in decoded_token:
             display_name = decoded_token["given_name"]

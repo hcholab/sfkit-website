@@ -114,14 +114,11 @@ async def verify_authorization_header(
         logger.info("no authorization key provided")
         return ""
 
+    db: firestore.AsyncClient = current_app.config["DATABASE"]
     doc = (
-        current_app.config["DATABASE"]
-        .collection("users")
-        .document("auth_keys")
-        .get()
-        .to_dict()
-        .get(auth_key)
-    )
+        await db.collection("users").document("auth_keys").get()
+    ).to_dict().get(auth_key)
+   
     if not doc:
         logger.info("invalid authorization key")
         return ""

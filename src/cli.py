@@ -20,7 +20,6 @@ bp = Blueprint("cli", __name__, url_prefix="/api")
 
 
 @bp.route("/upload_file", methods=["POST"])
-@authenticate
 async def upload_file() -> Tuple[dict, int]:
     auth_key = verify_authorization_header(request)
     if not auth_key:
@@ -66,7 +65,6 @@ async def upload_file() -> Tuple[dict, int]:
 
 
 @bp.route("/get_doc_ref_dict", methods=["GET"])
-@authenticate
 async def get_doc_ref_dict() -> Tuple[dict, int]:
     auth_key = verify_authorization_header(request)
     if not auth_key:
@@ -88,7 +86,6 @@ async def get_doc_ref_dict() -> Tuple[dict, int]:
 
 
 @bp.route("/get_username", methods=["GET"])
-@authenticate
 async def get_username() -> Tuple[dict, int]:
     auth_key = verify_authorization_header(request)
     if not auth_key:
@@ -146,7 +143,6 @@ async def update_firestore() -> Tuple[dict, int]:
 
 
 @bp.route("/create_cp0", methods=["GET"])
-@authenticate
 async def create_cp0() -> Tuple[dict, int]:
     auth_key = verify_authorization_header(request)
     if not auth_key:
