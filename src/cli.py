@@ -21,7 +21,7 @@ bp = Blueprint("cli", __name__, url_prefix="/api")
 
 @bp.route("/upload_file", methods=["POST"])
 async def upload_file() -> Tuple[dict, int]:
-    auth_key = verify_authorization_header(request)
+    auth_key = await verify_authorization_header(request)
     if not auth_key:
         return {"error": "unauthorized"}, 401
 
@@ -66,7 +66,7 @@ async def upload_file() -> Tuple[dict, int]:
 
 @bp.route("/get_doc_ref_dict", methods=["GET"])
 async def get_doc_ref_dict() -> Tuple[dict, int]:
-    auth_key = verify_authorization_header(request)
+    auth_key = await verify_authorization_header(request)
     if not auth_key:
         return {"error": "unauthorized"}, 401
 
@@ -87,7 +87,7 @@ async def get_doc_ref_dict() -> Tuple[dict, int]:
 
 @bp.route("/get_username", methods=["GET"])
 async def get_username() -> Tuple[dict, int]:
-    auth_key = verify_authorization_header(request)
+    auth_key = await verify_authorization_header(request)
     if not auth_key:
         return {"error": "unauthorized"}, 401
 
@@ -103,7 +103,7 @@ async def get_username() -> Tuple[dict, int]:
 
 
 async def update_firestore() -> Tuple[dict, int]:
-    auth_key = verify_authorization_header(request)
+    auth_key = await verify_authorization_header(request)
     if not auth_key:
         return {"error": "unauthorized"}, 401
 
@@ -144,7 +144,7 @@ async def update_firestore() -> Tuple[dict, int]:
 
 @bp.route("/create_cp0", methods=["GET"])
 async def create_cp0() -> Tuple[dict, int]:
-    auth_key = verify_authorization_header(request)
+    auth_key = await verify_authorization_header(request)
     if not auth_key:
         return {"error": "unauthorized"}, 401
 
