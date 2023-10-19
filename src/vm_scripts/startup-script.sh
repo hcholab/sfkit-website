@@ -28,6 +28,9 @@ demo_study=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/a
 auth_key=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/auth_key" -H "Metadata-Flavor: Google")
 echo $auth_key > auth_key.txt
 
+SFKIT_API_URL=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/SFKIT_API_URL" -H "Metadata-Flavor: Google")
+export SFKIT_API_URL
+
 apt-get --assume-yes update
 apt-get --assume-yes install build-essential
 apt-get install python3-pip python3-numpy wget git zip unzip -y 
