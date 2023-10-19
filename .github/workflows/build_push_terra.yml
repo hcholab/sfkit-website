@@ -15,6 +15,18 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          # TODO: Replace with GCR URL
+          images: |
+            ghcr.io/${{ steps.repository_owner.outputs.lowercase }}/${{ github.event.repository.name }}
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=ref,event=branch,enable=${{ github.ref != 'refs/heads/main' }}
+            type=ref,event=pratest
+
       - name: Build Docker image
         uses: docker/build-push-action@v5
         with:
@@ -22,10 +34,8 @@ jobs:
           # push: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]' }}
           cache-from: type=gha,scope=${{ github.ref_name }}
           cache-to: type=gha,scope=${{ github.ref_name }},mode=max
-          tags: |
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-            type=ref,event=branch,enable=${{ github.ref != 'refs/heads/main' }}
-            type=ref,event=pratest
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
 
       - name: AppSec scan with Trivy
         uses: broadinstitute/dsp-appsec-trivy-action@v1
