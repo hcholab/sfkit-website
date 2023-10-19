@@ -19,7 +19,7 @@ async def add_notification(
 ) -> None:
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("users").document(user_id)
-    doc_ref_dict: dict = await doc_ref.get().to_dict() or {}
+    doc_ref_dict: dict = (await doc_ref.get()).to_dict() or {}
     notifications: list[str] = doc_ref_dict.get(location, [])
     notifications.append(notification)
     await doc_ref.set({location: notifications}, merge=True)

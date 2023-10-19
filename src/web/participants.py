@@ -56,7 +56,7 @@ async def remove_participant() -> Response:
         return jsonify({"error": "Invalid input"}), 400
 
     doc_ref = db.collection("studies").document(study_id)
-    doc_ref_dict: dict = await doc_ref.get().to_dict()
+    doc_ref_dict: dict = (await doc_ref.get()).to_dict()
 
     # Check if the user is a participant in the study
     if user_id not in doc_ref_dict.get("participants", []):
@@ -81,7 +81,7 @@ async def approve_join_study() -> Response:
     user_id = request.args.get("userId")
 
     doc_ref = db.collection("studies").document(study_id)
-    doc_ref_dict: dict = await doc_ref.get().to_dict()
+    doc_ref_dict: dict = (await doc_ref.get()).to_dict()
 
     if user_id in doc_ref_dict.get("requested_participants", {}):
         del doc_ref_dict["requested_participants"][user_id]
@@ -110,7 +110,7 @@ async def request_join_study() -> Response:
 
         db = current_app.config["DATABASE"]
         doc_ref = db.collection("studies").document(study_id)
-        doc_ref_dict: dict = await doc_ref.get().to_dict()
+        doc_ref_dict: dict = (await doc_ref.get()).to_dict()
 
         if not doc_ref_dict:
             return jsonify({"error": "Study not found"}), 404
@@ -140,7 +140,7 @@ async def request_join_study() -> Response:
 # async def accept_invitation(study_title: str) -> Response:
 #     db = current_app.config["DATABASE"]
 #     doc_ref = db.collection("studies").document(study_id)
-#     doc_ref_dict: dict = await doc_ref.get().to_dict()
+#     doc_ref_dict: dict = (await doc_ref.get()).to_dict()
 
 #     if g.user["id"] not in doc_ref_dict["invited_participants"]:
 #         return redirect_with_flash(

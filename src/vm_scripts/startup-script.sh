@@ -30,6 +30,7 @@ echo $auth_key > auth_key.txt
 
 SFKIT_API_URL=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/SFKIT_API_URL" -H "Metadata-Flavor: Google")
 export SFKIT_API_URL
+echo "SFKIT_API_URL: $SFKIT_API_URL"
 
 apt-get --assume-yes update
 apt-get --assume-yes install build-essential

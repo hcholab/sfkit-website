@@ -1,5 +1,4 @@
 import asyncio
-from threading import Thread
 from typing import Tuple
 
 from quart import Blueprint, current_app, request
@@ -27,7 +26,7 @@ async def upload_file() -> Tuple[dict, int]:
 
     db = current_app.config["DATABASE"]
     user_dict = (
-        await db.collection("users").document("auth_keys").get().to_dict()[auth_key]
+        (await db.collection("users").document("auth_keys").get()).to_dict()[auth_key]
     )
     study_id = user_dict["study_id"]
     username = user_dict["username"]
@@ -36,7 +35,7 @@ async def upload_file() -> Tuple[dict, int]:
         f"upload_file: {study_id}, request: {request}, request.files: {request.files}"
     )
 
-    file = request.files.get("file", None)
+    file = (await request.files).get("file", None)
 
     if not file:
         logger.info("no file")
@@ -45,7 +44,7 @@ async def upload_file() -> Tuple[dict, int]:
     logger.info(f"filename: {file.filename}")
 
     doc_ref_dict: dict = (
-        await db.collection("studies").document(study_id).get().to_dict()
+        (await db.collection("studies").document(study_id).get()).to_dict()
     )
     role: str = str(doc_ref_dict["participants"].index(username))
 
@@ -71,15 +70,12 @@ async def get_doc_ref_dict() -> Tuple[dict, int]:
         return {"error": "unauthorized"}, 401
 
     db = current_app.config["DATABASE"]
-    study_id = (
-        await db.collection("users")
-        .document("auth_keys")
-        .get()
-        .to_dict()[auth_key]["study_id"]
-    )
+    doc_ref = await db.collection("users").document("auth_keys").get()
+    study_id = doc_ref.to_dict()[auth_key]["study_id"]
+   
 
     doc_ref_dict: dict = (
-        await db.collection("studies").document(study_id).get().to_dict()
+        (await db.collection("studies").document(study_id).get()).to_dict()
     )
 
     return doc_ref_dict, 200
@@ -93,22 +89,23 @@ async def get_username() -> Tuple[dict, int]:
 
     db = current_app.config["DATABASE"]
     username = (
-        await db.collection("users")
+        (await db.collection("users")
         .document("auth_keys")
-        .get()
+        .get())
         .to_dict()[auth_key]["username"]
     )
 
     return {"username": username}, 200
 
 
+@bp.route("/update_firestore", methods=["GET"])
 async def update_firestore() -> Tuple[dict, int]:
     auth_key = await verify_authorization_header(request)
     if not auth_key:
         return {"error": "unauthorized"}, 401
 
     db = current_app.config["DATABASE"]
-    user_dict = await db.collection("users").document("auth_keys").get().to_dict().get(auth_key, None)
+    user_dict = (await db.collection("users").document("auth_keys").get()).to_dict().get(auth_key, None)
     if not user_dict:
         return {"error": "invalid auth key"}, 401
 
@@ -118,7 +115,7 @@ async def update_firestore() -> Tuple[dict, int]:
     msg: str = str(request.args.get("msg"))
     _, parameter = msg.split("::")
     doc_ref = db.collection("studies").document(study_id)
-    doc_ref_dict: dict = await doc_ref.get().to_dict()
+    doc_ref_dict: dict = (await doc_ref.get()).to_dict()
     gcp_project: str = doc_ref_dict["personal_parameters"][username]["GCP_PROJECT"][
         "value"
     ]
@@ -126,7 +123,7 @@ async def update_firestore() -> Tuple[dict, int]:
 
 
     if parameter.startswith("status"):
-        return process_status(
+        return await process_status(
             db,
             username,
             study_id,
@@ -137,9 +134,9 @@ async def update_firestore() -> Tuple[dict, int]:
             role,
         )
     elif parameter.startswith("task"):
-        return process_task(db, username, parameter, doc_ref)
+        return await process_task(db, username, parameter, doc_ref)
     else:
-        return process_parameter(db, username, parameter, doc_ref)
+        return await process_parameter(db, username, parameter, doc_ref)
 
 
 @bp.route("/create_cp0", methods=["GET"])
@@ -150,14 +147,14 @@ async def create_cp0() -> Tuple[dict, int]:
 
     db = current_app.config["DATABASE"]
     study_id = (
-        await db.collection("users")
+        (await db.collection("users")
         .document("auth_keys")
-        .get()
+        .get())
         .to_dict()[auth_key]["study_id"]
     )
 
     doc_ref = current_app.config["DATABASE"].collection("studies").document(study_id)
-    doc_ref_dict: dict = await doc_ref.get().to_dict()
+    doc_ref_dict: dict = (await doc_ref.get()).to_dict()
 
     if not doc_ref_dict:
         return {"error": f"study {study_id} not found"}, 400

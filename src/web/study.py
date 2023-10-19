@@ -1,6 +1,5 @@
 import io
 from datetime import datetime
-from multiprocessing import Process
 import uuid
 
 from google.cloud import firestore
@@ -44,16 +43,15 @@ async def study() -> Response:
 
     return jsonify({"study": study})
 
-
+# TODO: use asyncio to delete in parallel. This requires making the google_cloud_compute functions async. Using multiple processing failed because inside daemon. Threads failed because of GIL.
 @bp.route("/restart_study", methods=["GET"])
 @authenticate
-async def restart_study() -> Response:
+async def restart_study() -> Response:  
     study_id = request.args.get("study_id")
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_id)
     doc_ref_dict: dict = (await doc_ref.get()).to_dict()
-
-    processes = []
+    
     for role, v in enumerate(doc_ref_dict["participants"]):
         participant = doc_ref_dict["personal_parameters"][v]
         if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
@@ -62,17 +60,9 @@ async def restart_study() -> Response:
                 if instance == format_instance_name(
                     google_cloud_compute.study_id, str(role)
                 ):
-                    p = Process(
-                        target=google_cloud_compute.delete_instance, args=(instance,)
-                    )
-                    p.start()
-                    processes.append(p)
+                    google_cloud_compute.delete_instance(instance)
 
-            p = Process(target=google_cloud_compute.delete_firewall, args=(None,))
-            p.start()
-            processes.append(p)
-    for p in processes:
-        p.join()
+            google_cloud_compute.delete_firewall(None)
     logger.info("Successfully Deleted gcp instances and firewalls")
 
     for participant in doc_ref_dict["participants"]:
@@ -155,16 +145,11 @@ async def delete_study() -> Response:
     doc_ref = db.collection("studies").document(study_id)
     doc_ref_dict: dict = (await doc_ref.get()).to_dict()
 
-    processes = []
     for participant in doc_ref_dict["personal_parameters"].values():
         if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
             google_cloud_compute = GoogleCloudCompute(study_id, gcp_project)
-            p = Process(target=google_cloud_compute.delete_everything)
-            p.start()
-            processes.append(p)
+            google_cloud_compute.delete_everything()
 
-    for p in processes:
-        p.join()
     logger.info("Successfully deleted GCP instances and other related resources")
 
     for participant in doc_ref_dict["personal_parameters"].values():

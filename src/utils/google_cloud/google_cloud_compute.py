@@ -381,7 +381,7 @@ class GoogleCloudCompute:
         if "dev" in os.getenv("SERVICE_URL"):
             metadata_config["items"].append({
                 'key': 'SFKIT_API_URL',
-                'value': os.getenv("SERVICE_URL")
+                'value': "https://sfkit-website-dev-bhj5a4wkqa-uc.a.run.app/api" # TODO: find better way to do this
             })
 
         if metadata:
