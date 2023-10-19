@@ -33,6 +33,7 @@ FROM us.gcr.io/broad-dsp-gcr-public/base/python:distroless
 
 WORKDIR /app
 
+COPY --from=builder /home/nonroot/.local/bin/hypercorn /bin/
 COPY --from=builder /home/nonroot/.local/lib /usr/lib/
 COPY --from=builder /app/*.py ./
 COPY --from=builder /app/src ./src/

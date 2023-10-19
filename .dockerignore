@@ -1,5 +1,5 @@
 *
-*.py
+!*.py
 !requirements*.txt
 !/src
 !/tests
