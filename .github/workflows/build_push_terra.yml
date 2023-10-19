@@ -3,7 +3,21 @@ name: Build and push Docker image to Terra
 on:
   push:
     branches: [main]
+    paths:
+      - "*.py"
+      - "requirements*.txt"
+      - "src/**"
+      - "tests/**"
+      - "Dockerfile"
+      - ".github/workflows/build_push_terra.yml"
   pull_request:
+    paths:
+      - "*.py"
+      - "requirements*.txt"
+      - "src/**"
+      - "tests/**"
+      - "Dockerfile"
+      - ".github/workflows/build_push_terra.yml"
 
 jobs:
   build:
