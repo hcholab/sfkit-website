@@ -25,7 +25,7 @@ jobs:
           tags: |
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=ref,event=branch,enable=${{ github.ref != 'refs/heads/main' }}
-            type=ref,event=pratest
+            type=ref,event=pr
 
       - name: Build Docker image
         uses: docker/build-push-action@v5
