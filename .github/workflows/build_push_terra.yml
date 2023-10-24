@@ -23,11 +23,11 @@ env:
   # Google project where artifacts are uploaded.
   GOOGLE_PROJECT: dsp-artifact-registry
   # Name of the app-specific Docker repository configured in GOOGLE_PROJECT.
-  REPOSITORY_NAME: ${{ github.event.repository.name }}
+  REPOSITORY_NAME: sfkit
   # Name of the image we'll be uploading into the Docker repository.
   # This is often equal to the GitHub repository name, but it might also be the
   # name of the Helm Chart if that's different.
-  IMAGE_NAME: ${{ github.event.repository.name }}
+  IMAGE_NAME: sfkit-server
   # This is the region-specific top-level Google-managed domain where our
   # GOOGLE_PROJECT/REPOSITORY_NAME can be found.
   GOOGLE_DOCKER_REPOSITORY: us-central1-docker.pkg.dev
