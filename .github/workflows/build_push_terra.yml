@@ -30,7 +30,7 @@ env:
   IMAGE_NAME: ${{ github.event.repository.name }}
   # This is the region-specific top-level Google-managed domain where our
   # GOOGLE_PROJECT/REPOSITORY_NAME can be found.
-  GOOGLE_DOCKER_REPOSITORY: us-central1-docker.pkg.devices
+  GOOGLE_DOCKER_REPOSITORY: us-central1-docker.pkg.dev
 
 jobs:
   generate-tag:
@@ -46,8 +46,6 @@ jobs:
           token: ${{ (github.actor != 'dependabot[bot]' && secrets.BROADBOT_TOKEN) || secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
-      # We use DRY_RUN so we don't push to the repo prematurely -- we may
-      # have code-gen changes, or we might not end up pushing at all.
       - name: Generate Tag
         uses: databiosphere/github-actions/actions/bumper@bumper-0.2.0
         id: tag
@@ -56,7 +54,6 @@ jobs:
           RELEASE_BRANCHES: ${{ github.event.repository.default_branch }}
           WITH_V: true
           GITHUB_TOKEN: ${{ (github.actor != 'dependabot[bot]' && secrets.BROADBOT_TOKEN) || secrets.GITHUB_TOKEN }}
-          DRY_RUN: true
 
   build-and-publish:
     needs: [generate-tag]
@@ -84,6 +81,18 @@ jobs:
             type=raw,value=${{ needs.generate-tag.outputs.tag }}
             type=semver,pattern=v{{major}},value=${{ needs.generate-tag.outputs.tag }},enable={{is_default_branch}}
             type=semver,pattern=v{{major}}.{{minor}},value=${{ needs.generate-tag.outputs.tag }},enable={{is_default_branch}}
+      
+      # GCP Config
+      - name: auth to GCP
+        id: auth
+        uses: google-github-actions/auth@v0
+        with:
+          workload_identity_provider: "projects/1038484894585/locations/global/workloadIdentityPools/github-wi-pool/providers/github-wi-provider"
+          service_account: "dsp-artifact-registry-push@dsp-artifact-registry.iam.gserviceaccount.com"
+      - name: Set up gcloud sdk
+        uses: google-github-actions/setup-gcloud@v0
+      - name: Explicitly auth Docker for Artifact Registry
+        run: gcloud auth configure-docker $GOOGLE_DOCKER_REPOSITORY --quiet
 
       - name: Build Docker image
         uses: docker/build-push-action@v5
@@ -96,3 +105,27 @@ jobs:
 
       - name: Run Trivy vulnerability scanner
         uses: broadinstitute/dsp-appsec-trivy-action@v1
+      
+      - name: Push Docker image
+        run: |
+          docker push ${{ env.GOOGLE_DOCKER_REPOSITORY }}/${{ env.GOOGLE_PROJECT }}/${{ env.REPOSITORY_NAME }}/${{ env.IMAGE_NAME }} --all-tags
+
+      # (Optional) Comment pushed image
+      - name: Comment pushed image
+        uses: actions/github-script@0.3.0
+        if: github.event_name == 'pull_request'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { issue: { number: issue_number }, repo: { owner, repo }  } = context;
+            github.issues.createComment({ issue_number, owner, repo, body: 'Pushed image: ${{ steps.image-name.outputs.tagged }}' });
+
+  report-to-sherlock:
+    uses: broadinstitute/sherlock/.github/workflows/client-report-app-version.yaml@main
+    needs: [build-and-publish, generate-tag]
+    with:
+      chart-name: "sfkit"
+      new-version: ${{ needs.generate-tag.outputs.tag }}
+    permissions:
+      contents: "read"
+      id-token: "write"
