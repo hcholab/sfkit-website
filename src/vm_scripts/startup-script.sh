@@ -31,7 +31,9 @@ echo $auth_key > auth_key.txt
 SFKIT_API_URL=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/SFKIT_API_URL" -H "Metadata-Flavor: Google")
 export SFKIT_API_URL
 echo "SFKIT_API_URL: $SFKIT_API_URL"
-export SFKIT_PROXY_ON=true
+if [[ $demo_study != "true" ]]; then
+    export SFKIT_PROXY_ON=true
+fi
 
 apt-get --assume-yes update
 apt-get --assume-yes install build-essential
@@ -44,6 +46,7 @@ bash add-google-cloud-ops-agent-repo.sh --also-install
 bash <(curl -sL https://github.com/hcholab/sfkit/releases/latest/download/install.sh)
 export PYTHONUNBUFFERED=TRUE
 
+cd /sfkit
 cp ../auth_key.txt .
 sfkit auth 
 sfkit networking --ports ${ports} 

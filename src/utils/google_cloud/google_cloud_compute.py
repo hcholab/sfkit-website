@@ -294,6 +294,7 @@ class GoogleCloudCompute:
         boot_disk_size: int = 10,
         delete: bool = True,
     ) -> str:
+        logger.info(f"Setting up instance {name}...")
         if name in self.list_instances() and delete:
             self.delete_instance(name)
             logger.info(f"Waiting for instance {name} to be deleted")
@@ -378,7 +379,7 @@ class GoogleCloudCompute:
             ]
         }
 
-        if "dev" in os.getenv("SERVICE_URL"):
+        if "dev" in os.getenv("SERVICE_URL", ""):
             metadata_config["items"].append({
                 'key': 'SFKIT_API_URL',
                 'value': "https://sfkit-website-dev-bhj5a4wkqa-uc.a.run.app/api" # TODO: find better way to do this
@@ -399,6 +400,7 @@ class GoogleCloudCompute:
         self.wait_for_zone_operation(self.zone, operation["name"])
 
     def list_instances(self, subnetwork: str = "") -> list[str]:
+        logger.info("Listing VM instances...")
         try:
             result = self.compute.instances().list(project=self.gcp_project, zone=self.zone).execute()
         except Exception as e:
