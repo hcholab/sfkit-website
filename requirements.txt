@@ -1,4 +1,3 @@
-coverage
 firebase_admin
 google_api_python_client
 google-cloud-firestore
@@ -9,15 +8,13 @@ google-cloud-storage
 httpx
 ipaddr
 Jinja2
-mock-firestore
 protobuf
 PyJWT
 python_http_client
 quart
 quart_cors
-pytest
-pytest-mock
 Requests
 sendgrid
 tenacity
 Werkzeug
+
