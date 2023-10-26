@@ -105,7 +105,7 @@ async def handler():
         # using a study-specific barrier,
         # wait until all participants in a study are connected,
         # and then initiate the ICE protocol for it
-        barrier = study_barriers.setdefault(study_id, asyncio.Barrier(len(study_participants)))
+        barrier = study_barriers.setdefault(study_id, asyncio.Barrier(len(study_participants)-1)) # -1 assuming cp0 doesn't use the proxy
         async with barrier:
             if pid == 0:
                 print("All parties have connected:", ", ".join(str(k) for k in parties))
