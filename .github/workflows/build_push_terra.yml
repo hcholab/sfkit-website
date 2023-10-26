@@ -18,6 +18,7 @@ on:
       - "src/**"
       - "tests/**"
       - "Dockerfile"
+      - ".github/workflows/build_push_terra.yml"
 
 env:
   # Delete me when ready to merge dev back into main
