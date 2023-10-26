@@ -5,9 +5,12 @@ from enum import Enum
 from typing import Awaitable, Callable, Dict, List
 
 import httpx
-from quart import Blueprint, abort, copy_current_websocket_context, current_app, websocket
+from google.cloud import firestore
+from quart import (Blueprint, abort, copy_current_websocket_context,
+                   current_app, websocket)
 
 from src.auth import verify_token
+from src.utils.api_functions import verify_authorization_header
 
 bp = Blueprint("signaling", __name__, url_prefix="/api")
 
@@ -49,8 +52,8 @@ study_parties: Dict[str, Dict[PID, Callable[[Message], Awaitable[None]]]] = {}
 
 # Environment variables
 PORT = os.getenv("PORT", "8000")  # Set automatically by Cloud Run
-ORIGIN = os.getenv("ORIGIN", f"ws://host.docker.internal:{PORT}")  # e.g. ws://sfkit.terra.bio (/.org)
-TERRA = os.getenv("TERRA", "y")
+ORIGIN = os.getenv("ORIGIN", "wss://sfkit-website-dev-bhj5a4wkqa-uc.a.run.app") # host.docker.internal:{PORT}  # e.g. ws://sfkit.terra.bio (/.org) # TODO: fix default
+TERRA = os.getenv("TERRA", "")
 
 # Header
 AUTH_HEADER = "Authorization"  # In Terra, this is machine ID, in non-terra, this is a JWT?
@@ -59,6 +62,7 @@ STUDY_ID_HEADER = ("X-MPC-Study-ID")
 @bp.websocket("/ice")
 async def handler():
     if websocket.headers.get("Origin") != ORIGIN:
+        print(f"Unexpected Origin header: {websocket.headers.get('Origin')} != {ORIGIN}")
         await Message(MessageType.ERROR, "Unexpected Origin header").send()
         abort(401)
 
@@ -138,6 +142,7 @@ async def handler():
 async def _get_user_id():
     # sourcery skip: assign-if-exp, reintroduce-else, remove-unnecessary-else, swap-if-else-branches
     if TERRA:
+        print(f"TERRA is {TERRA}")
         auth_header = websocket.headers.get(AUTH_HEADER)
         async with httpx.AsyncClient() as client:
             res = await client.get(
@@ -158,30 +163,39 @@ async def _get_subject_id() -> str:
     auth_header: str = websocket.headers.get(AUTH_HEADER, "")
     if not auth_header:
         return None
-    try: # azure auth
-        print("Trying to get subject ID from Azure")
-        decoded_token = await verify_token(auth_header.split(" ")[1])
-        return decoded_token["sub"]
-    except Exception as e: # google auth (machine ID)
-        print("Trying to get subject ID from Google")
-        # TODO: read e to see if google is what we want
-        async with httpx.AsyncClient() as client:
-            res = await client.get(
-                "https://www.googleapis.com/oauth2/v3/tokeninfo",
-                headers={
-                    "Authorization": auth_header,
-                },
-            )
-            if not res.is_error: 
-                return str(
-                    res.json()["sub"]
-                )  
-            await Message(
-                MessageType.ERROR,
-                f"Unable to fetch subject ID from Google: {res.status_code} {str(res.read())}",
-            ).send()
-    return None
-    # TODO: add option using auth_key
+    print(f"auth_header is {auth_header}")
+    auth_key = auth_header.split(" ")[1]
+    if not auth_key:
+        await Message(MessageType.ERROR, "Unable to read auth_key").send()
+    print(f"auth_key is {auth_key}")
+    db: firestore.AsyncClient = current_app.config["DATABASE"]
+    user_dict = (
+        (await db.collection("users").document("auth_keys").get()).to_dict()[auth_key]
+    )
+    return user_dict["username"]
+    # except Exception as e: # azure auth
+    #     print("Trying to get subject ID from Azure")
+    #     decoded_token = await verify_token(auth_header.split(" ")[1])
+    #     return decoded_token["sub"]
+    # except Exception as e: # google auth (machine ID)
+    #     print("Trying to get subject ID from Google")
+    #     # TODO: read e to see if google is what we want
+    #     async with httpx.AsyncClient() as client:
+    #         res = await client.get(
+    #             "https://www.googleapis.com/oauth2/v3/tokeninfo",
+    #             headers={
+    #                 "Authorization": auth_header,
+    #             },
+    #         )
+    #         if not res.is_error: 
+    #             return str(
+    #                 res.json()["sub"]
+    #             )  
+    #         await Message(
+    #             MessageType.ERROR,
+    #             f"Unable to fetch subject ID from Google: {res.status_code} {str(res.read())}",
+    #         ).send()
+    # return None
 
 async def _get_study_participants(study_id: str) -> List[str]:
     db = current_app.config["DATABASE"]
