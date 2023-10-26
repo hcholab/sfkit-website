@@ -2,7 +2,8 @@ name: Build and push Docker image to Terra
 
 on:
   push:
-    branches: [main]
+    # when ready to merge dev branch back into main, change this to main
+    branches: [dev]
     paths:
       - "*.py"
       - "requirements*.txt"
@@ -20,6 +21,8 @@ on:
       - ".github/workflows/build_push_terra.yml"
 
 env:
+  # Delete me when ready to merge dev back into main
+  TARGET_BRANCH: dev
   # Google project where artifacts are uploaded.
   GOOGLE_PROJECT: dsp-artifact-registry
   # Name of the app-specific Docker repository configured in GOOGLE_PROJECT.
@@ -27,7 +30,7 @@ env:
   # Name of the image we'll be uploading into the Docker repository.
   # This is often equal to the GitHub repository name, but it might also be the
   # name of the Helm Chart if that's different.
-  IMAGE_NAME: sfkit-server
+  IMAGE_NAME: ${{ github.event.repository.name }}
   # This is the region-specific top-level Google-managed domain where our
   # GOOGLE_PROJECT/REPOSITORY_NAME can be found.
   GOOGLE_DOCKER_REPOSITORY: us-central1-docker.pkg.dev
@@ -51,7 +54,7 @@ jobs:
         id: tag
         env:
           DEFAULT_BUMP: patch
-          RELEASE_BRANCHES: ${{ github.event.repository.default_branch }}
+          RELEASE_BRANCHES: ${{ env.TARGET_BRANCH || github.event.repository.default_branch }}
           WITH_V: true
           GITHUB_TOKEN: ${{ (github.actor != 'dependabot[bot]' && secrets.BROADBOT_TOKEN) || secrets.GITHUB_TOKEN }}
 
@@ -124,7 +127,7 @@ jobs:
     uses: broadinstitute/sherlock/.github/workflows/client-report-app-version.yaml@main
     needs: [build-and-publish, generate-tag]
     with:
-      chart-name: "sfkit"
+      chart-name: "sfkitwebsite"
       new-version: ${{ needs.generate-tag.outputs.tag }}
     permissions:
       contents: "read"
