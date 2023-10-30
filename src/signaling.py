@@ -37,8 +37,8 @@ class Message:
         for key, value in msg.items():
             if isinstance(value, Enum):
                 msg[key] = value.value
-        if msg["type"] == "error":
-            print("Sending error", msg)
+        # if msg["type"] == "error":
+          #   print("Sending error", msg)
         await ws.send_json(msg)
 
     @staticmethod
@@ -126,6 +126,7 @@ async def handler():
                     ).send()
                     continue
                 elif msg.targetPID not in parties or msg.targetPID == pid:
+                    print(f"Unexpected message is {msg}. Parties are {parties}")
                     await Message(
                         MessageType.ERROR,
                         f"Unexpected target id {msg.targetPID}",
