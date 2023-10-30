@@ -33,7 +33,7 @@ class Message:
     sourcePID: PID = -1
     targetPID: PID = -1
 
-    async def send(self, ws=websocket):
+    async def send(self, ws):
         msg = asdict(self)
         for key, value in msg.items():
             if isinstance(value, Enum):
@@ -67,17 +67,17 @@ async def handler():
     print(threading.get_ident())
     if websocket.headers.get("Origin") != ORIGIN:
         print(f"Unexpected Origin header: {websocket.headers.get('Origin')} != {ORIGIN}")
-        await Message(MessageType.ERROR, "Unexpected Origin header").send()
+        await Message(MessageType.ERROR, "Unexpected Origin header").send(websocket)
         abort(401)
 
-    user_id = await _get_user_id()
+    user_id = await _get_user_id(websocket)
     if not user_id:
-        await Message(MessageType.ERROR, "Missing authentication").send()
+        await Message(MessageType.ERROR, "Missing authentication").send(websocket)
         abort(401)
 
     study_id = websocket.headers.get(STUDY_ID_HEADER)
     if not study_id:
-        await Message(MessageType.ERROR, f"Missing {STUDY_ID_HEADER} header").send()
+        await Message(MessageType.ERROR, f"Missing {STUDY_ID_HEADER} header").send(websocket)
         abort(400)
 
     study_participants = await _get_study_participants(study_id)
@@ -86,7 +86,7 @@ async def handler():
     if pid < 0:
         await Message(
             MessageType.ERROR, f"User {user_id} is not in study {study_id}"
-        ).send()
+        ).send(websocket)
         abort(403)
 
     parties = study_parties.setdefault(study_id, {})
@@ -94,7 +94,7 @@ async def handler():
         await Message(
             MessageType.ERROR,
             f"Party {pid} is already connected to study {study_id}",
-        ).send()
+        ).send(websocket)
         abort(409)
 
     try:
@@ -126,14 +126,14 @@ async def handler():
                 if msg.targetPID < 0:
                     await Message(
                         MessageType.ERROR, f"Missing target PID: {msg}"
-                    ).send()
+                    ).send(websocket)
                     continue
                 elif msg.targetPID not in parties or msg.targetPID == pid:
                     print(f"Unexpected message is {msg}. Parties are {parties}")
                     await Message(
                         MessageType.ERROR,
                         f"Unexpected target id {msg.targetPID}",
-                    ).send()
+                    ).send(websocket)
                     continue
                 else:
                     target_send = parties[msg.targetPID]
@@ -145,11 +145,11 @@ async def handler():
         print(f"Party {pid} disconnected from study {study_id}")
 
 
-async def _get_user_id():
+async def _get_user_id(ws):
     # sourcery skip: assign-if-exp, reintroduce-else, remove-unnecessary-else, swap-if-else-branches
     if TERRA:
         print(f"TERRA is {TERRA}")
-        auth_header = websocket.headers.get(AUTH_HEADER)
+        auth_header = ws.headers.get(AUTH_HEADER)
         async with httpx.AsyncClient() as client:
             res = await client.get(
                 "https://sam.dsde-dev.broadinstitute.org/register/user/v2/self/info",
@@ -162,7 +162,7 @@ async def _get_user_id():
             return res.json()["userSubjectId"] # TODO: do same logic for authorization for other endpoints
 
     else: # try to extract from auth header (azure, google)
-        return await _get_subject_id(websocket)
+        return await _get_subject_id(ws)
 
 
 async def _get_subject_id(ws) -> str:
