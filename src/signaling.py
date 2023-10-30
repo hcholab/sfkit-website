@@ -162,17 +162,17 @@ async def _get_user_id():
             return res.json()["userSubjectId"] # TODO: do same logic for authorization for other endpoints
 
     else: # try to extract from auth header (azure, google)
-        return await _get_subject_id()
+        return await _get_subject_id(websocket)
 
 
-async def _get_subject_id() -> str:
-    auth_header: str = websocket.headers.get(AUTH_HEADER, "")
+async def _get_subject_id(ws) -> str:
+    auth_header: str = ws.headers.get(AUTH_HEADER, "")
     if not auth_header:
         return None
     print(f"auth_header is {auth_header}")
     auth_key = auth_header.split(" ")[1]
     if not auth_key:
-        await Message(MessageType.ERROR, "Unable to read auth_key").send()
+        await Message(MessageType.ERROR, "Unable_to_read_auth_key").send(ws)
     print(f"auth_key is {auth_key}")
     db: firestore.AsyncClient = current_app.config["DATABASE"]
     user_dict = (
