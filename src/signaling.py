@@ -37,6 +37,8 @@ class Message:
         for key, value in msg.items():
             if isinstance(value, Enum):
                 msg[key] = value.value
+        if msg.type == MessageType.ERROR:
+            print("Sending error", msg)
         await ws.send_json(msg)
 
     @staticmethod
