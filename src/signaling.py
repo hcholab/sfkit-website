@@ -115,6 +115,7 @@ async def handler():
             print(f"{pid}: All parties have connected:", ", ".join(str(k) for k in parties))
 
             while True:
+                print(f"pid: {pid}, parties: {parties}")
                 # read the next message and override its PID
                 # (this prevents PID spoofing)
                 msg = await Message.receive()
