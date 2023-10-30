@@ -43,8 +43,8 @@ class Message:
         await ws.send_json(msg)
 
     @staticmethod
-    async def receive():
-        msg = await websocket.receive_json()
+    async def receive(ws):
+        msg = await ws.receive_json()
         print("Received", msg)
         msg["type"] = MessageType(msg["type"])
         return Message(**msg)
@@ -118,7 +118,7 @@ async def handler():
                 print(f"pid: {pid}, parties: {parties}")
                 # read the next message and override its PID
                 # (this prevents PID spoofing)
-                msg = await Message.receive()
+                msg = await Message.receive(websocket)
                 msg.sourcePID = pid
                 msg.studyID = study_id
 
