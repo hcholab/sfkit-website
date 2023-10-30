@@ -2,6 +2,7 @@ import asyncio
 import os
 from dataclasses import asdict, dataclass
 from enum import Enum
+import threading
 from typing import Awaitable, Callable, Dict, List
 
 import httpx
@@ -63,6 +64,7 @@ STUDY_ID_HEADER = ("X-MPC-Study-ID")
 
 @bp.websocket("/ice")
 async def handler():
+    print(threading.get_ident())
     if websocket.headers.get("Origin") != ORIGIN:
         print(f"Unexpected Origin header: {websocket.headers.get('Origin')} != {ORIGIN}")
         await Message(MessageType.ERROR, "Unexpected Origin header").send()
