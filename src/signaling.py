@@ -100,8 +100,8 @@ async def handler():
     try:
         # store the current websocket send method for the party
         @copy_current_websocket_context
-        async def ws_send(msg: Message):
-            await msg.send()
+        async def ws_send(msg: Message, ws=websocket):
+            await msg.send(ws)
 
         parties[pid] = ws_send
         print(f"Registered websocket for party {pid}")
@@ -137,7 +137,7 @@ async def handler():
                     continue
                 else:
                     target_send = parties[msg.targetPID]
-                    await target_send(msg)
+                    await target_send(msg, websocket)
     except Exception as e:
         print(f"Terminal connection error for party {pid} in study {study_id}: {e}")
     finally:
