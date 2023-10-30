@@ -111,8 +111,8 @@ async def handler():
         # and then initiate the ICE protocol for it
         barrier = study_barriers.setdefault(study_id, asyncio.Barrier(len(study_participants))) 
         async with barrier:
-            if pid == 0:
-                print("All parties have connected:", ", ".join(str(k) for k in parties))
+            # if pid == 0:
+            print(f"{pid}: All parties have connected:", ", ".join(str(k) for k in parties))
 
             while True:
                 # read the next message and override its PID
