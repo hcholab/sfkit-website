@@ -2,16 +2,11 @@ import asyncio
 import os
 from dataclasses import asdict, dataclass
 from enum import Enum
-import threading
-from typing import Awaitable, Callable, Dict, List
+from typing import Dict, List
 
 import httpx
 from google.cloud import firestore
-from quart import (Blueprint, abort, copy_current_websocket_context,
-                   current_app, websocket)
-
-from src.auth import verify_token
-from src.utils.api_functions import verify_authorization_header
+from quart import Blueprint, Websocket, abort, current_app, websocket
 
 bp = Blueprint("signaling", __name__, url_prefix="/api")
 
@@ -33,17 +28,15 @@ class Message:
     sourcePID: PID = -1
     targetPID: PID = -1
 
-    async def send(self, ws):
+    async def send(self, ws: Websocket):
         msg = asdict(self)
         for key, value in msg.items():
             if isinstance(value, Enum):
                 msg[key] = value.value
-        # if msg["type"] == "error":
-          #   print("Sending error", msg)
         await ws.send_json(msg)
 
     @staticmethod
-    async def receive(ws):
+    async def receive(ws: Websocket):
         msg = await ws.receive_json()
         print("Received", msg)
         msg["type"] = MessageType(msg["type"])
@@ -51,7 +44,7 @@ class Message:
 
 # in-memory stores for Websockets
 study_barriers: Dict[str, asyncio.Barrier] = {}
-study_parties: Dict[str, Dict[PID, Callable[[Message], Awaitable[None]]]] = {}
+study_parties: Dict[str, Dict[PID, Websocket]] = {}
 
 # Environment variables
 PORT = os.getenv("PORT", "8000")  # Set automatically by Cloud Run
@@ -64,7 +57,6 @@ STUDY_ID_HEADER = ("X-MPC-Study-ID")
 
 @bp.websocket("/ice")
 async def handler():
-    print(threading.get_ident())
     if websocket.headers.get("Origin") != ORIGIN:
         print(f"Unexpected Origin header: {websocket.headers.get('Origin')} != {ORIGIN}")
         await Message(MessageType.ERROR, "Unexpected Origin header").send(websocket)
@@ -98,10 +90,8 @@ async def handler():
         abort(409)
 
     try:
-        async def ws_send(msg: Message, ws):
-            await msg.send(ws)
-
-        parties[pid] = websocket
+        # store the current websocket for the party
+        parties[pid] = websocket._get_current_object() 
         print(f"Registered websocket for party {pid}")
 
         # using a study-specific barrier,
@@ -109,8 +99,8 @@ async def handler():
         # and then initiate the ICE protocol for it
         barrier = study_barriers.setdefault(study_id, asyncio.Barrier(len(study_participants))) 
         async with barrier:
-            # if pid == 0:
-            print(f"{pid}: All parties have connected:", ", ".join(str(k) for k in parties))
+            if pid == 0:
+                print(f"{pid}: All parties have connected:", ", ".join(str(k) for k in parties))
 
             while True:
                 print(f"pid: {pid}, parties: {parties}")
@@ -135,9 +125,9 @@ async def handler():
                     continue
                 else:
                     target_ws = parties[msg.targetPID]
-                    await ws_send(msg, target_ws)
+                    await msg.send(target_ws)
     except Exception as e:
-        print(f"Terminal connection error for party {pid} in study {study_id}: {e}")
+        print(f"Terminal connection error for party {pid} in study {study_id}: {e.with_traceback()}")
     finally:
         del parties[pid]
         print(f"Party {pid} disconnected from study {study_id}")
