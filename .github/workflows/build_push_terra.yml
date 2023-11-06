@@ -19,6 +19,8 @@ on:
       - "tests/**"
       - "Dockerfile"
       - ".github/workflows/build_push_terra.yml"
+  schedule:
+    - cron: "30 12 * * 1"
 
 env:
   # Delete me when ready to merge dev back into main
