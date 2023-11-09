@@ -1,3 +1,4 @@
+import uuid
 from quart import current_app
 from google.cloud.firestore_v1 import FieldFilter
 
@@ -67,3 +68,10 @@ async def add_user_to_db(decoded_token: dict) -> None:
         )
     except Exception as e:
         raise RuntimeError({"error": "Failed to create user", "details": str(e)}) from e
+
+def is_valid_uuid(val):
+    try:
+        uuid.UUID(str(val))
+        return True
+    except ValueError:
+        return False

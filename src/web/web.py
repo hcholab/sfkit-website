@@ -7,7 +7,7 @@ from datetime import datetime
 from firebase_admin import auth as firebase_auth
 from quart import Blueprint, Response, current_app, jsonify, request, send_file
 
-from src.api_utils import get_display_names, get_studies
+from src.api_utils import get_display_names, get_studies, is_valid_uuid
 from src.auth import authenticate, verify_token
 from src.utils import custom_logging
 from src.utils.generic_functions import add_notification, remove_notification
@@ -216,6 +216,10 @@ async def download_results_file() -> Response:
 
     db = current_app.config["DATABASE"]
     study_id = request.args.get("study_id")
+
+    # verify study_id for added security against path-injection
+    if not is_valid_uuid(study_id):
+        return jsonify({"error": "Invalid study_id"}), 400
 
     doc_ref_dict = (
         await db.collection("studies").document(study_id).get()
