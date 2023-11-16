@@ -372,6 +372,12 @@ class GoogleCloudCompute:
             "r",
         ).read()
 
+        if role == "0":
+            startup_script = open(
+            os.path.join(os.path.dirname(__file__), "../../vm_scripts/startup-script_user_cp0.sh"),
+            "r",
+        ).read()
+
         metadata_config = {
             "items": [
                 {"key": "startup-script", "value": startup_script},
