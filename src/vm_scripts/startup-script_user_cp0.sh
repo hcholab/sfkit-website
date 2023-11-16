@@ -5,6 +5,11 @@ touch startup_was_launched
 
 echo $(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/auth_key" -H "Metadata-Flavor: Google") > auth_key.txt
 
+# Misc configurations
+sudo sysctl -w net.core.rmem_max=2500000 && sudo sysctl -w net.core.wmem_max=2500000
+sudo ulimit -n 1000000 && sudo ulimit -u 1000000
+export PYTHONUNBUFFERED=TRUE
+
 mkdir -p sfkit && chmod -R 777 sfkit
 commands=("auth" "networking --ports 8020,8040" "generate_keys" "run_protocol")
 
