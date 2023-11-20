@@ -11,11 +11,12 @@ sudo bash -c "ulimit -n 1000000 && ulimit -u 1000000"
 export PYTHONUNBUFFERED=TRUE
 
 mkdir -p sfkit && chmod -R 777 sfkit
-commands=("auth" "networking --ports 8020,8040" "generate_keys" "run_protocol")
-
 curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh ./get-docker.sh
 sudo docker pull us-central1-docker.pkg.dev/dsp-artifact-registry/sfkit/sfkit # Pull image once
 
+cat > run_docker_commands.sh << 'EOF'
+#!/bin/bash
+commands=("auth" "networking --ports 8020,8040" "generate_keys" "run_protocol")
 for cmd in "${commands[@]}"
 do
     sudo docker run --net host --cap-add net_admin \
@@ -26,4 +27,7 @@ do
     -v $PWD/auth_key.txt:/sfkit/auth_key.txt:ro \
     us-central1-docker.pkg.dev/dsp-artifact-registry/sfkit/sfkit $cmd
 done
+EOF
 
+chmod +x run_docker_commands.sh
+nohup ./run_docker_commands.sh > output.log 2>&1 &
