@@ -15,18 +15,19 @@ from src.utils.google_cloud.google_cloud_compute import (
 logger = custom_logging.setup_logging(__name__)
 
 
-async def process_status(
-    db, username, study_id, parameter, doc_ref, doc_ref_dict, gcp_project, role
-):
+async def process_status(db, username, study_id, parameter, doc_ref, doc_ref_dict, gcp_project, role):
     status = parameter.split("=")[1]
     await update_status(db.transaction(), doc_ref, username, status)
-    if (
-        "Finished protocol" in status
-        and doc_ref_dict["setup_configuration"] == "website"
-    ):
-        if doc_ref_dict["personal_parameters"][username]["DELETE_VM"]["value"] == "Yes":
+
+    is_finished_protocol = "Finished protocol" in status
+    is_website_setup = doc_ref_dict["setup_configuration"] == "website"
+    is_delete_vm_yes = doc_ref_dict["personal_parameters"][username]["DELETE_VM"]["value"] == "Yes"
+    is_role_zero = role == "0"
+
+    if is_finished_protocol:
+        if is_website_setup and is_delete_vm_yes:
             asyncio.create_task(delete_instance(study_id, gcp_project, role))
-        else:
+        elif is_website_setup or is_role_zero:
             asyncio.create_task(stop_instance(study_id, gcp_project, role))
 
     return {}, 200
