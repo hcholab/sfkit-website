@@ -110,6 +110,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           load: true
+          build-args: |
+            APP_VERSION=${{ github.sha }}-${{ github.run_attempt }}
           cache-from: type=gha,scope=${{ github.ref_name }}
           cache-to: type=gha,scope=${{ github.ref_name }},mode=max
           tags: ${{ steps.meta.outputs.tags }}

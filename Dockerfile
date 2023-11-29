@@ -38,4 +38,7 @@ COPY --from=builder /home/nonroot/.local/lib /usr/lib/
 COPY --from=builder /app/*.py ./
 COPY --from=builder /app/src ./src/
 
+ARG APP_VERSION
+ENV APP_VERSION=${APP_VERSION:-latest}
+
 ENTRYPOINT ["hypercorn", "app:app", "--bind", "0.0.0.0:8080"]
