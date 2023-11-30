@@ -1,11 +1,23 @@
+import os
 import uuid
-from quart import current_app
+from urllib.parse import urlparse, urlunsplit
+
 from google.cloud.firestore_v1 import FieldFilter
+from quart import current_app
 
 from src.utils import custom_logging
 
-
 logger = custom_logging.setup_logging(__name__)
+
+
+def get_api_url():
+    return urlparse(os.getenv("SFKIT_API_URL"))
+
+
+def get_websocket_origin():
+    url = get_api_url()
+    scheme = 'wss' if url.scheme == 'https' else 'ws'
+    return urlunsplit((scheme, str(url.netloc), '', '', ''))
 
 
 async def get_studies(private_filter=None) -> list:
