@@ -62,7 +62,7 @@ jobs:
           DEFAULT_BUMP: patch
           RELEASE_BRANCHES: ${{ env.TARGET_BRANCH || github.event.repository.default_branch }}
           WITH_V: true
-          GITHUB_TOKEN: ${{ (github.actor != 'dependabot[bot]' && secrets.BROADBOT_TOKEN) || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-and-publish:
     needs: [generate-tag]
@@ -139,8 +139,39 @@ jobs:
     uses: broadinstitute/sherlock/.github/workflows/client-report-app-version.yaml@main
     needs: [build-and-publish, generate-tag]
     with:
-      chart-name: "sfkitwebsite"
+      chart-name: "sfkit"
       new-version: ${{ needs.generate-tag.outputs.tag }}
     permissions:
       contents: "read"
       id-token: "write"
+  
+  set-version-in-terra-dev:
+    # Put new version in Broad dev environment
+    uses: broadinstitute/sherlock/.github/workflows/client-set-environment-app-version.yaml@main
+    needs: [build-and-publish, report-to-sherlock]
+    if: ${{ github.ref_name == 'dev' }}
+    with:
+      new-version: ${{ needs.publish-job.outputs.tag }}
+      chart-name: 'sfkit'
+      environment-name: 'dev'
+    secrets:
+      sync-git-token: ${{ secrets.BROADBOT_TOKEN }}
+    permissions:
+      id-token: 'write'
+  
+  # Uncomment this to have success/failure notifications sent to Slack for auto deploys
+  # report workflow status in slack
+  # see https://docs.google.com/document/d/1G6-whnNJvON6Qq1b3VvRJFC7M9M-gu2dAVrQHDyp9Us/edit?usp=sharing
+  # report-workflow:
+  #   uses: broadinstitute/sherlock/.github/workflows/client-report-workflow.yaml@main
+  #   with:
+  #     # Channels to notify upon workflow success or failure
+  #     notify-slack-channels-upon-workflow-completion: '#YOUR_CHANNEL_HERE'
+
+  #     # Channels to notify upon workflow success only
+  #     # notify-slack-channels-upon-workflow-success: "#channel-here"
+
+  #     # Channels to notify upon workflow failure only
+  #     # notify-slack-channels-upon-workflow-failure: "#channel-here"
+  #   permissions:
+  #     id-token: 'write'
