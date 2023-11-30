@@ -62,7 +62,7 @@ jobs:
           DEFAULT_BUMP: patch
           RELEASE_BRANCHES: ${{ env.TARGET_BRANCH || github.event.repository.default_branch }}
           WITH_V: true
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ (github.actor != 'dependabot[bot]' && secrets.BROADBOT_TOKEN) || secrets.GITHUB_TOKEN }}
 
   build-and-publish:
     needs: [generate-tag]
@@ -144,7 +144,7 @@ jobs:
     permissions:
       contents: "read"
       id-token: "write"
-  
+
   set-version-in-terra-dev:
     # Put new version in Broad dev environment
     uses: broadinstitute/sherlock/.github/workflows/client-set-environment-app-version.yaml@main
@@ -152,13 +152,13 @@ jobs:
     if: ${{ github.ref_name == 'dev' }}
     with:
       new-version: ${{ needs.publish-job.outputs.tag }}
-      chart-name: 'sfkit'
-      environment-name: 'dev'
+      chart-name: "sfkit"
+      environment-name: "dev"
     secrets:
       sync-git-token: ${{ secrets.BROADBOT_TOKEN }}
     permissions:
-      id-token: 'write'
-  
+      id-token: "write"
+
   # Uncomment this to have success/failure notifications sent to Slack for auto deploys
   # report workflow status in slack
   # see https://docs.google.com/document/d/1G6-whnNJvON6Qq1b3VvRJFC7M9M-gu2dAVrQHDyp9Us/edit?usp=sharing

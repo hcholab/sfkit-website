@@ -1,5 +1,8 @@
 from copy import deepcopy
+import os
 
+APP_VERSION = os.getenv('APP_VERSION', '')
+BUILD_VERSION = os.getenv('BUILD_VERSION', '')
 SERVER_GCP_PROJECT = "broad-cho-priv1"
 SERVER_REGION = "us-central1"
 SERVER_ZONE = f"{SERVER_REGION}-a"
