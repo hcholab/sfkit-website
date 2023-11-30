@@ -12,4 +12,4 @@ async def status() -> Tuple[dict, int]:
 
 @bp.route("/version", methods=["GET"])
 async def version() -> Tuple[dict, int]:
-    return {"version": constants.BUILD_VERSION}, 200
+    return {"appVersion": constants.APP_VERSION, "buildVersion": constants.BUILD_VERSION}, 200
