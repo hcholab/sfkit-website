@@ -14,11 +14,6 @@ def get_api_url():
     return urlparse(os.getenv("SFKIT_API_URL"))
 
 
-def get_api_origin():
-    url = get_api_url()
-    return urlunsplit((str(url.scheme), str(url.netloc), '', '', ''))
-
-
 def get_websocket_origin():
     url = get_api_url()
     scheme = 'wss' if url.scheme == 'https' else 'ws'

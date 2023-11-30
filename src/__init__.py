@@ -7,8 +7,6 @@ from quart_cors import cors
 from google.cloud import firestore
 
 from src import cli, signaling, status
-from src.api_utils import get_api_origin
-
 from src.utils import custom_logging
 from src.web import web, participants, study
 
@@ -19,7 +17,9 @@ def create_app() -> Quart:
     initialize_firebase_admin()
 
     app = Quart(__name__)
-    app = cors(app, allow_origin=get_api_origin())
+
+    origins = filter(None, os.getenv("CORS_ORIGINS", "").split(","))
+    app = cors(app, allow_origin=origins)
 
     app.config.from_mapping(
         SECRET_KEY=secrets.token_hex(16), DATABASE=firestore.AsyncClient()
