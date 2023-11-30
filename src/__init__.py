@@ -18,7 +18,7 @@ def create_app() -> Quart:
 
     app = Quart(__name__)
 
-    origins = filter(None, os.getenv("CORS_ORIGINS", "").split(","))
+    origins = filter(None, os.getenv("CORS_ORIGINS", "*").split(","))
     app = cors(app, allow_origin=origins)
 
     app.config.from_mapping(
