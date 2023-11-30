@@ -47,7 +47,7 @@ study_barriers: Dict[str, asyncio.Barrier] = {}
 study_parties: Dict[str, Dict[PID, Websocket]] = {}
 
 # Environment variables
-PORT = os.getenv("PORT", "8000")  # Set automatically by Cloud Run
+PORT = os.getenv("PORT", "8080")  # Set automatically by Cloud Run
 ORIGIN = os.getenv("ORIGIN", "wss://sfkit-website-dev-bhj5a4wkqa-uc.a.run.app") # host.docker.internal:{PORT}  # e.g. ws://sfkit.terra.bio (/.org) # TODO: fix default
 TERRA = os.getenv("TERRA", "")
 
