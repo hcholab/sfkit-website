@@ -6,7 +6,7 @@ from quart import Quart
 from quart_cors import cors
 from google.cloud import firestore
 
-from src import cli, signaling
+from src import cli, signaling, status
 from src.utils import custom_logging
 from src.web import web, participants, study
 
@@ -23,6 +23,7 @@ def create_app() -> Quart:
         SECRET_KEY=secrets.token_hex(16), DATABASE=firestore.AsyncClient()
     )
 
+    app.register_blueprint(status.bp)
     app.register_blueprint(cli.bp)
     app.register_blueprint(web.bp)
     app.register_blueprint(participants.bp)
