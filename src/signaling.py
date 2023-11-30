@@ -7,6 +7,9 @@ from typing import Dict, List
 import httpx
 from google.cloud import firestore
 from quart import Blueprint, Websocket, abort, current_app, websocket
+from quart_cors import websocket_cors
+
+from src.api_utils import get_websocket_origin
 
 bp = Blueprint("signaling", __name__, url_prefix="/api")
 
@@ -47,23 +50,15 @@ study_barriers: Dict[str, asyncio.Barrier] = {}
 study_parties: Dict[str, Dict[PID, Websocket]] = {}
 
 # Environment variables
-# ws://host.docker.internal:8080
-# wss://sfkit.terra.bio
-# wss://sfkit.org
-WEBSOCKET_ORIGIN = os.getenv("WEBSOCKET_ORIGIN", "wss://sfkit-website-dev-bhj5a4wkqa-uc.a.run.app") # TODO: fix default
 TERRA = os.getenv("TERRA", "")
 
 # Header
-AUTH_HEADER = "Authorization"  # In Terra, this is machine ID, in non-terra, this is a JWT?
+AUTH_HEADER = "Authorization"
 STUDY_ID_HEADER = ("X-MPC-Study-ID") 
 
 @bp.websocket("/ice")
+@websocket_cors(allow_origin=get_websocket_origin())
 async def handler():
-    if websocket.headers.get("Origin") != WEBSOCKET_ORIGIN:
-        print(f"Unexpected Origin header: {websocket.headers.get('Origin')} != {WEBSOCKET_ORIGIN}")
-        await Message(MessageType.ERROR, "Unexpected Origin header").send(websocket)
-        abort(401)
-
     user_id = await _get_user_id(websocket)
     if not user_id:
         await Message(MessageType.ERROR, "Missing authentication").send(websocket)
