@@ -47,8 +47,10 @@ study_barriers: Dict[str, asyncio.Barrier] = {}
 study_parties: Dict[str, Dict[PID, Websocket]] = {}
 
 # Environment variables
-PORT = os.getenv("PORT", "8080")  # Set automatically by Cloud Run
-ORIGIN = os.getenv("ORIGIN", "wss://sfkit-website-dev-bhj5a4wkqa-uc.a.run.app") # host.docker.internal:{PORT}  # e.g. ws://sfkit.terra.bio (/.org) # TODO: fix default
+# ws://host.docker.internal:8080
+# wss://sfkit.terra.bio
+# wss://sfkit.org
+WEBSOCKET_ORIGIN = os.getenv("WEBSOCKET_ORIGIN", "wss://sfkit-website-dev-bhj5a4wkqa-uc.a.run.app") # TODO: fix default
 TERRA = os.getenv("TERRA", "")
 
 # Header
@@ -57,8 +59,8 @@ STUDY_ID_HEADER = ("X-MPC-Study-ID")
 
 @bp.websocket("/ice")
 async def handler():
-    if websocket.headers.get("Origin") != ORIGIN:
-        print(f"Unexpected Origin header: {websocket.headers.get('Origin')} != {ORIGIN}")
+    if websocket.headers.get("Origin") != WEBSOCKET_ORIGIN:
+        print(f"Unexpected Origin header: {websocket.headers.get('Origin')} != {WEBSOCKET_ORIGIN}")
         await Message(MessageType.ERROR, "Unexpected Origin header").send(websocket)
         abort(401)
 
