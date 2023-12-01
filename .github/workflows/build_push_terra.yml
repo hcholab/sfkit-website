@@ -148,10 +148,10 @@ jobs:
   set-version-in-terra-dev:
     # Put new version in Broad dev environment
     uses: broadinstitute/sherlock/.github/workflows/client-set-environment-app-version.yaml@main
-    needs: [build-and-publish, report-to-sherlock]
-    if: ${{ github.ref_name == 'dev' }}
+    needs: [build-and-publish, report-to-sherlock, generate-tag]
+    # if: ${{ github.ref_name == 'dev' }}
     with:
-      new-version: ${{ needs.publish-job.outputs.tag }}
+      new-version: ${{ needs.generate-tag.outputs.tag }}
       chart-name: "sfkit"
       environment-name: "dev"
     secrets:
