@@ -44,4 +44,4 @@ ARG BUILD_VERSION=latest
 ENV APP_VERSION=${APP_VERSION} \
     BUILD_VERSION=${BUILD_VERSION}
 
-ENTRYPOINT ["hypercorn", "app:app", "--bind", "0.0.0.0:8080"]
+ENTRYPOINT ["hypercorn", "app:app", "--bind", "0.0.0.0:8080", "--config", "hypercorn_config.toml"]
