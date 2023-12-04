@@ -35,7 +35,7 @@ WORKDIR /app
 
 COPY --from=builder /home/nonroot/.local/bin/hypercorn /bin/
 COPY --from=builder /home/nonroot/.local/lib /usr/lib/
-COPY --from=builder /app/*.py ./
+COPY --from=builder /app/*.py /app/*.toml ./
 COPY --from=builder /app/src ./src/
 
 ARG APP_VERSION=latest
