@@ -35,8 +35,16 @@ WORKDIR /app
 
 COPY --from=builder /home/nonroot/.local/bin/hypercorn /bin/
 COPY --from=builder /home/nonroot/.local/lib /usr/lib/
-COPY --from=builder /app/*.py ./
+COPY --from=builder /app/*.py /app/*.toml ./
 COPY --from=builder /app/src ./src/
+
+# TODO: Remove for production
+COPY --from=cgr.dev/chainguard/curl /usr/bin/curl /bin/
+COPY --from=cgr.dev/chainguard/curl \
+  /usr/lib/libcurl.so.4 \
+  /usr/lib/libnghttp2.so.* \
+  /usr/lib/libbrotlidec.so.1 \
+  /usr/lib/libbrotlicommon.so.1 /lib/
 
 ARG APP_VERSION=latest
 ARG BUILD_VERSION=latest
