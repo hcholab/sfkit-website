@@ -39,7 +39,7 @@ substitutions:
   _TRIGGER_ID: 44d26102-694b-457c-afaf-b086e4d866be
   _DEPLOY_REGION: us-central1
   _FLASK_DEBUG: development
-  _CORS_ORIGINS: https://dev.sfkit.org
+  _CORS_ORIGINS: https://dev.sfkit.org,http://localhost:5173
   _GCR_HOSTNAME: us.gcr.io
   _PLATFORM: managed
 tags:
