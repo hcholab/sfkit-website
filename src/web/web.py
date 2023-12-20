@@ -8,7 +8,7 @@ from firebase_admin import auth as firebase_auth
 from quart import Blueprint, Response, current_app, jsonify, request, send_file
 
 from src.api_utils import get_display_names, get_studies, is_valid_uuid
-from src.auth import authenticate, verify_token
+from src.auth import authenticate, get_user_id, verify_token
 from src.utils import custom_logging
 from src.utils.generic_functions import add_notification, remove_notification
 from src.utils.google_cloud.google_cloud_secret_manager import get_firebase_api_key
@@ -29,13 +29,12 @@ bp = Blueprint("web", __name__, url_prefix="/api")
 @bp.route("/createCustomToken", methods=["POST"])
 @authenticate
 async def create_custom_token() -> Response:
-    user = await verify_token(request.headers.get("Authorization").split(" ")[1])
-    microsoft_user_id = user["sub"]
+    user_id = get_user_id(request)
     try:
         # Use the thread executor to run the blocking function
         loop = asyncio.get_event_loop()
         custom_token = await loop.run_in_executor(
-            None, firebase_auth.create_custom_token, microsoft_user_id
+            None, firebase_auth.create_custom_token, user_id
         )
         firebase_api_key = await get_firebase_api_key()
         return (

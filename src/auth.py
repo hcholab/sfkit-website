@@ -1,6 +1,7 @@
 from functools import wraps
 
 from google.cloud import firestore
+import httpx
 import jwt
 from jwt import algorithms
 import requests
@@ -20,9 +21,39 @@ for key in jwks["keys"]:
 
 
 async def get_user_id(request) -> str:
-    return (await verify_token(request.headers.get("Authorization").split(" ")[1]))["sub"]
+    auth_header: str = request.headers.get("Authorization")
+    bearer, token = auth_header.split(" ")
+    if bearer != "Bearer":
+        raise ValueError("Invalid Authorization header")
+    return (await verify_token(token))["id"] if constants.TERRA else (await verify_token(token))["sub"]
+
 
 async def verify_token(token):
+    if constants.TERRA:
+        return await verify_token_terra(token)
+    else:
+        return await verify_token_azure(token)
+
+
+async def verify_token_terra(token):
+    async with httpx.AsyncClient() as client:
+        headers = {
+            "accept": "application/json",
+            "Authorization": f"Bearer {token}",
+        }
+        response = await client.get(f"{constants.SAM_API_URL}/api/users/v2/self", headers=headers)
+
+    if response.status_code != 200:
+        raise ValueError("Token is invalid")
+
+    db: firestore.AsyncClient = current_app.config["DATABASE"]
+    if not (await db.collection("users").document(response.json()["id"]).get()).exists:
+        await add_user_to_db(response.json())
+
+    return response.json()
+
+        
+async def verify_token_azure(token):
     headers = jwt.get_unverified_header(token)
     kid = headers["kid"]
 
@@ -59,7 +90,7 @@ def authenticate(f):
         if not auth_header or "Bearer" not in auth_header:
             return jsonify({"message": "Authentication token required"}), 401
 
-        token = auth_header.split(" ")[1]
+        bearer, token = auth_header.split(" ")
 
         try:
             await verify_token(token)
