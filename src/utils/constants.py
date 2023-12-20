@@ -1,6 +1,8 @@
 from copy import deepcopy
 import os
 
+TERRA = os.getenv("TERRA", "")
+SAM_API_URL = os.getenv("SAM_API_URL", "https://sam.dsde-dev.broadinstitute.org")
 APP_VERSION = os.getenv('APP_VERSION', '')
 BUILD_VERSION = os.getenv('BUILD_VERSION', '')
 SERVER_GCP_PROJECT = "broad-cho-priv1"

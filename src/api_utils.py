@@ -5,7 +5,7 @@ from urllib.parse import urlparse, urlunsplit
 from google.cloud.firestore_v1 import FieldFilter
 from quart import current_app
 
-from src.utils import custom_logging
+from src.utils import constants, custom_logging
 
 logger = custom_logging.setup_logging(__name__)
 
@@ -66,17 +66,20 @@ async def get_display_names() -> dict:
 
 
 async def add_user_to_db(decoded_token: dict) -> None:
-    logger.info(f"Creating user {decoded_token['sub']}")
+    user_id = decoded_token['id'] if constants.TERRA else decoded_token['sub']
+    logger.info(f"Creating user {user_id}")
     db = current_app.config["DATABASE"]
     try:
-        await db.collection("users").document(decoded_token["sub"]).set({"about": "", "notifications": []})
-        display_name = decoded_token["sub"]
-        if "given_name" in decoded_token:
+        await db.collection("users").document(user_id).set({"about": "", "notifications": []})
+        display_name = user_id
+        if constants.TERRA and "email" in decoded_token:
+            display_name = decoded_token["email"]
+        elif "given_name" in decoded_token:
             display_name = decoded_token["given_name"]
             if "family_name" in decoded_token:
                 display_name += " " + decoded_token["family_name"]
         await db.collection("users").document("display_names").set(
-            {decoded_token["sub"]: display_name}, merge=True
+            {user_id: display_name}, merge=True
         )
     except Exception as e:
         raise RuntimeError({"error": "Failed to create user", "details": str(e)}) from e

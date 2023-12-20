@@ -7,13 +7,18 @@ from quart_cors import cors
 from google.cloud import firestore
 
 from src import cli, signaling, status
-from src.utils import custom_logging
+from src.utils import constants, custom_logging
 from src.web import web, participants, study
 
 logger = custom_logging.setup_logging(__name__)
 
 
 def create_app() -> Quart:
+    if constants.TERRA:
+        logger.info("Creating app - on Terra")
+    else:
+        logger.info("Creating app - NOT on Terra")
+
     initialize_firebase_admin()
 
     app = Quart(__name__)
