@@ -42,7 +42,7 @@ async def create_custom_token() -> Response:
                 {
                     "customToken": custom_token.decode("utf-8"),
                     "firebaseApiKey": firebase_api_key,
-                    "firebaseProjectId": os.getenv("FIREBASE_PROJECT_ID", "broad-cho-priv1"),
+                    "firebaseProjectId": current_app.config["DATABASE"].project,
                 }
             ),
             200,

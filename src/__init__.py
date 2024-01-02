@@ -27,7 +27,10 @@ def create_app() -> Quart:
     app = cors(app, allow_origin=list(origins))
 
     app.config.from_mapping(
-        SECRET_KEY=secrets.token_hex(16), DATABASE=firestore.AsyncClient()
+        SECRET_KEY=secrets.token_hex(16),
+        DATABASE=firestore.AsyncClient(
+            project=os.getenv("FIREBASE_PROJECT_ID", "broad-cho-priv1"),
+        ),
     )
 
     app.register_blueprint(status.bp)
