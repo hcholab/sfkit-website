@@ -28,7 +28,9 @@ def create_app() -> Quart:
 
     app.config.from_mapping(
         SECRET_KEY=secrets.token_hex(16),
-        DATABASE=firestore.AsyncClient(os.getenv("FIREBASE_PROJECT_ID", "broad-cho-priv1")),
+        DATABASE=firestore.AsyncClient(
+            project=os.getenv("FIREBASE_PROJECT_ID", "broad-cho-priv1"),
+        ),
     )
 
     app.register_blueprint(status.bp)
