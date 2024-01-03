@@ -6,7 +6,7 @@ from quart import Quart
 from quart_cors import cors
 from google.cloud import firestore
 
-from src import cli, constants, signaling, status
+from src import cli, signaling, status
 from src.utils import constants, custom_logging
 from src.web import web, participants, study
 
