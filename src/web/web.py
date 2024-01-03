@@ -3,6 +3,7 @@ import io
 import os
 import zipfile
 from datetime import datetime
+from functools import partial
 
 from firebase_admin import auth as firebase_auth
 from quart import Blueprint, Response, current_app, jsonify, request, send_file
@@ -34,7 +35,8 @@ async def create_custom_token() -> Response:
         # Use the thread executor to run the blocking function
         loop = asyncio.get_event_loop()
         custom_token = await loop.run_in_executor(
-            None, firebase_auth.create_custom_token, user_id
+            None, partial(firebase_auth.create_custom_token, user_id,
+                          app=current_app.config["FIREBASE_APP"]),
         )
         firebase_api_key = await get_firebase_api_key()
         return (
