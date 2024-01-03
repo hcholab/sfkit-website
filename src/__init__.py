@@ -53,6 +53,7 @@ def initialize_firebase_app() -> firebase_admin.App:
         'projectId': constants.FIREBASE_PROJECT_ID,
         'serviceAccountId': cred.service_account_email,
     }
+    logger.info(f'Initializing firebase app with options: {options}')
     if os.path.exists(key):  # local testing
         app = firebase_admin.initialize_app(credential=firebase_admin.credentials.Certificate(key),
                                             options=options)
