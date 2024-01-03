@@ -28,7 +28,10 @@ def create_app() -> Quart:
 
     app.config.from_mapping(
         SECRET_KEY=secrets.token_hex(16),
-        DATABASE=firestore.AsyncClient(project=firebase_app.project_id),
+        DATABASE=firestore.AsyncClient(
+            project=firebase_app.project_id,
+            database=constants.FIRESTORE_DATABASE,
+        ),
     )
 
     app.register_blueprint(status.bp)
@@ -52,6 +55,6 @@ def initialize_firebase_app() -> firebase_admin.App:
         app = firebase_admin.initialize_app(options=options)
 
     # test firestore connection
-    db = firestore.Client(project=app.project_id)
+    db = firestore.Client(project=app.project_id, database=constants.FIRESTORE_DATABASE)
     logger.info(f'Firestore test: {db.collection("test").document("test").get().exists}')
     return app
