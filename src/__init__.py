@@ -6,7 +6,7 @@ from quart import Quart
 from quart_cors import cors
 from google.cloud import firestore
 
-from src import cli, signaling, status
+from src import cli, constants, signaling, status
 from src.utils import constants, custom_logging
 from src.web import web, participants, study
 
@@ -19,7 +19,7 @@ def create_app() -> Quart:
     else:
         logger.info("Creating app - NOT on Terra")
 
-    initialize_firebase_admin()
+    firebase_app = initialize_firebase_app()
 
     app = Quart(__name__)
 
@@ -28,9 +28,7 @@ def create_app() -> Quart:
 
     app.config.from_mapping(
         SECRET_KEY=secrets.token_hex(16),
-        DATABASE=firestore.AsyncClient(
-            project=os.getenv("FIREBASE_PROJECT_ID", "broad-cho-priv1"),
-        ),
+        DATABASE=firestore.AsyncClient(project=firebase_app.project_id),
     )
 
     app.register_blueprint(status.bp)
@@ -43,14 +41,17 @@ def create_app() -> Quart:
     return app
 
 
-def initialize_firebase_admin() -> None:
+def initialize_firebase_app() -> firebase_admin.App:
     key: str = ".serviceAccountKey.json"
+    options = { 'projectId': constants.FIREBASE_PROJECT_ID}
     if os.path.exists(key):  # local testing
-        firebase_admin.initialize_app(firebase_admin.credentials.Certificate(key))
+        app = firebase_admin.initialize_app(credential=firebase_admin.credentials.Certificate(key),
+                                            options=options)
     else:
         logger.info("No service account key found, using default for firebase_admin")
-        firebase_admin.initialize_app()
+        app = firebase_admin.initialize_app(options=options)
 
     # test firestore connection
-    db = firestore.Client()
+    db = firestore.Client(project=app.project_id)
     logger.info(f'Firestore test: {db.collection("test").document("test").get().exists}')
+    return app
