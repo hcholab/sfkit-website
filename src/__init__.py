@@ -2,13 +2,14 @@ import os
 import secrets
 
 import firebase_admin
+from google import auth as google_auth
+from google.cloud import firestore
 from quart import Quart
 from quart_cors import cors
-from google.cloud import firestore
 
 from src import cli, signaling, status
 from src.utils import constants, custom_logging
-from src.web import web, participants, study
+from src.web import participants, study, web
 
 logger = custom_logging.setup_logging(__name__)
 
@@ -47,7 +48,11 @@ def create_app() -> Quart:
 
 def initialize_firebase_app() -> firebase_admin.App:
     key: str = ".serviceAccountKey.json"
-    options = { 'projectId': constants.FIREBASE_PROJECT_ID}
+    cred, _ = google_auth.default()
+    options = {
+        'projectId': constants.FIREBASE_PROJECT_ID,
+        'serviceAccountId': cred.service_account_email,
+    }
     if os.path.exists(key):  # local testing
         app = firebase_admin.initialize_app(credential=firebase_admin.credentials.Certificate(key),
                                             options=options)
