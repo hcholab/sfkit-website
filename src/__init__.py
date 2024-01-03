@@ -43,8 +43,7 @@ def create_app() -> Quart:
 
 def initialize_firebase_app() -> firebase_admin.App:
     key: str = ".serviceAccountKey.json"
-    project = constants.FIREBASE_PROJECT_ID
-    options = { 'projectId': project}
+    options = { 'projectId': constants.FIREBASE_PROJECT_ID}
     if os.path.exists(key):  # local testing
         app = firebase_admin.initialize_app(credential=firebase_admin.credentials.Certificate(key),
                                             options=options)
@@ -53,6 +52,6 @@ def initialize_firebase_app() -> firebase_admin.App:
         app = firebase_admin.initialize_app(options=options)
 
     # test firestore connection
-    db = firestore.Client(project=project)
+    db = firestore.Client(project=app.project_id)
     logger.info(f'Firestore test: {db.collection("test").document("test").get().exists}')
     return app
