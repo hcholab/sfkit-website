@@ -51,23 +51,6 @@ def initialize_firebase_admin() -> None:
         logger.info("No service account key found, using default for firebase_admin")
         firebase_admin.initialize_app()
 
-
-# def initialize_firestore_async_client():
-#     key: str = ".serviceAccountKey.json"
-
-#     # If service account key exists, use it (local testing)
-#     if os.path.exists(key):
-#         with open(key) as json_file:
-#             json_data = json.load(json_file)
-#         return firestore.AsyncClient(
-#             project=json_data["project_id"],
-#             credentials=service_account.Credentials.from_service_account_info(
-#                 json_data
-#             ),
-#         )
-
-#     else:
-#         logger.info(
-#             "No service account key found, using Google Application Default Credentials"
-#         )
-#         return firestore.AsyncClient()
+    # test firestore connection
+    db = firestore.Client()
+    logger.info(f'Firestore test: {db.collection("test").document("test").get().exists}')
