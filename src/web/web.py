@@ -29,7 +29,7 @@ bp = Blueprint("web", __name__, url_prefix="/api")
 @bp.route("/createCustomToken", methods=["POST"])
 @authenticate
 async def create_custom_token() -> Response:
-    user_id = get_user_id(request)
+    user_id = await get_user_id(request)
     try:
         # Use the thread executor to run the blocking function
         loop = asyncio.get_event_loop()
