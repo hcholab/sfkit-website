@@ -28,6 +28,7 @@ def create_app() -> Quart:
 
     app.config.from_mapping(
         SECRET_KEY=secrets.token_hex(16),
+        FIREBASE_APP=firebase_app,
         DATABASE=firestore.AsyncClient(
             project=firebase_app.project_id,
             database=constants.FIRESTORE_DATABASE,
