@@ -20,7 +20,7 @@ def create_app() -> Quart:
     else:
         logger.info("Creating app - NOT on Terra")
 
-    firebase_app = initialize_firebase_app()
+    initialize_firebase_app()
 
     app = Quart(__name__)
 
@@ -29,7 +29,6 @@ def create_app() -> Quart:
 
     app.config.from_mapping(
         SECRET_KEY=secrets.token_hex(16),
-        FIREBASE_APP=firebase_app,
         DATABASE=firestore.AsyncClient(
             project=firebase_app.project_id,
             database=constants.FIRESTORE_DATABASE,
@@ -46,22 +45,25 @@ def create_app() -> Quart:
     return app
 
 
-def initialize_firebase_app() -> firebase_admin.App:
+def initialize_firebase_app() -> None:
     key: str = ".serviceAccountKey.json"
-    cred, _ = google_auth.default()
     options = {
         'projectId': constants.FIREBASE_PROJECT_ID,
-        'serviceAccountId': cred.service_account_email,
     }
-    logger.info(f'Initializing firebase app with options: {options}')
     if os.path.exists(key):  # local testing
         app = firebase_admin.initialize_app(credential=firebase_admin.credentials.Certificate(key),
                                             options=options)
     else:
         logger.info("No service account key found, using default for firebase_admin")
-        app = firebase_admin.initialize_app(options=options)
+        cred, _ = google_auth.default()
+        if constants.TARGET_SERVICE_ACCOUNT:
+            cred = google_auth.impersonated_credentials.Credentials(
+                source_credentials=cred,
+                target_principal=constants.TARGET_SERVICE_ACCOUNT,
+                target_scopes=["https://www.googleapis.com/auth/cloud-platform"],
+                lifetime=500)
+        app = firebase_admin.initialize_app(credential=cred, options=options)
 
     # test firestore connection
     db = firestore.Client(project=app.project_id, database=constants.FIRESTORE_DATABASE)
     logger.info(f'Firestore test: {db.collection("test").document("test").get().exists}')
-    return app
