@@ -67,6 +67,7 @@ def initialize_firebase_app() -> firebase_admin.App:
             # https://github.com/firebase/firebase-admin-python/issues/698
             cred._g_credential = gcred
             cred._project_id = project_id
+            options['serviceAccountId'] = constants.TARGET_SERVICE_ACCOUNT
         app = firebase_admin.initialize_app(credential=cred, options=options)
 
     # test firestore connection
