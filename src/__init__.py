@@ -2,7 +2,7 @@ import os
 import secrets
 
 import firebase_admin
-from google import auth as google_auth
+import google
 from google.cloud import firestore
 from quart import Quart
 from quart_cors import cors
@@ -55,13 +55,17 @@ def initialize_firebase_app() -> firebase_admin.App:
                                             options=options)
     else:
         logger.info("No service account key found, using default for firebase_admin")
-        cred, _ = google_auth.default()
+        cred = firebase_admin.credentials.ApplicationDefault()
         if constants.TARGET_SERVICE_ACCOUNT:
-            cred = google_auth.impersonated_credentials.Credentials(
-                source_credentials=cred,
+            gcred, project_id = google.auth.default()
+            gcred = google.auth.impersonated_credentials.Credentials(
+                source_credentials=gcred,
                 target_principal=constants.TARGET_SERVICE_ACCOUNT,
                 target_scopes=["https://www.googleapis.com/auth/cloud-platform"],
                 lifetime=500)
+            # https://github.com/firebase/firebase-admin-python/issues/698
+            cred._g_credential = gcred
+            cred._project_id = project_id
         app = firebase_admin.initialize_app(credential=cred, options=options)
 
     # test firestore connection
