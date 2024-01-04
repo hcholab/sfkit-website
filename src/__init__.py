@@ -3,6 +3,7 @@ import secrets
 
 import firebase_admin
 import google
+from google.auth import impersonated_credentials
 from google.cloud import firestore
 from quart import Quart
 from quart_cors import cors
@@ -58,7 +59,7 @@ def initialize_firebase_app() -> firebase_admin.App:
         cred = firebase_admin.credentials.ApplicationDefault()
         if constants.TARGET_SERVICE_ACCOUNT:
             gcred, project_id = google.auth.default()
-            gcred = google.auth.impersonated_credentials.Credentials(
+            gcred = impersonated_credentials.Credentials(
                 source_credentials=gcred,
                 target_principal=constants.TARGET_SERVICE_ACCOUNT,
                 target_scopes=["https://www.googleapis.com/auth/cloud-platform"],
