@@ -20,7 +20,7 @@ def create_app() -> Quart:
     else:
         logger.info("Creating app - NOT on Terra")
 
-    initialize_firebase_app()
+    firebase_app = initialize_firebase_app()
 
     app = Quart(__name__)
 
@@ -45,7 +45,7 @@ def create_app() -> Quart:
     return app
 
 
-def initialize_firebase_app() -> None:
+def initialize_firebase_app() -> firebase_admin.App:
     key: str = ".serviceAccountKey.json"
     options = {
         'projectId': constants.FIREBASE_PROJECT_ID,
@@ -67,3 +67,4 @@ def initialize_firebase_app() -> None:
     # test firestore connection
     db = firestore.Client(project=app.project_id, database=constants.FIRESTORE_DATABASE)
     logger.info(f'Firestore test: {db.collection("test").document("test").get().exists}')
+    return app
