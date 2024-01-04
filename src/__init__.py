@@ -2,7 +2,7 @@ import os
 import secrets
 
 import firebase_admin
-from google import auth as google_auth
+import google
 from google.cloud import firestore
 from quart import Quart
 from quart_cors import cors
@@ -55,9 +55,9 @@ def initialize_firebase_app() -> firebase_admin.App:
                                             options=options)
     else:
         logger.info("No service account key found, using default for firebase_admin")
-        cred, _ = google_auth.default()
+        cred, _ = google.auth.default()
         if constants.TARGET_SERVICE_ACCOUNT:
-            cred = google_auth.impersonated_credentials.Credentials(
+            cred = google.auth.impersonated_credentials.Credentials(
                 source_credentials=cred,
                 target_principal=constants.TARGET_SERVICE_ACCOUNT,
                 target_scopes=["https://www.googleapis.com/auth/cloud-platform"],
