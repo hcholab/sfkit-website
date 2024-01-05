@@ -21,7 +21,7 @@ def create_app() -> Quart:
     else:
         logger.info("Creating app - NOT on Terra")
 
-    firebase_app = initialize_firebase_app()
+    initialize_firebase_app()
 
     app = Quart(__name__)
 
@@ -31,7 +31,7 @@ def create_app() -> Quart:
     app.config.from_mapping(
         SECRET_KEY=secrets.token_hex(16),
         DATABASE=firestore.AsyncClient(
-            project=firebase_app.project_id,
+            project=constants.FIREBASE_PROJECT_ID,
             database=constants.FIRESTORE_DATABASE,
         ),
     )
@@ -46,19 +46,19 @@ def create_app() -> Quart:
     return app
 
 
-def initialize_firebase_app() -> firebase_admin.App:
+def initialize_firebase_app() -> None:
     key: str = ".serviceAccountKey.json"
     options = {
         'projectId': constants.FIREBASE_PROJECT_ID,
     }
     if os.path.exists(key):  # local testing
-        app = firebase_admin.initialize_app(credential=firebase_admin.credentials.Certificate(key),
+        firebase_admin.initialize_app(credential=firebase_admin.credentials.Certificate(key),
                                             options=options)
     else:
         logger.info("No service account key found, using default for firebase_admin")
         cred = firebase_admin.credentials.ApplicationDefault()
         if constants.TARGET_SERVICE_ACCOUNT:
-            gcred, project_id = google.auth.default()
+            gcred, _ = google.auth.default()
             gcred = impersonated_credentials.Credentials(
                 source_credentials=gcred,
                 target_principal=constants.TARGET_SERVICE_ACCOUNT,
@@ -66,11 +66,11 @@ def initialize_firebase_app() -> firebase_admin.App:
                 lifetime=500)
             # https://github.com/firebase/firebase-admin-python/issues/698
             cred._g_credential = gcred
-            cred._project_id = project_id
+            cred._project_id = constants.FIREBASE_PROJECT_ID
             options['serviceAccountId'] = constants.TARGET_SERVICE_ACCOUNT
-        app = firebase_admin.initialize_app(credential=cred, options=options)
+        firebase_admin.initialize_app(credential=cred, options=options)
 
     # test firestore connection
-    db = firestore.Client(project=app.project_id, database=constants.FIRESTORE_DATABASE)
+    db = firestore.Client(project=constants.FIREBASE_PROJECT_ID,
+                          database=constants.FIRESTORE_DATABASE)
     logger.info(f'Firestore test: {db.collection("test").document("test").get().exists}')
-    return app
