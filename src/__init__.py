@@ -67,6 +67,8 @@ def initialize_firebase_app() -> None:
             # https://github.com/firebase/firebase-admin-python/issues/698
             cred._g_credential = gcred
             cred._project_id = constants.FIREBASE_PROJECT_ID
+            token = cred.get_access_token().access_token
+            logger.info(f'Impersonated token: {".".join(token.split(".")[:2])}')
             options['serviceAccountId'] = constants.TARGET_SERVICE_ACCOUNT
         firebase_admin.initialize_app(credential=cred, options=options)
 
