@@ -59,6 +59,9 @@ def initialize_firebase_app() -> None:
     else:
         logger.info("No service account key found, using default for firebase_admin")
         cred = firebase_admin.credentials.ApplicationDefault()
+        token = cred.get_access_token().access_token
+        logger.info(f'Firebase admin project_id: {cred.project_id}, token: {token}')
+
         if constants.TARGET_SERVICE_ACCOUNT:
             gcred, _ = google.auth.default()
 
@@ -84,7 +87,7 @@ def initialize_firebase_app() -> None:
 
             # for testing
             token = cred.get_access_token().access_token
-            logger.info(f'Impersonated Firebase token: {".".join(token.split(".")[:2])}')
+            logger.info(f'Impersonated Firebase project_id: {cred.project_id}, token: {token}')
 
         firebase_admin.initialize_app(credential=cred, options=options)
 
