@@ -2,10 +2,6 @@ import os
 import secrets
 
 import firebase_admin
-import google
-import google.oauth2.id_token
-from google.auth import impersonated_credentials
-from google.auth.transport.requests import Request
 from google.cloud import firestore
 from quart import Quart
 from quart_cors import cors

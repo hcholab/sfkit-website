@@ -9,7 +9,7 @@ from quart import Blueprint, Response, current_app, jsonify, request, send_file
 
 from src.api_utils import get_display_names, get_studies, is_valid_uuid
 from src.auth import authenticate, get_user_id, verify_token
-from src.utils import custom_logging
+from src.utils import constants, custom_logging
 from src.utils.generic_functions import add_notification, remove_notification
 from src.utils.google_cloud.google_cloud_secret_manager import get_firebase_api_key
 from src.utils.google_cloud.google_cloud_storage import (
@@ -34,16 +34,16 @@ async def create_custom_token() -> Response:
         # Use the thread executor to run the blocking function
         loop = asyncio.get_event_loop()
         custom_token = await loop.run_in_executor(
-            None, firebase_auth.create_custom_token, user_id)
+            None, firebase_auth.create_custom_token, user_id
+        )
         firebase_api_key = await get_firebase_api_key()
-        db = current_app.config["DATABASE"]
         return (
             jsonify(
                 {
                     "customToken": custom_token.decode("utf-8"),
                     "firebaseApiKey": firebase_api_key,
-                    "firebaseProjectId": db.project,
-                    "firebaseDatabase": db.database,
+                    "firebaseProjectId": constants.FIREBASE_PROJECT_ID,
+                    "firestoreDatabaseId": constants.FIRESTORE_DATABASE,
                 }
             ),
             200,
@@ -222,9 +222,7 @@ async def download_results_file() -> Response:
     if not is_valid_uuid(study_id):
         return jsonify({"error": "Invalid study_id"}), 400
 
-    doc_ref_dict = (
-        await db.collection("studies").document(study_id).get()
-    ).to_dict()
+    doc_ref_dict = (await db.collection("studies").document(study_id).get()).to_dict()
     role: str = str(doc_ref_dict["participants"].index(user_id))
 
     base = "src/static/results"
