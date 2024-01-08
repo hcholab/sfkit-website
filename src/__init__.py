@@ -32,10 +32,7 @@ def create_app() -> Quart:
 
     app.config.from_mapping(
         SECRET_KEY=secrets.token_hex(16),
-        DATABASE=firestore.AsyncClient(
-            project=constants.FIREBASE_PROJECT_ID,
-            database=constants.FIRESTORE_DATABASE,
-        ),
+        DATABASE=firestore.AsyncClient(database=constants.FIRESTORE_DATABASE),
     )
 
     app.register_blueprint(status.bp)
@@ -50,17 +47,12 @@ def create_app() -> Quart:
 
 def initialize_firebase_app() -> None:
     key: str = ".serviceAccountKey.json"
-    options = {
-        'projectId': constants.FIREBASE_PROJECT_ID,
-    }
     if os.path.exists(key):  # local testing
-        firebase_admin.initialize_app(credential=firebase_admin.credentials.Certificate(key),
-                                            options=options)
+        firebase_admin.initialize_app(credential=firebase_admin.credentials.Certificate(key))
     else:
         logger.info("No service account key found, using default for firebase_admin")
-        firebase_admin.initialize_app(options=options)
+        firebase_admin.initialize_app()
 
     # test firestore connection
-    db = firestore.Client(project=constants.FIREBASE_PROJECT_ID,
-                          database=constants.FIRESTORE_DATABASE)
+    db = firestore.Client(database=constants.FIRESTORE_DATABASE)
     logger.info(f'Firestore test: {db.collection("test").document("test").get().exists}')
