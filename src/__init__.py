@@ -32,10 +32,7 @@ def create_app() -> Quart:
 
     app.config.from_mapping(
         SECRET_KEY=secrets.token_hex(16),
-        DATABASE=firestore.AsyncClient(
-            project=constants.FIREBASE_PROJECT_ID,
-            database=constants.FIRESTORE_DATABASE,
-        ),
+        DATABASE=firestore.AsyncClient(database=constants.FIRESTORE_DATABASE),
     )
 
     app.register_blueprint(status.bp)
@@ -50,48 +47,12 @@ def create_app() -> Quart:
 
 def initialize_firebase_app() -> None:
     key: str = ".serviceAccountKey.json"
-    options = {
-        'projectId': constants.FIREBASE_PROJECT_ID,
-    }
     if os.path.exists(key):  # local testing
-        firebase_admin.initialize_app(credential=firebase_admin.credentials.Certificate(key),
-                                            options=options)
+        firebase_admin.initialize_app(credential=firebase_admin.credentials.Certificate(key))
     else:
         logger.info("No service account key found, using default for firebase_admin")
-        cred = firebase_admin.credentials.ApplicationDefault()
-        token = cred.get_access_token().access_token
-        logger.info(f'Firebase admin project_id: {cred.project_id}, token: {token}')
-
-        if constants.TARGET_SERVICE_ACCOUNT:
-            gcred, _ = google.auth.default()
-
-            # for testing
-            aud = "https://iam.googleapis.com"
-            token = google.oauth2.id_token.fetch_id_token(Request(), aud)
-            logger.info(f'Default Google token: {".".join(token.split(".")[:2])}')
-
-            gcred = impersonated_credentials.Credentials(
-                source_credentials=gcred,
-                target_principal=constants.TARGET_SERVICE_ACCOUNT,
-                target_scopes=["https://www.googleapis.com/auth/cloud-platform"],
-                lifetime=500)
-
-            # for testing
-            token = google.oauth2.id_token.fetch_id_token(Request(), aud)
-            logger.info(f'Impersonated Google token: {".".join(token.split(".")[:2])}')
-
-            # https://github.com/firebase/firebase-admin-python/issues/698
-            cred._g_credential = gcred
-            cred._project_id = constants.FIREBASE_PROJECT_ID
-            options['serviceAccountId'] = constants.TARGET_SERVICE_ACCOUNT
-
-            # for testing
-            token = cred.get_access_token().access_token
-            logger.info(f'Impersonated Firebase project_id: {cred.project_id}, token: {token}')
-
-        firebase_admin.initialize_app(credential=cred, options=options)
+        firebase_admin.initialize_app()
 
     # test firestore connection
-    db = firestore.Client(project=constants.FIREBASE_PROJECT_ID,
-                          database=constants.FIRESTORE_DATABASE)
+    db = firestore.Client(database=constants.FIRESTORE_DATABASE)
     logger.info(f'Firestore test: {db.collection("test").document("test").get().exists}')
