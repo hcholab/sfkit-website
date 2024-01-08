@@ -34,7 +34,8 @@ async def create_custom_token() -> Response:
         # Use the thread executor to run the blocking function
         loop = asyncio.get_event_loop()
         custom_token = await loop.run_in_executor(
-            None, firebase_auth.create_custom_token, user_id)
+            None, firebase_auth.create_custom_token, user_id
+        )
         firebase_api_key = await get_firebase_api_key()
         return (
             jsonify(
@@ -42,7 +43,7 @@ async def create_custom_token() -> Response:
                     "customToken": custom_token.decode("utf-8"),
                     "firebaseApiKey": firebase_api_key,
                     "firebaseProjectId": constants.FIREBASE_PROJECT_ID,
-                    "firestoreDatabase": constants.FIRESTORE_DATABASE,
+                    "firestoreDatabaseId": constants.FIRESTORE_DATABASE,
                 }
             ),
             200,
@@ -221,9 +222,7 @@ async def download_results_file() -> Response:
     if not is_valid_uuid(study_id):
         return jsonify({"error": "Invalid study_id"}), 400
 
-    doc_ref_dict = (
-        await db.collection("studies").document(study_id).get()
-    ).to_dict()
+    doc_ref_dict = (await db.collection("studies").document(study_id).get()).to_dict()
     role: str = str(doc_ref_dict["participants"].index(user_id))
 
     base = "src/static/results"
