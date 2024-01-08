@@ -9,7 +9,7 @@ from quart import Blueprint, Response, current_app, jsonify, request, send_file
 
 from src.api_utils import get_display_names, get_studies, is_valid_uuid
 from src.auth import authenticate, get_user_id, verify_token
-from src.utils import custom_logging
+from src.utils import constants, custom_logging
 from src.utils.generic_functions import add_notification, remove_notification
 from src.utils.google_cloud.google_cloud_secret_manager import get_firebase_api_key
 from src.utils.google_cloud.google_cloud_storage import (
@@ -36,14 +36,13 @@ async def create_custom_token() -> Response:
         custom_token = await loop.run_in_executor(
             None, firebase_auth.create_custom_token, user_id)
         firebase_api_key = await get_firebase_api_key()
-        db = current_app.config["DATABASE"]
         return (
             jsonify(
                 {
                     "customToken": custom_token.decode("utf-8"),
                     "firebaseApiKey": firebase_api_key,
-                    "firebaseProjectId": db.project,
-                    "firebaseDatabase": db.database,
+                    "firebaseProjectId": constants.FIREBASE_PROJECT_ID,
+                    "firestoreDatabase": constants.FIRESTORE_DATABASE,
                 }
             ),
             200,
