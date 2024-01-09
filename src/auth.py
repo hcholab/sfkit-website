@@ -21,7 +21,7 @@ for key in jwks["keys"]:
 
 
 async def get_user_id() -> str:
-    auth_header: str = request.headers.get("Authorization")
+    auth_header: str = request.headers.get("Authorization", "", type=str)
     if not auth_header.startswith("Bearer "):
         raise ValueError("Invalid Authorization header")
     res = await _verify_token(auth_header[7:])
@@ -86,14 +86,11 @@ async def _verify_token_azure(token):
 def authenticate(f):
     @wraps(f)
     async def decorated_function(*args, **kwargs):
-        auth_header = request.headers.get("Authorization")
-        if not auth_header or "Bearer" not in auth_header:
+        auth_header = request.headers.get("Authorization", "", type=str)
+        if not auth_header.startswith("Bearer "):
             return jsonify({"message": "Authentication token required"}), 401
-
-        bearer, token = auth_header.split(" ")
-
         try:
-            await verify_token(token)
+            await _verify_token(auth_header[7:])
         except Exception as e:
             return jsonify({"message": str(e)}), 401
 
