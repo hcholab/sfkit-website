@@ -14,6 +14,7 @@ DEVELOPER_USER_ID = "developer"
 GOOGLE_CLIENT_ID = (
     "419003787216-rcif34r976a9qm3818qgeqed7c582od6.apps.googleusercontent.com"
 )
+# these are used only when TERRA is NOT set
 AZURE_B2C_CLIENT_ID = os.getenv("AZURE_B2C_CLIENT_ID", "a605ffae-592a-4096-b029-78ba66b6d614") # public; used for authentication
 AZURE_B2C_JWKS_URL = os.getenv("AZURE_B2C_JWKS_URL", "https://sfkitdevb2c.b2clogin.com/sfkitdevb2c.onmicrosoft.com/discovery/v2.0/keys?p=B2C_1_signupsignin1")
 
