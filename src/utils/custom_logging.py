@@ -6,8 +6,21 @@ from google.cloud import logging as gcp_logging
 from src.utils import constants
 
 
-def setup_logging(name: Optional[str] = None) -> logging.Logger:
+class Logger(logging.Logger):
+    # used to avoid too much verbosity from third-party libraries
+    DEBUG = logging.DEBUG + 1
+
+    def __init__(self, name: str) -> None:
+        super().__init__(name)
+
+    def debug(self, msg: str, *args, **kwargs) -> None:
+        super().log(Logger.DEBUG, msg, *args, **kwargs)
+
+
+def setup_logging(name: Optional[str] = None) -> Logger:
     level = logging.getLevelName(constants.LOG_LEVEL)
+    if level == logging.DEBUG:
+        level = Logger.DEBUG
 
     # If the environment variable is set to "True", we are running on Cloud Run
     if constants.CLOUD_RUN.lower() == "true":
