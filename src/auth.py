@@ -30,14 +30,10 @@ if not constants.TERRA:
 
 async def get_user_id(req: Union[Request, Websocket] = request) -> str:
     auth_header: str = req.headers.get(AUTH_HEADER, "", type=str)
-    if not auth_header.startswith(BEARER_PREFIX):
-        raise ValueError("Invalid Authorization header")
-
-    token = auth_header[len(BEARER_PREFIX):]
     if constants.TERRA:
-        res = await _verify_token_terra(token)
+        res = await _verify_token_terra(auth_header)
     else:
-        res = await _verify_token_azure(token)
+        res = await _verify_token_azure(auth_header)
 
     user_id = res["id"] if constants.TERRA else res["sub"]
     if user_id in USER_IDS:
@@ -56,11 +52,11 @@ async def get_user_id(req: Union[Request, Websocket] = request) -> str:
     return user_id
 
 
-async def _verify_token_terra(token):
+async def _verify_token_terra(auth_header: str):
     async with httpx.AsyncClient() as client:
         headers = {
             "accept": "application/json",
-            AUTH_HEADER: BEARER_PREFIX + token,
+            AUTH_HEADER: auth_header,
         }
         response = await client.get(f"{constants.SAM_API_URL}/api/users/v2/self", headers=headers)
 
@@ -70,7 +66,11 @@ async def _verify_token_terra(token):
     return response.json()
 
 
-async def _verify_token_azure(token):
+async def _verify_token_azure(auth_header: str):
+    if not auth_header.startswith(BEARER_PREFIX):
+        raise ValueError("Invalid Authorization header")
+
+    token = auth_header[len(BEARER_PREFIX):]
     headers = jwt.get_unverified_header(token)
     kid = headers["kid"]
 
