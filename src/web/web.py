@@ -11,16 +11,12 @@ from src.api_utils import get_display_names, get_studies, is_valid_uuid
 from src.auth import authenticate, get_user_id
 from src.utils import constants, custom_logging
 from src.utils.generic_functions import add_notification, remove_notification
-from src.utils.google_cloud.google_cloud_secret_manager import get_firebase_api_key
+from src.utils.google_cloud.google_cloud_secret_manager import \
+    get_firebase_api_key
 from src.utils.google_cloud.google_cloud_storage import (
-    download_blob_to_bytes,
-    download_blob_to_filename,
-)
-from src.utils.studies_functions import (
-    add_file_to_zip,
-    check_conditions,
-    update_status_and_start_setup,
-)
+    download_blob_to_bytes, download_blob_to_filename)
+from src.utils.studies_functions import (add_file_to_zip, check_conditions,
+                                         update_status_and_start_setup)
 
 logger = custom_logging.setup_logging(__name__)
 bp = Blueprint("web", __name__, url_prefix="/api")

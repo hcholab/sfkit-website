@@ -1,4 +1,3 @@
-import os
 import uuid
 from urllib.parse import urlparse, urlunsplit
 

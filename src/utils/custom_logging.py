@@ -1,13 +1,12 @@
 import logging
-import os
 from typing import Optional
+
 from google.cloud import logging as gcp_logging
 
 from src.utils import constants
 
 
 def setup_logging(name: Optional[str] = None) -> logging.Logger:
-    # If the environment variable is set to "True", we are running on Cloud Run
     if constants.TERRA or constants.CLOUD_RUN.lower() == "true":
         # Instantiate the Google Cloud Logging client
         client = gcp_logging.Client()

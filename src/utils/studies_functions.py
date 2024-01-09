@@ -1,6 +1,5 @@
 import asyncio
 import os
-import re
 import secrets
 import time
 from html import escape
@@ -9,10 +8,9 @@ from typing import Optional
 from google.cloud.firestore_v1 import DocumentReference
 from jinja2 import Template
 from python_http_client.exceptions import HTTPError
-from quart import current_app, g, jsonify, url_for
+from quart import current_app, g
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Email, Mail
-from werkzeug import Response
 
 from src.utils import constants, custom_logging
 from src.utils.google_cloud.google_cloud_compute import (GoogleCloudCompute,
