@@ -35,6 +35,7 @@ async def get_user_id(req: Union[Request, Websocket] = request) -> str:
     else:
         user = await _get_azure_b2c_user(auth_header)
 
+    logger.debug("get_user_id: user=%s", user)
     user_id = user["id"] if constants.TERRA else user["sub"]
     if user_id in USER_IDS:
         return user_id
@@ -102,18 +103,19 @@ async def get_cli_user(req: Request) -> dict:
         logger.error("no authorization token or key provided")
         return {}
     elif constants.TERRA:
-        return await _get_terra_user(auth_header)
+        user = await _get_terra_user(auth_header)
+    else:
+        db: firestore.AsyncClient = current_app.config["DATABASE"]
+        user = (
+            await db.collection("users").document("auth_keys").get()
+        ).to_dict().get(auth_header)
 
-    db: firestore.AsyncClient = current_app.config["DATABASE"]
-    doc = (
-        await db.collection("users").document("auth_keys").get()
-    ).to_dict().get(auth_header)
+        if not user:
+            logger.error("invalid authorization key")
+            return {}
 
-    if not doc:
-        logger.error("invalid authorization key")
-        return {}
-
-    return doc
+    logger.debug("get_cli_user: user=%s", user)
+    return user
 
 
 def authenticate(f):
