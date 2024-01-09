@@ -8,7 +8,7 @@ from src.utils import constants
 
 def setup_logging(name: Optional[str] = None) -> logging.Logger:
     # If the environment variable is set to "True", we are running on Cloud Run
-    if os.environ.get("CLOUD_RUN", "False").lower() == "true":
+    if constants.TERRA or constants.CLOUD_RUN.lower() == "true":
         # Instantiate the Google Cloud Logging client
         client = gcp_logging.Client()
 

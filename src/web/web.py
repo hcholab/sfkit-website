@@ -36,12 +36,11 @@ async def create_custom_token() -> Response:
         custom_token = await loop.run_in_executor(
             None, firebase_auth.create_custom_token, user_id
         )
-        firebase_api_key = await get_firebase_api_key()
         return (
             jsonify(
                 {
                     "customToken": custom_token.decode("utf-8"),
-                    "firebaseApiKey": firebase_api_key,
+                    "firebaseApiKey": await get_firebase_api_key(),
                     "firebaseProjectId": constants.FIREBASE_PROJECT_ID,
                     "firestoreDatabaseId": constants.FIRESTORE_DATABASE,
                 }

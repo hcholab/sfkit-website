@@ -31,12 +31,12 @@ class GoogleCloudCompute:
     def delete_everything(self) -> None:
         logger.info(f"Deleting gcp resources for study {self.study_id}...")
         # if the network doesn't exist, there's nothing to delete
-        try: 
+        try:
             self.compute.networks().get(project=self.gcp_project, network=self.network_name).execute()
         except Exception as e:
             logger.info(f"Cannot find network {self.network_name}; skipping deletion.")
             return
-        
+
         self.remove_conflicting_peerings()
 
         for instance in self.list_instances():
@@ -385,7 +385,7 @@ class GoogleCloudCompute:
             ]
         }
 
-        if "dev" in os.getenv("SERVICE_URL", ""):
+        if "dev" in constants.SERVICE_URL:
             metadata_config["items"].append({
                 'key': 'SFKIT_API_URL',
                 'value': "https://sfkit-website-dev-bhj5a4wkqa-uc.a.run.app/api" # TODO: find better way to do this

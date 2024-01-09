@@ -10,12 +10,8 @@ from src.utils import constants, custom_logging
 logger = custom_logging.setup_logging(__name__)
 
 
-def get_api_url():
-    return urlparse(os.getenv("SFKIT_API_URL"))
-
-
 def get_websocket_origin():
-    url = get_api_url()
+    url = urlparse(constants.SFKIT_API_URL)
     scheme = 'wss' if url.scheme == 'https' else 'ws'
     return urlunsplit((scheme, str(url.netloc), '', '', ''))
 

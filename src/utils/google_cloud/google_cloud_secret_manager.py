@@ -1,17 +1,16 @@
 import asyncio
-import os
 
 from google.cloud import secretmanager
 
 from src.utils import constants
 
+_FIREBASE_API_KEY = constants.FIREBASE_API_KEY
 
 async def get_firebase_api_key() -> str:
-    firebase_api_key = os.environ.get("FIREBASE_API_KEY")
-    if not firebase_api_key:
-        firebase_api_key = await get_secret("FIREBASE_API_KEY")
-        os.environ.setdefault("FIREBASE_API_KEY", firebase_api_key)
-    return firebase_api_key
+    global _FIREBASE_API_KEY
+    if not _FIREBASE_API_KEY:
+        _FIREBASE_API_KEY = await get_secret("FIREBASE_API_KEY")
+    return _FIREBASE_API_KEY
 
 
 async def get_secret(name: str) -> str:
