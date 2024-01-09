@@ -99,7 +99,7 @@ async def _get_azure_b2c_user(auth_header: str):
 async def get_cli_user(req: Request) -> dict:
     auth_header = req.headers.get(AUTH_HEADER)
     if not auth_header:
-        logger.error("no authorization key provided")
+        logger.error("no authorization token or key provided")
         return {}
     elif constants.TERRA:
         return _get_terra_user(auth_header)
