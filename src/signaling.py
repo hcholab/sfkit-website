@@ -7,7 +7,7 @@ from quart import Blueprint, Websocket, abort, current_app, websocket
 from quart_cors import websocket_cors
 
 from src.api_utils import get_websocket_origin
-from src.auth import get_user_id, verify_auth_key
+from src.auth import get_user_id, get_auth_key_user
 from src.utils import constants
 
 bp = Blueprint("signaling", __name__, url_prefix="/api")
@@ -130,7 +130,7 @@ async def _get_user_id(ws: Websocket):
     if constants.TERRA:
         return await get_user_id(ws)
     else:
-        user = await verify_auth_key(ws)
+        user = await get_auth_key_user(ws)
         if user:
             return user["username"]
         else:

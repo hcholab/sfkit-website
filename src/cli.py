@@ -3,7 +3,7 @@ from typing import Tuple
 
 from quart import Blueprint, current_app, request
 
-from src.auth import verify_auth_key
+from src.auth import get_auth_key_user
 from src.utils import custom_logging
 from src.utils.api_functions import (process_parameter, process_status,
                                      process_task)
@@ -16,7 +16,7 @@ bp = Blueprint("cli", __name__, url_prefix="/api")
 
 @bp.route("/upload_file", methods=["POST"])
 async def upload_file() -> Tuple[dict, int]:
-    user = await verify_auth_key(request)
+    user = await get_auth_key_user(request)
     if not user:
         return {"error": "unauthorized"}, 401
 
@@ -58,7 +58,7 @@ async def upload_file() -> Tuple[dict, int]:
 
 @bp.route("/get_doc_ref_dict", methods=["GET"])
 async def get_doc_ref_dict() -> Tuple[dict, int]:
-    user = await verify_auth_key(request)
+    user = await get_auth_key_user(request)
     if not user:
         return {"error": "unauthorized"}, 401
 
@@ -71,7 +71,7 @@ async def get_doc_ref_dict() -> Tuple[dict, int]:
 
 @bp.route("/get_username", methods=["GET"])
 async def get_username() -> Tuple[dict, int]:
-    user = await verify_auth_key(request)
+    user = await get_auth_key_user(request)
     if not user:
         return {"error": "unauthorized"}, 401
 
@@ -80,7 +80,7 @@ async def get_username() -> Tuple[dict, int]:
 
 @bp.route("/update_firestore", methods=["GET"])
 async def update_firestore() -> Tuple[dict, int]:
-    user = await verify_auth_key(request)
+    user = await get_auth_key_user(request)
     if not user:
         return {"error": "unauthorized"}, 401
 
@@ -117,7 +117,7 @@ async def update_firestore() -> Tuple[dict, int]:
 
 @bp.route("/create_cp0", methods=["GET"])
 async def create_cp0() -> Tuple[dict, int]:
-    user = await verify_auth_key(request)
+    user = await get_auth_key_user(request)
     if not user:
         return {"error": "unauthorized"}, 401
 

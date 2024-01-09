@@ -96,7 +96,7 @@ async def _get_azure_b2c_user(auth_header: str):
     return decoded_token
 
 
-async def verify_auth_key(
+async def get_auth_key_user(
     request: Request, authenticate_user: bool = True
 ) -> dict:
     auth_key = request.headers.get(AUTH_HEADER)
