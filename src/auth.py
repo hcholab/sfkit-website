@@ -26,22 +26,22 @@ async def get_user_id() -> str:
     auth_header: str = request.headers.get("Authorization", "", type=str)
     if not auth_header.startswith("Bearer "):
         raise ValueError("Invalid Authorization header")
-    res = await _verify_token(auth_header[7:])
-    return res["id"] if constants.TERRA else res["sub"]
 
-
-async def _verify_token(token):
+    token = auth_header[7:]
     if constants.TERRA:
         res = await _verify_token_terra(token)
     else:
         res = await _verify_token_azure(token)
 
-    user_id = res["id"] if constants.TERRA else res["sub"]
-    if not user_id in user_ids:
-        db: firestore.AsyncClient = current_app.config["DATABASE"]
-        if not (await db.collection("users").document(user_id).get()).exists:
-            await add_user_to_db(res)
-        user_ids.add(user_id)
+    user_id = res["userSubjectId"] if constants.TERRA else res["sub"]
+    if user_id in user_ids:
+        return user_id
+
+    db: firestore.AsyncClient = current_app.config["DATABASE"]
+    if not (await db.collection("users").document(user_id).get()).exists:
+        await add_user_to_db(res)
+    user_ids.add(user_id)
+    return user_id
 
 
 async def _verify_token_terra(token):
@@ -87,11 +87,8 @@ async def _verify_token_azure(token):
 def authenticate(f):
     @wraps(f)
     async def decorated_function(*args, **kwargs):
-        auth_header = request.headers.get("Authorization", "", type=str)
-        if not auth_header.startswith("Bearer "):
-            return jsonify({"message": "Authentication token required"}), 401
         try:
-            await _verify_token(auth_header[7:])
+            await get_user_id()
         except Exception as e:
             return jsonify({"message": str(e)}), 401
 
