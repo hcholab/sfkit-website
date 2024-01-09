@@ -9,7 +9,11 @@ from jwt import algorithms
 from quart import Request, Websocket, current_app, jsonify, request
 
 from src.api_utils import add_user_to_db
-from src.utils import constants
+from src.utils import constants, custom_logging
+
+logger = custom_logging.setup_logging(__name__)
+
+AUTH_HEADER = "Authorization"
 
 # Prepare public keys from Microsoft's JWKS endpoint for token verification
 JWKS_URL = "https://sfkitdevb2c.b2clogin.com/sfkitdevb2c.onmicrosoft.com/discovery/v2.0/keys?p=B2C_1_signupsignin1"
@@ -24,7 +28,7 @@ for key in jwks["keys"]:
 
 
 async def get_user_id(req: Union[Request, Websocket] = request) -> str:
-    auth_header: str = req.headers.get("Authorization", "", type=str)
+    auth_header: str = req.headers.get(AUTH_HEADER, "", type=str)
     if not auth_header.startswith("Bearer "):
         raise ValueError("Invalid Authorization header")
 
@@ -49,7 +53,7 @@ async def _verify_token_terra(token):
     async with httpx.AsyncClient() as client:
         headers = {
             "accept": "application/json",
-            "Authorization": f"Bearer {token}",
+            AUTH_HEADER: f"Bearer {token}",
         }
         response = await client.get(f"{constants.SAM_API_URL}/api/users/v2/self", headers=headers)
 
@@ -83,6 +87,26 @@ async def _verify_token_azure(token):
         raise ValueError("Token is not valid") from e
 
     return decoded_token
+
+
+async def verify_auth_key(
+    request: Request, authenticate_user: bool = True
+) -> dict:
+    auth_key = request.headers.get(AUTH_HEADER)
+    if not auth_key:
+        logger.error("no authorization key provided")
+        return {}
+
+    db: firestore.AsyncClient = current_app.config["DATABASE"]
+    doc = (
+        await db.collection("users").document("auth_keys").get()
+    ).to_dict().get(auth_key)
+
+    if not doc:
+        logger.error("invalid authorization key")
+        return {}
+
+    return doc
 
 
 def authenticate(f):

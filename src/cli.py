@@ -3,10 +3,10 @@ from typing import Tuple
 
 from quart import Blueprint, current_app, request
 
-from src.auth import authenticate
+from src.auth import verify_auth_key
 from src.utils import custom_logging
 from src.utils.api_functions import (process_parameter, process_status,
-                                     process_task, verify_auth_key)
+                                     process_task)
 from src.utils.google_cloud.google_cloud_storage import upload_blob_from_file
 from src.utils.studies_functions import setup_gcp
 

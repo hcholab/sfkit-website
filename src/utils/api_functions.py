@@ -1,10 +1,7 @@
 import asyncio
 import time
-from threading import Thread
 
 from google.cloud import firestore
-from quart import current_app
-from werkzeug import Request
 
 from src.utils import custom_logging
 from src.utils.google_cloud.google_cloud_compute import (GoogleCloudCompute,
@@ -106,24 +103,3 @@ async def delete_instance(study_id, gcp_project, role):
 async def stop_instance(study_id, gcp_project, role):
     gcloudCompute = GoogleCloudCompute(study_id, gcp_project)
     await gcloudCompute.stop_instance(format_instance_name(study_id, role))
-
-
-async def verify_auth_key(
-    request: Request, authenticate_user: bool = True
-) -> dict:
-    auth_key = request.headers.get("Authorization")
-    if not auth_key:
-        logger.error("no authorization key provided")
-        return {}
-
-    db: firestore.AsyncClient = current_app.config["DATABASE"]
-    doc = (
-        await db.collection("users").document("auth_keys").get()
-    ).to_dict().get(auth_key)
-
-    if not doc:
-        logger.error("invalid authorization key")
-        return {}
-
-    return doc
-

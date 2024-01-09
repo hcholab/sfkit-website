@@ -7,9 +7,8 @@ from quart import Blueprint, Websocket, abort, current_app, websocket
 from quart_cors import websocket_cors
 
 from src.api_utils import get_websocket_origin
-from src.auth import get_user_id
+from src.auth import get_user_id, verify_auth_key
 from src.utils import constants
-from src.utils.api_functions import verify_auth_key
 
 bp = Blueprint("signaling", __name__, url_prefix="/api")
 
@@ -50,7 +49,6 @@ study_barriers: Dict[str, asyncio.Barrier] = {}
 study_parties: Dict[str, Dict[PID, Websocket]] = {}
 
 # Header
-AUTH_HEADER = "Authorization"
 STUDY_ID_HEADER = ("X-MPC-Study-ID")
 
 @bp.websocket("/ice")
