@@ -43,6 +43,12 @@ async def get_user_id(req: Union[Request, Websocket] = request) -> str:
     if user_id in USER_IDS:
         return user_id
 
+    # guard against possible confusion of user_id with auth_keys
+    # TODO: move auth_keys into a separate collection
+    if user_id == "auth_keys":
+        logger.error("Attempted to use 'auth_keys' as user ID")
+        raise ValueError("Invalid user ID")
+
     db: firestore.AsyncClient = current_app.config["DATABASE"]
     if not (await db.collection("users").document(user_id).get()).exists:
         await add_user_to_db(res)
