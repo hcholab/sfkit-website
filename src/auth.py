@@ -102,7 +102,7 @@ async def get_cli_user(req: Request) -> dict:
         logger.error("no authorization token or key provided")
         return {}
     elif constants.TERRA:
-        return _get_terra_user(auth_header)
+        return await _get_terra_user(auth_header)
 
     db: firestore.AsyncClient = current_app.config["DATABASE"]
     doc = (
