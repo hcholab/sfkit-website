@@ -30,9 +30,15 @@ async def get_user_id() -> str:
 
 async def _verify_token(token):
     if constants.TERRA:
-        return await _verify_token_terra(token)
+        res = await _verify_token_terra(token)
     else:
-        return await _verify_token_azure(token)
+        res = await _verify_token_azure(token)
+
+    user_id = res["id"] if constants.TERRA else res["sub"]
+
+    db: firestore.AsyncClient = current_app.config["DATABASE"]
+    if not (await db.collection("users").document(user_id).get()).exists:
+        await add_user_to_db(res)
 
 
 async def _verify_token_terra(token):
@@ -45,10 +51,6 @@ async def _verify_token_terra(token):
 
     if response.status_code != 200:
         raise ValueError("Token is invalid")
-
-    db: firestore.AsyncClient = current_app.config["DATABASE"]
-    if not (await db.collection("users").document(response.json()["id"]).get()).exists:
-        await add_user_to_db(response.json())
 
     return response.json()
 
@@ -68,10 +70,6 @@ async def _verify_token_azure(token):
             algorithms=["RS256"],
             audience=constants.MICROSOFT_CLIENT_ID,
         )
-
-        db: firestore.AsyncClient = current_app.config["DATABASE"]
-        if not (await db.collection("users").document(decoded_token["sub"]).get()).exists:
-            await add_user_to_db(decoded_token)
 
     except jwt.ExpiredSignatureError as e:
         raise ValueError("Token has expired") from e
