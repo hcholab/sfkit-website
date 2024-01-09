@@ -96,18 +96,18 @@ async def _get_azure_b2c_user(auth_header: str):
     return decoded_token
 
 
-async def get_auth_key_user(
-    request: Request, authenticate_user: bool = True
-) -> dict:
-    auth_key = request.headers.get(AUTH_HEADER)
-    if not auth_key:
+async def get_cli_user(req: Request) -> dict:
+    auth_header = req.headers.get(AUTH_HEADER)
+    if not auth_header:
         logger.error("no authorization key provided")
         return {}
+    elif constants.TERRA:
+        return _get_terra_user(auth_header)
 
     db: firestore.AsyncClient = current_app.config["DATABASE"]
     doc = (
         await db.collection("users").document("auth_keys").get()
-    ).to_dict().get(auth_key)
+    ).to_dict().get(auth_header)
 
     if not doc:
         logger.error("invalid authorization key")
