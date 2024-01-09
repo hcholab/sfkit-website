@@ -24,6 +24,7 @@ class Logger(logging.Logger):
     def debug(self, msg: str, *args, **kwargs) -> None:
         super().log(Logger.DEBUG, msg, *args, **kwargs)
 
+logging.addLevelName(Logger.DEBUG, "DEBUG")
 
 def setup_logging(name: Optional[str] = None) -> Logger:
     level = logging.getLevelName(constants.LOG_LEVEL)
@@ -41,8 +42,6 @@ def setup_logging(name: Optional[str] = None) -> Logger:
     else:
         # For Kubernetes or local development, log to stdout with a simple format
         logging.basicConfig(level=level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-
-    logging.log(logging.INFO, "Logging initialized, LOG_LEVEL=%s(%d)", constants.LOG_LEVEL, level)
 
     logger = logging.getLogger(name)
     return Logger.from_super(logger)
