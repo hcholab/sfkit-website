@@ -20,22 +20,22 @@ for key in jwks["keys"]:
     PUBLIC_KEYS[kid] = algorithms.RSAAlgorithm.from_jwk(key)
 
 
-async def get_user_id(request) -> str:
+async def get_user_id() -> str:
     auth_header: str = request.headers.get("Authorization")
-    bearer, token = auth_header.split(" ")
-    if bearer != "Bearer":
+    if not auth_header.startswith("Bearer "):
         raise ValueError("Invalid Authorization header")
-    return (await verify_token(token))["id"] if constants.TERRA else (await verify_token(token))["sub"]
+    res = await _verify_token(auth_header[7:])
+    return res["id"] if constants.TERRA else res["sub"]
 
 
-async def verify_token(token):
+async def _verify_token(token):
     if constants.TERRA:
-        return await verify_token_terra(token)
+        return await _verify_token_terra(token)
     else:
-        return await verify_token_azure(token)
+        return await _verify_token_azure(token)
 
 
-async def verify_token_terra(token):
+async def _verify_token_terra(token):
     async with httpx.AsyncClient() as client:
         headers = {
             "accept": "application/json",
@@ -52,8 +52,8 @@ async def verify_token_terra(token):
 
     return response.json()
 
-        
-async def verify_token_azure(token):
+
+async def _verify_token_azure(token):
     headers = jwt.get_unverified_header(token)
     kid = headers["kid"]
 
