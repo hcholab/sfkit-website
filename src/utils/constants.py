@@ -19,7 +19,7 @@ AZURE_B2C_CLIENT_ID = os.getenv("AZURE_B2C_CLIENT_ID", "a605ffae-592a-4096-b029-
 AZURE_B2C_JWKS_URL = os.getenv("AZURE_B2C_JWKS_URL", "https://sfkitdevb2c.b2clogin.com/sfkitdevb2c.onmicrosoft.com/discovery/v2.0/keys?p=B2C_1_signupsignin1")
 
 FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID", SERVER_GCP_PROJECT)
-FIRESTORE_DATABASE = os.getenv("FIRESTORE_DATABASE")
+FIRESTORE_DATABASE = os.getenv("FIRESTORE_DATABASE", "(default)")
 
 MPCGWAS_SHARED_PARAMETERS = {
     "NUM_SNPS": {
