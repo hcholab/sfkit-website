@@ -14,6 +14,7 @@ from src.utils import constants, custom_logging
 logger = custom_logging.setup_logging(__name__)
 
 AUTH_HEADER = "Authorization"
+BEARER_PREFIX = "Bearer "
 
 PUBLIC_KEYS = {}
 USER_IDS = set()
@@ -30,10 +31,10 @@ if not constants.TERRA:
 
 async def get_user_id(req: Union[Request, Websocket] = request) -> str:
     auth_header: str = req.headers.get(AUTH_HEADER, "", type=str)
-    if not auth_header.startswith("Bearer "):
+    if not auth_header.startswith(BEARER_PREFIX):
         raise ValueError("Invalid Authorization header")
 
-    token = auth_header[7:]
+    token = auth_header[len(BEARER_PREFIX):]
     if constants.TERRA:
         res = await _verify_token_terra(token)
     else:
@@ -60,7 +61,7 @@ async def _verify_token_terra(token):
     async with httpx.AsyncClient() as client:
         headers = {
             "accept": "application/json",
-            AUTH_HEADER: f"Bearer {token}",
+            AUTH_HEADER: BEARER_PREFIX + token,
         }
         response = await client.get(f"{constants.SAM_API_URL}/api/users/v2/self", headers=headers)
 
