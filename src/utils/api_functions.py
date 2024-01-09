@@ -2,15 +2,13 @@ import asyncio
 import time
 from threading import Thread
 
-from quart import current_app
 from google.cloud import firestore
+from quart import current_app
 from werkzeug import Request
 
 from src.utils import custom_logging
-from src.utils.google_cloud.google_cloud_compute import (
-    GoogleCloudCompute,
-    format_instance_name,
-)
+from src.utils.google_cloud.google_cloud_compute import (GoogleCloudCompute,
+                                                         format_instance_name)
 
 logger = custom_logging.setup_logging(__name__)
 
@@ -71,7 +69,7 @@ async def update_parameter(transaction, username, parameter, doc_ref) -> bool:
         return False
     transaction.update(doc_ref, doc_ref_dict)
     return True
-   
+
 
 @firestore.async_transactional
 async def update_status(transaction, doc_ref, username, status) -> bool:
@@ -110,22 +108,22 @@ async def stop_instance(study_id, gcp_project, role):
     await gcloudCompute.stop_instance(format_instance_name(study_id, role))
 
 
-async def verify_authorization_header(
+async def verify_auth_key(
     request: Request, authenticate_user: bool = True
-) -> str:
+) -> dict:
     auth_key = request.headers.get("Authorization")
     if not auth_key:
-        logger.info("no authorization key provided")
-        return ""
+        logger.error("no authorization key provided")
+        return {}
 
     db: firestore.AsyncClient = current_app.config["DATABASE"]
     doc = (
         await db.collection("users").document("auth_keys").get()
     ).to_dict().get(auth_key)
-   
-    if not doc:
-        logger.info("invalid authorization key")
-        return ""
 
-    return auth_key
+    if not doc:
+        logger.error("invalid authorization key")
+        return {}
+
+    return doc
 

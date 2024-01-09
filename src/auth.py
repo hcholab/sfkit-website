@@ -1,11 +1,12 @@
 from functools import wraps
+from typing import Union
 
-from google.cloud import firestore
 import httpx
 import jwt
-from jwt import algorithms
 import requests
-from quart import current_app, jsonify, request
+from google.cloud import firestore
+from jwt import algorithms
+from quart import Request, Websocket, current_app, jsonify, request
 
 from src.api_utils import add_user_to_db
 from src.utils import constants
@@ -22,8 +23,8 @@ for key in jwks["keys"]:
     PUBLIC_KEYS[kid] = algorithms.RSAAlgorithm.from_jwk(key)
 
 
-async def get_user_id() -> str:
-    auth_header: str = request.headers.get("Authorization", "", type=str)
+async def get_user_id(req: Union[Request, Websocket] = request) -> str:
+    auth_header: str = req.headers.get("Authorization", "", type=str)
     if not auth_header.startswith("Bearer "):
         raise ValueError("Invalid Authorization header")
 
