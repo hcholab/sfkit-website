@@ -21,6 +21,8 @@ AZURE_B2C_JWKS_URL = os.getenv("AZURE_B2C_JWKS_URL", "https://sfkitdevb2c.b2clog
 FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID", SERVER_GCP_PROJECT)
 FIRESTORE_DATABASE = os.getenv("FIRESTORE_DATABASE", "(default)")
 
+LOG_LEVEL=os.getenv("LOG_LEVEL", "DEBUG")
+
 MPCGWAS_SHARED_PARAMETERS = {
     "NUM_SNPS": {
         "name": "Number of Single Nucleotide Polymorphisms",
