@@ -31,11 +31,11 @@ if not constants.TERRA:
 async def get_user_id(req: Union[Request, Websocket] = request) -> str:
     auth_header: str = req.headers.get(AUTH_HEADER, "", type=str)
     if constants.TERRA:
-        res = await _verify_token_terra(auth_header)
+        user = await _get_terra_user(auth_header)
     else:
-        res = await _verify_token_azure(auth_header)
+        user = await _get_azure_b2c_user(auth_header)
 
-    user_id = res["id"] if constants.TERRA else res["sub"]
+    user_id = user["id"] if constants.TERRA else user["sub"]
     if user_id in USER_IDS:
         return user_id
 
@@ -47,12 +47,12 @@ async def get_user_id(req: Union[Request, Websocket] = request) -> str:
 
     db: firestore.AsyncClient = current_app.config["DATABASE"]
     if not (await db.collection("users").document(user_id).get()).exists:
-        await add_user_to_db(res)
+        await add_user_to_db(user)
     USER_IDS.add(user_id)
     return user_id
 
 
-async def _verify_token_terra(auth_header: str):
+async def _get_terra_user(auth_header: str):
     async with httpx.AsyncClient() as client:
         headers = {
             "accept": "application/json",
@@ -66,7 +66,7 @@ async def _verify_token_terra(auth_header: str):
     return response.json()
 
 
-async def _verify_token_azure(auth_header: str):
+async def _get_azure_b2c_user(auth_header: str):
     if not auth_header.startswith(BEARER_PREFIX):
         raise ValueError("Invalid Authorization header")
 
