@@ -14,7 +14,10 @@ def setup_logging(name: Optional[str] = None) -> logging.Logger:
 
         # Attach the Cloud Logging handler to the root logger
         client.get_default_handler()
-        client.setup_logging(log_level=logging.getLevelName(constants.LOG_LEVEL))
+
+        log_level = logging.getLevelName(constants.LOG_LEVEL)
+        client.setup_logging(log_level=log_level)
+        logging.log(logging.INFO, "Logging initialized, LOG_LEVEL=%s(%d)", constants.LOG_LEVEL, log_level)
     else:
         # For local development, log to stdout with a simple format
         logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")

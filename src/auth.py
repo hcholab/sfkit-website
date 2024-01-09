@@ -99,11 +99,9 @@ async def _get_azure_b2c_user(auth_header: str):
 
 async def get_cli_user(req: Request) -> dict:
     auth_header = req.headers.get(AUTH_HEADER)
-    if not auth_header:
-        logger.error("no authorization token or key provided")
-        return {}
-    elif constants.TERRA:
+    if constants.TERRA:
         user = await _get_terra_user(auth_header)
+        logger.info("_get_terra_user: user=%s", user)
     else:
         db: firestore.AsyncClient = current_app.config["DATABASE"]
         user = (
