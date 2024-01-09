@@ -13,7 +13,9 @@ from src.utils import constants
 # Prepare public keys from Microsoft's JWKS endpoint for token verification
 JWKS_URL = "https://sfkitdevb2c.b2clogin.com/sfkitdevb2c.onmicrosoft.com/discovery/v2.0/keys?p=B2C_1_signupsignin1"
 jwks = requests.get(JWKS_URL).json()
+user_ids = set()
 PUBLIC_KEYS = {}
+
 
 for key in jwks["keys"]:
     kid = key["kid"]
@@ -35,10 +37,11 @@ async def _verify_token(token):
         res = await _verify_token_azure(token)
 
     user_id = res["id"] if constants.TERRA else res["sub"]
-
-    db: firestore.AsyncClient = current_app.config["DATABASE"]
-    if not (await db.collection("users").document(user_id).get()).exists:
-        await add_user_to_db(res)
+    if not user_id in user_ids:
+        db: firestore.AsyncClient = current_app.config["DATABASE"]
+        if not (await db.collection("users").document(user_id).get()).exists:
+            await add_user_to_db(res)
+        user_ids.add(user_id)
 
 
 async def _verify_token_terra(token):
