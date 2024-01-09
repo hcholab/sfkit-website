@@ -1,10 +1,17 @@
-from copy import deepcopy
 import os
+from copy import deepcopy
+
+FLASK_DEBUG = os.getenv("FLASK_DEBUG")
+LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")
 
 TERRA = os.getenv("TERRA", "")
 SAM_API_URL = os.getenv("SAM_API_URL", "https://sam.dsde-dev.broadinstitute.org")
-APP_VERSION = os.getenv('APP_VERSION', '')
-BUILD_VERSION = os.getenv('BUILD_VERSION', '')
+SFKIT_API_URL = os.getenv("SFKIT_API_URL", "http://localhost:8080")
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*")
+APP_VERSION = os.getenv("APP_VERSION", "")
+BUILD_VERSION = os.getenv("BUILD_VERSION", "")
+CLOUD_RUN = os.getenv("CLOUD_RUN", "False")
+SERVICE_URL = os.getenv("SERVICE_URL", "")
 SERVER_GCP_PROJECT = "broad-cho-priv1"
 SERVER_REGION = "us-central1"
 SERVER_ZONE = f"{SERVER_REGION}-a"
@@ -15,13 +22,17 @@ GOOGLE_CLIENT_ID = (
     "419003787216-rcif34r976a9qm3818qgeqed7c582od6.apps.googleusercontent.com"
 )
 # these are used only when TERRA is NOT set
-AZURE_B2C_CLIENT_ID = os.getenv("AZURE_B2C_CLIENT_ID", "a605ffae-592a-4096-b029-78ba66b6d614") # public; used for authentication
-AZURE_B2C_JWKS_URL = os.getenv("AZURE_B2C_JWKS_URL", "https://sfkitdevb2c.b2clogin.com/sfkitdevb2c.onmicrosoft.com/discovery/v2.0/keys?p=B2C_1_signupsignin1")
+AZURE_B2C_CLIENT_ID = os.getenv(
+    "AZURE_B2C_CLIENT_ID", "a605ffae-592a-4096-b029-78ba66b6d614"
+)  # public; used for authentication
+AZURE_B2C_JWKS_URL = os.getenv(
+    "AZURE_B2C_JWKS_URL",
+    "https://sfkitdevb2c.b2clogin.com/sfkitdevb2c.onmicrosoft.com/discovery/v2.0/keys?p=B2C_1_signupsignin1",
+)
 
+FIREBASE_API_KEY = os.getenv("FIREBASE_API_KEY")
 FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID", SERVER_GCP_PROJECT)
 FIRESTORE_DATABASE = os.getenv("FIRESTORE_DATABASE", "(default)")
-
-LOG_LEVEL=os.getenv("LOG_LEVEL", "DEBUG")
 
 MPCGWAS_SHARED_PARAMETERS = {
     "NUM_SNPS": {

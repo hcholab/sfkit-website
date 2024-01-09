@@ -101,7 +101,6 @@ async def get_cli_user(req: Request) -> dict:
     auth_header = req.headers.get(AUTH_HEADER)
     if constants.TERRA:
         user = await _get_terra_user(auth_header)
-        logger.info("_get_terra_user: user=%s", user)
     else:
         db: firestore.AsyncClient = current_app.config["DATABASE"]
         user = (

@@ -1,6 +1,5 @@
 import asyncio
 import os
-import re
 import secrets
 import time
 from html import escape
@@ -9,10 +8,9 @@ from typing import Optional
 from google.cloud.firestore_v1 import DocumentReference
 from jinja2 import Template
 from python_http_client.exceptions import HTTPError
-from quart import current_app, g, jsonify, url_for
+from quart import current_app, g
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Email, Mail
-from werkzeug import Response
 
 from src.utils import constants, custom_logging
 from src.utils.google_cloud.google_cloud_compute import (GoogleCloudCompute,
@@ -188,7 +186,7 @@ def sanitize_path(path: str) -> str:
 
 def is_developer() -> bool:
     return (
-        os.environ.get("FLASK_DEBUG") == "development"
+        constants.FLASK_DEBUG == "development"
         and g.user
         and "id" in g.user
         and g.user["id"] == constants.DEVELOPER_USER_ID
@@ -297,7 +295,7 @@ def check_conditions(doc_ref_dict, user_id) -> str:
     if (
         not demo
         and "broad-cho-priv1" in gcp_project
-        and os.environ.get("FLASK_DEBUG") != "development"
+        and constants.FLASK_DEBUG != "development"
     ):
         return "This project ID is only allowed for a demo study. Please follow the instructions in the 'Configure Study' button to set up your own GCP project before running the protocol."
     if not demo and not data_path:
