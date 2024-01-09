@@ -15,16 +15,17 @@ logger = custom_logging.setup_logging(__name__)
 
 AUTH_HEADER = "Authorization"
 
-# Prepare public keys from Microsoft's JWKS endpoint for token verification
-JWKS_URL = "https://sfkitdevb2c.b2clogin.com/sfkitdevb2c.onmicrosoft.com/discovery/v2.0/keys?p=B2C_1_signupsignin1"
-jwks = requests.get(JWKS_URL).json()
-user_ids = set()
 PUBLIC_KEYS = {}
+USER_IDS = set()
 
 
-for key in jwks["keys"]:
-    kid = key["kid"]
-    PUBLIC_KEYS[kid] = algorithms.RSAAlgorithm.from_jwk(key)
+if not constants.TERRA:
+    # Prepare public keys from Microsoft's JWKS endpoint for token verification
+    JWKS_URL = "https://sfkitdevb2c.b2clogin.com/sfkitdevb2c.onmicrosoft.com/discovery/v2.0/keys?p=B2C_1_signupsignin1"
+    jwks = requests.get(JWKS_URL).json()
+    for key in jwks["keys"]:
+        kid = key["kid"]
+        PUBLIC_KEYS[kid] = algorithms.RSAAlgorithm.from_jwk(key)
 
 
 async def get_user_id(req: Union[Request, Websocket] = request) -> str:
@@ -39,13 +40,13 @@ async def get_user_id(req: Union[Request, Websocket] = request) -> str:
         res = await _verify_token_azure(token)
 
     user_id = res["userSubjectId"] if constants.TERRA else res["sub"]
-    if user_id in user_ids:
+    if user_id in USER_IDS:
         return user_id
 
     db: firestore.AsyncClient = current_app.config["DATABASE"]
     if not (await db.collection("users").document(user_id).get()).exists:
         await add_user_to_db(res)
-    user_ids.add(user_id)
+    USER_IDS.add(user_id)
     return user_id
 
 
