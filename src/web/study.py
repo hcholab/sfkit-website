@@ -5,7 +5,7 @@ import uuid
 from google.cloud import firestore
 from quart import Blueprint, Response, current_app, jsonify, request, send_file
 
-from src.auth import authenticate, get_user_id, verify_token
+from src.auth import authenticate, get_user_id
 from src.utils import constants, custom_logging
 from src.utils.google_cloud.google_cloud_compute import (GoogleCloudCompute,
                                                          format_instance_name)
@@ -46,12 +46,12 @@ async def study() -> Response:
 # TODO: use asyncio to delete in parallel. This requires making the google_cloud_compute functions async. Using multiple processing failed because inside daemon. Threads failed because of GIL.
 @bp.route("/restart_study", methods=["GET"])
 @authenticate
-async def restart_study() -> Response:  
+async def restart_study() -> Response:
     study_id = request.args.get("study_id")
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_id)
     doc_ref_dict: dict = (await doc_ref.get()).to_dict()
-    
+
     for role, v in enumerate(doc_ref_dict["participants"]):
         participant = doc_ref_dict["personal_parameters"][v]
         if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
@@ -90,7 +90,7 @@ async def create_study() -> Response:
     description = data.get("description")
     study_information = data.get("study_information")
 
-    user_id = await get_user_id(request)
+    user_id = await get_user_id()
 
     logger.info(f"Creating {study_type} study with {setup_configuration} configuration")
 
@@ -194,9 +194,7 @@ async def study_information() -> Response:
 @authenticate
 async def parameters() -> Response:
     try:
-        user_id = (
-            await verify_token(request.headers.get("Authorization").split(" ")[1])
-        )["sub"]
+        user_id = await get_user_id()
         study_id = request.args.get("study_id")
         data = await request.json
         db = current_app.config["DATABASE"]
@@ -234,7 +232,7 @@ async def download_auth_key() -> Response:
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_id)
     doc_ref_dict = (await doc_ref.get()).to_dict()
-    user_id = (await verify_token(request.headers.get("Authorization").split(" ")[1]))["sub"]
+    user_id = await get_user_id()
     auth_key = doc_ref_dict["personal_parameters"][user_id]["AUTH_KEY"]["value"] or await make_auth_key(
         study_id, user_id
     )

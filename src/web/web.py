@@ -8,7 +8,7 @@ from firebase_admin import auth as firebase_auth
 from quart import Blueprint, Response, current_app, jsonify, request, send_file
 
 from src.api_utils import get_display_names, get_studies, is_valid_uuid
-from src.auth import authenticate, get_user_id, verify_token
+from src.auth import authenticate, get_user_id
 from src.utils import constants, custom_logging
 from src.utils.generic_functions import add_notification, remove_notification
 from src.utils.google_cloud.google_cloud_secret_manager import get_firebase_api_key
@@ -29,7 +29,7 @@ bp = Blueprint("web", __name__, url_prefix="/api")
 @bp.route("/createCustomToken", methods=["POST"])
 @authenticate
 async def create_custom_token() -> Response:
-    user_id = await get_user_id(request)
+    user_id = await get_user_id()
     try:
         # Use the thread executor to run the blocking function
         loop = asyncio.get_event_loop()
@@ -80,12 +80,11 @@ async def my_studies() -> Response:
     for study in my_studies:
         study["owner_name"] = display_names.get(study["owner"], study["owner"])
 
-    user = await verify_token(request.headers.get("Authorization").split(" ")[1])
-    sub = user["sub"]
+    user_id = await get_user_id()
     my_studies = [
         study
         for study in my_studies
-        if sub in study["participants"] or sub in study["invited_participants"]
+        if user_id in study["participants"] or user_id in study["invited_participants"]
     ]
     return jsonify({"studies": my_studies})
 
@@ -96,9 +95,7 @@ async def profile(user_id: str = None) -> Response:
     db = current_app.config["DATABASE"]
 
     if not user_id:
-        user_id = (
-            await verify_token(request.headers.get("Authorization").split(" ")[1])
-        )["sub"]
+        user_id = await get_user_id()
 
     if request.method == "GET":
         try:
@@ -121,9 +118,7 @@ async def profile(user_id: str = None) -> Response:
     elif request.method == "POST":
         try:
             data = await request.get_json()
-            logged_in_user_id = (
-                await verify_token(request.headers.get("Authorization").split(" ")[1])
-            )["sub"]
+            logged_in_user_id = await get_user_id()
 
             if logged_in_user_id != user_id:
                 return (
@@ -155,9 +150,7 @@ async def profile(user_id: str = None) -> Response:
 @bp.route("/start_protocol", methods=["POST"])
 @authenticate
 async def start_protocol() -> Response:
-    user_id = (await verify_token(request.headers.get("Authorization").split(" ")[1]))[
-        "sub"
-    ]
+    user_id = await get_user_id()
     db = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(request.args.get("study_id"))
     doc_ref_dict = (await doc_ref.get()).to_dict() or {}
@@ -211,9 +204,7 @@ async def send_message() -> Response:
 @bp.route("/download_results_file", methods=("GET",))
 @authenticate
 async def download_results_file() -> Response:
-    user_id = (await verify_token(request.headers.get("Authorization").split(" ")[1]))[
-        "sub"
-    ]
+    user_id = await get_user_id()
 
     db = current_app.config["DATABASE"]
     study_id = request.args.get("study_id")
@@ -271,9 +262,7 @@ async def download_results_file() -> Response:
 @bp.route("/fetch_plot_file", methods=["POST"])
 @authenticate
 async def fetch_plot_file() -> Response:  # sourcery skip: use-named-expression
-    user_id = (await verify_token(request.headers.get("Authorization").split(" ")[1]))[
-        "sub"
-    ]
+    user_id = await get_user_id()
     study_id = (await request.get_json()).get("study_id")
     db = current_app.config["DATABASE"]
     doc_ref = await db.collection("studies").document(study_id).get()
@@ -297,9 +286,7 @@ async def fetch_plot_file() -> Response:  # sourcery skip: use-named-expression
 @bp.route("/update_notifications", methods=["POST"])
 @authenticate
 async def update_notifications() -> Response:
-    user_id = (await verify_token(request.headers.get("Authorization").split(" ")[1]))[
-        "sub"
-    ]
+    user_id = await get_user_id()
     data = await request.get_json()
 
     await remove_notification(data.get("notification"), user_id)

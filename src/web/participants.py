@@ -1,7 +1,7 @@
 from google.cloud import firestore
 from quart import Blueprint, Response, current_app, jsonify, request
 
-from src.auth import authenticate, verify_token
+from src.auth import authenticate, get_user_id
 from src.utils import constants, custom_logging
 from src.utils.generic_functions import add_notification
 from src.utils.studies_functions import email
@@ -115,9 +115,7 @@ async def request_join_study() -> Response:
         if not doc_ref_dict:
             return jsonify({"error": "Study not found"}), 404
 
-        user_id = (
-            await verify_token(request.headers.get("Authorization").split(" ")[1])
-        )["sub"]
+        user_id = await get_user_id()
 
         requested_participants = doc_ref_dict.get("requested_participants", {})
         requested_participants[user_id] = message

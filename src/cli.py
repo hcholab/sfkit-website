@@ -3,14 +3,10 @@ from typing import Tuple
 
 from quart import Blueprint, current_app, request
 
-from src.auth import authenticate
+from src.auth import get_auth_key_user
 from src.utils import custom_logging
-from src.utils.api_functions import (
-    process_parameter,
-    process_status,
-    process_task,
-    verify_authorization_header,
-)
+from src.utils.api_functions import (process_parameter, process_status,
+                                     process_task)
 from src.utils.google_cloud.google_cloud_storage import upload_blob_from_file
 from src.utils.studies_functions import setup_gcp
 
@@ -20,16 +16,12 @@ bp = Blueprint("cli", __name__, url_prefix="/api")
 
 @bp.route("/upload_file", methods=["POST"])
 async def upload_file() -> Tuple[dict, int]:
-    auth_key = await verify_authorization_header(request)
-    if not auth_key:
+    user = await get_auth_key_user(request)
+    if not user:
         return {"error": "unauthorized"}, 401
 
-    db = current_app.config["DATABASE"]
-    user_dict = (
-        (await db.collection("users").document("auth_keys").get()).to_dict()[auth_key]
-    )
-    study_id = user_dict["study_id"]
-    username = user_dict["username"]
+    study_id = user["study_id"]
+    username = user["username"]
 
     logger.info(
         f"upload_file: {study_id}, request: {request}, request.files: {request.files}"
@@ -43,6 +35,7 @@ async def upload_file() -> Tuple[dict, int]:
 
     logger.info(f"filename: {file.filename}")
 
+    db = current_app.config["DATABASE"]
     doc_ref_dict: dict = (
         (await db.collection("studies").document(study_id).get()).to_dict()
     )
@@ -65,52 +58,35 @@ async def upload_file() -> Tuple[dict, int]:
 
 @bp.route("/get_doc_ref_dict", methods=["GET"])
 async def get_doc_ref_dict() -> Tuple[dict, int]:
-    auth_key = await verify_authorization_header(request)
-    if not auth_key:
+    user = await get_auth_key_user(request)
+    if not user:
         return {"error": "unauthorized"}, 401
 
     db = current_app.config["DATABASE"]
-    doc_ref = await db.collection("users").document("auth_keys").get()
-    study_id = doc_ref.to_dict()[auth_key]["study_id"]
-   
-
-    doc_ref_dict: dict = (
-        (await db.collection("studies").document(study_id).get()).to_dict()
+    study: dict = (
+        (await db.collection("studies").document(user["study_id"]).get()).to_dict()
     )
-
-    return doc_ref_dict, 200
+    return study, 200
 
 
 @bp.route("/get_username", methods=["GET"])
 async def get_username() -> Tuple[dict, int]:
-    auth_key = await verify_authorization_header(request)
-    if not auth_key:
+    user = await get_auth_key_user(request)
+    if not user:
         return {"error": "unauthorized"}, 401
 
-    db = current_app.config["DATABASE"]
-    username = (
-        (await db.collection("users")
-        .document("auth_keys")
-        .get())
-        .to_dict()[auth_key]["username"]
-    )
-
-    return {"username": username}, 200
+    return {"username": user["username"]}, 200
 
 
 @bp.route("/update_firestore", methods=["GET"])
 async def update_firestore() -> Tuple[dict, int]:
-    auth_key = await verify_authorization_header(request)
-    if not auth_key:
+    user = await get_auth_key_user(request)
+    if not user:
         return {"error": "unauthorized"}, 401
 
+    username = user["username"]
+    study_id = user["study_id"]
     db = current_app.config["DATABASE"]
-    user_dict = (await db.collection("users").document("auth_keys").get()).to_dict().get(auth_key, None)
-    if not user_dict:
-        return {"error": "invalid auth key"}, 401
-
-    username = user_dict["username"]
-    study_id = user_dict["study_id"]
 
     msg: str = str(request.args.get("msg"))
     _, parameter = msg.split("::")
@@ -141,17 +117,11 @@ async def update_firestore() -> Tuple[dict, int]:
 
 @bp.route("/create_cp0", methods=["GET"])
 async def create_cp0() -> Tuple[dict, int]:
-    auth_key = await verify_authorization_header(request)
-    if not auth_key:
+    user = await get_auth_key_user(request)
+    if not user:
         return {"error": "unauthorized"}, 401
 
-    db = current_app.config["DATABASE"]
-    study_id = (
-        (await db.collection("users")
-        .document("auth_keys")
-        .get())
-        .to_dict()[auth_key]["study_id"]
-    )
+    study_id = user["study_id"]
 
     doc_ref = current_app.config["DATABASE"].collection("studies").document(study_id)
     doc_ref_dict: dict = (await doc_ref.get()).to_dict()
