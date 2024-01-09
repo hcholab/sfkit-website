@@ -13,6 +13,14 @@ class Logger(logging.Logger):
     def __init__(self, name: str) -> None:
         super().__init__(name)
 
+    @classmethod
+    def from_super(cls, super_instance: logging.Logger):
+        # Create a new instance of Logger
+        instance = cls(super_instance.name)
+        # Copy the state from the superclass instance
+        instance.__dict__.update(super_instance.__dict__)
+        return instance
+
     def debug(self, msg: str, *args, **kwargs) -> None:
         super().log(Logger.DEBUG, msg, *args, **kwargs)
 
@@ -35,4 +43,6 @@ def setup_logging(name: Optional[str] = None) -> Logger:
         logging.basicConfig(level=level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
     logging.log(logging.INFO, "Logging initialized, LOG_LEVEL=%s(%d)", constants.LOG_LEVEL, level)
-    return logging.getLogger(name)
+
+    logger = logging.getLogger(name)
+    return Logger.from_super(logger)
