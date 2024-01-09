@@ -22,8 +22,7 @@ USER_IDS = set()
 
 if not constants.TERRA:
     # Prepare public keys from Microsoft's JWKS endpoint for token verification
-    JWKS_URL = "https://sfkitdevb2c.b2clogin.com/sfkitdevb2c.onmicrosoft.com/discovery/v2.0/keys?p=B2C_1_signupsignin1"
-    jwks = requests.get(JWKS_URL).json()
+    jwks = requests.get(constants.AZURE_B2C_JWKS_URL).json()
     for key in jwks["keys"]:
         kid = key["kid"]
         PUBLIC_KEYS[kid] = algorithms.RSAAlgorithm.from_jwk(key)
@@ -84,7 +83,7 @@ async def _verify_token_azure(token):
             token,
             public_key,
             algorithms=["RS256"],
-            audience=constants.MICROSOFT_CLIENT_ID,
+            audience=constants.AZURE_B2C_CLIENT_ID,
         )
 
     except jwt.ExpiredSignatureError as e:
