@@ -39,7 +39,7 @@ async def get_user_id(req: Union[Request, Websocket] = request) -> str:
     else:
         res = await _verify_token_azure(token)
 
-    user_id = res["userSubjectId"] if constants.TERRA else res["sub"]
+    user_id = res["id"] if constants.TERRA else res["sub"]
     if user_id in USER_IDS:
         return user_id
 
