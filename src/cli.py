@@ -115,11 +115,8 @@ async def get_username() -> Tuple[dict, int]:
 
 @bp.route("/update_firestore", methods=["GET"])
 async def update_firestore() -> Tuple[dict, int]:
-    msg = request.args.get("msg")
-    if msg is None:
-        raise BadRequest("msg is required")
     try:
-        _, parameter = msg.split("::")
+        _, parameter = request.args.get("msg", "").split("::")
     except:
         raise BadRequest(
             "msg must be in the format 'update_firestore::parameter=value'"
