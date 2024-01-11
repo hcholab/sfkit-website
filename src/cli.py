@@ -115,8 +115,6 @@ async def get_username() -> Tuple[dict, int]:
 
 @bp.route("/update_firestore", methods=["GET"])
 async def update_firestore() -> Tuple[dict, int]:
-    study = await _get_study()
-
     msg = request.args.get("msg")
     if msg is None:
         raise BadRequest("msg is required")
@@ -126,6 +124,8 @@ async def update_firestore() -> Tuple[dict, int]:
         raise BadRequest(
             "msg must be in the format 'update_firestore::parameter=value'"
         )
+
+    study = await _get_study()
 
     try:
         gcp_project = str(
