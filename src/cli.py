@@ -4,8 +4,9 @@ from typing import Tuple
 from quart import Blueprint, current_app, request
 
 from src.auth import get_cli_user
-from src.utils import custom_logging, constants
-from src.utils.api_functions import process_parameter, process_status, process_task
+from src.utils import constants, custom_logging
+from src.utils.api_functions import (process_parameter, process_status,
+                                     process_task)
 from src.utils.google_cloud.google_cloud_storage import upload_blob_from_file
 from src.utils.studies_functions import setup_gcp
 
