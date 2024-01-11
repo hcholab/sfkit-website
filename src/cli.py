@@ -43,8 +43,8 @@ async def upload_file() -> Tuple[dict, int]:
 
     db = current_app.config["DATABASE"]
     doc_ref_dict: dict = (
-        await db.collection("studies").document(study_id).get()
-    ).to_dict()
+       (await db.collection("studies").document(study_id).get()).to_dict()
+    )
     role: str = str(doc_ref_dict["participants"].index(username))
 
     if "manhattan" in str(file.filename):
@@ -71,7 +71,9 @@ async def get_doc_ref_dict() -> Tuple[dict, int]:
     _, study_id = _get_username_study_id(user)
 
     db = current_app.config["DATABASE"]
-    study: dict = (await db.collection("studies").document(study_id).get()).to_dict()
+    study: dict = (
+        (await db.collection("studies").document(study_id).get()).to_dict()
+    )
     return study, 200
 
 
