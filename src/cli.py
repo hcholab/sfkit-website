@@ -4,8 +4,7 @@ from typing import Any, Dict, Tuple
 
 from google.cloud import firestore
 from quart import Blueprint, current_app, request
-from werkzeug.exceptions import (BadRequest, Conflict, Forbidden, NotFound,
-                                 Unauthorized)
+from werkzeug.exceptions import BadRequest, Conflict, Forbidden, NotFound
 
 from src.auth import get_cli_user
 from src.utils import constants, custom_logging
@@ -29,8 +28,6 @@ class Study:
 
 async def _get_user_study_ids():
     user = await get_cli_user(request)
-    if not user:
-        raise Unauthorized()
 
     if constants.TERRA:
         user_id, study_id = user["id"], request.args.get("study_id")
@@ -106,9 +103,6 @@ async def get_doc_ref_dict() -> Tuple[dict, int]:
 @bp.route("/get_username", methods=["GET"])
 async def get_username() -> Tuple[dict, int]:
     user = await get_cli_user(request)
-    if not user:
-        raise Unauthorized()
-
     username, _ = _get_user_study_ids(user)
     return {"username": username}, 200
 
