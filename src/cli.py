@@ -75,7 +75,6 @@ async def upload_file() -> Tuple[dict, int]:
 
     file = (await request.files).get("file", None)
     if not file:
-        logger.info("no file")
         raise BadRequest("no file")
     logger.info(f"filename: {file.filename}")
 
