@@ -4,7 +4,7 @@ from typing import Any, Dict, Tuple
 
 from google.cloud import firestore
 from quart import Blueprint, current_app, request
-from werkzeug.exceptions import BadRequest, Conflict, Forbidden, NotFound
+from werkzeug.exceptions import BadRequest, Conflict, Forbidden
 
 from src.auth import get_cli_user
 from src.utils import constants, custom_logging
@@ -57,7 +57,9 @@ async def _get_study():
     study = doc.to_dict()
     PARTICIPANTS_KEY = "participants"
     if not study:
-        raise NotFound()
+        raise Forbidden() # best practice instead of NotFound
+    elif not PARTICIPANTS_KEY in study:
+        raise Conflict("study has no participants")
     elif not user_id in study[PARTICIPANTS_KEY]:
         raise Forbidden()
 
