@@ -3,8 +3,9 @@ import secrets
 
 import firebase_admin
 from google.cloud import firestore
-from quart import Quart
+from quart import Quart, json
 from quart_cors import cors
+from werkzeug.exceptions import HTTPException
 
 from src import cli, signaling, status
 from src.utils import constants, custom_logging
@@ -40,6 +41,13 @@ def create_app() -> Quart:
     app.register_blueprint(participants.bp)
     app.register_blueprint(study.bp)
     app.register_blueprint(signaling.bp)
+
+    @app.errorhandler(HTTPException)
+    async def handle_exception(e):
+        res = e.get_response()
+        res.data = json.dumps({ "error": e.description })
+        res.content_type = "application/json"
+        return res
 
     return app
 

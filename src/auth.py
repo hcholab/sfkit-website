@@ -6,7 +6,8 @@ import jwt
 import requests
 from google.cloud import firestore
 from jwt import algorithms
-from quart import Request, Websocket, current_app, jsonify, request
+from quart import Request, Websocket, current_app, request
+from werkzeug.exceptions import Unauthorized
 
 from src.api_utils import add_user_to_db
 from src.utils import constants, custom_logging
@@ -43,7 +44,7 @@ async def get_user_id(req: Union[Request, Websocket] = request) -> str:
     # TODO: move auth_keys into a separate collection
     if user_id == "auth_keys":
         logger.error("Attempted to use 'auth_keys' as user ID")
-        raise ValueError("Invalid user ID")
+        raise Unauthorized("Invalid user ID")
 
     db: firestore.AsyncClient = current_app.config["DATABASE"]
     if not (await db.collection("users").document(user_id).get()).exists:
@@ -61,21 +62,21 @@ async def _get_terra_user(auth_header: str):
         response = await client.get(f"{constants.SAM_API_URL}/api/users/v2/self", headers=headers)
 
     if response.status_code != 200:
-        raise ValueError("Token is invalid")
+        raise Unauthorized("Token is invalid")
 
     return response.json()
 
 
 async def _get_azure_b2c_user(auth_header: str):
     if not auth_header.startswith(BEARER_PREFIX):
-        raise ValueError("Invalid Authorization header")
+        raise Unauthorized("Invalid Authorization header")
 
     token = auth_header[len(BEARER_PREFIX):]
     headers = jwt.get_unverified_header(token)
     kid = headers["kid"]
 
     if kid not in PUBLIC_KEYS:
-        raise ValueError("Invalid KID")
+        raise Unauthorized("Invalid KID")
 
     public_key = PUBLIC_KEYS[kid]
     try:
@@ -87,11 +88,11 @@ async def _get_azure_b2c_user(auth_header: str):
         )
 
     except jwt.ExpiredSignatureError as e:
-        raise ValueError("Token has expired") from e
+        raise Unauthorized("Token has expired") from e
     except jwt.DecodeError as e:
-        raise ValueError("Token is invalid") from e
+        raise Unauthorized("Token is invalid") from e
     except jwt.InvalidTokenError as e:
-        raise ValueError("Token is not valid") from e
+        raise Unauthorized("Token is not valid") from e
 
     return decoded_token
 
@@ -107,8 +108,7 @@ async def get_cli_user(req: Request) -> dict:
         ).to_dict().get(auth_header)
 
         if not user:
-            logger.error("invalid authorization key")
-            return {}
+            raise Unauthorized("invalid authorization key")
     return user
 
 
@@ -118,7 +118,7 @@ def authenticate(f):
         try:
             await get_user_id()
         except Exception as e:
-            return jsonify({"message": str(e)}), 401
+            raise Unauthorized(str(e))
 
         return await f(*args, **kwargs)
 

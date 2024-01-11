@@ -1,10 +1,13 @@
 import asyncio
-from typing import Tuple
+from dataclasses import dataclass
+from typing import Any, Dict, Tuple
 
+from google.cloud import firestore
 from quart import Blueprint, current_app, request
+from werkzeug.exceptions import BadRequest, Conflict, Forbidden, NotFound
 
 from src.auth import get_cli_user
-from src.utils import custom_logging
+from src.utils import constants, custom_logging
 from src.utils.api_functions import (process_parameter, process_status,
                                      process_task)
 from src.utils.google_cloud.google_cloud_storage import upload_blob_from_file
@@ -14,41 +17,75 @@ logger = custom_logging.setup_logging(__name__)
 bp = Blueprint("cli", __name__, url_prefix="/api")
 
 
+@dataclass
+class Study:
+    id: str
+    dict: Dict[str, Any]
+    ref: firestore.AsyncDocumentReference
+    user_id: str
+    role: str
+
+
+async def _get_user_study_ids():
+    user = await get_cli_user(request)
+
+    if constants.TERRA:
+        user_id, study_id = user["id"], request.args.get("study_id")
+    else:
+        user_id, study_id = user["username"], user["study_id"]
+
+    if type(user_id) != str:
+        raise Conflict("Invalid user ID")
+
+    if study_id is None:
+        raise BadRequest("Missing study ID")
+    elif type(study_id) != str:
+        raise Conflict("Invalid study ID")
+
+    return user_id, study_id
+
+
+def _get_db() -> firestore.AsyncClient:
+    return current_app.config["DATABASE"]
+
+
+async def _get_study():
+    user_id, study_id = await _get_user_study_ids()
+
+    study_ref = _get_db().collection("studies").document(study_id)
+    doc = await study_ref.get()
+    study = doc.to_dict()
+    PARTICIPANTS_KEY = "participants"
+    if not study:
+        raise NotFound()
+    elif not user_id in study[PARTICIPANTS_KEY]:
+        raise Forbidden()
+
+    role = str(study[PARTICIPANTS_KEY].index(user_id))
+
+    return Study(study_id, study, study_ref, user_id, role)
+
+
 @bp.route("/upload_file", methods=["POST"])
 async def upload_file() -> Tuple[dict, int]:
-    user = await get_cli_user(request)
-    if not user:
-        return {"error": "unauthorized"}, 401
-
-    study_id = user["study_id"]
-    username = user["username"]
-
+    study = await _get_study()
     logger.info(
-        f"upload_file: {study_id}, request: {request}, request.files: {request.files}"
+        f"upload_file: {study.id}, request: {request}, request.files: {request.files}"
     )
 
     file = (await request.files).get("file", None)
-
     if not file:
-        logger.info("no file")
-        return {"error": "no file"}, 400
-
+        raise BadRequest("no file")
     logger.info(f"filename: {file.filename}")
 
-    db = current_app.config["DATABASE"]
-    doc_ref_dict: dict = (
-        (await db.collection("studies").document(study_id).get()).to_dict()
-    )
-    role: str = str(doc_ref_dict["participants"].index(username))
-
     if "manhattan" in str(file.filename):
-        file_path = f"{study_id}/p{role}/manhattan.png"
+        file_path = f"{study.id}/p{study.role}/manhattan.png"
     elif "pca_plot" in str(file.filename):
-        file_path = f"{study_id}/p{role}/pca_plot.png"
+        file_path = f"{study.id}/p{study.role}/pca_plot.png"
     elif str(file.filename) == "pos.txt":
-        file_path = f"{study_id}/pos.txt"
+        file_path = f"{study.id}/pos.txt"
     else:
-        file_path = f"{study_id}/p{role}/result.txt"
+        file_path = f"{study.id}/p{study.role}/result.txt"
 
     upload_blob_from_file("sfkit", file, file_path)
     logger.info(f"uploaded file {file.filename} to {file_path}")
@@ -58,78 +95,58 @@ async def upload_file() -> Tuple[dict, int]:
 
 @bp.route("/get_doc_ref_dict", methods=["GET"])
 async def get_doc_ref_dict() -> Tuple[dict, int]:
-    user = await get_cli_user(request)
-    if not user:
-        return {"error": "unauthorized"}, 401
-
-    db = current_app.config["DATABASE"]
-    study: dict = (
-        (await db.collection("studies").document(user["study_id"]).get()).to_dict()
-    )
-    return study, 200
+    study = await _get_study()
+    return study.dict, 200
 
 
 @bp.route("/get_username", methods=["GET"])
 async def get_username() -> Tuple[dict, int]:
     user = await get_cli_user(request)
-    if not user:
-        return {"error": "unauthorized"}, 401
-
-    return {"username": user["username"]}, 200
+    username, _ = _get_user_study_ids(user)
+    return {"username": username}, 200
 
 
 @bp.route("/update_firestore", methods=["GET"])
 async def update_firestore() -> Tuple[dict, int]:
-    user = await get_cli_user(request)
-    if not user:
-        return {"error": "unauthorized"}, 401
+    try:
+        _, parameter = request.args.get("msg", "").split("::")
+    except:
+        raise BadRequest(
+            "msg must be in the format 'update_firestore::parameter=value'"
+        )
 
-    username = user["username"]
-    study_id = user["study_id"]
-    db = current_app.config["DATABASE"]
+    study = await _get_study()
 
-    msg: str = str(request.args.get("msg"))
-    _, parameter = msg.split("::")
-    doc_ref = db.collection("studies").document(study_id)
-    doc_ref_dict: dict = (await doc_ref.get()).to_dict()
-    gcp_project: str = doc_ref_dict["personal_parameters"][username]["GCP_PROJECT"][
-        "value"
-    ]
-    role: str = str(doc_ref_dict["participants"].index(username))
+    try:
+        gcp_project = str(
+            study["personal_parameters"][study.user_id]["GCP_PROJECT"]["value"]
+        )
+    except KeyError:
+        raise Conflict("GCP_PROJECT not found")
 
-
-    if parameter.startswith("status"):
+    db = _get_db()
+    if parameter.startswith("status="):
         return await process_status(
             db,
-            username,
-            study_id,
+            study.user_id,
+            study.id,
             parameter,
-            doc_ref,
-            doc_ref_dict,
+            study.ref,
+            study,
             gcp_project,
-            role,
+            study.role,
         )
-    elif parameter.startswith("task"):
-        return await process_task(db, username, parameter, doc_ref)
+    elif parameter.startswith("task="):
+        return await process_task(db, study.user_id, parameter, study.ref)
     else:
-        return await process_parameter(db, username, parameter, doc_ref)
+        return await process_parameter(db, study.user_id, parameter, study.ref)
 
 
 @bp.route("/create_cp0", methods=["GET"])
 async def create_cp0() -> Tuple[dict, int]:
-    user = await get_cli_user(request)
-    if not user:
-        return {"error": "unauthorized"}, 401
-
-    study_id = user["study_id"]
-
-    doc_ref = current_app.config["DATABASE"].collection("studies").document(study_id)
-    doc_ref_dict: dict = (await doc_ref.get()).to_dict()
-
-    if not doc_ref_dict:
-        return {"error": f"study {study_id} not found"}, 400
+    study = await _get_study()
 
     # Create a new task for the setup_gcp function
-    asyncio.create_task(setup_gcp(doc_ref, "0"))
+    asyncio.create_task(setup_gcp(study.ref, "0"))
 
     return {}, 200
