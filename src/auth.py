@@ -7,7 +7,7 @@ import requests
 from google.cloud import firestore
 from jwt import algorithms
 from quart import Request, Websocket, current_app, request
-from werkzeug.exceptions import BadRequest, Unauthorized
+from werkzeug.exceptions import Unauthorized
 
 from src.api_utils import add_user_to_db
 from src.utils import constants, custom_logging
@@ -44,7 +44,7 @@ async def get_user_id(req: Union[Request, Websocket] = request) -> str:
     # TODO: move auth_keys into a separate collection
     if user_id == "auth_keys":
         logger.error("Attempted to use 'auth_keys' as user ID")
-        raise BadRequest("Invalid user ID")
+        raise Unauthorized("Invalid user ID")
 
     db: firestore.AsyncClient = current_app.config["DATABASE"]
     if not (await db.collection("users").document(user_id).get()).exists:
