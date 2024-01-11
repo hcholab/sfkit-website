@@ -43,7 +43,7 @@ async def upload_file() -> Tuple[dict, int]:
 
     db = current_app.config["DATABASE"]
     doc_ref_dict: dict = (
-       (await db.collection("studies").document(study_id).get()).to_dict()
+        (await db.collection("studies").document(study_id).get()).to_dict()
     )
     role: str = str(doc_ref_dict["participants"].index(username))
 
