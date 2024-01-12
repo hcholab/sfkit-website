@@ -108,6 +108,9 @@ async def register_terra_service_account():
     )
 
     if res.status_code not in (HTTPStatus.CREATED.value, HTTPStatus.CONFLICT.value):
+        logger.error("SAM request: %s %s/api/users/v2/self/register %s %s", HTTPMethod.POST.name, constants.SAM_API_URL, get_service_account_headers(), {
+            "acceptsTermsOfService": True,
+        })
         raise HTTPException(description=str(res.read()), response=res)
 
 
