@@ -97,7 +97,6 @@ def get_service_account_headers():
 
 
 async def register_terra_service_account():
-    logger.info("Registering Terra service account")
     res = await _sam_request(
         HTTPMethod.POST,
         "/api/users/v2/self/register",
@@ -110,6 +109,8 @@ async def register_terra_service_account():
 
     if res.status_code not in (HTTPStatus.CREATED.value, HTTPStatus.CONFLICT.value):
         raise HTTPException(description=str(res.read()), response=res)
+    else:
+        logger.info(res.json()["message"])
 
 
 async def _get_azure_b2c_user(auth_header: str):
