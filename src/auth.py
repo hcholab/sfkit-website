@@ -60,7 +60,7 @@ async def get_user_id(req: Union[Request, Websocket] = request) -> str:
 
 
 async def _sam_request(
-    method: HTTPMethod, path: str, headers: httpx.HeaderTypes, json: dict | None = None
+    method: HTTPMethod, path: str, headers: httpx.Headers, json: dict | None = None
 ):
     async with httpx.AsyncClient() as http:
         return await http.request(
