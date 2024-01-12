@@ -95,7 +95,8 @@ def get_service_account_headers():
     }
 
 
-async def register_service_account():
+async def register_terra_service_account():
+    logger.info("Registering Terra service account")
     res = await _sam_request(
         HTTPMethod.POST,
         "/api/users/v2/self/register",
