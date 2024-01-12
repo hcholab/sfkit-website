@@ -3,15 +3,19 @@ import os
 import secrets
 import time
 from html import escape
-from typing import Optional
 from string import Template
+from http import HTTPStatus
+from typing import Any, Dict, Optional
 
+import httpx
 from google.cloud.firestore_v1 import DocumentReference
 from python_http_client.exceptions import HTTPError
 from quart import current_app, g
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Email, Mail
+from werkzeug.exceptions import HTTPException
 
+from src.auth import get_service_account_headers
 from src.utils import constants, custom_logging
 from src.utils.google_cloud.google_cloud_compute import (GoogleCloudCompute,
                                                          format_instance_name)
@@ -156,6 +160,44 @@ async def setup_gcp(doc_ref: DocumentReference, role: str) -> None:
         doc_ref_dict["tasks"][user].append("Configuring your VM instance")
         await doc_ref.set(doc_ref_dict)
         return
+
+
+async def _terra_rawls_post(path: str, json: Dict[str, Any]):
+    async with httpx.AsyncClient() as http:
+        res = await http.post(
+            f"{constants.RAWLS_API_URL}/api/workspaces/{constants.TERRA_CP0_WORKSPACE_NAMESPACE}/{constants.TERRA_CP0_WORKSPACE_NAME}{path}",
+            get_service_account_headers(),
+            json=json,
+        )
+        if res.status_code != HTTPStatus.CREATED.value:
+            raise HTTPException(response=res)
+
+
+async def submit_terra_workflow(study_id: str, _role: str) -> None:
+    # Add study ID to the data table:
+    # https://rawls.dsde-dev.broadinstitute.org/#/entities/create_entity
+    await _terra_rawls_post(
+        "/entities",
+        {
+            "entityType": "study",
+            "name": study_id,
+            "attributes": {
+                # add role if ever we need to use this for non-CP0
+            },
+        },
+    )
+
+    # Submit workflow for execution, referencing the study ID from the data table:
+    # https://rawls.dsde-dev.broadinstitute.org/#/submissions/createSubmission
+    await _terra_rawls_post(
+        "/submissions",
+        {
+            "entityType": "study",
+            "entityName": study_id,
+            "methodConfigurationNamespace": constants.TERRA_CP0_CONFIG_NAMESPACE,
+            "methodConfigurationName": constants.TERRA_CP0_CONFIG_NAME,
+        },
+    )
 
 
 async def generate_ports(doc_ref: DocumentReference, role: str) -> None:
