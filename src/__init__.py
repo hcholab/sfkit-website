@@ -8,17 +8,16 @@ from quart_cors import cors
 from werkzeug.exceptions import HTTPException
 
 from src import cli, signaling, status
-from src.auth import register_service_account
+from src.auth import register_terra_service_account
 from src.utils import constants, custom_logging
 from src.web import participants, study, web
 
 logger = custom_logging.setup_logging(__name__)
 
 
-async def create_app() -> Quart:
+def create_app() -> Quart:
     if constants.TERRA:
         logger.info("Creating app - on Terra")
-        await register_service_account()
     else:
         logger.info("Creating app - NOT on Terra")
 
@@ -43,6 +42,11 @@ async def create_app() -> Quart:
     app.register_blueprint(participants.bp)
     app.register_blueprint(study.bp)
     app.register_blueprint(signaling.bp)
+
+    @app.before_serving
+    async def _register_terra_service_account():
+        if constants.TERRA:
+            await register_terra_service_account()
 
     @app.errorhandler(HTTPException)
     async def handle_exception(e):
