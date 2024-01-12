@@ -8,7 +8,7 @@ import requests
 from google.cloud import firestore
 from jwt import algorithms
 from quart import Request, Websocket, current_app, request
-from werkzeug.exceptions import Unauthorized
+from werkzeug.exceptions import HTTPException, Unauthorized
 
 from src.api_utils import add_user_to_db
 from src.utils import constants, custom_logging
@@ -57,7 +57,7 @@ async def get_user_id(req: Union[Request, Websocket] = request) -> str:
     return user_id
 
 
-async def _sam_request(method: HTTPMethod, path: str):
+async def _sam_request(method: HTTPMethod, path: str, json: dict | None = None):
     async with httpx.AsyncClient() as http:
         return await http.request(
             method.name,
@@ -66,6 +66,7 @@ async def _sam_request(method: HTTPMethod, path: str):
                 "accept": "application/json",
                 AUTH_HEADER: _get_auth_header(),
             },
+            json=json,
         )
 
 
@@ -76,6 +77,19 @@ async def _get_terra_user():
         raise Unauthorized("Token is invalid")
 
     return res.json()
+
+
+async def register_service_account():
+    res = await _sam_request(
+        HTTPMethod.POST,
+        "/api/users/v2/self/register",
+        json={
+            "acceptsTermsOfService": True,
+        },
+    )
+
+    if HTTPStatus(res.status_code) not in (HTTPStatus.CREATED, HTTPStatus.CONFLICT):
+        raise HTTPException(response=res)
 
 
 async def _get_azure_b2c_user():
