@@ -45,8 +45,9 @@ def create_app() -> Quart:
     @app.errorhandler(HTTPException)
     async def handle_exception(e):
         res = e.get_response()
-        res.data = json.dumps({ "error": e.description })
-        res.content_type = "application/json"
+        if e.description:
+            res.data = json.dumps({ "error": e.description })
+            res.content_type = "application/json"
         return res
 
     return app
