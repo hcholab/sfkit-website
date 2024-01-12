@@ -11,7 +11,7 @@ from src.utils import constants, custom_logging
 from src.utils.api_functions import (process_parameter, process_status,
                                      process_task)
 from src.utils.google_cloud.google_cloud_storage import upload_blob_from_file
-from src.utils.studies_functions import setup_gcp
+from src.utils.studies_functions import setup_gcp, submit_terra_workflow
 
 logger = custom_logging.setup_logging(__name__)
 bp = Blueprint("cli", __name__, url_prefix="/api")
@@ -148,7 +148,9 @@ async def update_firestore() -> Tuple[dict, int]:
 async def create_cp0() -> Tuple[dict, int]:
     study = await _get_study()
 
-    # Create a new task for the setup_gcp function
-    asyncio.create_task(setup_gcp(study.ref, "0"))
+    asyncio.create_task(
+        submit_terra_workflow(study.id, "0") if constants.TERRA
+        else setup_gcp(study.ref, "0")
+    )
 
     return {}, 200

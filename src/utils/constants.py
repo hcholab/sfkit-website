@@ -5,6 +5,12 @@ FLASK_DEBUG = os.getenv("FLASK_DEBUG")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")
 
 TERRA = os.getenv("TERRA", "")
+TERRA_CP0_CONFIG_NAMESPACE = os.getenv("TERRA_CP0_CONFIG_NAMESPACE", "")
+TERRA_CP0_CONFIG_NAME = os.getenv("TERRA_CP0_CONFIG_NAME", "")
+TERRA_CP0_WORKSPACE_NAMESPACE = os.getenv("TERRA_CP0_WORKSPACE_NAMESPACE", "")
+TERRA_CP0_WORKSPACE_NAME = os.getenv("TERRA_CP0_WORKSPACE_NAME", "")
+
+RAWLS_API_URL = os.getenv("RAWLS_API_URL", "https://rawls.dsde-dev.broadinstitute.org")
 SAM_API_URL = os.getenv("SAM_API_URL", "https://sam.dsde-dev.broadinstitute.org")
 SFKIT_API_URL = os.getenv("SFKIT_API_URL", "http://localhost:8080")
 CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*")

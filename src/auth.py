@@ -30,7 +30,7 @@ if not constants.TERRA:
         PUBLIC_KEYS[kid] = algorithms.RSAAlgorithm.from_jwk(key)
 
 
-def _get_auth_header():
+def get_auth_header():
     return request.headers.get(AUTH_HEADER, "", type=str)
 
 
@@ -64,7 +64,7 @@ async def _sam_request(method: HTTPMethod, path: str, json: dict | None = None):
             f"{constants.SAM_API_URL}{path}",
             headers={
                 "accept": "application/json",
-                AUTH_HEADER: _get_auth_header(),
+                AUTH_HEADER: get_auth_header(),
             },
             json=json,
         )
@@ -73,7 +73,7 @@ async def _sam_request(method: HTTPMethod, path: str, json: dict | None = None):
 async def _get_terra_user():
     res = await _sam_request(HTTPMethod.GET, "/api/users/v2/self")
 
-    if HTTPStatus(res.status_code) != HTTPStatus.OK:
+    if res.status_code != HTTPStatus.OK.value:
         raise Unauthorized("Token is invalid")
 
     return res.json()
@@ -88,12 +88,12 @@ async def register_service_account():
         },
     )
 
-    if HTTPStatus(res.status_code) not in (HTTPStatus.CREATED, HTTPStatus.CONFLICT):
+    if res.status_code not in (HTTPStatus.CREATED.value, HTTPStatus.CONFLICT.value):
         raise HTTPException(response=res)
 
 
 async def _get_azure_b2c_user():
-    auth_header = _get_auth_header()
+    auth_header = get_auth_header()
     if not auth_header.startswith(BEARER_PREFIX):
         raise Unauthorized("Invalid Authorization header")
 
@@ -127,7 +127,7 @@ async def get_cli_user(req: Request) -> dict:
     if constants.TERRA:
         user = await _get_terra_user()
     else:
-        auth_header = _get_auth_header()
+        auth_header = get_auth_header()
         if not auth_header:
             raise Unauthorized("Missing authorization key")
 
