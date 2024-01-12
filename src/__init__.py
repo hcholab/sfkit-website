@@ -15,7 +15,7 @@ from src.web import participants, study, web
 logger = custom_logging.setup_logging(__name__)
 
 
-def create_app() -> Quart:
+async def create_app() -> Quart:
     if constants.TERRA:
         logger.info("Creating app - on Terra")
     else:
