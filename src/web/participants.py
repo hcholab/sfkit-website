@@ -43,6 +43,35 @@ async def invite_participant() -> Response:
         return jsonify({"error": "Failed to send invitation"}), 500
 
 
+@bp.route("/accept_invitation", methods=["POST"])
+@authenticate
+async def accept_invitation() -> Response:
+    db: firestore.AsyncClient = current_app.config["DATABASE"]
+
+    study_id = request.args.get("study_id")
+    user_id = await get_user_id()
+
+    if not study_id or not user_id:
+        return jsonify({"error": "Invalid input"}), 400
+
+    user_doc = await db.collection("users").document(user_id).get()
+    user_email = user_doc.to_dict().get("email")
+
+    doc_ref = db.collection("studies").document(study_id)
+    doc_ref_dict: dict = (await doc_ref.get()).to_dict()
+
+    if user_email not in doc_ref_dict.get("invited_participants", []):
+        return jsonify({"error": "User is not invited for this study"}), 400
+
+    doc_ref_dict["invited_participants"].remove(user_email)
+    doc_ref_dict["participants"] = doc_ref_dict.get("participants", []) + [user_id]
+
+    await doc_ref.set(doc_ref_dict)
+
+    add_notification(f"You have accepted the invitation to {doc_ref_dict['title']}", user_id)
+    return jsonify({"message": "Invitation accepted successfully"}), 200
+
+
 @bp.route("/remove_participant", methods=["POST"])
 @authenticate
 async def remove_participant() -> Response:
