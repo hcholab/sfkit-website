@@ -104,13 +104,11 @@ async def register_terra_service_account():
         get_service_account_headers(),
         json={
             "acceptsTermsOfService": True,
+            "userAttributes": {"marketingConsent": False},
         },
     )
 
     if res.status_code not in (HTTPStatus.CREATED.value, HTTPStatus.CONFLICT.value):
-        logger.error("SAM request: %s %s/api/users/v2/self/register %s %s", HTTPMethod.POST.name, constants.SAM_API_URL, get_service_account_headers(), {
-            "acceptsTermsOfService": True,
-        })
         raise HTTPException(description=str(res.read()), response=res)
 
 
@@ -163,10 +161,12 @@ async def get_cli_user(req: Union[Request, Websocket]) -> dict:
             raise Unauthorized("invalid authorization key")
     return user
 
+
 async def get_user_email(user_id: str) -> str:
     db: firestore.AsyncClient = current_app.config["DATABASE"]
     user = await db.collection("users").document(user_id).get()
     return user.to_dict().get("email", "")
+
 
 def authenticate(f):
     @wraps(f)
