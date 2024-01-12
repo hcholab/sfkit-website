@@ -107,8 +107,8 @@ async def register_terra_service_account():
         },
     )
 
-    if res.status_code not in (HTTPStatus.CREATED.value, HTTPStatus.FORBIDDEN.value):
-        raise HTTPException(response=res)
+    if res.status_code not in (HTTPStatus.CREATED.value, HTTPStatus.CONFLICT.value):
+        raise HTTPException(description=str(res.read()), response=res)
 
 
 async def _get_azure_b2c_user(auth_header: str):
