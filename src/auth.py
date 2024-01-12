@@ -6,6 +6,7 @@ import google.auth
 import httpx
 import jwt
 import requests
+from google.auth.transport.requests import Request as GAuthRequest
 from google.cloud import firestore
 from jwt import algorithms
 from quart import Request, Websocket, current_app, request
@@ -89,7 +90,7 @@ async def _get_terra_user(auth_header: str):
 def get_service_account_headers():
     creds, _ = google.auth.default()
     creds = creds.with_scopes(["openid", "email", "profile"])
-    creds.refresh(Request())
+    creds.refresh(GAuthRequest())
     return {
         AUTH_HEADER: BEARER_PREFIX + creds.token,
     }

@@ -49,7 +49,7 @@ def create_app() -> Quart:
             await register_terra_service_account()
 
     @app.errorhandler(HTTPException)
-    async def handle_exception(e):
+    async def handle_exception(e: HTTPException):
         res = e.get_response()
         if e.description:
             res.data = json.dumps({ "error": e.description })
