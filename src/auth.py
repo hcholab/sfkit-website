@@ -1,4 +1,5 @@
 from functools import wraps
+from http import HTTPMethod, HTTPStatus
 from typing import Union
 
 import httpx
@@ -7,7 +8,7 @@ import requests
 from google.cloud import firestore
 from jwt import algorithms
 from quart import Request, Websocket, current_app, request
-from werkzeug.exceptions import Unauthorized
+from werkzeug.exceptions import HTTPException, Unauthorized
 
 from src.api_utils import add_user_to_db
 from src.utils import constants, custom_logging
@@ -29,12 +30,15 @@ if not constants.TERRA:
         PUBLIC_KEYS[kid] = algorithms.RSAAlgorithm.from_jwk(key)
 
 
+def get_auth_header():
+    return request.headers.get(AUTH_HEADER, "", type=str)
+
+
 async def get_user_id(req: Union[Request, Websocket] = request) -> str:
-    auth_header: str = req.headers.get(AUTH_HEADER, "", type=str)
     if constants.TERRA:
-        user = await _get_terra_user(auth_header)
+        user = await _get_terra_user()
     else:
-        user = await _get_azure_b2c_user(auth_header)
+        user = await _get_azure_b2c_user()
 
     user_id = user["id"] if constants.TERRA else user["sub"]
     if user_id in USER_IDS:
@@ -53,25 +57,47 @@ async def get_user_id(req: Union[Request, Websocket] = request) -> str:
     return user_id
 
 
-async def _get_terra_user(auth_header: str):
-    async with httpx.AsyncClient() as client:
-        headers = {
-            "accept": "application/json",
-            AUTH_HEADER: auth_header,
-        }
-        response = await client.get(f"{constants.SAM_API_URL}/api/users/v2/self", headers=headers)
+async def _sam_request(method: HTTPMethod, path: str, json: dict | None = None):
+    async with httpx.AsyncClient() as http:
+        return await http.request(
+            method.name,
+            f"{constants.SAM_API_URL}{path}",
+            headers={
+                "accept": "application/json",
+                AUTH_HEADER: get_auth_header(),
+            },
+            json=json,
+        )
 
-    if response.status_code != 200:
+
+async def _get_terra_user():
+    res = await _sam_request(HTTPMethod.GET, "/api/users/v2/self")
+
+    if res.status_code != HTTPStatus.OK.value:
         raise Unauthorized("Token is invalid")
 
-    return response.json()
+    return res.json()
 
 
-async def _get_azure_b2c_user(auth_header: str):
+async def register_service_account():
+    res = await _sam_request(
+        HTTPMethod.POST,
+        "/api/users/v2/self/register",
+        json={
+            "acceptsTermsOfService": True,
+        },
+    )
+
+    if res.status_code not in (HTTPStatus.CREATED.value, HTTPStatus.CONFLICT.value):
+        raise HTTPException(response=res)
+
+
+async def _get_azure_b2c_user():
+    auth_header = get_auth_header()
     if not auth_header.startswith(BEARER_PREFIX):
         raise Unauthorized("Invalid Authorization header")
 
-    token = auth_header[len(BEARER_PREFIX):]
+    token = auth_header[len(BEARER_PREFIX) :]
     headers = jwt.get_unverified_header(token)
     kid = headers["kid"]
 
@@ -98,14 +124,19 @@ async def _get_azure_b2c_user(auth_header: str):
 
 
 async def get_cli_user(req: Request) -> dict:
-    auth_header = req.headers.get(AUTH_HEADER)
     if constants.TERRA:
-        user = await _get_terra_user(auth_header)
+        user = await _get_terra_user()
     else:
+        auth_header = get_auth_header()
+        if not auth_header:
+            raise Unauthorized("Missing authorization key")
+
         db: firestore.AsyncClient = current_app.config["DATABASE"]
         user = (
-            await db.collection("users").document("auth_keys").get()
-        ).to_dict().get(auth_header)
+            (await db.collection("users").document("auth_keys").get())
+            .to_dict()
+            .get(auth_header)
+        )
 
         if not user:
             raise Unauthorized("invalid authorization key")
