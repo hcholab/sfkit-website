@@ -43,6 +43,35 @@ async def invite_participant() -> Response:
         return jsonify({"error": "Failed to send invitation"}), 500
 
 
+@bp.route("/accept_invitation", methods=["POST"])
+@authenticate
+async def accept_invitation() -> Response:
+    db: firestore.AsyncClient = current_app.config["DATABASE"]
+
+    study_id = request.args.get("study_id")
+    user_id = await get_user_id()
+
+    if not study_id or not user_id:
+        return jsonify({"error": "Invalid input"}), 400
+
+    user_doc = await db.collection("users").document(user_id).get()
+    user_email = user_doc.to_dict().get("email")
+
+    doc_ref = db.collection("studies").document(study_id)
+    doc_ref_dict: dict = (await doc_ref.get()).to_dict()
+
+    if user_email not in doc_ref_dict.get("invited_participants", []):
+        return jsonify({"error": "User is not invited for this study"}), 400
+
+    doc_ref_dict["invited_participants"].remove(user_email)
+    doc_ref_dict["participants"] = doc_ref_dict.get("participants", []) + [user_id]
+
+    await doc_ref.set(doc_ref_dict)
+
+    add_notification(f"You have accepted the invitation to {doc_ref_dict['title']}", user_id)
+    return jsonify({"message": "Invitation accepted successfully"}), 200
+
+
 @bp.route("/remove_participant", methods=["POST"])
 @authenticate
 async def remove_participant() -> Response:
@@ -130,37 +159,3 @@ async def request_join_study() -> Response:
     except Exception as e:
         logger.error(f"Failed to request to join study: {e}")
         return jsonify({"error": "Failed to request to join study"}), 500
-
-
-# TODO: add endpoint to accept invitation to study
-# @bp.route("/accept_invitation/<study_title>", methods=["GET", "POST"])
-# @login_required
-# async def accept_invitation(study_title: str) -> Response:
-#     db = current_app.config["DATABASE"]
-#     doc_ref = db.collection("studies").document(study_id)
-#     doc_ref_dict: dict = (await doc_ref.get()).to_dict()
-
-#     if g.user["id"] not in doc_ref_dict["invited_participants"]:
-#         return redirect_with_flash(
-#             url=url_for("studies.index"),
-#             message="The logged in user is not invited to this study.  If you came here from an email invitation, please log in with the email address you were invited with before accepting the invitation.",
-#         )
-
-#     doc_ref_dict["invited_participants"].remove(g.user["id"])
-
-#     await doc_ref.set(
-#         {
-#             "invited_participants": doc_ref_dict["invited_participants"],
-#             "participants": doc_ref_dict["participants"] + [g.user["id"]],
-#             "personal_parameters": doc_ref_dict["personal_parameters"]
-#             | {
-#                 g.user["id"]: constants.default_user_parameters(
-#                     doc_ref_dict["study_type"]
-#                 )
-#             },
-#             "status": doc_ref_dict["status"] | {g.user["id"]: ""},
-#         },
-#         merge=True,
-#     )
-
-#     return redirect(url_for("studies.study", study_title=study_title))

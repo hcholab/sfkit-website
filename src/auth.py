@@ -158,6 +158,10 @@ async def get_cli_user(req: Union[Request, Websocket]) -> dict:
             raise Unauthorized("invalid authorization key")
     return user
 
+async def get_user_email(user_id: str) -> str:
+    db: firestore.AsyncClient = current_app.config["DATABASE"]
+    user = await db.collection("users").document(user_id).get()
+    return user.to_dict().get("email", "")
 
 def authenticate(f):
     @wraps(f)

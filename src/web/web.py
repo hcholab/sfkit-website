@@ -8,7 +8,7 @@ from firebase_admin import auth as firebase_auth
 from quart import Blueprint, Response, current_app, jsonify, request, send_file
 
 from src.api_utils import get_display_names, get_studies, is_valid_uuid
-from src.auth import authenticate, get_user_id
+from src.auth import authenticate, get_user_email, get_user_id
 from src.utils import constants, custom_logging
 from src.utils.generic_functions import add_notification, remove_notification
 from src.utils.google_cloud.google_cloud_secret_manager import \
@@ -76,10 +76,11 @@ async def my_studies() -> Response:
         study["owner_name"] = display_names.get(study["owner"], study["owner"])
 
     user_id = await get_user_id()
+    email = await get_user_email(user_id)
     my_studies = [
         study
         for study in my_studies
-        if user_id in study["participants"] or user_id in study["invited_participants"]
+        if user_id in study["participants"] or email in study["invited_participants"]
     ]
     return jsonify({"studies": my_studies})
 

@@ -65,17 +65,20 @@ async def add_user_to_db(decoded_token: dict) -> None:
     logger.info(f"Creating user {user_id}")
     db = current_app.config["DATABASE"]
     try:
-        await db.collection("users").document(user_id).set({"about": "", "notifications": []})
         display_name = user_id
         if constants.TERRA and "email" in decoded_token:
             display_name = decoded_token["email"]
-        elif "given_name" in decoded_token:
+            email = decoded_token["email"]
+        if "given_name" in decoded_token:
             display_name = decoded_token["given_name"]
             if "family_name" in decoded_token:
                 display_name += " " + decoded_token["family_name"]
+        if "emails" in decoded_token:
+            email = decoded_token["emails"][0]
         await db.collection("users").document("display_names").set(
             {user_id: display_name}, merge=True
         )
+        await db.collection("users").document(user_id).set({"about": "", "notifications": [], "email": email, "display_name": display_name}, merge=True)
     except Exception as e:
         raise RuntimeError({"error": "Failed to create user", "details": str(e)}) from e
 
