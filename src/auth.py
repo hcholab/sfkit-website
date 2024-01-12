@@ -2,6 +2,7 @@ from functools import wraps
 from http import HTTPMethod, HTTPStatus
 from typing import Union
 
+import google.auth
 import httpx
 import jwt
 import requests
@@ -30,15 +31,16 @@ if not constants.TERRA:
         PUBLIC_KEYS[kid] = algorithms.RSAAlgorithm.from_jwk(key)
 
 
-def get_auth_header():
-    return request.headers.get(AUTH_HEADER, "", type=str)
+def _get_auth_header(req: Union[Request, Websocket]) -> str:
+    return req.headers.get(AUTH_HEADER, "", type=str)
 
 
 async def get_user_id(req: Union[Request, Websocket] = request) -> str:
+    auth_header = _get_auth_header(req)
     if constants.TERRA:
-        user = await _get_terra_user()
+        user = await _get_terra_user(auth_header)
     else:
-        user = await _get_azure_b2c_user()
+        user = await _get_azure_b2c_user(auth_header)
 
     user_id = user["id"] if constants.TERRA else user["sub"]
     if user_id in USER_IDS:
@@ -57,21 +59,26 @@ async def get_user_id(req: Union[Request, Websocket] = request) -> str:
     return user_id
 
 
-async def _sam_request(method: HTTPMethod, path: str, json: dict | None = None):
+async def _sam_request(
+    method: HTTPMethod, path: str, headers: httpx.HeaderTypes, json: dict | None = None
+):
     async with httpx.AsyncClient() as http:
         return await http.request(
             method.name,
             f"{constants.SAM_API_URL}{path}",
-            headers={
-                "accept": "application/json",
-                AUTH_HEADER: get_auth_header(),
-            },
+            headers=headers,
             json=json,
         )
 
 
-async def _get_terra_user():
-    res = await _sam_request(HTTPMethod.GET, "/api/users/v2/self")
+async def _get_terra_user(auth_header: str):
+    res = await _sam_request(
+        HTTPMethod.GET,
+        "/api/users/v2/self",
+        headers={
+            AUTH_HEADER: auth_header,
+        },
+    )
 
     if res.status_code != HTTPStatus.OK.value:
         raise Unauthorized("Token is invalid")
@@ -79,10 +86,20 @@ async def _get_terra_user():
     return res.json()
 
 
+def get_service_account_headers():
+    creds, _ = google.auth.default()
+    creds = creds.with_scopes(["openid", "email", "profile"])
+    creds.refresh(Request())
+    return {
+        AUTH_HEADER: BEARER_PREFIX + creds.token,
+    }
+
+
 async def register_service_account():
     res = await _sam_request(
         HTTPMethod.POST,
         "/api/users/v2/self/register",
+        get_service_account_headers(),
         json={
             "acceptsTermsOfService": True,
         },
@@ -92,8 +109,7 @@ async def register_service_account():
         raise HTTPException(response=res)
 
 
-async def _get_azure_b2c_user():
-    auth_header = get_auth_header()
+async def _get_azure_b2c_user(auth_header: str):
     if not auth_header.startswith(BEARER_PREFIX):
         raise Unauthorized("Invalid Authorization header")
 
@@ -123,11 +139,11 @@ async def _get_azure_b2c_user():
     return decoded_token
 
 
-async def get_cli_user(req: Request) -> dict:
+async def get_cli_user(req: Union[Request, Websocket]) -> dict:
+    auth_header = _get_auth_header(req)
     if constants.TERRA:
-        user = await _get_terra_user()
+        user = await _get_terra_user(auth_header)
     else:
-        auth_header = get_auth_header()
         if not auth_header:
             raise Unauthorized("Missing authorization key")
 
