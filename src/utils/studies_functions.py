@@ -190,7 +190,7 @@ async def submit_terra_workflow(study_id: str, _role: str) -> None:
     # Submit workflow for execution, referencing the study ID from the data table:
     # https://rawls.dsde-dev.broadinstitute.org/#/submissions/createSubmission
     await _terra_rawls_post(
-        "/entities",
+        "/submissions",
         {
             "entityType": "study",
             "entityName": study_id,
