@@ -15,7 +15,7 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Email, Mail
 from werkzeug.exceptions import HTTPException
 
-from src.auth import AUTH_HEADER, get_auth_header
+from src.auth import get_service_account_headers
 from src.utils import constants, custom_logging
 from src.utils.google_cloud.google_cloud_compute import (GoogleCloudCompute,
                                                          format_instance_name)
@@ -166,10 +166,7 @@ async def _terra_rawls_post(path: str, json: Dict[str, Any]):
     async with httpx.AsyncClient() as http:
         res = await http.post(
             f"{constants.RAWLS_API_URL}/api/workspaces/{constants.TERRA_CP0_WORKSPACE_NAMESPACE}/{constants.TERRA_CP0_WORKSPACE_NAME}{path}",
-            headers={
-                "accept": "application/json",
-                AUTH_HEADER: get_auth_header(),
-            },
+            get_service_account_headers(),
             json=json,
         )
         if res.status_code != HTTPStatus.CREATED.value:
