@@ -130,37 +130,3 @@ async def request_join_study() -> Response:
     except Exception as e:
         logger.error(f"Failed to request to join study: {e}")
         return jsonify({"error": "Failed to request to join study"}), 500
-
-
-# TODO: add endpoint to accept invitation to study
-# @bp.route("/accept_invitation/<study_title>", methods=["GET", "POST"])
-# @login_required
-# async def accept_invitation(study_title: str) -> Response:
-#     db = current_app.config["DATABASE"]
-#     doc_ref = db.collection("studies").document(study_id)
-#     doc_ref_dict: dict = (await doc_ref.get()).to_dict()
-
-#     if g.user["id"] not in doc_ref_dict["invited_participants"]:
-#         return redirect_with_flash(
-#             url=url_for("studies.index"),
-#             message="The logged in user is not invited to this study.  If you came here from an email invitation, please log in with the email address you were invited with before accepting the invitation.",
-#         )
-
-#     doc_ref_dict["invited_participants"].remove(g.user["id"])
-
-#     await doc_ref.set(
-#         {
-#             "invited_participants": doc_ref_dict["invited_participants"],
-#             "participants": doc_ref_dict["participants"] + [g.user["id"]],
-#             "personal_parameters": doc_ref_dict["personal_parameters"]
-#             | {
-#                 g.user["id"]: constants.default_user_parameters(
-#                     doc_ref_dict["study_type"]
-#                 )
-#             },
-#             "status": doc_ref_dict["status"] | {g.user["id"]: ""},
-#         },
-#         merge=True,
-#     )
-
-#     return redirect(url_for("studies.study", study_title=study_title))

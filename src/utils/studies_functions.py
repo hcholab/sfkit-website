@@ -4,9 +4,9 @@ import secrets
 import time
 from html import escape
 from typing import Optional
+from string import Template
 
 from google.cloud.firestore_v1 import DocumentReference
-from jinja2 import Template
 from python_http_client.exceptions import HTTPError
 from quart import current_app, g
 from sendgrid import SendGridAPIClient
@@ -21,8 +21,8 @@ logger = custom_logging.setup_logging(__name__)
 
 email_template = Template(
     """
-<p>Hello!<br>{{ inviter }} has invited you to join the {{ study_title }} study on the sfkit website.  Click <a href='https://sfkit.org/accept_invitation/{{ study_title }}'>here</a> to accept the invitation. (Note: you will need to log in using this email address to accept the invitation.){% if invitation_message %}<br><br>Here is a message from {{ inviter }}:<br>{{ invitation_message }}{% endif %}</p>
-"""
+    <p>Hello!<br>${inviter} has invited you to join the ${study_title} study on the sfkit website. Sign-in on the website to accept the invitation!<br>${invitation_message}</p>
+    """
 )
 
 
@@ -46,9 +46,9 @@ async def email(
     ).to_dict()
     sg = SendGridAPIClient(api_key=doc_ref_dict.get("api_key", ""))
 
-    html_content = email_template.render(
+    html_content = email_template.substitute(
         inviter=escape(inviter),
-        invitation_message=escape(invitation_message),
+        invitation_message=escape(invitation_message) if invitation_message else "",
         study_title=escape(study_title),
     )
 
