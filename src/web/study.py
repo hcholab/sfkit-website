@@ -1,9 +1,10 @@
 import io
-from datetime import datetime
 import uuid
+from datetime import datetime
 
 from google.cloud import firestore
 from quart import Blueprint, Response, current_app, jsonify, request, send_file
+from werkzeug.exceptions import Forbidden, BadRequest
 
 from src.auth import authenticate, get_user_id
 from src.utils import constants, custom_logging
@@ -19,19 +20,26 @@ bp = Blueprint("study", __name__, url_prefix="/api")
 @authenticate
 async def study() -> Response:
     study_id = request.args.get("study_id")
+    user_id = await get_user_id()
     db = current_app.config["DATABASE"]
 
     try:
         study = (await db.collection("studies").document(study_id).get()).to_dict()
     except Exception as e:
-        return jsonify({"error": "Failed to fetch study", "details": str(e)})
+        logger.error(f"Failed to fetch study: {e}")
+        raise Forbidden() 
+
+    if user_id not in study["participants"]:
+        raise Forbidden()
 
     try:
         display_names = (
             await db.collection("users").document("display_names").get()
         ).to_dict() or {}
     except Exception as e:
-        return jsonify({"error": "Failed to fetch display names", "details": str(e)})
+        logger.error(f"Failed to fetch display names: {e}")
+        raise BadRequest()
+        
 
     study["owner_name"] = display_names.get(study["owner"], study["owner"])
     study["display_names"] = {
@@ -186,8 +194,8 @@ async def study_information() -> Response:
 
         return jsonify({"message": "Study information updated successfully"}), 200
     except Exception as e:
-        current_app.logger.error(f"Failed to update study information: {e}")
-        return jsonify({"error": "Failed to update study information"}), 500
+        logger.error(f"Failed to update study information: {e}")
+        raise BadRequest()
 
 
 @bp.route("/parameters", methods=["POST"])
@@ -222,8 +230,8 @@ async def parameters() -> Response:
 
         return jsonify({"message": "Parameters updated successfully"}), 200
     except Exception as e:
-        current_app.logger.error(f"Failed to update parameters: {e}")
-        return jsonify({"error": "Failed to update parameters"}), 500
+        logger.error(f"Failed to update parameters: {e}")
+        raise BadRequest()
 
 @bp.route("/download_auth_key", methods=["GET"])
 @authenticate

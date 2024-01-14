@@ -64,7 +64,12 @@ async def accept_invitation() -> Response:
         return jsonify({"error": "User is not invited for this study"}), 400
 
     doc_ref_dict["invited_participants"].remove(user_email)
+    
     doc_ref_dict["participants"] = doc_ref_dict.get("participants", []) + [user_id]
+    doc_ref_dict["personal_parameters"] = doc_ref_dict.get(
+        "personal_parameters", {}
+    ) | {user_id: constants.default_user_parameters(doc_ref_dict["study_type"])}
+    doc_ref_dict["status"] = doc_ref_dict.get("status", {}) | {user_id: ""}
 
     await doc_ref.set(doc_ref_dict)
 
@@ -97,7 +102,7 @@ async def remove_participant() -> Response:
 
     await doc_ref.set(doc_ref_dict)
 
-    add_notification(f"You have been removed from {doc_ref_dict['title']}", user_id)
+    await add_notification(f"You have been removed from {doc_ref_dict['title']}", user_id)
     return jsonify({"message": "Participant removed successfully"}), 200
 
 
