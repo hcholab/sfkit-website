@@ -148,9 +148,9 @@ async def update_firestore() -> Tuple[dict, int]:
 async def create_cp0() -> Tuple[dict, int]:
     study = await _get_study()
 
-    asyncio.create_task(
-        submit_terra_workflow(study.id, "0") if constants.TERRA
-        else setup_gcp(study.ref, "0")
-    )
+    if constants.TERRA:
+        await submit_terra_workflow(study.id, "0")
+    else:
+        asyncio.create_task(setup_gcp(study.ref, "0"))
 
     return {}, 200
