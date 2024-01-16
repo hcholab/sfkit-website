@@ -2,18 +2,22 @@ import uuid
 from urllib.parse import urlparse, urlunsplit
 
 import httpx
-import werkzeug.exceptions
 from google.cloud.firestore_v1 import FieldFilter
 from quart import current_app
+from werkzeug.exceptions import HTTPException
 
 from src.utils import constants, custom_logging
 
 logger = custom_logging.setup_logging(__name__)
 
 
-class APIException(werkzeug.exceptions.HTTPException):
+class APIException(HTTPException):
     def __init__(self, res: httpx.Response):
-        super().__init__(description=str(res.read()), response=res)
+        if res.headers.get("content-type") == "application/json" and "message" in res.json():
+            desc = res.json()["message"]
+        else:
+            desc = str(res.read())
+        super().__init__(description=desc, response=res)
 
 
 def get_websocket_origin():
