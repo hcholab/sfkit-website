@@ -1,10 +1,12 @@
 import uuid
+from typing import Union
 from urllib.parse import urlparse, urlunsplit
 
 import httpx
 from google.cloud.firestore_v1 import FieldFilter
 from quart import current_app
 from werkzeug.exceptions import HTTPException
+from werkzeug.wrappers import Response
 
 from src.utils import constants, custom_logging
 
@@ -12,11 +14,20 @@ logger = custom_logging.setup_logging(__name__)
 
 
 class APIException(HTTPException):
-    def __init__(self, res: httpx.Response):
-        if res.headers.get("content-type") == "application/json" and "message" in res.json():
+    def __init__(self, res: Union[httpx.Response, Response]):
+        if isinstance(res, httpx.Response):
+            res = Response(
+                response=res.content,
+                status=res.status_code,
+                headers=res.headers,
+                content_type=res.headers.get("content-type"),
+            )
+
+        if res.content_type == "application/json" and "message" in res.json():
             desc = res.json()["message"]
         else:
             desc = str(res.read())
+
         super().__init__(description=desc, response=res)
         self.code = res.status_code
 
