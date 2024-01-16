@@ -49,14 +49,25 @@ def create_app() -> Quart:
             await register_terra_service_account()
 
     @app.errorhandler(HTTPException)
-    async def handle_exception(e: HTTPException):
-        res = e.get_response()
-        if e.description:
-            res.data = json.dumps({ "error": e.description })
-            res.content_type = "application/json"
-        return res
+    async def _handle_exception(e: HTTPException):
+        return handle_exception(e)
 
     return app
+
+
+async def handle_exception(e: HTTPException):
+    res = e.get_response()
+    error = e.description
+    if not error:
+        if res.content_type == "application/json":
+            error = res.json()
+            error = error["message"] if "message" in error else str(error)
+        else:
+            error = str(res.read())
+    res.data = json.dumps({
+        "error": error,
+    })
+    return res
 
 
 def initialize_firebase_app() -> None:

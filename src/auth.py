@@ -10,9 +10,9 @@ from google.auth.transport.requests import Request as GAuthRequest
 from google.cloud import firestore
 from jwt import algorithms
 from quart import Request, Websocket, current_app, request
-from werkzeug.exceptions import Unauthorized
+from werkzeug.exceptions import HTTPException, Unauthorized
 
-from src.api_utils import APIException, add_user_to_db
+from src.api_utils import add_user_to_db
 from src.utils import constants, custom_logging
 
 logger = custom_logging.setup_logging(__name__)
@@ -108,7 +108,7 @@ async def register_terra_service_account():
     )
 
     if res.status_code not in (HTTPStatus.CREATED.value, HTTPStatus.CONFLICT.value):
-        raise APIException(res)
+        raise HTTPException(response=res)
     else:
         logger.info(res.json()["message"])
 
