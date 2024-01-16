@@ -164,19 +164,17 @@ async def setup_gcp(doc_ref: DocumentReference, role: str) -> None:
 
 async def _terra_rawls_post(path: str, json: Dict[str, Any]):
     async with httpx.AsyncClient() as http:
-        res = await http.post(
+        return await http.post(
             f"{constants.RAWLS_API_URL}/api/workspaces/{constants.TERRA_CP0_WORKSPACE_NAMESPACE}/{constants.TERRA_CP0_WORKSPACE_NAME}{path}",
             headers=get_service_account_headers(),
             json=json,
         )
-        if res.status_code != HTTPStatus.CREATED.value:
-            raise APIException(res)
 
 
 async def submit_terra_workflow(study_id: str, _role: str) -> None:
     # Add study ID to the data table:
     # https://rawls.dsde-dev.broadinstitute.org/#/entities/create_entity
-    await _terra_rawls_post(
+    res = await _terra_rawls_post(
         "/entities",
         {
             "entityType": "study",
@@ -186,18 +184,23 @@ async def submit_terra_workflow(study_id: str, _role: str) -> None:
             },
         },
     )
+    if res.status_code in (HTTPStatus.CREATED.value, HTTPStatus.CONFLICT.value):
+        raise APIException(res)
 
     # Submit workflow for execution, referencing the study ID from the data table:
     # https://rawls.dsde-dev.broadinstitute.org/#/submissions/createSubmission
-    await _terra_rawls_post(
+    res = await _terra_rawls_post(
         "/submissions",
         {
             "entityType": "study",
             "entityName": study_id,
             "methodConfigurationNamespace": constants.TERRA_CP0_CONFIG_NAMESPACE,
             "methodConfigurationName": constants.TERRA_CP0_CONFIG_NAME,
+            "useCallCache": False,
         },
     )
+    if res.status_code != HTTPStatus.CREATED.value:
+        raise APIException(res)
 
 
 async def generate_ports(doc_ref: DocumentReference, role: str) -> None:

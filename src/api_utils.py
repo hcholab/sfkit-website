@@ -18,6 +18,7 @@ class APIException(HTTPException):
         else:
             desc = str(res.read())
         super().__init__(description=desc, response=res)
+        self.code = res.status_code
 
 
 def get_websocket_origin():
