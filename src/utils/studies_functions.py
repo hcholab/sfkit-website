@@ -184,7 +184,7 @@ async def submit_terra_workflow(study_id: str, _role: str) -> None:
             },
         },
     )
-    if res.status_code in (HTTPStatus.CREATED.value, HTTPStatus.CONFLICT.value):
+    if res.status_code not in (HTTPStatus.CREATED.value, HTTPStatus.CONFLICT.value):
         raise APIException(res)
 
     # Submit workflow for execution, referencing the study ID from the data table:
