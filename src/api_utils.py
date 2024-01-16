@@ -110,9 +110,5 @@ async def handle_http_exception(e: HTTPException):
             error = error["message"] if "message" in error else str(error)
         else:
             error = str(res.read())
-    res.data = json.dumps(
-        {
-            "error": error,
-        }
-    )
+    res.data = json.dumps({"error": error})
     return res
