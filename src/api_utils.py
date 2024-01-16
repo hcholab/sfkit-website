@@ -101,7 +101,7 @@ def is_valid_uuid(val):
         return False
 
 
-async def handle_http_exception(e: HTTPException):
+def handle_http_exception(e: HTTPException):
     res = e.get_response()
     error = e.description
     if not error:
