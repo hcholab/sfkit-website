@@ -4,13 +4,13 @@ from datetime import datetime
 
 from google.cloud import firestore
 from quart import Blueprint, Response, current_app, jsonify, request, send_file
-from werkzeug.exceptions import Forbidden, BadRequest
+from werkzeug.exceptions import BadRequest, Conflict, Forbidden
 
 from src.auth import authenticate, get_user_id
 from src.utils import constants, custom_logging
 from src.utils.google_cloud.google_cloud_compute import (GoogleCloudCompute,
                                                          format_instance_name)
-from src.utils.studies_functions import make_auth_key
+from src.utils.studies_functions import make_auth_key, study_title_already_exists
 
 logger = custom_logging.setup_logging(__name__)
 bp = Blueprint("study", __name__, url_prefix="/api")
@@ -19,9 +19,9 @@ bp = Blueprint("study", __name__, url_prefix="/api")
 @bp.route("/study", methods=["GET"])
 @authenticate
 async def study() -> Response:
-    study_id = request.args.get("study_id")
     user_id = await get_user_id()
-    db = current_app.config["DATABASE"]
+    study_id = request.args.get("study_id")
+    db: firestore.AsyncClient = current_app.config["DATABASE"]
 
     try:
         study = (await db.collection("studies").document(study_id).get()).to_dict()
@@ -56,7 +56,7 @@ async def study() -> Response:
 @authenticate
 async def restart_study() -> Response:
     study_id = request.args.get("study_id")
-    db = current_app.config["DATABASE"]
+    db: firestore.AsyncClient = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_id)
     doc_ref_dict: dict = (await doc_ref.get()).to_dict()
 
@@ -80,7 +80,6 @@ async def restart_study() -> Response:
         doc_ref_dict["personal_parameters"][participant]["PUBLIC_KEY"]["value"] = ""
         doc_ref_dict["personal_parameters"][participant]["IP_ADDRESS"]["value"] = ""
     doc_ref_dict["tasks"] = {}
-
     await doc_ref.set(doc_ref_dict)
 
     return jsonify({"message": "Successfully restarted study"})
@@ -89,7 +88,9 @@ async def restart_study() -> Response:
 @bp.route("/create_study", methods=["POST"])
 @authenticate
 async def create_study() -> Response:
-    data = await request.json
+    user_id = await get_user_id()
+
+    data: dict = await request.json
     study_type = data.get("study_type")
     setup_configuration = data.get("setup_configuration")
     study_title = data.get("title")
@@ -98,19 +99,12 @@ async def create_study() -> Response:
     description = data.get("description")
     study_information = data.get("study_information")
 
-    user_id = await get_user_id()
-
     logger.info(f"Creating {study_type} study with {setup_configuration} configuration")
 
-    # TODO: check if user has already created a study with this title
+    if await study_title_already_exists(study_title):
+        raise Conflict("Study title already exists")
 
-    # (cleaned_study_title, response, status_code) = await valid_study_title(
-    #     title, study_type, setup_configuration
-    # )
-    # if not cleaned_study_title:
-    #     return response, status_code
-
-    study_id = str(uuid.uuid4())
+    study_id = str(uuid.uuid4()) 
     db: firestore.AsyncClient = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_id)
 
@@ -138,18 +132,16 @@ async def create_study() -> Response:
             "invited_participants": [],
         }
     )
-    await make_auth_key(study_id, "Broad")
 
-    return jsonify(
-        {"message": "Study created successfully", "study_id": study_id}
-    )
+    await make_auth_key(study_id, "Broad")
+    return jsonify({"message": "Study created successfully", "study_id": study_id})
 
 
 @bp.route("/delete_study", methods=["DELETE"])
 @authenticate
 async def delete_study() -> Response:
     study_id = request.args.get("study_id")
-    db = current_app.config["DATABASE"]
+    db: firestore.AsyncClient = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_id)
     doc_ref_dict: dict = (await doc_ref.get()).to_dict()
 
@@ -205,7 +197,7 @@ async def parameters() -> Response:
         user_id = await get_user_id()
         study_id = request.args.get("study_id")
         data = await request.json
-        db = current_app.config["DATABASE"]
+        db: firestore.AsyncClient = current_app.config["DATABASE"]
         doc_ref = db.collection("studies").document(study_id)
         doc_ref_dict = (await doc_ref.get()).to_dict()
 
@@ -237,7 +229,7 @@ async def parameters() -> Response:
 @authenticate
 async def download_auth_key() -> Response:
     study_id = request.args.get("study_id")
-    db = current_app.config["DATABASE"]
+    db: firestore.AsyncClient = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_id)
     doc_ref_dict = (await doc_ref.get()).to_dict()
     user_id = await get_user_id()
