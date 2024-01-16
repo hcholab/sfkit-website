@@ -166,7 +166,7 @@ async def _terra_rawls_post(path: str, json: Dict[str, Any]):
     async with httpx.AsyncClient() as http:
         res = await http.post(
             f"{constants.RAWLS_API_URL}/api/workspaces/{constants.TERRA_CP0_WORKSPACE_NAMESPACE}/{constants.TERRA_CP0_WORKSPACE_NAME}{path}",
-            get_service_account_headers(),
+            headers=get_service_account_headers(),
             json=json,
         )
         if res.status_code != HTTPStatus.CREATED.value:

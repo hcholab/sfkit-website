@@ -1,6 +1,6 @@
 from functools import wraps
 from http import HTTPMethod, HTTPStatus
-from typing import Union
+from typing import Dict, Union
 
 import google.auth
 import httpx
@@ -61,7 +61,7 @@ async def get_user_id(req: Union[Request, Websocket] = request) -> str:
 
 
 async def _sam_request(
-    method: HTTPMethod, path: str, headers: httpx.Headers, json: dict | None = None
+    method: HTTPMethod, path: str, headers: Dict[str, str], json: dict | None = None
 ):
     async with httpx.AsyncClient() as http:
         return await http.request(
@@ -100,7 +100,7 @@ async def register_terra_service_account():
     res = await _sam_request(
         HTTPMethod.POST,
         "/api/users/v2/self/register",
-        get_service_account_headers(),
+        headers=get_service_account_headers(),
         json={
             "acceptsTermsOfService": True,
             "userAttributes": {"marketingConsent": False},
