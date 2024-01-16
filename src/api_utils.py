@@ -19,7 +19,7 @@ class APIException(HTTPException):
             res = Response(
                 response=res.content,
                 status=res.status_code,
-                headers=res.headers,
+                headers=res.headers.items(),
                 content_type=res.headers.get("content-type"),
             )
 
