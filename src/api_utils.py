@@ -1,6 +1,8 @@
 import uuid
 from urllib.parse import urlparse, urlunsplit
 
+import httpx
+import werkzeug.exceptions
 from google.cloud.firestore_v1 import FieldFilter
 from quart import current_app
 
@@ -9,10 +11,15 @@ from src.utils import constants, custom_logging
 logger = custom_logging.setup_logging(__name__)
 
 
+class APIException(werkzeug.exceptions.HTTPException):
+    def __init__(self, res: httpx.Response):
+        super().__init__(description=str(res.read()), response=res)
+
+
 def get_websocket_origin():
     url = urlparse(constants.SFKIT_API_URL)
-    scheme = 'wss' if url.scheme == 'https' else 'ws'
-    return urlunsplit((scheme, str(url.netloc), '', '', ''))
+    scheme = "wss" if url.scheme == "https" else "ws"
+    return urlunsplit((scheme, str(url.netloc), "", "", ""))
 
 
 async def get_studies(private_filter=None) -> list:
@@ -61,7 +68,7 @@ async def get_display_names() -> dict:
 
 
 async def add_user_to_db(decoded_token: dict) -> None:
-    user_id = decoded_token['id'] if constants.TERRA else decoded_token['sub']
+    user_id = decoded_token["id"] if constants.TERRA else decoded_token["sub"]
     logger.info(f"Creating user {user_id}")
     db = current_app.config["DATABASE"]
     try:
@@ -78,9 +85,18 @@ async def add_user_to_db(decoded_token: dict) -> None:
         await db.collection("users").document("display_names").set(
             {user_id: display_name}, merge=True
         )
-        await db.collection("users").document(user_id).set({"about": "", "notifications": [], "email": email, "display_name": display_name}, merge=True)
+        await db.collection("users").document(user_id).set(
+            {
+                "about": "",
+                "notifications": [],
+                "email": email,
+                "display_name": display_name,
+            },
+            merge=True,
+        )
     except Exception as e:
         raise RuntimeError({"error": "Failed to create user", "details": str(e)}) from e
+
 
 def is_valid_uuid(val):
     try:

@@ -3,8 +3,8 @@ import os
 import secrets
 import time
 from html import escape
-from string import Template
 from http import HTTPStatus
+from string import Template
 from typing import Any, Dict, Optional
 
 import httpx
@@ -13,8 +13,8 @@ from python_http_client.exceptions import HTTPError
 from quart import current_app, g
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Email, Mail
-from werkzeug.exceptions import HTTPException
 
+from src.api_utils import APIException
 from src.auth import get_service_account_headers
 from src.utils import constants, custom_logging
 from src.utils.google_cloud.google_cloud_compute import (GoogleCloudCompute,
@@ -170,7 +170,7 @@ async def _terra_rawls_post(path: str, json: Dict[str, Any]):
             json=json,
         )
         if res.status_code != HTTPStatus.CREATED.value:
-            raise HTTPException(response=res)
+            raise APIException(res)
 
 
 async def submit_terra_workflow(study_id: str, _role: str) -> None:
