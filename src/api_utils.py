@@ -1,8 +1,10 @@
+import json
 import uuid
 from urllib.parse import urlparse, urlunsplit
 
 from google.cloud.firestore_v1 import FieldFilter
 from quart import current_app
+from werkzeug.exceptions import HTTPException
 
 from src.utils import constants, custom_logging
 
@@ -97,3 +99,20 @@ def is_valid_uuid(val):
         return True
     except ValueError:
         return False
+
+
+async def handle_http_exception(e: HTTPException):
+    res = e.get_response()
+    error = e.description
+    if not error:
+        if res.content_type == "application/json":
+            error = res.json()
+            error = error["message"] if "message" in error else str(error)
+        else:
+            error = str(res.read())
+    res.data = json.dumps(
+        {
+            "error": error,
+        }
+    )
+    return res

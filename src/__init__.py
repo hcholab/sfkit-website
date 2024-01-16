@@ -8,12 +8,12 @@ from quart_cors import cors
 from werkzeug.exceptions import HTTPException
 
 from src import cli, signaling, status
+from src.api_utils import handle_http_exception
 from src.auth import register_terra_service_account
 from src.utils import constants, custom_logging
 from src.web import participants, study, web
 
 logger = custom_logging.setup_logging(__name__)
-
 
 def create_app() -> Quart:
     if constants.TERRA:
@@ -49,25 +49,10 @@ def create_app() -> Quart:
             await register_terra_service_account()
 
     @app.errorhandler(HTTPException)
-    async def _handle_exception(e: HTTPException):
-        return handle_exception(e)
+    async def _handle_http_exception(e: HTTPException):
+        return handle_http_exception(e)
 
     return app
-
-
-async def handle_exception(e: HTTPException):
-    res = e.get_response()
-    error = e.description
-    if not error:
-        if res.content_type == "application/json":
-            error = res.json()
-            error = error["message"] if "message" in error else str(error)
-        else:
-            error = str(res.read())
-    res.data = json.dumps({
-        "error": error,
-    })
-    return res
 
 
 def initialize_firebase_app() -> None:
