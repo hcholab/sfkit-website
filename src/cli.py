@@ -144,7 +144,7 @@ async def update_firestore() -> Tuple[dict, int]:
         return await process_parameter(db, study.user_id, parameter, study.ref)
 
 
-@bp.route("/create_cp0", methods=["GET"])
+@bp.route("/create_cp0", methods=["POST", "GET"]) # TODO: Use only POST
 async def create_cp0() -> Tuple[dict, int]:
     study = await _get_study()
 
