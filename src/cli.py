@@ -56,13 +56,14 @@ async def _get_study():
     doc = await study_ref.get()
     study = doc.to_dict()
     PARTICIPANTS_KEY = "participants"
-    if not study:
-        raise Forbidden() # best practice instead of NotFound
-    elif not PARTICIPANTS_KEY in study:
-        raise Conflict("study has no participants")
-    elif not user_id in study[PARTICIPANTS_KEY]:
+    if (
+        not study
+        or PARTICIPANTS_KEY in study
+        and user_id not in study[PARTICIPANTS_KEY]
+    ):
         raise Forbidden()
-
+    elif PARTICIPANTS_KEY not in study:
+        raise Conflict("study has no participants")
     role = str(study[PARTICIPANTS_KEY].index(user_id))
 
     return Study(study_id, study, study_ref, user_id, role)
@@ -99,6 +100,19 @@ async def upload_file() -> Tuple[dict, int]:
 async def get_doc_ref_dict() -> Tuple[dict, int]:
     study = await _get_study()
     return study.dict, 200
+
+
+@bp.route("/get_study_options", methods=["GET"])
+async def get_study_options() -> Tuple[dict, int]:
+    user = await get_cli_user(request)
+    auth_keys_doc = await _get_db().collection("users").document("auth_keys").get()
+    auth_keys = auth_keys_doc.to_dict()
+    
+    options = [
+        value | {"auth_key" : key} for key, value in auth_keys.items() if user == value["username"]
+    ] 
+    
+    return {"options": options}, 200
 
 
 @bp.route("/get_username", methods=["GET"])

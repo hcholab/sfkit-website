@@ -97,6 +97,7 @@ async def make_auth_key(study_id: str, user_id: str) -> str:
         {
             auth_key: {
                 "study_id": study_id,
+                "title": doc_ref_dict["title"],
                 "username": user_id,
             }
         },
