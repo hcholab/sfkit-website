@@ -109,7 +109,7 @@ async def get_study_options() -> Tuple[dict, int]:
     auth_keys = auth_keys_doc.to_dict()
     
     options = [
-        value | {"auth_key" : key} for key, value in auth_keys.items() if user == value["username"]
+        value | {"auth_key" : key} for key, value in auth_keys.items() if user["id"] == value["username"]
     ] 
     
     return {"options": options}, 200
