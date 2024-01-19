@@ -8,6 +8,7 @@ from quart import current_app
 from werkzeug.exceptions import HTTPException
 from werkzeug.wrappers import Response
 
+from src.auth import ID_KEY, TERRA_ID_KEY
 from src.utils import constants, custom_logging
 
 logger = custom_logging.setup_logging(__name__)
@@ -84,7 +85,7 @@ async def get_display_names() -> dict:
 
 
 async def add_user_to_db(decoded_token: dict) -> None:
-    user_id = decoded_token["id"] if constants.TERRA else decoded_token["sub"]
+    user_id = decoded_token[ID_KEY] if constants.TERRA else decoded_token[TERRA_ID_KEY]
     logger.info(f"Creating user {user_id}")
     db = current_app.config["DATABASE"]
     try:
