@@ -1,6 +1,6 @@
 from functools import wraps
 from http import HTTPMethod, HTTPStatus
-from typing import Dict, Union
+from typing import Dict, Set, Union
 
 import google.auth
 import httpx
@@ -21,7 +21,7 @@ AUTH_HEADER = "Authorization"
 BEARER_PREFIX = "Bearer "
 
 PUBLIC_KEYS = {}
-USER_IDS = set()
+USER_IDS: Set = set()
 
 
 if not constants.TERRA:

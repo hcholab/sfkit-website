@@ -24,3 +24,4 @@ requirements2.txt
 .sourcery.yaml
 *_manhattan.png
 *pca_plot.png
+mypy.ini

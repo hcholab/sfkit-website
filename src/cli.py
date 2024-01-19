@@ -2,7 +2,7 @@ import asyncio
 from dataclasses import dataclass
 from typing import Any, Dict, Tuple
 
-from google.cloud import firestore
+from google.cloud.firestore import AsyncDocumentReference, AsyncClient
 from quart import Blueprint, current_app, request
 from werkzeug.exceptions import BadRequest, Conflict, Forbidden
 
@@ -21,7 +21,7 @@ bp = Blueprint("cli", __name__, url_prefix="/api")
 class Study:
     id: str
     dict: Dict[str, Any]
-    ref: firestore.AsyncDocumentReference
+    ref: AsyncDocumentReference
     user_id: str
     role: str
 
@@ -45,7 +45,7 @@ async def _get_user_study_ids():
     return user_id, study_id
 
 
-def _get_db() -> firestore.AsyncClient:
+def _get_db() -> AsyncClient:
     return current_app.config["DATABASE"]
 
 
@@ -117,8 +117,7 @@ async def get_study_options() -> Tuple[dict, int]:
 
 @bp.route("/get_username", methods=["GET"])
 async def get_username() -> Tuple[dict, int]:
-    user = await get_cli_user(request)
-    username, _ = _get_user_study_ids(user)
+    username, _ = await _get_user_study_ids()
     return {"username": username}, 200
 
 
