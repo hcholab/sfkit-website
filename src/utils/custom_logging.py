@@ -21,10 +21,12 @@ class Logger(logging.Logger):
         instance.__dict__.update(super_instance.__dict__)
         return instance
 
-    def debug(self, msg: str, *args, **kwargs) -> None:
+    def debug(self, msg: object, *args, **kwargs) -> None:
         super().log(Logger.DEBUG, msg, *args, **kwargs)
 
+
 logging.addLevelName(Logger.DEBUG, "DEBUG")
+
 
 def setup_logging(name: Optional[str] = None) -> Logger:
     level = logging.getLevelName(constants.LOG_LEVEL)

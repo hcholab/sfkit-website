@@ -5,18 +5,16 @@ import zipfile
 from datetime import datetime
 
 from firebase_admin import auth as firebase_auth
-from quart import Blueprint, Response, current_app, jsonify, request, send_file
+from quart import Blueprint, Response, current_app, jsonify, make_response, request, send_file
+from werkzeug.exceptions import BadRequest, Conflict, Forbidden
 
 from src.api_utils import get_display_names, get_studies, is_valid_uuid
 from src.auth import authenticate, get_user_email, get_user_id
 from src.utils import constants, custom_logging
 from src.utils.generic_functions import add_notification, remove_notification
-from src.utils.google_cloud.google_cloud_secret_manager import \
-    get_firebase_api_key
-from src.utils.google_cloud.google_cloud_storage import (
-    download_blob_to_bytes, download_blob_to_filename)
-from src.utils.studies_functions import (add_file_to_zip, check_conditions,
-                                         update_status_and_start_setup)
+from src.utils.google_cloud.google_cloud_secret_manager import get_firebase_api_key
+from src.utils.google_cloud.google_cloud_storage import download_blob_to_bytes, download_blob_to_filename
+from src.utils.studies_functions import add_file_to_zip, check_conditions, update_status_and_start_setup
 
 logger = custom_logging.setup_logging(__name__)
 bp = Blueprint("web", __name__, url_prefix="/api")
@@ -27,25 +25,20 @@ bp = Blueprint("web", __name__, url_prefix="/api")
 async def create_custom_token() -> Response:
     user_id = await get_user_id()
     try:
-        # Use the thread executor to run the blocking function
         loop = asyncio.get_event_loop()
-        custom_token = await loop.run_in_executor(
-            None, firebase_auth.create_custom_token, user_id
+        custom_token = await loop.run_in_executor(None, firebase_auth.create_custom_token, user_id)
+        return jsonify(
+            {
+                "customToken": custom_token.decode("utf-8"),
+                "firebaseApiKey": await get_firebase_api_key(),
+                "firebaseProjectId": constants.FIREBASE_PROJECT_ID,
+                "firestoreDatabaseId": constants.FIRESTORE_DATABASE,
+            }
         )
-        return (
-            jsonify(
-                {
-                    "customToken": custom_token.decode("utf-8"),
-                    "firebaseApiKey": await get_firebase_api_key(),
-                    "firebaseProjectId": constants.FIREBASE_PROJECT_ID,
-                    "firestoreDatabaseId": constants.FIRESTORE_DATABASE,
-                }
-            ),
-            200,
-        )
+
     except Exception as e:
-        print("Error creating custom token:", e)
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"Failed to create custom token: {e}")
+        raise BadRequest("Error creating custom token")
 
 
 @bp.route("/public_studies", methods=["GET"])
@@ -55,7 +48,8 @@ async def public_studies() -> Response:
         public_studies = await get_studies(private_filter=False)
         display_names = await get_display_names()
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"Failed to fetch public studies: {e}")
+        raise BadRequest("Failed to fetch public studies")
 
     for study in public_studies:
         study["owner_name"] = display_names.get(study["owner"], study["owner"])
@@ -70,7 +64,8 @@ async def my_studies() -> Response:
         my_studies = await get_studies()
         display_names = await get_display_names()
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"Failed to fetch my studies: {e}")
+        raise BadRequest("Failed to fetch my studies")
 
     for study in my_studies:
         study["owner_name"] = display_names.get(study["owner"], study["owner"])
@@ -78,16 +73,14 @@ async def my_studies() -> Response:
     user_id = await get_user_id()
     email = await get_user_email(user_id)
     my_studies = [
-        study
-        for study in my_studies
-        if user_id in study["participants"] or email in study["invited_participants"]
+        study for study in my_studies if user_id in study["participants"] or email in study["invited_participants"]
     ]
     return jsonify({"studies": my_studies})
 
 
 @bp.route("/profile/<user_id>", methods=["GET", "POST"])
 @authenticate
-async def profile(user_id: str = None) -> Response:
+async def profile(user_id: str = "") -> Response:
     db = current_app.config["DATABASE"]
 
     if not user_id:
@@ -95,52 +88,37 @@ async def profile(user_id: str = None) -> Response:
 
     if request.method == "GET":
         try:
-            display_names = (
-                await db.collection("users").document("display_names").get()
-            ).to_dict() or {}
-            profile = (
-                await db.collection("users").document(user_id).get()
-            ).to_dict() or {}
+            display_names = (await db.collection("users").document("display_names").get()).to_dict() or {}
+            profile = (await db.collection("users").document(user_id).get()).to_dict() or {}
 
             profile["displayName"] = display_names.get(user_id, user_id)
-            return jsonify({"profile": profile}), 200
+            return jsonify({"profile": profile})
 
         except Exception as e:
-            return (
-                jsonify({"error": "Failed to fetch profile data", "details": str(e)}),
-                500,
-            )
+            logger.error(f"Failed to fetch profile: {e}")
+            raise BadRequest("Failed to fetch profile")
 
-    elif request.method == "POST":
+    else:  # "POST" request
         try:
             data = await request.get_json()
             logged_in_user_id = await get_user_id()
 
             if logged_in_user_id != user_id:
-                return (
-                    jsonify({"error": "You are not authorized to update this profile"}),
-                    403,
-                )
+                raise Forbidden("You are not authorized to update this profile")
 
-            display_names = (
-                await db.collection("users").document("display_names").get()
-            ).to_dict() or {}
+            display_names = (await db.collection("users").document("display_names").get()).to_dict() or {}
             display_names[user_id] = data["displayName"]
             await db.collection("users").document("display_names").set(display_names)
 
-            profile = (
-                await db.collection("users").document(user_id).get()
-            ).to_dict() or {}
+            profile = (await db.collection("users").document(user_id).get()).to_dict() or {}
             profile["about"] = data["about"]
             await db.collection("users").document(user_id).set(profile)
 
             return jsonify({"message": "Profile updated successfully"})
 
         except Exception as e:
-            return (
-                jsonify({"error": "Failed to update profile", "details": str(e)}),
-                500,
-            )
+            logger.error(f"Failed to update profile: {e}")
+            raise BadRequest("Failed to update profile")
 
 
 @bp.route("/start_protocol", methods=["POST"])
@@ -154,7 +132,7 @@ async def start_protocol() -> Response:
 
     if statuses[user_id] == "":
         if message := check_conditions(doc_ref_dict, user_id):
-            return jsonify({"error": message}), 400
+            raise Conflict(message)
 
         statuses[user_id] = "ready to begin sfkit"
         await doc_ref.set({"status": statuses}, merge=True)
@@ -162,11 +140,9 @@ async def start_protocol() -> Response:
     if "" in statuses.values():
         logger.info("Not all participants are ready.")
     elif statuses[user_id] == "ready to begin sfkit":
-        await update_status_and_start_setup(
-            doc_ref, doc_ref_dict, request.args.get("study_id")
-        )
+        await update_status_and_start_setup(doc_ref, doc_ref_dict, request.args.get("study_id"))
 
-    return jsonify({"message": "Protocol started successfully"}), 200
+    return jsonify({"message": "Protocol started successfully"})
 
 
 @bp.route("/send_message", methods=["POST"])
@@ -180,7 +156,7 @@ async def send_message() -> Response:
     sender = data.get("sender")
 
     if not message or not sender or not study_id:
-        return jsonify({"error": "Message, sender, and study_id are required"}), 400
+        raise BadRequest("Missing required fields")
 
     doc_ref = db.collection("studies").document(study_id)
     doc_ref_dict: dict = (await doc_ref.get()).to_dict()
@@ -194,7 +170,7 @@ async def send_message() -> Response:
     doc_ref_dict["messages"] = doc_ref_dict.get("messages", []) + [new_message]
     await doc_ref.set(doc_ref_dict)
 
-    return jsonify({"message": "Message sent successfully", "data": new_message}), 200
+    return jsonify({"message": "Message sent successfully", "data": new_message})
 
 
 @bp.route("/download_results_file", methods=("GET",))
@@ -205,9 +181,8 @@ async def download_results_file() -> Response:
     db = current_app.config["DATABASE"]
     study_id = request.args.get("study_id")
 
-    # verify study_id for added security against path-injection
     if not is_valid_uuid(study_id):
-        return jsonify({"error": "Invalid study_id"}), 400
+        raise BadRequest("Invalid study_id")
 
     doc_ref_dict = (await db.collection("studies").document(study_id).get()).to_dict()
     role: str = str(doc_ref_dict["participants"].index(user_id))
@@ -242,9 +217,7 @@ async def download_results_file() -> Response:
         if result_success:
             add_file_to_zip(zip_file, f"{base}/{shared}/result.txt", "result.txt")
         if plot_success:
-            add_file_to_zip(
-                zip_file, f"{base}/{shared}/{plot_name}.png", f"{plot_name}.png"
-            )
+            add_file_to_zip(zip_file, f"{base}/{shared}/{plot_name}.png", f"{plot_name}.png")
 
     zip_buffer.seek(0)
     return await send_file(
@@ -276,7 +249,7 @@ async def fetch_plot_file() -> Response:  # sourcery skip: use-named-expression
             attachment_filename=f"{plot_name}.png",
         )
     else:
-        return "File not found", 404
+        raise BadRequest("Failed to fetch plot")
 
 
 @bp.route("/update_notifications", methods=["POST"])

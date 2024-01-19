@@ -8,10 +8,8 @@ from werkzeug.exceptions import BadRequest, Conflict, Forbidden
 
 from src.auth import authenticate, get_cp0_id, get_user_id
 from src.utils import constants, custom_logging
-from src.utils.google_cloud.google_cloud_compute import (GoogleCloudCompute,
-                                                         format_instance_name)
-from src.utils.studies_functions import (make_auth_key,
-                                         study_title_already_exists)
+from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, format_instance_name
+from src.utils.studies_functions import make_auth_key, study_title_already_exists
 
 logger = custom_logging.setup_logging(__name__)
 bp = Blueprint("study", __name__, url_prefix="/api")
@@ -21,11 +19,11 @@ bp = Blueprint("study", __name__, url_prefix="/api")
 @authenticate
 async def study() -> Response:
     user_id = await get_user_id()
-    study_id = request.args.get("study_id")
+    study_id = request.args.get("study_id") or ""
     db: firestore.AsyncClient = current_app.config["DATABASE"]
 
     try:
-        study = (await db.collection("studies").document(study_id).get()).to_dict()
+        study: dict = (await db.collection("studies").document(study_id).get()).to_dict() or {}
     except Exception as e:
         logger.error(f"Failed to fetch study: {e}")
         raise Forbidden()
@@ -34,13 +32,10 @@ async def study() -> Response:
         raise Forbidden()
 
     try:
-        display_names = (
-            await db.collection("users").document("display_names").get()
-        ).to_dict() or {}
+        display_names = (await db.collection("users").document("display_names").get()).to_dict() or {}
     except Exception as e:
         logger.error(f"Failed to fetch display names: {e}")
         raise BadRequest()
-
 
     study["owner_name"] = display_names.get(study["owner"], study["owner"])
     study["display_names"] = {
@@ -52,32 +47,29 @@ async def study() -> Response:
 
     return jsonify({"study": study})
 
+
 # TODO: use asyncio to delete in parallel. This requires making the google_cloud_compute functions async. Using multiple processing failed because inside daemon. Threads failed because of GIL.
 @bp.route("/restart_study", methods=["GET"])
 @authenticate
 async def restart_study() -> Response:
-    study_id = request.args.get("study_id")
+    study_id = request.args.get("study_id") or ""
     db: firestore.AsyncClient = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_id)
-    doc_ref_dict: dict = (await doc_ref.get()).to_dict()
+    doc_ref_dict: dict = (await doc_ref.get()).to_dict() or {}
 
     for role, v in enumerate(doc_ref_dict["participants"]):
         participant = doc_ref_dict["personal_parameters"][v]
         if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
             google_cloud_compute = GoogleCloudCompute(study_id, gcp_project)
             for instance in google_cloud_compute.list_instances():
-                if instance == format_instance_name(
-                    google_cloud_compute.study_id, str(role)
-                ):
+                if instance == format_instance_name(google_cloud_compute.study_id, str(role)):
                     google_cloud_compute.delete_instance(instance)
 
-            google_cloud_compute.delete_firewall(None)
+            google_cloud_compute.delete_firewall("")
     logger.info("Successfully Deleted gcp instances and firewalls")
 
     for participant in doc_ref_dict["participants"]:
-        doc_ref_dict["status"][participant] = (
-            "ready to begin protocol" if participant == get_cp0_id() else ""
-        )
+        doc_ref_dict["status"][participant] = "ready to begin protocol" if participant == get_cp0_id() else ""
         doc_ref_dict["personal_parameters"][participant]["PUBLIC_KEY"]["value"] = ""
         doc_ref_dict["personal_parameters"][participant]["IP_ADDRESS"]["value"] = ""
     doc_ref_dict["tasks"] = {}
@@ -92,10 +84,10 @@ async def create_study() -> Response:
     user_id = await get_user_id()
 
     data: dict = await request.json
-    study_type = data.get("study_type")
+    study_type = data.get("study_type") or ""
     setup_configuration = data.get("setup_configuration")
-    study_title = data.get("title")
-    demo = data.get("demo_study")
+    study_title = data.get("title") or ""
+    demo = data.get("demo_study") or False
     private_study = data.get("private_study")
     description = data.get("description")
     study_information = data.get("study_information")
@@ -143,10 +135,10 @@ async def create_study() -> Response:
 @bp.route("/delete_study", methods=["DELETE"])
 @authenticate
 async def delete_study() -> Response:
-    study_id = request.args.get("study_id")
+    study_id = request.args.get("study_id") or ""
     db: firestore.AsyncClient = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_id)
-    doc_ref_dict: dict = (await doc_ref.get()).to_dict()
+    doc_ref_dict: dict = (await doc_ref.get()).to_dict() or {}
 
     for participant in doc_ref_dict["personal_parameters"].values():
         if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
@@ -176,9 +168,7 @@ async def study_information() -> Response:
         description = data.get("description")
         study_information = data.get("information")
 
-        doc_ref = (
-            current_app.config["DATABASE"].collection("studies").document(study_id)
-        )
+        doc_ref = current_app.config["DATABASE"].collection("studies").document(study_id)
         await doc_ref.set(
             {
                 "description": description,
@@ -187,7 +177,7 @@ async def study_information() -> Response:
             merge=True,
         )
 
-        return jsonify({"message": "Study information updated successfully"}), 200
+        return jsonify({"message": "Study information updated successfully"})
     except Exception as e:
         logger.error(f"Failed to update study information: {e}")
         raise BadRequest()
@@ -198,11 +188,11 @@ async def study_information() -> Response:
 async def parameters() -> Response:
     try:
         user_id = await get_user_id()
-        study_id = request.args.get("study_id")
+        study_id = request.args.get("study_id") or ""
         data = await request.json
         db: firestore.AsyncClient = current_app.config["DATABASE"]
         doc_ref = db.collection("studies").document(study_id)
-        doc_ref_dict = (await doc_ref.get()).to_dict()
+        doc_ref_dict = (await doc_ref.get()).to_dict() or {}
 
         for p, value in data.items():
             if p in doc_ref_dict["parameters"]:
@@ -211,22 +201,19 @@ async def parameters() -> Response:
                 doc_ref_dict["advanced_parameters"][p]["value"] = value
             elif "NUM_INDS" in p:
                 participant = p.split("NUM_INDS")[1]
-                doc_ref_dict["personal_parameters"][participant]["NUM_INDS"][
-                    "value"
-                ] = value
+                doc_ref_dict["personal_parameters"][participant]["NUM_INDS"]["value"] = value
             elif p in doc_ref_dict["personal_parameters"][user_id]:
                 doc_ref_dict["personal_parameters"][user_id][p]["value"] = value
                 if p == "NUM_CPUS":
-                    doc_ref_dict["personal_parameters"][user_id]["NUM_THREADS"][
-                        "value"
-                    ] = value
+                    doc_ref_dict["personal_parameters"][user_id]["NUM_THREADS"]["value"] = value
 
         await doc_ref.set(doc_ref_dict, merge=True)
 
-        return jsonify({"message": "Parameters updated successfully"}), 200
+        return jsonify({"message": "Parameters updated successfully"})
     except Exception as e:
         logger.error(f"Failed to update parameters: {e}")
         raise BadRequest()
+
 
 @bp.route("/download_auth_key", methods=["GET"])
 @authenticate
@@ -234,7 +221,7 @@ async def download_auth_key() -> Response:
     study_id = request.args.get("study_id") or ""
     db: firestore.AsyncClient = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_id)
-    doc_ref_dict = (await doc_ref.get()).to_dict()
+    doc_ref_dict = (await doc_ref.get()).to_dict() or {}
     user_id = await get_user_id()
     auth_key = doc_ref_dict["personal_parameters"][user_id]["AUTH_KEY"]["value"] or await make_auth_key(
         study_id, user_id

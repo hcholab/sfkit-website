@@ -1,7 +1,7 @@
 from typing import Optional
 
 from google.api_core.exceptions import GoogleAPIError
-from google.cloud import storage
+from google.cloud.storage import Client as StorageClient
 from werkzeug.datastructures import FileStorage
 
 from src.utils import custom_logging
@@ -18,7 +18,7 @@ def upload_blob_from_filename(bucket_name: str, source_file_name: str, destinati
     :return: True if successful, False otherwise.
     """
     try:
-        storage_client = storage.Client()
+        storage_client = StorageClient()
         bucket = storage_client.bucket(bucket_name)
         blob = bucket.blob(destination_blob_name)
         blob.upload_from_filename(source_file_name)
@@ -40,7 +40,7 @@ def download_blob_to_filename(bucket_name: str, source_blob_name: str, destinati
     :return: True if successful, False otherwise.
     """
     try:
-        storage_client = storage.Client()
+        storage_client = StorageClient()
         bucket = storage_client.bucket(bucket_name)
         blob = bucket.blob(source_blob_name)
         blob.download_to_filename(destination_file_name)
@@ -66,7 +66,7 @@ def upload_blob_from_file(bucket_name: str, file_storage: FileStorage, destinati
     :return: True if successful, False otherwise.
     """
     try:
-        storage_client = storage.Client()
+        storage_client = StorageClient()
         bucket = storage_client.bucket(bucket_name)
         blob = bucket.blob(destination_blob_name)
         blob.upload_from_file(file_storage)
@@ -85,7 +85,7 @@ def download_blob_to_bytes(bucket_name: str, source_blob_name: str) -> Optional[
     :return: The contents of the blob as bytes if successful, None otherwise.
     """
     try:
-        storage_client = storage.Client()
+        storage_client = StorageClient()
         bucket = storage_client.bucket(bucket_name)
         blob = bucket.blob(source_blob_name)
         return blob.download_as_bytes()

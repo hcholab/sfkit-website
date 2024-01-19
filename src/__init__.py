@@ -52,7 +52,7 @@ def create_app() -> Quart:
     async def handle_exception(e: HTTPException):
         res = e.get_response()
         if e.description:
-            res.data = json.dumps({ "error": e.description })
+            res.data = json.dumps({"error": e.description})  # type: ignore
             res.content_type = "application/json"
         return res
 
@@ -62,16 +62,15 @@ def create_app() -> Quart:
 def initialize_firebase_app() -> None:
     key: str = ".serviceAccountKey.json"
     options = {
-        'projectId': constants.FIREBASE_PROJECT_ID,
+        "projectId": constants.FIREBASE_PROJECT_ID,
     }
     if os.path.exists(key):  # local testing
-        firebase_admin.initialize_app(credential=firebase_admin.credentials.Certificate(key),
-                                            options=options)
+        firebase_admin.initialize_app(credential=firebase_admin.credentials.Certificate(key), options=options)
     else:
         logger.info("No service account key found, using default for firebase_admin")
         firebase_admin.initialize_app(options=options)
 
     # test firestore connection
-    db = firestore.Client(project=constants.FIREBASE_PROJECT_ID,
-                          database=constants.FIRESTORE_DATABASE)
+    logger.info(f"Using firestore database: {constants.FIRESTORE_DATABASE}")
+    db = firestore.Client(project=constants.FIREBASE_PROJECT_ID, database=constants.FIRESTORE_DATABASE)
     logger.info(f'Firestore test: {db.collection("test").document("test").get().exists}')

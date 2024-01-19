@@ -9,7 +9,7 @@ from typing import Any, Dict, Optional
 
 import httpx
 from google.cloud import firestore
-from google.cloud.firestore_v1 import DocumentReference, FieldFilter, AsyncDocumentReference
+from google.cloud.firestore_v1 import AsyncDocumentReference, DocumentReference, FieldFilter
 from python_http_client.exceptions import HTTPError
 from quart import current_app, g
 from sendgrid import SendGridAPIClient
@@ -18,8 +18,7 @@ from sendgrid.helpers.mail import Email, Mail
 from src.api_utils import APIException
 from src.auth import get_service_account_headers
 from src.utils import constants, custom_logging
-from src.utils.google_cloud.google_cloud_compute import (GoogleCloudCompute,
-                                                         format_instance_name)
+from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, format_instance_name
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 
 logger = custom_logging.setup_logging(__name__)
@@ -31,9 +30,7 @@ email_template = Template(
 )
 
 
-async def email(
-    inviter: str, recipient: str, invitation_message: str, study_title: str
-) -> int:
+async def email(inviter: str, recipient: str, invitation_message: str, study_title: str) -> int:
     """
     Sends an invitation email to the recipient.
 
@@ -43,12 +40,7 @@ async def email(
     :param study_title: The title of the study the recipient is being invited to.
     :return: The status code of the email sending operation.
     """
-    doc_ref_dict: dict = (
-        await current_app.config["DATABASE"]
-        .collection("meta")
-        .document("sendgrid")
-        .get()
-    ).to_dict()
+    doc_ref_dict: dict = (await current_app.config["DATABASE"].collection("meta").document("sendgrid").get()).to_dict()
     sg = SendGridAPIClient(api_key=doc_ref_dict.get("api_key", ""))
 
     html_content = email_template.substitute(
@@ -59,9 +51,7 @@ async def email(
 
     message = Mail(
         to_emails=recipient,
-        from_email=Email(
-            doc_ref_dict.get("from_email", ""), doc_ref_dict.get("from_user", "")
-        ),
+        from_email=Email(doc_ref_dict.get("from_email", ""), doc_ref_dict.get("from_user", "")),
         subject=f"sfkit: Invitation to join {study_title} study",
         html_content=html_content,
     )
@@ -122,9 +112,7 @@ async def setup_gcp(doc_ref: AsyncDocumentReference, role: str) -> None:
     doc_ref_dict["tasks"][user].append("Setting up networking and creating VM instance")
     await doc_ref.set(doc_ref_dict)
 
-    gcloudCompute = GoogleCloudCompute(
-        study_id, user_parameters["GCP_PROJECT"]["value"]
-    )
+    gcloudCompute = GoogleCloudCompute(study_id, user_parameters["GCP_PROJECT"]["value"])
 
     try:
         gcloudCompute.setup_networking(doc_ref_dict, role)
@@ -217,9 +205,7 @@ async def generate_ports(doc_ref: AsyncDocumentReference, role: str) -> None:
     await doc_ref.set(doc_ref_dict, merge=True)
 
 
-def add_file_to_zip(
-    zip_file, filepath: str, archive_name: Optional[str] = None
-) -> None:
+def add_file_to_zip(zip_file, filepath: str, archive_name: Optional[str] = None) -> None:
     with open(filepath, "rb") as f:
         zip_file.writestr(archive_name or os.path.basename(filepath), f.read())
 
@@ -244,17 +230,12 @@ def is_participant(study) -> bool:
     return (
         g.user
         and "id" in g.user
-        and (
-            g.user["id"] in study["participants"]
-            or g.user["id"] in study.get("invited_participants", [])
-        )
+        and (g.user["id"] in study["participants"] or g.user["id"] in study.get("invited_participants", []))
     )
 
 
 async def is_study_title_unique(study_title: str, db) -> bool:
-    study_ref = (
-        db.collection("studies").where("title", "==", study_title).limit(1).stream()
-    )
+    study_ref = db.collection("studies").where("title", "==", study_title).limit(1).stream()
     async for _ in study_ref:
         return False
     return True
@@ -263,13 +244,7 @@ async def is_study_title_unique(study_title: str, db) -> bool:
 async def study_title_already_exists(study_title: str) -> bool:
     logger.info(f"Checking if study title {study_title} already exists")
     db: firestore.AsyncClient = current_app.config["DATABASE"]
-    study_ref = (
-        db
-        .collection("studies")
-        .where(filter=FieldFilter("title", "==", study_title))
-        .limit(1)
-        .stream()
-    )
+    study_ref = db.collection("studies").where(filter=FieldFilter("title", "==", study_title)).limit(1).stream()
     async for _ in study_ref:
         return True
     return False
@@ -289,11 +264,7 @@ def check_conditions(doc_ref_dict, user_id) -> str:
         return "You have not set the number of individuals/rows in your data. Please click on the 'Study Parameters' button to set this value and any other parameters you wish to change before running the protocol."
     if not gcp_project:
         return "Your GCP project ID is not set. Please follow the instructions in the 'Configure Study' button before running the protocol."
-    if (
-        not demo
-        and "broad-cho-priv1" in gcp_project
-        and constants.FLASK_DEBUG != "development"
-    ):
+    if not demo and "broad-cho-priv1" in gcp_project and constants.FLASK_DEBUG != "development":
         return "This project ID is only allowed for a demo study. Please follow the instructions in the 'Configure Study' button to set up your own GCP project before running the protocol."
     if not demo and not data_path:
         return "Your data path is not set. Please follow the instructions in the 'Configure Study' button before running the protocol."

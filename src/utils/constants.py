@@ -1,5 +1,6 @@
 import os
 from copy import deepcopy
+from typing import Any, Dict, List, Union
 
 FLASK_DEBUG = os.getenv("FLASK_DEBUG")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")
@@ -24,9 +25,7 @@ SERVER_ZONE = f"{SERVER_REGION}-a"
 NETWORK_NAME_ROOT = "sfkit"
 INSTANCE_NAME_ROOT = "sfkit"
 DEVELOPER_USER_ID = "developer"
-GOOGLE_CLIENT_ID = (
-    "419003787216-rcif34r976a9qm3818qgeqed7c582od6.apps.googleusercontent.com"
-)
+GOOGLE_CLIENT_ID = "419003787216-rcif34r976a9qm3818qgeqed7c582od6.apps.googleusercontent.com"
 # these are used only when TERRA is NOT set
 AZURE_B2C_CLIENT_ID = os.getenv(
     "AZURE_B2C_CLIENT_ID", "a605ffae-592a-4096-b029-78ba66b6d614"
@@ -39,6 +38,8 @@ AZURE_B2C_JWKS_URL = os.getenv(
 FIREBASE_API_KEY = os.getenv("FIREBASE_API_KEY")
 FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID", SERVER_GCP_PROJECT)
 FIRESTORE_DATABASE = os.getenv("FIRESTORE_DATABASE", "(default)")
+
+PARMETERS_TYPE = Dict[str, Union[Dict[str, Any], List[str]]]
 
 MPCGWAS_SHARED_PARAMETERS = {
     "NUM_SNPS": {
@@ -462,7 +463,7 @@ DEFAULT_USER_PARAMETERS = {
 
 
 def default_user_parameters(study_type: str, demo: bool = False) -> dict:
-    parameters = deepcopy(DEFAULT_USER_PARAMETERS)
+    parameters: dict = deepcopy(DEFAULT_USER_PARAMETERS)
     if demo:
         parameters["GCP_PROJECT"]["value"] = SERVER_GCP_PROJECT
         if study_type == "MPC-GWAS":
@@ -476,7 +477,7 @@ def default_user_parameters(study_type: str, demo: bool = False) -> dict:
 
 
 def broad_user_parameters() -> dict:
-    parameters = deepcopy(DEFAULT_USER_PARAMETERS)
+    parameters: dict = deepcopy(DEFAULT_USER_PARAMETERS)
     parameters["GCP_PROJECT"]["value"] = SERVER_GCP_PROJECT
     parameters["NUM_INDS"]["value"] = "0"
     return parameters

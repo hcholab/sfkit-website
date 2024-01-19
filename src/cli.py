@@ -9,8 +9,7 @@ from werkzeug.exceptions import BadRequest, Conflict, Forbidden
 from src.api_utils import TERRA_ID_KEY
 from src.auth import get_cli_user
 from src.utils import constants, custom_logging
-from src.utils.api_functions import (process_parameter, process_status,
-                                     process_task)
+from src.utils.api_functions import process_parameter, process_status, process_task
 from src.utils.google_cloud.google_cloud_storage import upload_blob_from_file
 from src.utils.studies_functions import setup_gcp, submit_terra_workflow
 
@@ -67,11 +66,7 @@ async def _get_study():
     doc = await study_ref.get()
     study = doc.to_dict()
     PARTICIPANTS_KEY = "participants"
-    if (
-        not study
-        or PARTICIPANTS_KEY in study
-        and user_id not in study[PARTICIPANTS_KEY]
-    ):
+    if not study or PARTICIPANTS_KEY in study and user_id not in study[PARTICIPANTS_KEY]:
         raise Forbidden()
     elif PARTICIPANTS_KEY not in study:
         raise Conflict("study has no participants")
@@ -83,9 +78,7 @@ async def _get_study():
 @bp.route("/upload_file", methods=["POST"])
 async def upload_file() -> Tuple[dict, int]:
     study = await _get_study()
-    logger.info(
-        f"upload_file: {study.id}, request: {request}, request.files: {request.files}"
-    )
+    logger.info(f"upload_file: {study.id}, request: {request}, request.files: {request.files}")
 
     file = (await request.files).get("file", None)
     if not file:
@@ -118,13 +111,9 @@ async def get_study_options() -> Tuple[dict, int]:
     _, username = await _get_user()
 
     auth_keys_doc = await _get_db().collection("users").document("auth_keys").get()
-    auth_keys = auth_keys_doc.to_dict()
+    auth_keys = auth_keys_doc.to_dict() or {}
 
-    options = [
-        value | {"auth_key": key}
-        for key, value in auth_keys.items()
-        if username == value["username"]
-    ]
+    options = [value | {"auth_key": key} for key, value in auth_keys.items() if username == value["username"]]
 
     return {"options": options}, 200
 
@@ -140,23 +129,17 @@ async def update_firestore() -> Tuple[dict, int]:
     try:
         _, parameter = request.args.get("msg", "").split("::")
     except:
-        raise BadRequest(
-            "msg must be in the format 'update_firestore::parameter=value'"
-        )
+        raise BadRequest("msg must be in the format 'update_firestore::parameter=value'")
 
     study = await _get_study()
 
     try:
-        gcp_project = str(
-            study["personal_parameters"][study.user_id]["GCP_PROJECT"]["value"]
-        )
+        gcp_project = str(study.dict["personal_parameters"][study.user_id]["GCP_PROJECT"]["value"])
     except KeyError:
         raise Conflict("GCP_PROJECT not found")
 
-    db = _get_db()
     if parameter.startswith("status="):
         return await process_status(
-            db,
             study.user_id,
             study.id,
             parameter,
@@ -166,12 +149,12 @@ async def update_firestore() -> Tuple[dict, int]:
             study.role,
         )
     elif parameter.startswith("task="):
-        return await process_task(db, study.user_id, parameter, study.ref)
+        return await process_task(study.user_id, parameter, study.ref)
     else:
-        return await process_parameter(db, study.user_id, parameter, study.ref)
+        return await process_parameter(study.user_id, parameter, study.ref)
 
 
-@bp.route("/create_cp0", methods=["POST", "GET"]) # TODO: Use only POST
+@bp.route("/create_cp0", methods=["POST", "GET"])  # TODO: Use only POST
 async def create_cp0() -> Tuple[dict, int]:
     study = await _get_study()
 

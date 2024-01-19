@@ -4,15 +4,14 @@ import time
 from google.cloud import firestore
 
 from src.utils import custom_logging
-from src.utils.google_cloud.google_cloud_compute import (GoogleCloudCompute,
-                                                         format_instance_name)
+from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, format_instance_name
 
 logger = custom_logging.setup_logging(__name__)
 
 
-async def process_status(db, username, study_id, parameter, doc_ref, doc_ref_dict, gcp_project, role):
+async def process_status(username, study_id, parameter, doc_ref, doc_ref_dict, gcp_project, role):
     status = parameter.split("=")[1]
-    await update_status(db.transaction(), doc_ref, username, status)
+    await update_status({"username": username, "status": status, "doc_ref": doc_ref})
 
     is_finished_protocol = "Finished protocol" in status
     is_website_setup = doc_ref_dict["setup_configuration"] == "website"
@@ -28,11 +27,11 @@ async def process_status(db, username, study_id, parameter, doc_ref, doc_ref_dic
     return {}, 200
 
 
-async def process_task(db, username, parameter, doc_ref):
+async def process_task(username, parameter, doc_ref):
     task = parameter.split("=")[1]
     for _ in range(10):
         try:
-            await update_tasks(db.transaction(), doc_ref, username, task)
+            await update_tasks({"username": username, "task": task, "doc_ref": doc_ref})
             return {}, 200
         except Exception as e:
             logger.error(f"Failed to update task: {e}")
@@ -41,10 +40,10 @@ async def process_task(db, username, parameter, doc_ref):
     return {"error": "Failed to update task"}, 400
 
 
-async def process_parameter(db, username, parameter, doc_ref):
+async def process_parameter(username, parameter, doc_ref):
     for _ in range(10):
         try:
-            if await update_parameter(db.transaction(), username, parameter, doc_ref):
+            if await update_parameter({"username": username, "parameter": parameter, "doc_ref": doc_ref}):
                 return {}, 200
         except Exception as e:
             logger.error(f"Failed to update parameter: {e}")
@@ -54,7 +53,10 @@ async def process_parameter(db, username, parameter, doc_ref):
 
 
 @firestore.async_transactional
-async def update_parameter(transaction, username, parameter, doc_ref) -> bool:
+async def update_parameter(transaction) -> bool:
+    username = transaction["username"]
+    parameter = transaction["parameter"]
+    doc_ref = transaction["doc_ref"]
     name, value = parameter.split("=")
     doc_ref_dict: dict = (await doc_ref.get(transaction=transaction)).to_dict()
     if name in doc_ref_dict["personal_parameters"][username]:
@@ -69,7 +71,10 @@ async def update_parameter(transaction, username, parameter, doc_ref) -> bool:
 
 
 @firestore.async_transactional
-async def update_status(transaction, doc_ref, username, status) -> bool:
+async def update_status(transaction) -> bool:
+    username = transaction["username"]
+    status = transaction["status"]
+    doc_ref = transaction["doc_ref"]
     doc_ref_dict: dict = (await doc_ref.get(transaction=transaction)).to_dict()
     if "status" in doc_ref_dict:
         doc_ref_dict["status"][username] = status
@@ -81,7 +86,10 @@ async def update_status(transaction, doc_ref, username, status) -> bool:
 
 
 @firestore.async_transactional
-async def update_tasks(transaction, doc_ref, username, task) -> bool:
+async def update_tasks(transaction) -> bool:
+    username = transaction["username"]
+    task = transaction["task"]
+    doc_ref = transaction["doc_ref"]
     doc_ref_dict: dict = (await doc_ref.get(transaction=transaction)).to_dict()
     doc_ref_dict.setdefault("tasks", {}).setdefault(username, [])
 
@@ -97,9 +105,9 @@ async def update_tasks(transaction, doc_ref, username, task) -> bool:
 
 async def delete_instance(study_id, gcp_project, role):
     gcloudCompute = GoogleCloudCompute(study_id, gcp_project)
-    await gcloudCompute.delete_instance(format_instance_name(study_id, role))
+    gcloudCompute.delete_instance(format_instance_name(study_id, role))
 
 
 async def stop_instance(study_id, gcp_project, role):
     gcloudCompute = GoogleCloudCompute(study_id, gcp_project)
-    await gcloudCompute.stop_instance(format_instance_name(study_id, role))
+    gcloudCompute.stop_instance(format_instance_name(study_id, role))
