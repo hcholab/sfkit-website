@@ -12,15 +12,13 @@ from jwt import algorithms
 from quart import Request, Websocket, current_app, request
 from werkzeug.exceptions import Unauthorized
 
-from src.api_utils import APIException, add_user_to_db
+from src.api_utils import ID_KEY, TERRA_ID_KEY, APIException, add_user_to_db
 from src.utils import constants, custom_logging
 
 logger = custom_logging.setup_logging(__name__)
 
 AUTH_HEADER = "Authorization"
 BEARER_PREFIX = "Bearer "
-ID_KEY = "sub"
-TERRA_ID_KEY = "id"
 
 PUBLIC_KEYS = {}
 USER_IDS: Set = set()

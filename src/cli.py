@@ -6,7 +6,8 @@ from google.cloud.firestore import AsyncClient, AsyncDocumentReference
 from quart import Blueprint, current_app, request
 from werkzeug.exceptions import BadRequest, Conflict, Forbidden
 
-from src.auth import TERRA_ID_KEY, get_cli_user
+from src.api_utils import TERRA_ID_KEY
+from src.auth import get_cli_user
 from src.utils import constants, custom_logging
 from src.utils.api_functions import (process_parameter, process_status,
                                      process_task)
