@@ -6,6 +6,7 @@ import google.auth
 import httpx
 import jwt
 import requests
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from google.auth.transport.requests import Request as GAuthRequest
 from google.cloud import firestore
 from jwt import algorithms
@@ -33,7 +34,7 @@ if not constants.TERRA:
 
 
 def _get_auth_header(req: Union[Request, Websocket]) -> str:
-    return req.headers.get(AUTH_HEADER, "", type=str)
+    return req.headers.get(AUTH_HEADER, "", type=str) or ""
 
 
 async def get_user_id(req: Union[Request, Websocket] = request) -> str:
@@ -60,9 +61,7 @@ async def get_user_id(req: Union[Request, Websocket] = request) -> str:
     return user_id
 
 
-async def _sam_request(
-    method: HTTPMethod, path: str, headers: Dict[str, str], json: dict | None = None
-):
+async def _sam_request(method: HTTPMethod, path: str, headers: Dict[str, str], json: dict | None = None):
     async with httpx.AsyncClient() as http:
         return await http.request(
             method.name,
@@ -89,8 +88,10 @@ async def _get_terra_user(auth_header: str):
 
 def get_service_account_headers():
     creds, _ = google.auth.default()
-    creds = creds.with_scopes(["openid", "email", "profile"])
+    creds = creds.with_scopes(["openid", "email", "profile"])  # type: ignore
     creds.refresh(GAuthRequest())
+    if creds.token is None:
+        raise ValueError("Token is None")
     return {
         AUTH_HEADER: BEARER_PREFIX + creds.token,
     }
@@ -138,6 +139,9 @@ async def _get_azure_b2c_user(auth_header: str):
         raise Unauthorized("Invalid KID")
 
     public_key = PUBLIC_KEYS[kid]
+    if not isinstance(public_key, RSAPublicKey):
+        raise ValueError("Invalid public key")
+
     try:
         decoded_token = jwt.decode(
             token,
@@ -165,11 +169,8 @@ async def get_cli_user(req: Union[Request, Websocket]) -> dict:
             raise Unauthorized("Missing authorization key")
 
         db: firestore.AsyncClient = current_app.config["DATABASE"]
-        user = (
-            (await db.collection("users").document("auth_keys").get())
-            .to_dict()
-            .get(auth_header)
-        )
+        doc_ref_dict = (await db.collection("users").document("auth_keys").get()).to_dict() or {}
+        user = doc_ref_dict.get(auth_header) or None
 
         if not user:
             raise Unauthorized("invalid authorization key")
@@ -178,8 +179,8 @@ async def get_cli_user(req: Union[Request, Websocket]) -> dict:
 
 async def get_user_email(user_id: str) -> str:
     db: firestore.AsyncClient = current_app.config["DATABASE"]
-    user = await db.collection("users").document(user_id).get()
-    return user.to_dict().get("email", "")
+    user = (await db.collection("users").document(user_id).get()).to_dict() or {}
+    return user.get("email", "")
 
 
 def authenticate(f):

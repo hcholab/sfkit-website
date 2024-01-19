@@ -146,8 +146,8 @@ class GoogleCloudCompute:
         operation = self.compute.firewalls().insert(project=self.gcp_project, body=firewall_body).execute()
         self.wait_for_operation(operation["name"])
 
-    def delete_firewall(self, firewall_name: str = None) -> None:
-        if firewall_name is None:
+    def delete_firewall(self, firewall_name: str) -> None:
+        if not firewall_name:
             firewall_name = self.firewall_name
         logger.info(f"Deleting firewall {firewall_name}")
         try:
@@ -374,9 +374,9 @@ class GoogleCloudCompute:
 
         if role == "0":
             startup_script = open(
-            os.path.join(os.path.dirname(__file__), "../../vm_scripts/startup-script_user_cp0.sh"),
-            "r",
-        ).read()
+                os.path.join(os.path.dirname(__file__), "../../vm_scripts/startup-script_user_cp0.sh"),
+                "r",
+            ).read()
 
         metadata_config = {
             "items": [
@@ -386,10 +386,12 @@ class GoogleCloudCompute:
         }
 
         if "dev" in constants.SERVICE_URL:
-            metadata_config["items"].append({
-                'key': 'SFKIT_API_URL',
-                'value': "https://sfkit-website-dev-bhj5a4wkqa-uc.a.run.app/api" # TODO: find better way to do this
-            })
+            metadata_config["items"].append(
+                {
+                    "key": "SFKIT_API_URL",
+                    "value": "https://sfkit-website-dev-bhj5a4wkqa-uc.a.run.app/api",  # TODO: find better way to do this
+                }
+            )
 
         if metadata:
             metadata_config["items"] += metadata

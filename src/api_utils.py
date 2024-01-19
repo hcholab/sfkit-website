@@ -25,10 +25,10 @@ class APIException(HTTPException):
                 content_type=res.headers.get("content-type"),
             )
 
-        if res.content_type == "application/json" and "message" in res.json():
+        if res.content_type == "application/json" and callable(res.json) and "message" in res.json():
             desc = res.json()["message"]
         else:
-            desc = str(res.read())
+            desc = str(res.get_data(as_text=True))
 
         super().__init__(description=desc, response=res)
         self.code = res.status_code
@@ -60,14 +60,10 @@ async def get_studies(private_filter=None) -> list:
     try:
         studies_query = db.collection("studies").select(desired_keys)
         if private_filter is not None:
-            studies_query = studies_query.where(
-                filter=FieldFilter("private", "==", private_filter)
-            )
+            studies_query = studies_query.where(filter=FieldFilter("private", "==", private_filter))
         studies = [doc.to_dict() async for doc in studies_query.stream()]
     except Exception as e:
-        raise RuntimeError(
-            {"error": "Failed to fetch studies", "details": str(e)}
-        ) from e
+        raise RuntimeError({"error": "Failed to fetch studies", "details": str(e)}) from e
 
     return studies
 
@@ -78,9 +74,7 @@ async def get_display_names() -> dict:
         doc_ref = await db.collection("users").document("display_names").get()
         display_names = doc_ref.to_dict() or {}
     except Exception as e:
-        raise RuntimeError(
-            {"error": "Failed to fetch display names", "details": str(e)}
-        ) from e
+        raise RuntimeError({"error": "Failed to fetch display names", "details": str(e)}) from e
 
     return display_names
 
@@ -91,6 +85,7 @@ async def add_user_to_db(decoded_token: dict) -> None:
     db = current_app.config["DATABASE"]
     try:
         display_name = user_id
+        email = ""
         if constants.TERRA and "email" in decoded_token:
             display_name = decoded_token["email"]
             email = decoded_token["email"]
@@ -100,9 +95,7 @@ async def add_user_to_db(decoded_token: dict) -> None:
                 display_name += " " + decoded_token["family_name"]
         if "emails" in decoded_token:
             email = decoded_token["emails"][0]
-        await db.collection("users").document("display_names").set(
-            {user_id: display_name}, merge=True
-        )
+        await db.collection("users").document("display_names").set({user_id: display_name}, merge=True)
         await db.collection("users").document(user_id).set(
             {
                 "about": "",

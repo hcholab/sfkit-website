@@ -7,7 +7,7 @@ from quart import Blueprint, Websocket, abort, current_app, websocket
 from quart_cors import websocket_cors
 
 from src.api_utils import get_websocket_origin
-from src.auth import get_user_id, get_cli_user
+from src.auth import get_cli_user, get_user_id
 from src.utils import constants
 
 bp = Blueprint("signaling", __name__, url_prefix="/api")
@@ -44,12 +44,14 @@ class Message:
         msg["type"] = MessageType(msg["type"])
         return Message(**msg)
 
+
 # in-memory stores for Websockets
 study_barriers: Dict[str, asyncio.Barrier] = {}
 study_parties: Dict[str, Dict[PID, Websocket]] = {}
 
 # Header
-STUDY_ID_HEADER = ("X-MPC-Study-ID")
+STUDY_ID_HEADER = "X-MPC-Study-ID"
+
 
 @bp.websocket("/ice")
 @websocket_cors(allow_origin=get_websocket_origin())
@@ -68,9 +70,7 @@ async def handler():
 
     pid = _get_pid(study_participants, user_id)
     if pid < 0:
-        await Message(
-            MessageType.ERROR, f"User {user_id} is not in study {study_id}"
-        ).send(websocket)
+        await Message(MessageType.ERROR, f"User {user_id} is not in study {study_id}").send(websocket)
         abort(403)
 
     parties = study_parties.setdefault(study_id, {})
@@ -83,7 +83,7 @@ async def handler():
 
     try:
         # store the current websocket for the party
-        parties[pid] = websocket._get_current_object()
+        parties[pid] = websocket
         print(f"Registered websocket for party {pid}")
 
         # using a study-specific barrier,
@@ -104,9 +104,7 @@ async def handler():
 
                 # and send it to the other party
                 if msg.targetPID < 0:
-                    await Message(
-                        MessageType.ERROR, f"Missing target PID: {msg}"
-                    ).send(websocket)
+                    await Message(MessageType.ERROR, f"Missing target PID: {msg}").send(websocket)
                     continue
                 elif msg.targetPID not in parties or msg.targetPID == pid:
                     print(f"Unexpected message is {msg}. Parties are {parties}")
@@ -119,7 +117,7 @@ async def handler():
                     target_ws = parties[msg.targetPID]
                     await msg.send(target_ws)
     except Exception as e:
-        print(f"Terminal connection error for party {pid} in study {study_id}: {e.with_traceback()}")
+        print(f"Terminal connection error for party {pid} in study {study_id}:", e)
     finally:
         del parties[pid]
         print(f"Party {pid} disconnected from study {study_id}")
@@ -145,4 +143,3 @@ async def _get_study_participants(study_id: str) -> List[str]:
 
 def _get_pid(study: List[str], user_id: str) -> PID:
     return study.index(user_id) if user_id in study else -1
-
