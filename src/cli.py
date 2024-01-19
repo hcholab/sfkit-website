@@ -2,11 +2,11 @@ import asyncio
 from dataclasses import dataclass
 from typing import Any, Dict, Tuple
 
-from google.cloud.firestore import AsyncDocumentReference, AsyncClient
+from google.cloud.firestore import AsyncClient, AsyncDocumentReference
 from quart import Blueprint, current_app, request
 from werkzeug.exceptions import BadRequest, Conflict, Forbidden
 
-from src.auth import get_cli_user
+from src.auth import TERRA_ID_KEY, get_cli_user
 from src.utils import constants, custom_logging
 from src.utils.api_functions import (process_parameter, process_status,
                                      process_task)
@@ -30,7 +30,7 @@ async def _get_user_study_ids():
     user = await get_cli_user(request)
 
     if constants.TERRA:
-        user_id, study_id = user["id"], request.args.get("study_id")
+        user_id, study_id = user[TERRA_ID_KEY], request.args.get("study_id")
     else:
         user_id, study_id = user["username"], user["study_id"]
 
@@ -104,14 +104,16 @@ async def get_doc_ref_dict() -> Tuple[dict, int]:
 
 @bp.route("/get_study_options", methods=["GET"])
 async def get_study_options() -> Tuple[dict, int]:
-    user = await get_cli_user(request)
+    user_id, _ = await _get_user_study_ids()
     auth_keys_doc = await _get_db().collection("users").document("auth_keys").get()
     auth_keys = auth_keys_doc.to_dict()
-    
+
     options = [
-        value | {"auth_key" : key} for key, value in auth_keys.items() if user["id"] == value["username"]
-    ] 
-    
+        value | {"auth_key" : key}
+        for key, value in auth_keys.items()
+        if user_id == value["username"]
+    ]
+
     return {"options": options}, 200
 
 

@@ -6,11 +6,12 @@ from google.cloud import firestore
 from quart import Blueprint, Response, current_app, jsonify, request, send_file
 from werkzeug.exceptions import BadRequest, Conflict, Forbidden
 
-from src.auth import authenticate, get_user_id
+from src.auth import authenticate, get_cp0_id, get_user_id
 from src.utils import constants, custom_logging
 from src.utils.google_cloud.google_cloud_compute import (GoogleCloudCompute,
                                                          format_instance_name)
-from src.utils.studies_functions import make_auth_key, study_title_already_exists
+from src.utils.studies_functions import (make_auth_key,
+                                         study_title_already_exists)
 
 logger = custom_logging.setup_logging(__name__)
 bp = Blueprint("study", __name__, url_prefix="/api")
@@ -27,7 +28,7 @@ async def study() -> Response:
         study = (await db.collection("studies").document(study_id).get()).to_dict()
     except Exception as e:
         logger.error(f"Failed to fetch study: {e}")
-        raise Forbidden() 
+        raise Forbidden()
 
     if user_id not in study["participants"]:
         raise Forbidden()
@@ -39,7 +40,7 @@ async def study() -> Response:
     except Exception as e:
         logger.error(f"Failed to fetch display names: {e}")
         raise BadRequest()
-        
+
 
     study["owner_name"] = display_names.get(study["owner"], study["owner"])
     study["display_names"] = {
@@ -75,7 +76,7 @@ async def restart_study() -> Response:
 
     for participant in doc_ref_dict["participants"]:
         doc_ref_dict["status"][participant] = (
-            "ready to begin protocol" if participant == "Broad" else ""
+            "ready to begin protocol" if participant == get_cp0_id() else ""
         )
         doc_ref_dict["personal_parameters"][participant]["PUBLIC_KEY"]["value"] = ""
         doc_ref_dict["personal_parameters"][participant]["IP_ADDRESS"]["value"] = ""
@@ -104,9 +105,10 @@ async def create_study() -> Response:
     if await study_title_already_exists(study_title):
         raise Conflict("Study title already exists")
 
-    study_id = str(uuid.uuid4()) 
+    study_id = str(uuid.uuid4())
     db: firestore.AsyncClient = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_id)
+    cp0_id = get_cp0_id()
 
     await doc_ref.set(
         {
@@ -120,12 +122,12 @@ async def create_study() -> Response:
             "study_information": study_information,
             "owner": user_id,
             "created": datetime.now(),
-            "participants": ["Broad", user_id],
-            "status": {"Broad": "ready to begin protocol", user_id: ""},
+            "participants": [cp0_id, user_id],
+            "status": {cp0_id: "ready to begin protocol", user_id: ""},
             "parameters": constants.SHARED_PARAMETERS[study_type],
             "advanced_parameters": constants.ADVANCED_PARAMETERS[study_type],
             "personal_parameters": {
-                "Broad": constants.broad_user_parameters(),
+                cp0_id: constants.broad_user_parameters(),
                 user_id: constants.default_user_parameters(study_type, demo),
             },
             "requested_participants": {},
@@ -133,7 +135,7 @@ async def create_study() -> Response:
         }
     )
 
-    await make_auth_key(study_id, "Broad")
+    await make_auth_key(study_id, cp0_id)
     await make_auth_key(study_id, user_id)
     return jsonify({"message": "Study created successfully", "study_id": study_id})
 

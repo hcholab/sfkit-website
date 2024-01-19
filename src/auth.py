@@ -19,6 +19,8 @@ logger = custom_logging.setup_logging(__name__)
 
 AUTH_HEADER = "Authorization"
 BEARER_PREFIX = "Bearer "
+ID_KEY = "sub"
+TERRA_ID_KEY = "id"
 
 PUBLIC_KEYS = {}
 USER_IDS: Set = set()
@@ -43,7 +45,7 @@ async def get_user_id(req: Union[Request, Websocket] = request) -> str:
     else:
         user = await _get_azure_b2c_user(auth_header)
 
-    user_id = user["id"] if constants.TERRA else user["sub"]
+    user_id = user[TERRA_ID_KEY] if constants.TERRA else user[ID_KEY]
     if user_id in USER_IDS:
         return user_id
 
@@ -96,11 +98,21 @@ def get_service_account_headers():
     }
 
 
+_cp0_id = "Broad"
+
+
+def get_cp0_id():
+    return _cp0_id
+
+
 async def register_terra_service_account():
+    global _cp0_id
+
+    headers = get_service_account_headers()
     res = await _sam_request(
         HTTPMethod.POST,
         "/api/users/v2/self/register",
-        headers=get_service_account_headers(),
+        headers=headers,
         json={
             "acceptsTermsOfService": True,
             "userAttributes": {"marketingConsent": False},
@@ -111,6 +123,9 @@ async def register_terra_service_account():
         raise APIException(res)
     else:
         logger.info(res.json()["message"])
+
+    res = await _get_terra_user(headers[AUTH_HEADER])
+    _cp0_id = res[TERRA_ID_KEY]
 
 
 async def _get_azure_b2c_user(auth_header: str):
