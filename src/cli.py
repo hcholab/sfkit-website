@@ -105,7 +105,9 @@ async def get_doc_ref_dict() -> Tuple[dict, int]:
 
 @bp.route("/get_study_options", methods=["GET"])
 async def get_study_options() -> Tuple[dict, int]:
-    user_id, _ = await _get_user_study_ids()
+    user = await get_cli_user(request)
+    user_id = user[TERRA_ID_KEY] if constants.TERRA else user["username"]
+
     auth_keys_doc = await _get_db().collection("users").document("auth_keys").get()
     auth_keys = auth_keys_doc.to_dict()
 
