@@ -9,7 +9,7 @@ from typing import Any, Dict, Optional
 
 import httpx
 from google.cloud import firestore
-from google.cloud.firestore_v1 import DocumentReference, FieldFilter
+from google.cloud.firestore_v1 import DocumentReference, FieldFilter, AsyncDocumentReference
 from python_http_client.exceptions import HTTPError
 from quart import current_app, g
 from sendgrid import SendGridAPIClient
@@ -107,7 +107,7 @@ async def make_auth_key(study_id: str, user_id: str) -> str:
     return auth_key
 
 
-async def setup_gcp(doc_ref: DocumentReference, role: str) -> None:
+async def setup_gcp(doc_ref: AsyncDocumentReference, role: str) -> None:
     await generate_ports(doc_ref, role)
 
     doc_ref_dict = (await doc_ref.get()).to_dict() or {}
@@ -205,15 +205,15 @@ async def submit_terra_workflow(study_id: str, _role: str) -> None:
         raise APIException(res)
 
 
-async def generate_ports(doc_ref: DocumentReference, role: str) -> None:
+async def generate_ports(doc_ref: AsyncDocumentReference, role: str) -> None:
     doc_ref_dict = (await doc_ref.get()).to_dict() or {}
     user: str = doc_ref_dict["participants"][int(role)]
 
     base: int = 8000 + 200 * int(role)
     ports = [base + 20 * r for r in range(len(doc_ref_dict["participants"]))]
-    ports = ",".join([str(p) for p in ports])
+    ports_str = ",".join([str(p) for p in ports])
 
-    doc_ref_dict["personal_parameters"][user]["PORTS"]["value"] = ports
+    doc_ref_dict["personal_parameters"][user]["PORTS"]["value"] = ports_str
     await doc_ref.set(doc_ref_dict, merge=True)
 
 
@@ -310,8 +310,6 @@ async def update_status_and_start_setup(doc_ref, doc_ref_dict, study_id):
         user = participants[role]
         statuses[user] = "setting up your vm instance"
         await doc_ref.set({"status": statuses}, merge=True)
-
-        await make_auth_key(study_id, user)
 
         asyncio.create_task(setup_gcp(doc_ref, str(role)))
 

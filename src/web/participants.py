@@ -4,7 +4,7 @@ from quart import Blueprint, Response, current_app, jsonify, request
 from src.auth import authenticate, get_user_id
 from src.utils import constants, custom_logging
 from src.utils.generic_functions import add_notification
-from src.utils.studies_functions import email
+from src.utils.studies_functions import email, make_auth_key
 
 logger = custom_logging.setup_logging(__name__)
 bp = Blueprint("participants", __name__, url_prefix="/api")
@@ -70,8 +70,9 @@ async def accept_invitation() -> Response:
         "personal_parameters", {}
     ) | {user_id: constants.default_user_parameters(doc_ref_dict["study_type"])}
     doc_ref_dict["status"] = doc_ref_dict.get("status", {}) | {user_id: ""}
-
     await doc_ref.set(doc_ref_dict)
+
+    await make_auth_key(study_id, user_id)
 
     add_notification(f"You have accepted the invitation to {doc_ref_dict['title']}", user_id)
     return jsonify({"message": "Invitation accepted successfully"}), 200
@@ -127,8 +128,9 @@ async def approve_join_study() -> Response:
         "personal_parameters", {}
     ) | {user_id: constants.default_user_parameters(doc_ref_dict["study_type"])}
     doc_ref_dict["status"] = doc_ref_dict.get("status", {}) | {user_id: ""}
-
     await doc_ref.set(doc_ref_dict)
+
+    await make_auth_key(study_id, user_id)
 
     add_notification(f"You have been accepted to {doc_ref_dict['title']}", user_id=user_id)
     return jsonify({"message": "User has been approved to join the study"}), 200
