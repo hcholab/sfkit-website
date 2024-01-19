@@ -134,6 +134,7 @@ async def create_study() -> Response:
     )
 
     await make_auth_key(study_id, "Broad")
+    await make_auth_key(study_id, user_id)
     return jsonify({"message": "Study created successfully", "study_id": study_id})
 
 
@@ -228,7 +229,7 @@ async def parameters() -> Response:
 @bp.route("/download_auth_key", methods=["GET"])
 @authenticate
 async def download_auth_key() -> Response:
-    study_id = request.args.get("study_id")
+    study_id = request.args.get("study_id") or ""
     db: firestore.AsyncClient = current_app.config["DATABASE"]
     doc_ref = db.collection("studies").document(study_id)
     doc_ref_dict = (await doc_ref.get()).to_dict()
