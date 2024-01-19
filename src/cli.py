@@ -26,16 +26,26 @@ class Study:
     role: str
 
 
-async def _get_user_study_ids():
+async def _get_user():
     user = await get_cli_user(request)
-
     if constants.TERRA:
-        user_id, study_id = user[TERRA_ID_KEY], request.args.get("study_id")
+        user_id = user[TERRA_ID_KEY]
     else:
-        user_id, study_id = user["username"], user["study_id"]
+        user_id = user["username"]
 
     if type(user_id) != str:
         raise Conflict("Invalid user ID")
+
+    return user, user_id
+
+
+async def _get_user_study_ids():
+    user, user_id = await _get_user()
+
+    if constants.TERRA:
+        study_id = request.args.get("study_id")
+    else:
+        study_id = user["study_id"]
 
     if study_id is None:
         raise BadRequest("Missing study ID")
@@ -98,18 +108,19 @@ async def get_doc_ref_dict() -> Tuple[dict, int]:
 
 @bp.route("/get_study_options", methods=["GET"])
 async def get_study_options() -> Tuple[dict, int]:
-    user_id, _ = await _get_user_study_ids()
+    _, username = await _get_user()
+
     auth_keys_doc = await _get_db().collection("users").document("auth_keys").get()
     auth_keys = auth_keys_doc.to_dict() or {}
 
-    options = [value | {"auth_key": key} for key, value in auth_keys.items() if user_id == value["username"]]
+    options = [value | {"auth_key": key} for key, value in auth_keys.items() if username == value["username"]]
 
     return {"options": options}, 200
 
 
 @bp.route("/get_username", methods=["GET"])
 async def get_username() -> Tuple[dict, int]:
-    username, _ = await _get_user_study_ids()
+    _, username = await _get_user()
     return {"username": username}, 200
 
 
