@@ -28,11 +28,7 @@ class Study:
 
 async def _get_user():
     user = await get_cli_user(request)
-    if constants.TERRA:
-        user_id = user[TERRA_ID_KEY]
-    else:
-        user_id = user["username"]
-
+    user_id = user[TERRA_ID_KEY] if constants.TERRA else user["username"]
     if type(user_id) != str:
         raise Conflict("Invalid user ID")
 
@@ -138,8 +134,10 @@ async def update_firestore() -> Tuple[dict, int]:
     except KeyError:
         raise Conflict("GCP_PROJECT not found")
 
+    db = _get_db()
     if parameter.startswith("status="):
         return await process_status(
+            db,
             study.user_id,
             study.id,
             parameter,
@@ -149,9 +147,9 @@ async def update_firestore() -> Tuple[dict, int]:
             study.role,
         )
     elif parameter.startswith("task="):
-        return await process_task(study.user_id, parameter, study.ref)
+        return await process_task(db, study.user_id, parameter, study.ref)
     else:
-        return await process_parameter(study.user_id, parameter, study.ref)
+        return await process_parameter(db, study.user_id, parameter, study.ref)
 
 
 @bp.route("/create_cp0", methods=["POST", "GET"])  # TODO: Use only POST
