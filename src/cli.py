@@ -142,7 +142,7 @@ async def update_firestore() -> Tuple[dict, int]:
             study.id,
             parameter,
             study.ref,
-            study,
+            study.dict,
             gcp_project,
             study.role,
         )

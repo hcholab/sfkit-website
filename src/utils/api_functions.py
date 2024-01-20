@@ -2,6 +2,7 @@ import asyncio
 import time
 
 from google.cloud import firestore
+from google.cloud.firestore import AsyncClient, AsyncDocumentReference
 
 from src.utils import custom_logging
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, format_instance_name
@@ -9,7 +10,16 @@ from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, form
 logger = custom_logging.setup_logging(__name__)
 
 
-async def process_status(db, username, study_id, parameter, doc_ref, doc_ref_dict, gcp_project, role):
+async def process_status(
+    db: AsyncClient,
+    username: str,
+    study_id: str,
+    parameter: str,
+    doc_ref: AsyncDocumentReference,
+    doc_ref_dict: dict,
+    gcp_project: str,
+    role: str,
+):
     status = parameter.split("=")[1]
     await update_status(db.transaction(), {"username": username, "status": status, "doc_ref": doc_ref})
 
@@ -27,7 +37,7 @@ async def process_status(db, username, study_id, parameter, doc_ref, doc_ref_dic
     return {}, 200
 
 
-async def process_task(db, username, parameter, doc_ref):
+async def process_task(db: AsyncClient, username: str, parameter: str, doc_ref: AsyncDocumentReference):
     task = parameter.split("=")[1]
     for _ in range(10):
         try:
@@ -40,7 +50,7 @@ async def process_task(db, username, parameter, doc_ref):
     return {"error": "Failed to update task"}, 400
 
 
-async def process_parameter(db, username, parameter, doc_ref):
+async def process_parameter(db: AsyncClient, username: str, parameter: str, doc_ref: AsyncDocumentReference):
     for _ in range(10):
         try:
             if await update_parameter(
