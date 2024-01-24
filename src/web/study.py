@@ -57,16 +57,17 @@ async def restart_study() -> Response:
     doc_ref = db.collection("studies").document(study_id)
     doc_ref_dict: dict = (await doc_ref.get()).to_dict() or {}
 
-    for role, v in enumerate(doc_ref_dict["participants"]):
-        participant = doc_ref_dict["personal_parameters"][v]
-        if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
-            google_cloud_compute = GoogleCloudCompute(study_id, gcp_project)
-            for instance in google_cloud_compute.list_instances():
-                if instance == format_instance_name(google_cloud_compute.study_id, str(role)):
-                    google_cloud_compute.delete_instance(instance)
+    if not constants.TERRA:  # TODO: add equivalent for terra
+        for role, v in enumerate(doc_ref_dict["participants"]):
+            participant = doc_ref_dict["personal_parameters"][v]
+            if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
+                google_cloud_compute = GoogleCloudCompute(study_id, gcp_project)
+                for instance in google_cloud_compute.list_instances():
+                    if instance == format_instance_name(google_cloud_compute.study_id, str(role)):
+                        google_cloud_compute.delete_instance(instance)
 
-            google_cloud_compute.delete_firewall("")
-    logger.info("Successfully Deleted gcp instances and firewalls")
+                google_cloud_compute.delete_firewall("")
+        logger.info("Successfully Deleted gcp instances and firewalls")
 
     for participant in doc_ref_dict["participants"]:
         doc_ref_dict["status"][participant] = "ready to begin protocol" if participant == get_cp0_id() else ""
@@ -141,12 +142,12 @@ async def delete_study() -> Response:
     doc_ref = db.collection("studies").document(study_id)
     doc_ref_dict: dict = (await doc_ref.get()).to_dict() or {}
 
-    for participant in doc_ref_dict["personal_parameters"].values():
-        if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
-            google_cloud_compute = GoogleCloudCompute(study_id, gcp_project)
-            google_cloud_compute.delete_everything()
-
-    logger.info("Successfully deleted GCP instances and other related resources")
+    if not constants.TERRA:  # TODO: add equivalent for terra
+        for participant in doc_ref_dict["personal_parameters"].values():
+            if (gcp_project := participant.get("GCP_PROJECT").get("value")) != "":
+                google_cloud_compute = GoogleCloudCompute(study_id, gcp_project)
+                google_cloud_compute.delete_everything()
+        logger.info("Successfully deleted GCP instances and other related resources")
 
     for participant in doc_ref_dict["personal_parameters"].values():
         if (auth_key := participant.get("AUTH_KEY").get("value")) != "":
