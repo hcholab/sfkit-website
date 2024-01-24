@@ -1,6 +1,7 @@
 #!/bin/bash
 
 sudo -s
+export HOME=/root
 
 if [[ -f startup_was_launched ]]; then exit 0; fi
 touch startup_was_launched

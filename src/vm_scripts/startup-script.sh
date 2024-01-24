@@ -12,6 +12,7 @@ handle_error() {
 }
 
 trap handle_error ERR
+export HOME=/root
 
 sudo -s
 

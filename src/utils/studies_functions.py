@@ -9,11 +9,12 @@ from typing import Any, Dict, Optional
 
 import httpx
 from google.cloud import firestore
-from google.cloud.firestore_v1 import AsyncDocumentReference, DocumentReference, FieldFilter
+from google.cloud.firestore_v1 import AsyncDocumentReference, FieldFilter
 from python_http_client.exceptions import HTTPError
 from quart import current_app, g
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Email, Mail
+from werkzeug.exceptions import BadRequest
 
 from src.api_utils import APIException
 from src.auth import get_service_account_headers
@@ -41,7 +42,11 @@ async def email(inviter: str, recipient: str, invitation_message: str, study_tit
     :return: The status code of the email sending operation.
     """
     doc_ref_dict: dict = (await current_app.config["DATABASE"].collection("meta").document("sendgrid").get()).to_dict()
-    sg = SendGridAPIClient(api_key=doc_ref_dict.get("api_key", ""))
+
+    api_key = os.getenv("SENDGRID_API_KEY") or doc_ref_dict.get("api_key")
+    if not api_key:
+        raise BadRequest("No SendGrid API key found")
+    sg = SendGridAPIClient(api_key=api_key)
 
     html_content = email_template.substitute(
         inviter=escape(inviter),
