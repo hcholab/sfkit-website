@@ -86,7 +86,7 @@ async def handler():
 
     try:
         # store the current websocket for the party
-        parties[pid] = websocket._get_current_object()
+        parties[pid] = websocket._get_current_object()  # type: ignore
         logger.info("Registered websocket for party %d", pid)
 
         # using a study-specific barrier,
