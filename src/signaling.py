@@ -8,9 +8,10 @@ from quart_cors import websocket_cors
 
 from src.api_utils import get_websocket_origin
 from src.auth import get_cli_user, get_user_id
-from src.utils import constants
+from src.utils import constants, custom_logging
 
 bp = Blueprint("signaling", __name__, url_prefix="/api")
+logger = custom_logging.setup_logging(__name__)
 
 PID = int
 
@@ -35,12 +36,14 @@ class Message:
         for key, value in msg.items():
             if isinstance(value, Enum):
                 msg[key] = value.value
+        if self.type == MessageType.ERROR:
+            logger.error("Sending error message: %s", msg)
         await ws.send_json(msg)
 
     @staticmethod
     async def receive(ws: Websocket):
         msg = await ws.receive_json()
-        print("Received", msg)
+        logger.debug("Received: %s", msg)
         msg["type"] = MessageType(msg["type"])
         return Message(**msg)
 
@@ -83,8 +86,8 @@ async def handler():
 
     try:
         # store the current websocket for the party
-        parties[pid] = websocket
-        print(f"Registered websocket for party {pid}")
+        parties[pid] = websocket._get_current_object()
+        logger.info("Registered websocket for party %d", pid)
 
         # using a study-specific barrier,
         # wait until all participants in a study are connected,
@@ -92,10 +95,10 @@ async def handler():
         barrier = study_barriers.setdefault(study_id, asyncio.Barrier(len(study_participants)))
         async with barrier:
             if pid == 0:
-                print(f"{pid}: All parties have connected:", ", ".join(str(k) for k in parties))
+                logger.info("PID %d: All parties have connected: %s", pid, parties)
 
             while True:
-                print(f"pid: {pid}, parties: {parties}")
+                logger.debug("pid: %d, parties: %s", pid, parties)
                 # read the next message and override its PID
                 # (this prevents PID spoofing)
                 msg = await Message.receive(websocket)
@@ -107,7 +110,7 @@ async def handler():
                     await Message(MessageType.ERROR, f"Missing target PID: {msg}").send(websocket)
                     continue
                 elif msg.targetPID not in parties or msg.targetPID == pid:
-                    print(f"Unexpected message is {msg}. Parties are {parties}")
+                    logger.error("Unexpected message is %s. Parties are %s", msg, parties)
                     await Message(
                         MessageType.ERROR,
                         f"Unexpected target id {msg.targetPID}",
@@ -117,10 +120,10 @@ async def handler():
                     target_ws = parties[msg.targetPID]
                     await msg.send(target_ws)
     except Exception as e:
-        print(f"Terminal connection error for party {pid} in study {study_id}:", e)
+        logger.error("Terminal connection error for party %d in study %s: %s", pid, study_id, e)
     finally:
         del parties[pid]
-        print(f"Party {pid} disconnected from study {study_id}")
+        logger.warning("Party %d disconnected from study %s", pid, study_id)
 
 
 async def _get_user_id(ws: Websocket):
