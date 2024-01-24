@@ -158,6 +158,7 @@ async def _add_participant(doc_ref, doc_ref_dict, study_id, user_id):
         user_id: constants.default_user_parameters(doc_ref_dict["study_type"])
     }
     doc_ref_dict["status"] = doc_ref_dict.get("status", {}) | {user_id: ""}
+    doc_ref_dict["tasks"] = doc_ref_dict.get("tasks", {}) | {user_id: []}
     await doc_ref.set(doc_ref_dict)
 
     await make_auth_key(study_id, user_id)

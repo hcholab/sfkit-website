@@ -73,7 +73,7 @@ async def _get_study():
 
 @bp.route("/upload_file", methods=["POST"])
 async def upload_file() -> Tuple[dict, int]:
-    study = await _get_study()
+    study: Study = await _get_study()
     files = await request.files
     logger.info(f"upload_file: {study.id}, request: {request}, request.files: {files}")
 

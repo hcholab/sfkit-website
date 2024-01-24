@@ -116,6 +116,7 @@ async def create_study() -> Response:
             "created": datetime.now(),
             "participants": [cp0_id, user_id],
             "status": {cp0_id: "ready to begin protocol", user_id: ""},
+            "tasks": {cp0_id: [], user_id: []},
             "parameters": constants.SHARED_PARAMETERS[study_type],
             "advanced_parameters": constants.ADVANCED_PARAMETERS[study_type],
             "personal_parameters": {
