@@ -73,7 +73,7 @@ async def restart_study() -> Response:
         doc_ref_dict["status"][participant] = "ready to begin protocol" if participant == get_cp0_id() else ""
         doc_ref_dict["personal_parameters"][participant]["PUBLIC_KEY"]["value"] = ""
         doc_ref_dict["personal_parameters"][participant]["IP_ADDRESS"]["value"] = ""
-    doc_ref_dict["tasks"] = {}
+    doc_ref_dict["tasks"] = {key: [] for key in doc_ref_dict["tasks"].keys()}
     await doc_ref.set(doc_ref_dict)
 
     return jsonify({"message": "Successfully restarted study"})
