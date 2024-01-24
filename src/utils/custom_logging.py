@@ -33,17 +33,30 @@ def setup_logging(name: Optional[str] = None) -> Logger:
     if level == logging.DEBUG:
         level = Logger.DEBUG
 
-    # If the environment variable is set to "True", we are running on Cloud Run
     if constants.CLOUD_RUN.lower() == "true":
-        # Instantiate the Google Cloud Logging client
         client = gcp_logging.Client()
-
-        # Attach the Cloud Logging handler to the root logger
-        client.get_default_handler()
         client.setup_logging(log_level=level)
+        logger = logging.getLogger()
+        print(f"Initial logging handlers: {logger.handlers}", flush=True)
+        logger.handlers = list({h for h in logger.handlers if is_cloud_run_handler(h)})
     else:
         # For Kubernetes or local development, log to stdout with a simple format
         logging.basicConfig(level=level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-
-    logger = logging.getLogger(name)
+        logger = logging.getLogger(name)
+        logger.handlers = list(set(logger.handlers))
     return Logger.from_super(logger)
+
+
+def is_cloud_run_handler(handler: logging.Handler) -> bool:
+    """
+    is_cloud_handler
+
+    Returns True or False depending on whether the input is a
+    google-cloud-logging handler class
+
+    """
+    accepted_handlers = (
+        gcp_logging.handlers.StructuredLogHandler,
+        gcp_logging.handlers.CloudLoggingHandler,
+    )
+    return isinstance(handler, accepted_handlers)
