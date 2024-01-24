@@ -123,7 +123,7 @@ async def handler():
         logger.error("Terminal connection error for party %d in study %s: %s", pid, study_id, e)
     finally:
         del parties[pid]
-        logger.error("Party %d disconnected from study %s", pid, study_id)
+        logger.warning("Party %d disconnected from study %s", pid, study_id)
 
 
 async def _get_user_id(ws: Websocket):
