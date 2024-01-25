@@ -4,6 +4,7 @@ from enum import Enum
 from typing import Dict, List
 
 from quart import Blueprint, Websocket, abort, current_app, websocket
+from quart_cors import websocket_cors
 
 from src.api_utils import get_websocket_origin
 from src.auth import get_cli_user, get_user_id
@@ -52,19 +53,11 @@ study_barriers: Dict[str, asyncio.Barrier] = {}
 study_parties: Dict[str, Dict[PID, Websocket]] = {}
 
 STUDY_ID_HEADER = "X-MPC-Study-ID"
-WEBSOCKET_ORIGIN = get_websocket_origin()
 
 
 @bp.websocket("/ice")
+@websocket_cors(allow_origin=get_websocket_origin())
 async def ice_ws():
-    logger.info("New WebSocket connection")
-
-    origin = websocket.headers.get('Origin')
-    if origin != WEBSOCKET_ORIGIN:
-        logger.error("Unexpected WebSocket Origin: %s != %s", origin, WEBSOCKET_ORIGIN)
-        await Message(MessageType.ERROR, "Unexpected Origin header").send(websocket)
-        abort(401)
-
     user_id = await _get_user_id(websocket)
     if not user_id:
         await Message(MessageType.ERROR, "Missing authentication").send(websocket)
