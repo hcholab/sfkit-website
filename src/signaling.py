@@ -55,17 +55,11 @@ STUDY_ID_HEADER = "X-MPC-Study-ID"
 WEBSOCKET_ORIGIN = get_websocket_origin()
 
 
-@bp.route("/ice/status", methods=["GET"])
-async def ice_status():
-    return "HTTP OK", 200
-
-
 @bp.websocket("/ice")
 async def ice_ws():
     logger.info("New WebSocket connection")
 
     origin = websocket.headers.get('Origin')
-    logger.info("WebSocket Origin header: %s", origin) # TODO: remove
     if origin != WEBSOCKET_ORIGIN:
         logger.error("Unexpected WebSocket Origin: %s != %s", origin, WEBSOCKET_ORIGIN)
         await Message(MessageType.ERROR, "Unexpected Origin header").send(websocket)
@@ -77,7 +71,6 @@ async def ice_ws():
         abort(401)
 
     study_id = websocket.headers.get(STUDY_ID_HEADER)
-    logger.info(f"WebSocket {STUDY_ID_HEADER} header: %s", study_id) # TODO: remove
     if not study_id:
         await Message(MessageType.ERROR, f"Missing {STUDY_ID_HEADER} header").send(websocket)
         abort(400)
