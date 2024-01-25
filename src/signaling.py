@@ -56,6 +56,7 @@ WEBSOCKET_ORIGIN = get_websocket_origin()
 
 @bp.websocket("/ice")
 async def handler():
+    logger.info("New WebSocket connection")
     if not websocket:
         logger.error("No websocket")
         abort(426)
