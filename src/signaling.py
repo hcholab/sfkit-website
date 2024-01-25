@@ -55,7 +55,7 @@ STUDY_ID_HEADER = "X-MPC-Study-ID"
 WEBSOCKET_ORIGIN = get_websocket_origin()
 
 
-@bp.route("/ice", methods=["GET"])
+@bp.route("/ice/status", methods=["GET"])
 async def ice_status():
     return "HTTP OK", 200
 
