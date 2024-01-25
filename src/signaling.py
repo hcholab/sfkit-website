@@ -59,6 +59,18 @@ STUDY_ID_HEADER = "X-MPC-Study-ID"
 @bp.websocket("/ice")
 @websocket_cors(allow_origin=get_websocket_origin())
 async def handler():
+    if not websocket:
+        logger.error("No websocket")
+        abort(426)
+
+    logger.debug("Request: %s", websocket)
+    logger.debug("Headers: %s", websocket.headers)
+    logger.debug("Origin: %s", websocket.origin)
+    logger.debug("Host: %s", websocket.host)
+    logger.debug("Path: %s", websocket.path)
+    logger.debug("Query string: %s", websocket.query_string)
+    logger.debug("Remote address: %s", websocket.remote_addr)
+
     user_id = await _get_user_id(websocket)
     if not user_id:
         await Message(MessageType.ERROR, "Missing authentication").send(websocket)
