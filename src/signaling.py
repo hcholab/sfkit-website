@@ -55,6 +55,7 @@ study_parties: Dict[str, Dict[PID, Websocket]] = {}
 # Header
 STUDY_ID_HEADER = "X-MPC-Study-ID"
 
+logger.info("Signaling server origin: %s", get_websocket_origin())
 
 @bp.websocket("/ice")
 @websocket_cors(allow_origin=get_websocket_origin())
