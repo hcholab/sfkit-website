@@ -25,7 +25,7 @@ steps:
       - '--region=$_DEPLOY_REGION'
       - '--min-instances=1'
       - '--quiet'
-      - '--set-env-vars=^@^CLOUD_RUN=True@SERVICE_URL=https://$_SERVICE_NAME-$_DEPLOY_REGION.a.run.app@CORS_ORIGINS=$_CORS_ORIGINS@FLASK_DEBUG=$_FLASK_DEBUG@FIRESTORE_DATABASE=sfkit-dev'
+      - '--set-env-vars=^@^CLOUD_RUN=True@SERVICE_URL=https://$_SERVICE_NAME-$_DEPLOY_REGION.a.run.app@CORS_ORIGINS=$_CORS_ORIGINS@FLASK_DEBUG=$_FLASK_DEBUG@FIRESTORE_DATABASE=sfkit-dev@SFKIT_API_URL=$_SFKIT_API_URL'
     id: Deploy
     entrypoint: gcloud
 images:
@@ -40,6 +40,7 @@ substitutions:
   _DEPLOY_REGION: us-central1
   _FLASK_DEBUG: development
   _CORS_ORIGINS: https://dev.sfkit.org,http://localhost:5173
+  _SFKIT_API_URL: https://sfkit-website-dev-bhj5a4wkqa-uc.a.run.app/api
   _GCR_HOSTNAME: us.gcr.io
   _PLATFORM: managed
 tags:

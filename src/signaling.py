@@ -52,23 +52,20 @@ class Message:
 study_barriers: Dict[str, asyncio.Barrier] = {}
 study_parties: Dict[str, Dict[PID, Websocket]] = {}
 
-# Header
 STUDY_ID_HEADER = "X-MPC-Study-ID"
 
 
 @bp.websocket("/ice")
 @websocket_cors(allow_origin=get_websocket_origin())
-async def handler():
+async def ice_ws():
     user_id = await _get_user_id(websocket)
     if not user_id:
         await Message(MessageType.ERROR, "Missing authentication").send(websocket)
-        logger.error("Missing authentication")
         abort(401)
 
     study_id = websocket.headers.get(STUDY_ID_HEADER)
     if not study_id:
         await Message(MessageType.ERROR, f"Missing {STUDY_ID_HEADER} header").send(websocket)
-        logger.error("Missing %s header", STUDY_ID_HEADER)
         abort(400)
 
     study_participants = await _get_study_participants(study_id)
@@ -76,7 +73,6 @@ async def handler():
     pid = _get_pid(study_participants, user_id)
     if pid < 0:
         await Message(MessageType.ERROR, f"User {user_id} is not in study {study_id}").send(websocket)
-        logger.error("User %s is not in study %s", user_id, study_id)
         abort(403)
 
     parties = study_parties.setdefault(study_id, {})
@@ -85,7 +81,6 @@ async def handler():
             MessageType.ERROR,
             f"Party {pid} is already connected to study {study_id}",
         ).send(websocket)
-        logger.error("Party %d is already connected to study %s", pid, study_id)
         abort(409)
 
     try:
@@ -112,7 +107,6 @@ async def handler():
                 # and send it to the other party
                 if msg.targetPID < 0:
                     await Message(MessageType.ERROR, f"Missing target PID: {msg}").send(websocket)
-                    logger.error("Missing target PID: %s", msg)
                     continue
                 elif msg.targetPID not in parties or msg.targetPID == pid:
                     logger.error("Unexpected message is %s. Parties are %s", msg, parties)
