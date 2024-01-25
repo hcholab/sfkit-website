@@ -57,19 +57,9 @@ WEBSOCKET_ORIGIN = get_websocket_origin()
 @bp.websocket("/ice")
 async def handler():
     logger.info("New WebSocket connection")
-    if not websocket:
-        logger.error("No websocket")
-        abort(426)
-
-    logger.debug("Request: %s", websocket)
-    logger.debug("Headers: %s", websocket.headers)
-    logger.debug("Origin: %s", websocket.origin)
-    logger.debug("Host: %s", websocket.host)
-    logger.debug("Path: %s", websocket.path)
-    logger.debug("Query string: %s", websocket.query_string)
-    logger.debug("Remote address: %s", websocket.remote_addr)
 
     origin = websocket.headers.get('Origin')
+    logger.info("WebSocket Origin header: %s", origin) # TODO: remove
     if origin != WEBSOCKET_ORIGIN:
         logger.error("Unexpected WebSocket Origin: %s != %s", origin, WEBSOCKET_ORIGIN)
         await Message(MessageType.ERROR, "Unexpected Origin header").send(websocket)
@@ -81,6 +71,7 @@ async def handler():
         abort(401)
 
     study_id = websocket.headers.get(STUDY_ID_HEADER)
+    logger.info(f"WebSocket {STUDY_ID_HEADER} header: %s", study_id) # TODO: remove
     if not study_id:
         await Message(MessageType.ERROR, f"Missing {STUDY_ID_HEADER} header").send(websocket)
         abort(400)
