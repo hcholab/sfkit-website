@@ -54,8 +54,14 @@ study_parties: Dict[str, Dict[PID, Websocket]] = {}
 STUDY_ID_HEADER = "X-MPC-Study-ID"
 WEBSOCKET_ORIGIN = get_websocket_origin()
 
+
+@bp.route("/ice_status", methods=["GET"])
+async def ice_status():
+    return {}, 200
+
+
 @bp.websocket("/ice")
-async def handler():
+async def ice_ws():
     logger.info("New WebSocket connection")
 
     origin = websocket.headers.get('Origin')
