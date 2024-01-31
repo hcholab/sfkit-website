@@ -1,5 +1,6 @@
 import os
 import secrets
+from multiprocessing import current_process
 
 import firebase_admin
 from google.cloud import firestore
@@ -17,17 +18,22 @@ logger = custom_logging.setup_logging(__name__)
 
 
 def create_app() -> Quart:
+    app = Quart(__name__)
+
+    # exit early if this is not a worker process
+    # https://stackoverflow.com/a/74303441/2962507
+    if not current_process().daemon:
+        return app
+
     if constants.TERRA:
         logger.info("Creating app - on Terra")
     else:
         logger.info("Creating app - NOT on Terra")
 
-    initialize_firebase_app()
-
-    app = Quart(__name__)
-
     origins = filter(None, constants.CORS_ORIGINS.split(","))
     app = cors(app, allow_origin=list(origins) + [get_websocket_origin()])
+
+    initialize_firebase_app()
 
     app.config.from_mapping(
         SECRET_KEY=secrets.token_hex(16),
