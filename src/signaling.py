@@ -4,9 +4,7 @@ from enum import Enum
 from typing import Dict, List
 
 from quart import Blueprint, Websocket, abort, current_app, websocket
-from quart_cors import websocket_cors
 
-from src.api_utils import get_websocket_origin
 from src.auth import get_cli_user, get_user_id
 from src.utils import constants, custom_logging
 
@@ -56,7 +54,6 @@ STUDY_ID_HEADER = "X-MPC-Study-ID"
 
 
 @bp.websocket("/ice")
-@websocket_cors(allow_origin=get_websocket_origin())
 async def ice_ws():
     user_id = await _get_user_id(websocket)
     if not user_id:
