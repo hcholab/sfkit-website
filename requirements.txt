@@ -50,7 +50,7 @@ pycparser==2.21
 PyJWT==2.8.0
 pyparsing==3.1.1
 python-http-client==3.3.7
-Quart==0.19.3
+Quart==0.19.4
 quart-cors==0.7.0
 requests==2.31.0
 rsa==4.9
