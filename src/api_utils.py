@@ -15,6 +15,7 @@ logger = custom_logging.setup_logging(__name__)
 ID_KEY = "sub"
 TERRA_ID_KEY = "id"
 
+
 class APIException(HTTPException):
     def __init__(self, res: Union[httpx.Response, Response]):
         if isinstance(res, httpx.Response):
@@ -34,10 +35,17 @@ class APIException(HTTPException):
         self.code = res.status_code
 
 
-def get_websocket_origin():
+def _get_websocket_origin():
     url = urlparse(constants.SFKIT_API_URL)
     scheme = "wss" if url.scheme == "https" else "ws"
     return urlunsplit((scheme, str(url.netloc), "", "", ""))
+
+
+def get_allowed_origins():
+    origins = filter(None, constants.CORS_ORIGINS.split(","))
+    origins = list(origins) + [_get_websocket_origin()]
+    logger.info("Allowed origins: %s", " ".join(origins))
+    return origins
 
 
 async def get_studies(private_filter=None) -> list:
