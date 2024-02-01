@@ -44,7 +44,7 @@ def _get_websocket_origin():
 def get_allowed_origins():
     origins = filter(None, constants.CORS_ORIGINS.split(","))
     origins = list(origins) + [_get_websocket_origin()]
-    logger.info("Allowed origins: %s", ', '.join(origins))
+    logger.info("Allowed origins: %s", " ".join(origins))
     return origins
 
 
