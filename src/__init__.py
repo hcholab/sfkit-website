@@ -8,7 +8,7 @@ from quart_cors import cors
 from werkzeug.exceptions import HTTPException
 
 from src import cli, signaling, status
-from src.api_utils import get_websocket_origin
+from src.api_utils import get_allowed_origins
 from src.auth import register_terra_service_account
 from src.utils import constants, custom_logging
 from src.web import participants, study, web
@@ -26,8 +26,7 @@ def create_app() -> Quart:
 
     app = Quart(__name__)
 
-    origins = filter(None, constants.CORS_ORIGINS.split(","))
-    app = cors(app, allow_origin=list(origins) + [get_websocket_origin()])
+    app = cors(app, allow_origin=get_allowed_origins())
 
     app.config.from_mapping(
         SECRET_KEY=secrets.token_hex(16),
