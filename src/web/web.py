@@ -5,11 +5,11 @@ import zipfile
 from datetime import datetime
 
 from firebase_admin import auth as firebase_auth
-from quart import Blueprint, Response, current_app, jsonify, make_response, request, send_file
+from quart import Blueprint, Response, current_app, jsonify, request, send_file
 from werkzeug.exceptions import BadRequest, Conflict, Forbidden
 
 from src.api_utils import get_display_names, get_studies, is_valid_uuid
-from src.auth import authenticate, get_user_email, get_user_id
+from src.auth import authenticate, authenticate_on_terra, get_user_email, get_user_id
 from src.utils import constants, custom_logging
 from src.utils.generic_functions import add_notification, remove_notification
 from src.utils.google_cloud.google_cloud_secret_manager import get_firebase_api_key
@@ -42,7 +42,7 @@ async def create_custom_token() -> Response:
 
 
 @bp.route("/public_studies", methods=["GET"])
-@authenticate
+@authenticate_on_terra
 async def public_studies() -> Response:
     try:
         public_studies = await get_studies(private_filter=False)

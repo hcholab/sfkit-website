@@ -7,7 +7,7 @@ from quart import Blueprint, current_app, request
 from werkzeug.exceptions import BadRequest, Conflict, Forbidden
 
 from src.api_utils import TERRA_ID_KEY
-from src.auth import get_cli_user
+from src.auth import get_cli_user_id
 from src.utils import constants, custom_logging
 from src.utils.api_functions import process_parameter, process_status, process_task
 from src.utils.google_cloud.google_cloud_storage import upload_blob_from_file
@@ -26,17 +26,8 @@ class Study:
     role: str
 
 
-async def _get_user():
-    user = await get_cli_user(request)
-    user_id = user[TERRA_ID_KEY] if constants.TERRA else user["username"]
-    if type(user_id) != str:
-        raise Conflict("Invalid user ID")
-
-    return user, user_id
-
-
 async def _get_user_study_ids():
-    user, user_id = await _get_user()
+    user, user_id = await get_cli_user_id()
 
     if constants.TERRA:
         study_id = request.args.get("study_id")
@@ -105,7 +96,7 @@ async def get_doc_ref_dict() -> Tuple[dict, int]:
 
 @bp.route("/get_study_options", methods=["GET"])
 async def get_study_options() -> Tuple[dict, int]:
-    _, username = await _get_user()
+    _, username = await get_cli_user_id()
 
     auth_keys_doc = await _get_db().collection("users").document("auth_keys").get()
     auth_keys = auth_keys_doc.to_dict() or {}
@@ -117,7 +108,7 @@ async def get_study_options() -> Tuple[dict, int]:
 
 @bp.route("/get_username", methods=["GET"])
 async def get_username() -> Tuple[dict, int]:
-    _, username = await _get_user()
+    _, username = await get_cli_user_id()
     return {"username": username}, 200
 
 
