@@ -6,7 +6,8 @@ from google.cloud import firestore
 from quart import Blueprint, Response, current_app, jsonify, request, send_file
 from werkzeug.exceptions import BadRequest, Conflict, Forbidden
 
-from src.auth import authenticate, get_cp0_id, get_user_id
+from src.api_utils import ID_KEY, add_user_to_db
+from src.auth import authenticate, authenticate_on_terra, get_auth_header, get_cp0_id, get_user_id
 from src.utils import constants, custom_logging
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, format_instance_name
 from src.utils.studies_functions import make_auth_key, study_title_already_exists
@@ -80,9 +81,14 @@ async def restart_study() -> Response:
 
 
 @bp.route("/create_study", methods=["POST"])
-@authenticate
+@authenticate_on_terra
 async def create_study() -> Response:
-    user_id = await get_user_id()
+    if not get_auth_header(request):
+        user_id = str(uuid.uuid4())
+        await add_user_to_db({ID_KEY: user_id, "given_name": "Anonymous"})
+        logger.info(f"Creating study for anonymous user {user_id}")
+    else:
+        user_id = await get_user_id()
 
     data: dict = await request.json
     study_type = data.get("study_type") or ""
@@ -130,8 +136,8 @@ async def create_study() -> Response:
     )
 
     await make_auth_key(study_id, cp0_id)
-    await make_auth_key(study_id, user_id)
-    return jsonify({"message": "Study created successfully", "study_id": study_id})
+    auth_key: str = await make_auth_key(study_id, user_id)
+    return jsonify({"message": "Study created successfully", "study_id": study_id, "auth_key": auth_key})
 
 
 @bp.route("/delete_study", methods=["DELETE"])

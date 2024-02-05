@@ -11,7 +11,7 @@ from google.auth.transport.requests import Request as GAuthRequest
 from google.cloud import firestore
 from jwt import algorithms
 from quart import Request, Websocket, current_app, request
-from werkzeug.exceptions import Unauthorized
+from werkzeug.exceptions import Conflict, Unauthorized
 
 from src.api_utils import ID_KEY, TERRA_ID_KEY, APIException, add_user_to_db
 from src.utils import constants, custom_logging
@@ -33,15 +33,18 @@ if not constants.TERRA:
         PUBLIC_KEYS[kid] = algorithms.RSAAlgorithm.from_jwk(key)
 
 
-def _get_auth_header(req: Union[Request, Websocket]) -> str:
+def get_auth_header(req: Union[Request, Websocket]) -> str:
     return req.headers.get(AUTH_HEADER, "", type=str) or ""
 
 
 async def get_user_id(req: Union[Request, Websocket] = request) -> str:
-    auth_header = _get_auth_header(req)
+    auth_header = get_auth_header(req)
     if constants.TERRA:
         user = await _get_terra_user(auth_header)
     else:
+        if not auth_header.startswith(BEARER_PREFIX):  # use auth_key for anon user
+            _, user_id = await get_cli_user_id()
+            return user_id
         user = await _get_azure_b2c_user(auth_header)
 
     user_id = user[TERRA_ID_KEY] if constants.TERRA else user[ID_KEY]
@@ -161,7 +164,7 @@ async def _get_azure_b2c_user(auth_header: str):
 
 
 async def get_cli_user(req: Union[Request, Websocket]) -> dict:
-    auth_header = _get_auth_header(req)
+    auth_header = get_auth_header(req)
     if constants.TERRA:
         user = await _get_terra_user(auth_header)
     else:
@@ -175,6 +178,15 @@ async def get_cli_user(req: Union[Request, Websocket]) -> dict:
         if not user:
             raise Unauthorized("invalid authorization key")
     return user
+
+
+async def get_cli_user_id():
+    user = await get_cli_user(request)
+    user_id = user[TERRA_ID_KEY] if constants.TERRA else user["username"]
+    if type(user_id) != str:
+        raise Conflict("Invalid user ID")
+
+    return user, user_id
 
 
 async def get_user_email(user_id: str) -> str:
@@ -194,3 +206,7 @@ def authenticate(f):
         return await f(*args, **kwargs)
 
     return decorated_function
+
+
+def authenticate_on_terra(f):
+    return authenticate(f) if constants.TERRA else f

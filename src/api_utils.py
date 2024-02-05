@@ -117,7 +117,7 @@ async def add_user_to_db(decoded_token: dict) -> None:
         raise RuntimeError({"error": "Failed to create user", "details": str(e)}) from e
 
 
-def is_valid_uuid(val):
+def is_valid_uuid(val) -> bool:
     try:
         uuid.UUID(str(val))
         return True
