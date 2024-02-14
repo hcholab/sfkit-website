@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime
 
 from google.cloud import firestore
+from google.cloud.firestore_v1.field_path import FieldPath
 from quart import Blueprint, Response, current_app, jsonify, request, send_file
 from werkzeug.exceptions import BadRequest, Conflict, Forbidden
 
@@ -159,9 +160,14 @@ async def delete_study() -> Response:
         if (auth_key := participant.get("AUTH_KEY").get("value")) != "":
             doc_ref_auth_keys = db.collection("users").document("auth_keys")
             await doc_ref_auth_keys.update({auth_key: firestore.DELETE_FIELD})
+    for participant in doc_ref_dict["participants"]:
+        doc_ref_user = db.collection("users").document(participant)
+        doc_ref_user_dict = (await doc_ref_user.get()).to_dict() or {}
+        if doc_ref_user_dict.get("display_name") == "Anonymous":
+            await doc_ref_user.delete()
+            # TODO: delete user from display_names. This will require reworking the user_ids, as they need to start with a letter and have no hyphens for firestore field names
 
     await db.collection("deleted_studies").document(study_id).set(doc_ref_dict)
-
     await doc_ref.delete()
 
     return jsonify({"message": "Successfully deleted study"})
