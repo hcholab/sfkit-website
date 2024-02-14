@@ -323,7 +323,9 @@ class GoogleCloudCompute:
         image_response = self.compute.images().getFromFamily(project="debian-cloud", family="debian-11").execute()
         # image_response = self.compute.images().getFromFamily(project="ubuntu-os-cloud", family="ubuntu-2110").execute()
         source_disk_image = image_response["selfLink"]
-        if num_cpus <= 16:
+        if metadata[5]["value"] == "SF-RELATE":
+            machine_type = f"zones/{self.zone}/machineTypes/n2-highmem-128"
+        elif num_cpus <= 16:
             machine_type = f"zones/{self.zone}/machineTypes/e2-highmem-{num_cpus}"
         else:
             machine_type = f"zones/{self.zone}/machineTypes/n2-highmem-{num_cpus}"
@@ -375,6 +377,12 @@ class GoogleCloudCompute:
         if role == "0":
             startup_script = open(
                 os.path.join(os.path.dirname(__file__), "../../vm_scripts/startup-script_user_cp0.sh"),
+                "r",
+            ).read()
+
+        if metadata[5]["value"] == "SF-RELATE":
+            startup_script = open(
+                os.path.join(os.path.dirname(__file__), "../../vm_scripts/startup-script-sf-relate-demo.sh"),
                 "r",
             ).read()
 

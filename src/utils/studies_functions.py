@@ -134,6 +134,7 @@ async def setup_gcp(doc_ref: AsyncDocumentReference, role: str) -> None:
             {"key": "ports", "value": user_parameters["PORTS"]["value"]},
             {"key": "auth_key", "value": user_parameters["AUTH_KEY"]["value"]},
             {"key": "demo", "value": doc_ref_dict["demo"]},
+            {"key": "study_type", "value": doc_ref_dict["study_type"]},
         ]
 
         gcloudCompute.setup_instance(

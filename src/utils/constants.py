@@ -296,6 +296,17 @@ SFGWAS_SHARED_PARAMETERS = {
     ],
 }
 
+SFRELATE_SHARED_PARAMETERS = {
+    "num_snps": {
+        "name": "Number of Single Nucleotide Polymorphisms",
+        "description": "The number of SNPs in the dataset.",
+        "value": 145181,
+    },
+    "index": [
+        "num_snps",
+    ],
+}
+
 SFGWAS_ADVANCED_PARAMETERS = {
     "iter_per_eigenval": {
         "name": "Iterations per Evaluation",
@@ -342,12 +353,14 @@ SHARED_PARAMETERS = {
     "MPC-GWAS": MPCGWAS_SHARED_PARAMETERS,
     "PCA": PCA_SHARED_PARAMETERS,
     "SF-GWAS": SFGWAS_SHARED_PARAMETERS,
+    "SF-RELATE": SFRELATE_SHARED_PARAMETERS,
 }
 
 ADVANCED_PARAMETERS = {
     "MPC-GWAS": MPCGWAS_ADVANCED_PARAMETERS,
     "PCA": PCA_ADVANCED_PARAMETERS,
     "SF-GWAS": SFGWAS_ADVANCED_PARAMETERS,
+    "SF-RELATE": PCA_ADVANCED_PARAMETERS,  # TODO: update for SF-RELATE
 }
 
 
