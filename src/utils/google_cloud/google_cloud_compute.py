@@ -393,14 +393,6 @@ class GoogleCloudCompute:
             ]
         }
 
-        if "dev" in constants.SERVICE_URL:
-            metadata_config["items"].append(
-                {
-                    "key": "SFKIT_API_URL",
-                    "value": constants.SFKIT_API_URL,
-                }
-            )
-
         if metadata:
             metadata_config["items"] += metadata
         instance_body["metadata"] = metadata_config
