@@ -14,6 +14,10 @@ ulimit -n 1000000
 ulimit -u 1000000
 export PYTHONUNBUFFERED=TRUE
 
+SFKIT_API_URL=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/SFKIT_API_URL" -H "Metadata-Flavor: Google")
+export SFKIT_API_URL
+echo "SFKIT_API_URL: $SFKIT_API_URL"
+
 apt-get --assume-yes update
 mkdir -p sfkit && chmod -R 777 sfkit
 
@@ -39,7 +43,7 @@ commands=("auth" "networking --ports 8020,8040" "generate_keys" "run_protocol")
 for cmd in "${commands[@]}"
 do
     docker run --net host --cap-add net_admin \
-    -e "SFKIT_API_URL=https://sfkit-website-dev-bhj5a4wkqa-uc.a.run.app/api" \
+    -e "SFKIT_API_URL=$SFKIT_API_URL" \
     -e "SFKIT_PROXY_ON=true" \
     -e "PYTHONUNBUFFERED=TRUE" \
     -v $PWD/sfkit:/sfkit/.sfkit \
