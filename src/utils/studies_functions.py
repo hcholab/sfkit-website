@@ -1,21 +1,24 @@
+import asyncio
 import os
-import re
 import secrets
-from html import escape
-from threading import Thread
 import time
-from typing import Optional
+from html import escape
+from http import HTTPStatus
+from string import Template
+from typing import Any, Dict, Optional
 
-from flask import current_app, g, redirect, url_for
-from google.cloud.firestore_v1 import DocumentReference
-from jinja2 import Template
+import httpx
+from google.cloud import firestore
+from google.cloud.firestore_v1 import AsyncDocumentReference, FieldFilter
 from python_http_client.exceptions import HTTPError
+from quart import current_app, g
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Email, Mail
-from werkzeug import Response
+from werkzeug.exceptions import BadRequest
 
+from src.api_utils import APIException
+from src.auth import get_service_account_headers
 from src.utils import constants, custom_logging
-from src.utils.generic_functions import redirect_with_flash
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, format_instance_name
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 
@@ -23,12 +26,12 @@ logger = custom_logging.setup_logging(__name__)
 
 email_template = Template(
     """
-<p>Hello!<br>{{ inviter }} has invited you to join the {{ study_title }} study on the sfkit website.  Click <a href='https://sfkit.org/accept_invitation/{{ study_title }}'>here</a> to accept the invitation. (Note: you will need to log in using this email address to accept the invitation.){% if invitation_message %}<br><br>Here is a message from {{ inviter }}:<br>{{ invitation_message }}{% endif %}</p>
-"""
+    <p>Hello!<br>${inviter} has invited you to join the ${study_title} study on the sfkit website. Sign-in on the website to accept the invitation!<br>${invitation_message}</p>
+    """
 )
 
 
-def email(inviter: str, recipient: str, invitation_message: str, study_title: str) -> int:
+async def email(inviter: str, recipient: str, invitation_message: str, study_title: str) -> int:
     """
     Sends an invitation email to the recipient.
 
@@ -38,11 +41,17 @@ def email(inviter: str, recipient: str, invitation_message: str, study_title: st
     :param study_title: The title of the study the recipient is being invited to.
     :return: The status code of the email sending operation.
     """
-    doc_ref_dict: dict = current_app.config["DATABASE"].collection("meta").document("sendgrid").get().to_dict()
-    sg = SendGridAPIClient(api_key=doc_ref_dict.get("api_key", ""))
+    doc_ref_dict: dict = (await current_app.config["DATABASE"].collection("meta").document("sendgrid").get()).to_dict()
 
-    html_content = email_template.render(
-        inviter=escape(inviter), invitation_message=escape(invitation_message), study_title=escape(study_title)
+    api_key = os.getenv("SENDGRID_API_KEY") or doc_ref_dict.get("api_key")
+    if not api_key:
+        raise BadRequest("No SendGrid API key found")
+    sg = SendGridAPIClient(api_key=api_key)
+
+    html_content = email_template.substitute(
+        inviter=escape(inviter),
+        invitation_message=escape(invitation_message) if invitation_message else "",
+        study_title=escape(study_title),
     )
 
     message = Mail(
@@ -63,26 +72,27 @@ def email(inviter: str, recipient: str, invitation_message: str, study_title: st
         return e.status_code  # type: ignore
 
 
-def make_auth_key(study_title: str, user_id: str) -> str:
+async def make_auth_key(study_id: str, user_id: str) -> str:
     """
     Generates an auth_key for the user and stores it in the database.
 
-    :param study_title: The title of the study.
+    :param study_id: The study_id (uuid) of the study.
     :param user_id: The ID of the user.
     :return: The generated auth_key.
     """
     db = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(study_title)
-    doc_ref_dict: dict = doc_ref.get().to_dict()
+    doc_ref = db.collection("studies").document(study_id)
+    doc_ref_dict: dict = (await doc_ref.get()).to_dict()
 
     auth_key = secrets.token_hex(16)
     doc_ref_dict["personal_parameters"][user_id]["AUTH_KEY"]["value"] = auth_key
-    doc_ref.set(doc_ref_dict)
+    await doc_ref.set(doc_ref_dict)
 
-    current_app.config["DATABASE"].collection("users").document("auth_keys").set(
+    await current_app.config["DATABASE"].collection("users").document("auth_keys").set(
         {
             auth_key: {
-                "study_title": study_title,
+                "study_id": study_id,
+                "title": doc_ref_dict["title"],
                 "username": user_id,
             }
         },
@@ -92,11 +102,11 @@ def make_auth_key(study_title: str, user_id: str) -> str:
     return auth_key
 
 
-def setup_gcp(doc_ref: DocumentReference, role: str) -> None:
-    generate_ports(doc_ref, role)
+async def setup_gcp(doc_ref: AsyncDocumentReference, role: str) -> None:
+    await generate_ports(doc_ref, role)
 
-    doc_ref_dict = doc_ref.get().to_dict() or {}
-    study_title = doc_ref_dict["title"]
+    doc_ref_dict = (await doc_ref.get()).to_dict() or {}
+    study_id = doc_ref_dict["study_id"]
     user: str = doc_ref_dict["participants"][int(role)]
     user_parameters: dict = doc_ref_dict["personal_parameters"][user]
 
@@ -105,23 +115,30 @@ def setup_gcp(doc_ref: DocumentReference, role: str) -> None:
     if user not in doc_ref_dict["tasks"]:
         doc_ref_dict["tasks"][user] = []
     doc_ref_dict["tasks"][user].append("Setting up networking and creating VM instance")
-    doc_ref.set(doc_ref_dict)
+    await doc_ref.set(doc_ref_dict)
 
-    gcloudCompute = GoogleCloudCompute(study_title, user_parameters["GCP_PROJECT"]["value"])
+    gcloudCompute = GoogleCloudCompute(study_id, user_parameters["GCP_PROJECT"]["value"])
 
     try:
         gcloudCompute.setup_networking(doc_ref_dict, role)
 
         metadata = [
-            {"key": "data_path", "value": sanitize_path(user_parameters["DATA_PATH"]["value"])},
-            {"key": "geno_binary_file_prefix", "value": user_parameters["GENO_BINARY_FILE_PREFIX"]["value"]},
+            {
+                "key": "data_path",
+                "value": sanitize_path(user_parameters["DATA_PATH"]["value"]),
+            },
+            {
+                "key": "geno_binary_file_prefix",
+                "value": user_parameters["GENO_BINARY_FILE_PREFIX"]["value"],
+            },
             {"key": "ports", "value": user_parameters["PORTS"]["value"]},
             {"key": "auth_key", "value": user_parameters["AUTH_KEY"]["value"]},
             {"key": "demo", "value": doc_ref_dict["demo"]},
+            {"key": "study_type", "value": doc_ref_dict["study_type"]},
         ]
 
         gcloudCompute.setup_instance(
-            name=format_instance_name(doc_ref_dict["title"], role),
+            name=format_instance_name(doc_ref_dict["study_id"], role),
             role=role,
             metadata=metadata,
             num_cpus=int(user_parameters["NUM_CPUS"]["value"]),
@@ -132,25 +149,66 @@ def setup_gcp(doc_ref: DocumentReference, role: str) -> None:
         doc_ref_dict["status"][
             user
         ] = "FAILED - sfkit failed to set up your networking and VM instance. Please restart the study and double-check your parameters and configuration. If the problem persists, please contact us."
-        doc_ref.set(doc_ref_dict)
+        await doc_ref.set(doc_ref_dict)
         return
     else:
-        doc_ref_dict = doc_ref.get().to_dict() or {}
+        doc_ref_dict = (await doc_ref.get()).to_dict() or {}
         doc_ref_dict["tasks"][user].append("Configuring your VM instance")
-        doc_ref.set(doc_ref_dict)
+        await doc_ref.set(doc_ref_dict)
         return
 
 
-def generate_ports(doc_ref: DocumentReference, role: str) -> None:
-    doc_ref_dict = doc_ref.get().to_dict() or {}
+async def _terra_rawls_post(path: str, json: Dict[str, Any]):
+    async with httpx.AsyncClient() as http:
+        return await http.post(
+            f"{constants.RAWLS_API_URL}/api/workspaces/{constants.TERRA_CP0_WORKSPACE_NAMESPACE}/{constants.TERRA_CP0_WORKSPACE_NAME}{path}",
+            headers=get_service_account_headers(),
+            json=json,
+        )
+
+
+async def submit_terra_workflow(study_id: str, _role: str) -> None:
+    # Add study ID to the data table:
+    # https://rawls.dsde-dev.broadinstitute.org/#/entities/create_entity
+    res = await _terra_rawls_post(
+        "/entities",
+        {
+            "entityType": "study",
+            "name": study_id,
+            "attributes": {
+                # add role if ever we need to use this for non-CP0
+            },
+        },
+    )
+    if res.status_code not in (HTTPStatus.CREATED.value, HTTPStatus.CONFLICT.value):
+        raise APIException(res)
+
+    # Submit workflow for execution, referencing the study ID from the data table:
+    # https://rawls.dsde-dev.broadinstitute.org/#/submissions/createSubmission
+    res = await _terra_rawls_post(
+        "/submissions",
+        {
+            "entityType": "study",
+            "entityName": study_id,
+            "methodConfigurationNamespace": constants.TERRA_CP0_CONFIG_NAMESPACE,
+            "methodConfigurationName": constants.TERRA_CP0_CONFIG_NAME,
+            "useCallCache": False,
+        },
+    )
+    if res.status_code != HTTPStatus.CREATED.value:
+        raise APIException(res)
+
+
+async def generate_ports(doc_ref: AsyncDocumentReference, role: str) -> None:
+    doc_ref_dict = (await doc_ref.get()).to_dict() or {}
     user: str = doc_ref_dict["participants"][int(role)]
 
     base: int = 8000 + 200 * int(role)
     ports = [base + 20 * r for r in range(len(doc_ref_dict["participants"]))]
-    ports = ",".join([str(p) for p in ports])
+    ports_str = ",".join([str(p) for p in ports])
 
-    doc_ref_dict["personal_parameters"][user]["PORTS"]["value"] = ports
-    doc_ref.set(doc_ref_dict, merge=True)
+    doc_ref_dict["personal_parameters"][user]["PORTS"]["value"] = ports_str
+    await doc_ref.set(doc_ref_dict, merge=True)
 
 
 def add_file_to_zip(zip_file, filepath: str, archive_name: Optional[str] = None) -> None:
@@ -167,7 +225,7 @@ def sanitize_path(path: str) -> str:
 
 def is_developer() -> bool:
     return (
-        os.environ.get("FLASK_DEBUG") == "development"
+        constants.FLASK_DEBUG == "development"
         and g.user
         and "id" in g.user
         and g.user["id"] == constants.DEVELOPER_USER_ID
@@ -182,47 +240,20 @@ def is_participant(study) -> bool:
     )
 
 
-def is_study_title_unique(study_title: str, db) -> bool:
+async def is_study_title_unique(study_title: str, db) -> bool:
     study_ref = db.collection("studies").where("title", "==", study_title).limit(1).stream()
-    return not list(study_ref)
+    async for _ in study_ref:
+        return False
+    return True
 
 
-def valid_study_title(study_title: str, study_type: str, setup_configuration: str) -> tuple[str, Response]:
-    # sourcery skip: assign-if-exp, reintroduce-else, swap-if-else-branches, swap-if-expression, use-named-expression
-    cleaned_study_title = clean_study_title(study_title)
-
-    if not cleaned_study_title:
-        return (
-            "",
-            redirect_with_flash(
-                url=url_for("studies.create_study", study_type=study_type, setup_configuration=setup_configuration),
-                message="Title processing failed. Please add letters and try again.",
-            ),
-        )
-
-    if not is_study_title_unique(cleaned_study_title, current_app.config["DATABASE"]):
-        return (
-            "",
-            redirect_with_flash(
-                url=url_for("studies.create_study", study_type=study_type, setup_configuration=setup_configuration),
-                message="Title processing failed. Entered title is either a duplicate or too similar to an existing one.",
-            ),
-        )
-
-    return (cleaned_study_title, redirect(url_for("studies.parameters", study_title=cleaned_study_title)))
-
-
-def clean_study_title(s: str) -> str:
-    # input_string = "123abc-!@#$%^&*() def" # Output: "abc- def"
-
-    # Remove all characters that don't match the pattern
-    cleaned_str = re.sub(r"[^a-zA-Z0-9-]", "", s)
-
-    # If the first character is not an alphabet, remove it
-    while len(cleaned_str) > 0 and not cleaned_str[0].isalpha():
-        cleaned_str = cleaned_str[1:]
-
-    return cleaned_str.lower()
+async def study_title_already_exists(study_title: str) -> bool:
+    logger.info(f"Checking if study title {study_title} already exists")
+    db: firestore.AsyncClient = current_app.config["DATABASE"]
+    study_ref = db.collection("studies").where(filter=FieldFilter("title", "==", study_title)).limit(1).stream()
+    async for _ in study_ref:
+        return True
+    return False
 
 
 def check_conditions(doc_ref_dict, user_id) -> str:
@@ -239,7 +270,7 @@ def check_conditions(doc_ref_dict, user_id) -> str:
         return "You have not set the number of individuals/rows in your data. Please click on the 'Study Parameters' button to set this value and any other parameters you wish to change before running the protocol."
     if not gcp_project:
         return "Your GCP project ID is not set. Please follow the instructions in the 'Configure Study' button before running the protocol."
-    if not demo and "broad-cho-priv1" in gcp_project and os.environ.get("FLASK_DEBUG") != "development":
+    if not demo and "broad-cho-priv1" in gcp_project and constants.FLASK_DEBUG != "development":
         return "This project ID is only allowed for a demo study. Please follow the instructions in the 'Configure Study' button to set up your own GCP project before running the protocol."
     if not demo and not data_path:
         return "Your data path is not set. Please follow the instructions in the 'Configure Study' button before running the protocol."
@@ -248,17 +279,15 @@ def check_conditions(doc_ref_dict, user_id) -> str:
     return ""
 
 
-def update_status_and_start_setup(doc_ref, doc_ref_dict, study_title):
+async def update_status_and_start_setup(doc_ref, doc_ref_dict, study_id):
     participants = doc_ref_dict["participants"]
     statuses = doc_ref_dict["status"]
 
     for role in range(1, len(participants)):
         user = participants[role]
         statuses[user] = "setting up your vm instance"
-        doc_ref.set({"status": statuses}, merge=True)
+        await doc_ref.set({"status": statuses}, merge=True)
 
-        make_auth_key(study_title, user)
-
-        Thread(target=setup_gcp, args=(doc_ref, str(role))).start()
+        asyncio.create_task(setup_gcp(doc_ref, str(role)))
 
         time.sleep(1)

@@ -1,0 +1,177 @@
+name: Build and push Docker image to Terra
+
+on:
+  push:
+    # when ready to merge dev branch back into main, change this to main
+    branches: [dev]
+    paths:
+      - "*.py"
+      - "requirements*.txt"
+      - "src/**"
+      - "tests/**"
+      - "Dockerfile"
+      - ".github/workflows/build_push_terra.yml"
+  pull_request:
+    paths:
+      - "*.py"
+      - "requirements*.txt"
+      - "src/**"
+      - "tests/**"
+      - "Dockerfile"
+      - ".github/workflows/build_push_terra.yml"
+  schedule:
+    - cron: "30 12 * * 1"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Delete me when ready to merge dev back into main
+  TARGET_BRANCH: dev
+  # Google project where artifacts are uploaded.
+  GOOGLE_PROJECT: dsp-artifact-registry
+  # Name of the app-specific Docker repository configured in GOOGLE_PROJECT.
+  REPOSITORY_NAME: sfkit
+  # Name of the image we'll be uploading into the Docker repository.
+  # This is often equal to the GitHub repository name, but it might also be the
+  # name of the Helm Chart if that's different.
+  IMAGE_NAME: ${{ github.event.repository.name }}
+  # This is the region-specific top-level Google-managed domain where our
+  # GOOGLE_PROJECT/REPOSITORY_NAME can be found.
+  GOOGLE_DOCKER_REPOSITORY: us-central1-docker.pkg.dev
+
+jobs:
+  generate-tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      tag: ${{ steps.tag.outputs.new_tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ (github.actor != 'dependabot[bot]' && secrets.BROADBOT_TOKEN) || secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Generate Tag
+        uses: databiosphere/github-actions/actions/bumper@bumper-0.2.0
+        id: tag
+        env:
+          DEFAULT_BUMP: patch
+          RELEASE_BRANCHES: ${{ env.TARGET_BRANCH || github.event.repository.default_branch }}
+          WITH_V: true
+          GITHUB_TOKEN: ${{ (github.actor != 'dependabot[bot]' && secrets.BROADBOT_TOKEN) || secrets.GITHUB_TOKEN }}
+
+  build-and-publish:
+    needs: [generate-tag]
+    if: ${{ needs.generate-tag.outputs.tag != '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Assemble Docker tags
+        uses: docker/metadata-action@v5
+        id: meta
+        with:
+          # server image for backwards compatibility with old build behavior
+          images: |
+            ${{ env.GOOGLE_DOCKER_REPOSITORY }}/${{ env.GOOGLE_PROJECT }}/${{ env.REPOSITORY_NAME }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ needs.generate-tag.outputs.tag }}
+            type=semver,pattern=v{{major}},value=${{ needs.generate-tag.outputs.tag }},enable={{is_default_branch}}
+            type=semver,pattern=v{{major}}.{{minor}},value=${{ needs.generate-tag.outputs.tag }},enable={{is_default_branch}}
+
+      - name: Auth to GCP
+        id: gcp-auth
+        uses: google-github-actions/auth@v1
+        with:
+          token_format: access_token
+          workload_identity_provider: "projects/1038484894585/locations/global/workloadIdentityPools/github-wi-pool/providers/github-wi-provider"
+          service_account: "dsp-artifact-registry-push@dsp-artifact-registry.iam.gserviceaccount.com"
+
+      - name: Auth to GAR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.GOOGLE_DOCKER_REPOSITORY }}
+          username: oauth2accesstoken
+          password: "${{ steps.gcp-auth.outputs.access_token }}"
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          load: true
+          build-args: |
+            APP_VERSION=${{ needs.generate-tag.outputs.tag }}
+            BUILD_VERSION=${{ github.sha }}-${{ github.run_attempt }}
+          cache-from: type=gha,scope=${{ github.ref_name }}
+          cache-to: type=gha,scope=${{ github.ref_name }},mode=max
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Run Trivy vulnerability scanner
+        uses: broadinstitute/dsp-appsec-trivy-action@v1
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ env.GOOGLE_DOCKER_REPOSITORY }}/${{ env.GOOGLE_PROJECT }}/${{ env.REPOSITORY_NAME }}/${{ env.IMAGE_NAME }} --all-tags
+
+      # (Optional) Comment pushed image
+      - name: Comment pushed image
+        uses: actions/github-script@0.3.0
+        if: github.event_name == 'pull_request'
+        with:
+          github-token: ${{ secrets.BROADBOT_TOKEN }}
+          script: |
+            const { issue: { number: issue_number }, repo: { owner, repo }  } = context;
+            github.issues.createComment({ issue_number, owner, repo, body: 'Pushed image: ${{ env.GOOGLE_DOCKER_REPOSITORY }}/${{ env.GOOGLE_PROJECT }}/${{ env.REPOSITORY_NAME }}/${{ env.IMAGE_NAME }}:${{ needs.generate-tag.outputs.tag }}' });
+
+  report-to-sherlock:
+    uses: broadinstitute/sherlock/.github/workflows/client-report-app-version.yaml@main
+    needs: [build-and-publish, generate-tag]
+    with:
+      chart-name: "sfkit"
+      new-version: ${{ needs.generate-tag.outputs.tag }}
+    permissions:
+      contents: "read"
+      id-token: "write"
+
+  set-version-in-terra-dev:
+    # Put new version in Broad dev environment
+    uses: broadinstitute/sherlock/.github/workflows/client-set-environment-app-version.yaml@main
+    needs: [build-and-publish, report-to-sherlock, generate-tag]
+    if: ${{ github.ref_name == 'dev' }}
+    with:
+      new-version: ${{ needs.generate-tag.outputs.tag }}
+      chart-name: "sfkit"
+      environment-name: "dev"
+    secrets:
+      sync-git-token: ${{ secrets.BROADBOT_TOKEN }}
+    permissions:
+      id-token: "write"
+
+  # Uncomment this to have success/failure notifications sent to Slack for auto deploys
+  # report workflow status in slack
+  # see https://docs.google.com/document/d/1G6-whnNJvON6Qq1b3VvRJFC7M9M-gu2dAVrQHDyp9Us/edit?usp=sharing
+  # report-workflow:
+  #   uses: broadinstitute/sherlock/.github/workflows/client-report-workflow.yaml@main
+  #   with:
+  #     # Channels to notify upon workflow success or failure
+  #     notify-slack-channels-upon-workflow-completion: '#YOUR_CHANNEL_HERE'
+
+  #     # Channels to notify upon workflow success only
+  #     # notify-slack-channels-upon-workflow-success: "#channel-here"
+
+  #     # Channels to notify upon workflow failure only
+  #     # notify-slack-channels-upon-workflow-failure: "#channel-here"
+  #   permissions:
+  #     id-token: 'write'

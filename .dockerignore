@@ -1,0 +1,6 @@
+*
+!*.py
+!*.toml
+!requirements*.txt
+!/src
+!/tests

@@ -1,12 +1,45 @@
+import os
 from copy import deepcopy
+from typing import Any, Dict, List, Union
 
+FLASK_DEBUG = os.getenv("FLASK_DEBUG")
+LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")
+
+TERRA = os.getenv("TERRA", "")
+TERRA_CP0_CONFIG_NAMESPACE = os.getenv("TERRA_CP0_CONFIG_NAMESPACE", "")
+TERRA_CP0_CONFIG_NAME = os.getenv("TERRA_CP0_CONFIG_NAME", "")
+TERRA_CP0_WORKSPACE_NAMESPACE = os.getenv("TERRA_CP0_WORKSPACE_NAMESPACE", "")
+TERRA_CP0_WORKSPACE_NAME = os.getenv("TERRA_CP0_WORKSPACE_NAME", "")
+
+RAWLS_API_URL = os.getenv("RAWLS_API_URL", "https://rawls.dsde-dev.broadinstitute.org")
+SAM_API_URL = os.getenv("SAM_API_URL", "https://sam.dsde-dev.broadinstitute.org")
+SFKIT_API_URL = os.getenv("SFKIT_API_URL", "http://localhost:8080")
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*")
+APP_VERSION = os.getenv("APP_VERSION", "")
+BUILD_VERSION = os.getenv("BUILD_VERSION", "")
+CLOUD_RUN = os.getenv("CLOUD_RUN", "False")
+SERVICE_URL = os.getenv("SERVICE_URL", "")
 SERVER_GCP_PROJECT = "broad-cho-priv1"
 SERVER_REGION = "us-central1"
 SERVER_ZONE = f"{SERVER_REGION}-a"
 NETWORK_NAME_ROOT = "sfkit"
-INSTANCE_NAME_ROOT = NETWORK_NAME_ROOT
+INSTANCE_NAME_ROOT = "sfkit"
 DEVELOPER_USER_ID = "developer"
 GOOGLE_CLIENT_ID = "419003787216-rcif34r976a9qm3818qgeqed7c582od6.apps.googleusercontent.com"
+# these are used only when TERRA is NOT set
+AZURE_B2C_CLIENT_ID = os.getenv(
+    "AZURE_B2C_CLIENT_ID", "a605ffae-592a-4096-b029-78ba66b6d614"
+)  # public; used for authentication
+AZURE_B2C_JWKS_URL = os.getenv(
+    "AZURE_B2C_JWKS_URL",
+    "https://sfkitdevb2c.b2clogin.com/sfkitdevb2c.onmicrosoft.com/discovery/v2.0/keys?p=B2C_1_signupsignin1",
+)
+
+FIREBASE_API_KEY = os.getenv("FIREBASE_API_KEY")
+FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID", SERVER_GCP_PROJECT)
+FIRESTORE_DATABASE = os.getenv("FIRESTORE_DATABASE", "(default)")
+
+PARMETERS_TYPE = Dict[str, Union[Dict[str, Any], List[str]]]
 
 MPCGWAS_SHARED_PARAMETERS = {
     "NUM_SNPS": {
@@ -263,6 +296,17 @@ SFGWAS_SHARED_PARAMETERS = {
     ],
 }
 
+SFRELATE_SHARED_PARAMETERS = {
+    "num_snps": {
+        "name": "Number of Single Nucleotide Polymorphisms",
+        "description": "The number of SNPs in the dataset.",
+        "value": 145181,
+    },
+    "index": [
+        "num_snps",
+    ],
+}
+
 SFGWAS_ADVANCED_PARAMETERS = {
     "iter_per_eigenval": {
         "name": "Iterations per Evaluation",
@@ -309,12 +353,14 @@ SHARED_PARAMETERS = {
     "MPC-GWAS": MPCGWAS_SHARED_PARAMETERS,
     "PCA": PCA_SHARED_PARAMETERS,
     "SF-GWAS": SFGWAS_SHARED_PARAMETERS,
+    "SF-RELATE": SFRELATE_SHARED_PARAMETERS,
 }
 
 ADVANCED_PARAMETERS = {
     "MPC-GWAS": MPCGWAS_ADVANCED_PARAMETERS,
     "PCA": PCA_ADVANCED_PARAMETERS,
     "SF-GWAS": SFGWAS_ADVANCED_PARAMETERS,
+    "SF-RELATE": PCA_ADVANCED_PARAMETERS,  # TODO: update for SF-RELATE
 }
 
 
@@ -430,7 +476,7 @@ DEFAULT_USER_PARAMETERS = {
 
 
 def default_user_parameters(study_type: str, demo: bool = False) -> dict:
-    parameters = deepcopy(DEFAULT_USER_PARAMETERS)
+    parameters: dict = deepcopy(DEFAULT_USER_PARAMETERS)
     if demo:
         parameters["GCP_PROJECT"]["value"] = SERVER_GCP_PROJECT
         if study_type == "MPC-GWAS":
@@ -444,7 +490,7 @@ def default_user_parameters(study_type: str, demo: bool = False) -> dict:
 
 
 def broad_user_parameters() -> dict:
-    parameters = deepcopy(DEFAULT_USER_PARAMETERS)
+    parameters: dict = deepcopy(DEFAULT_USER_PARAMETERS)
     parameters["GCP_PROJECT"]["value"] = SERVER_GCP_PROJECT
     parameters["NUM_INDS"]["value"] = "0"
     return parameters

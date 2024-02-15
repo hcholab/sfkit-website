@@ -20,19 +20,27 @@ class GoogleCloudCompute:
     Class to handle interactions with Google Cloud Compute Engine
     """
 
-    def __init__(self, study_title: str, gcp_project: str) -> None:
+    def __init__(self, study_id: str, gcp_project: str) -> None:
         self.gcp_project: str = gcp_project
-        self.study_title: str = study_title
-        self.network_name = f"{constants.NETWORK_NAME_ROOT}-{study_title}"
+        self.study_id: str = study_id
+        self.network_name = f"{constants.NETWORK_NAME_ROOT}-{study_id}"
         self.firewall_name = f"{self.network_name}-vm-ingress"
         self.zone = constants.SERVER_ZONE
         self.compute = googleapi.build("compute", "v1")
 
     def delete_everything(self) -> None:
+        logger.info(f"Deleting gcp resources for study {self.study_id}...")
+        # if the network doesn't exist, there's nothing to delete
+        try:
+            self.compute.networks().get(project=self.gcp_project, network=self.network_name).execute()
+        except Exception as e:
+            logger.info(f"Cannot find network {self.network_name}; skipping deletion.")
+            return
+
         self.remove_conflicting_peerings()
 
         for instance in self.list_instances():
-            if instance[:-1] == format_instance_name(self.study_title, ""):
+            if instance[:-1] == format_instance_name(self.study_id, ""):
                 self.delete_instance(instance)
 
         try:
@@ -138,8 +146,8 @@ class GoogleCloudCompute:
         operation = self.compute.firewalls().insert(project=self.gcp_project, body=firewall_body).execute()
         self.wait_for_operation(operation["name"])
 
-    def delete_firewall(self, firewall_name: str = None) -> None:
-        if firewall_name is None:
+    def delete_firewall(self, firewall_name: str) -> None:
+        if not firewall_name:
             firewall_name = self.firewall_name
         logger.info(f"Deleting firewall {firewall_name}")
         try:
@@ -167,8 +175,8 @@ class GoogleCloudCompute:
 
         for other_project in peerings:
             if other_project not in allowed_gcp_projects:
-                logger.info(f"Deleting peering called {self.study_title}peering-{other_project}")
-                body = {"name": f"{self.study_title}peering-{other_project}"}
+                logger.info(f"Deleting peering called {self.study_id}peering-{other_project}")
+                body = {"name": f"{self.study_id}peering-{other_project}"}
                 self.compute.networks().removePeering(
                     project=self.gcp_project, network=self.network_name, body=body
                 ).execute()
@@ -192,6 +200,17 @@ class GoogleCloudCompute:
 
     @retry(stop=stop_after_attempt(3), wait=wait_fixed(30))
     def delete_subnet(self, subnet: dict) -> None:
+        subnets = (
+            self.compute.subnetworks()
+            .list(project=self.gcp_project, region=constants.SERVER_REGION)
+            .execute()["items"]
+        )
+        subnet_names = [subnet["name"] for subnet in subnets]
+
+        if subnet["name"] not in subnet_names:
+            logger.info(f"Subnet {subnet['name']} does not exist. Skipping deletion.")
+            return
+
         for instance in self.list_instances(subnetwork=subnet["selfLink"]):
             self.delete_instance(instance)
 
@@ -249,10 +268,10 @@ class GoogleCloudCompute:
         other_projects = [p for p in gcp_projects if p != self.gcp_project]
         for other_project in other_projects:
             if other_project not in existing_peerings:
-                logger.info(f"Creating peering called {self.study_title}peering-{other_project}")
+                logger.info(f"Creating peering called {self.study_id}peering-{other_project}")
                 body = {
                     "networkPeering": {
-                        "name": f"{self.study_title}peering-{other_project}",
+                        "name": f"{self.study_id}peering-{other_project}",
                         "network": f"https://www.googleapis.com/compute/v1/projects/{other_project}/global/networks/{self.network_name}",
                         "exchangeSubnetRoutes": True,
                     }
@@ -275,6 +294,7 @@ class GoogleCloudCompute:
         boot_disk_size: int = 10,
         delete: bool = True,
     ) -> str:
+        logger.info(f"Setting up instance {name}...")
         if name in self.list_instances() and delete:
             self.delete_instance(name)
             logger.info(f"Waiting for instance {name} to be deleted")
@@ -303,7 +323,9 @@ class GoogleCloudCompute:
         image_response = self.compute.images().getFromFamily(project="debian-cloud", family="debian-11").execute()
         # image_response = self.compute.images().getFromFamily(project="ubuntu-os-cloud", family="ubuntu-2110").execute()
         source_disk_image = image_response["selfLink"]
-        if num_cpus <= 16:
+        if metadata[5]["value"] == "SF-RELATE":
+            machine_type = f"zones/{self.zone}/machineTypes/n2-highmem-128"
+        elif num_cpus <= 16:
             machine_type = f"zones/{self.zone}/machineTypes/e2-highmem-{num_cpus}"
         else:
             machine_type = f"zones/{self.zone}/machineTypes/n2-highmem-{num_cpus}"
@@ -352,12 +374,33 @@ class GoogleCloudCompute:
             "r",
         ).read()
 
+        if role == "0":
+            startup_script = open(
+                os.path.join(os.path.dirname(__file__), "../../vm_scripts/startup-script_user_cp0.sh"),
+                "r",
+            ).read()
+
+        if metadata[5]["value"] == "SF-RELATE":
+            startup_script = open(
+                os.path.join(os.path.dirname(__file__), "../../vm_scripts/startup-script-sf-relate-demo.sh"),
+                "r",
+            ).read()
+
         metadata_config = {
             "items": [
                 {"key": "startup-script", "value": startup_script},
                 {"key": "enable-oslogin", "value": True},
             ]
         }
+
+        if "dev" in constants.SERVICE_URL:
+            metadata_config["items"].append(
+                {
+                    "key": "SFKIT_API_URL",
+                    "value": constants.SFKIT_API_URL,
+                }
+            )
+
         if metadata:
             metadata_config["items"] += metadata
         instance_body["metadata"] = metadata_config
@@ -373,6 +416,7 @@ class GoogleCloudCompute:
         self.wait_for_zone_operation(self.zone, operation["name"])
 
     def list_instances(self, subnetwork: str = "") -> list[str]:
+        logger.info("Listing VM instances...")
         try:
             result = self.compute.instances().list(project=self.gcp_project, zone=self.zone).execute()
         except Exception as e:
@@ -437,8 +481,8 @@ class GoogleCloudCompute:
         return response["networkInterfaces"][0]["accessConfigs"][0]["natIP"]
 
 
-def format_instance_name(study_title: str, role: str) -> str:
-    return f"{study_title}-{constants.INSTANCE_NAME_ROOT}{role}"
+def format_instance_name(study_id: str, role: str) -> str:
+    return f"{constants.INSTANCE_NAME_ROOT}-{study_id}---p{role}"
 
 
 def create_subnet_name(network_name: str, role: str) -> str:

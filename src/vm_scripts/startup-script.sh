@@ -14,12 +14,13 @@ handle_error() {
 trap handle_error ERR
 
 sudo -s
+export HOME=/root
 
 if [[ -f startup_was_launched ]]; then exit 0; fi
 touch startup_was_launched
 
 role=$(hostname | tail -c 2)
-study_title=$(hostname | awk -F'-secure-gwas' '{print $1}')
+study_id=$(hostname | awk -F'-secure-gwas' '{print $1}')
 ports=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/ports" -H "Metadata-Flavor: Google")
 geno_binary_file_prefix=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/geno_binary_file_prefix" -H "Metadata-Flavor: Google")
 data_path=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/data_path" -H "Metadata-Flavor: Google")
@@ -27,6 +28,14 @@ demo_study=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/a
 
 auth_key=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/auth_key" -H "Metadata-Flavor: Google")
 echo $auth_key > auth_key.txt
+
+SFKIT_API_URL=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/SFKIT_API_URL" -H "Metadata-Flavor: Google")
+export SFKIT_API_URL
+echo "SFKIT_API_URL: $SFKIT_API_URL"
+
+# if [[ $demo_study != "true" ]]; then
+#     export SFKIT_PROXY_ON=true
+# fi
 
 apt-get --assume-yes update
 apt-get --assume-yes install build-essential
@@ -36,17 +45,19 @@ apt-get install python3-pip python3-numpy wget git zip unzip -y
 curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
 bash add-google-cloud-ops-agent-repo.sh --also-install
 
-pip install --upgrade --no-cache-dir sfkit
-PATH=$PATH:~/.local/bin
+bash <(curl -sL https://github.com/hcholab/sfkit/releases/latest/download/install.sh)
+source ~/.profile
 export PYTHONUNBUFFERED=TRUE
 
+cd /sfkit
+cp ../auth_key.txt .
 sfkit auth 
 sfkit networking --ports ${ports} 
 sfkit generate_keys
 
 if [[ $demo_study == "true" ]]; then
     sfkit register_data --geno_binary_file_prefix demo --data_path demo
-    nohup sfkit run_protocol --demo > output.log 2>&1 &
+    nohup sfkit run_protocol > output.log 2>&1 &
     exit 0
 fi
 
