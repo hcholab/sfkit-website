@@ -5,7 +5,7 @@ import time
 from html import escape
 from http import HTTPStatus
 from string import Template
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import httpx
 from google.cloud import firestore
@@ -210,11 +210,6 @@ async def generate_ports(doc_ref: AsyncDocumentReference, role: str) -> None:
 
     doc_ref_dict["personal_parameters"][user]["PORTS"]["value"] = ports_str
     await doc_ref.set(doc_ref_dict, merge=True)
-
-
-def add_file_to_zip(zip_file, filepath: str, archive_name: Optional[str] = None) -> None:
-    with open(filepath, "rb") as f:
-        zip_file.writestr(archive_name or os.path.basename(filepath), f.read())
 
 
 def sanitize_path(path: str) -> str:
