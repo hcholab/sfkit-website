@@ -82,7 +82,7 @@ async def upload_file() -> Tuple[dict, int]:
     else:
         file_path = f"{study.id}/p{study.role}/result.txt"
 
-    upload_blob_from_file("sfkit", file, file_path)
+    upload_blob_from_file(constants.RESULTS_BUCKET, file, file_path)
     logger.info(f"uploaded file {file.filename} to {file_path}")
 
     return {}, 200
