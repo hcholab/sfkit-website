@@ -192,14 +192,14 @@ async def download_results_file() -> Response:
     os.makedirs(f"{base}/{shared}", exist_ok=True)
 
     result_success = download_blob_to_filename(
-        "sfkit",
+        constants.RESULTS_BUCKET,
         f"{shared}/result.txt",
         f"{base}/{shared}/result.txt",
     )
 
     plot_name = "manhattan" if "GWAS" in doc_ref_dict["study_type"] else "pca_plot"
     plot_success = download_blob_to_filename(
-        "sfkit",
+        constants.RESULTS_BUCKET,
         f"{shared}/{plot_name}.png",
         f"{base}/{shared}/{plot_name}.png",
     )
@@ -240,7 +240,7 @@ async def fetch_plot_file() -> Response:  # sourcery skip: use-named-expression
 
     plot_name = "manhattan" if "GWAS" in doc_ref_dict["study_type"] else "pca_plot"
 
-    plot = download_blob_to_bytes("sfkit", f"{study_id}/p{role}/{plot_name}.png")
+    plot = download_blob_to_bytes(constants.RESULTS_BUCKET, f"{study_id}/p{role}/{plot_name}.png")
     if plot:
         return await send_file(
             io.BytesIO(plot),
