@@ -1,6 +1,7 @@
 import asyncio
 import io
 import os
+import tempfile
 import zipfile
 from datetime import datetime
 
@@ -13,8 +14,8 @@ from src.auth import authenticate, authenticate_on_terra, get_user_email, get_us
 from src.utils import constants, custom_logging
 from src.utils.generic_functions import add_notification, remove_notification
 from src.utils.google_cloud.google_cloud_secret_manager import get_firebase_api_key
-from src.utils.google_cloud.google_cloud_storage import download_blob_to_bytes, download_blob_to_filename
-from src.utils.studies_functions import add_file_to_zip, check_conditions, update_status_and_start_setup
+from src.utils.google_cloud.google_cloud_storage import download_blob_to_bytes
+from src.utils.studies_functions import check_conditions, update_status_and_start_setup
 
 logger = custom_logging.setup_logging(__name__)
 bp = Blueprint("web", __name__, url_prefix="/api")
@@ -187,24 +188,21 @@ async def download_results_file() -> Response:
     doc_ref_dict = (await db.collection("studies").document(study_id).get()).to_dict()
     role: str = str(doc_ref_dict["participants"].index(user_id))
 
-    base = "src/static/results"
     shared = f"{study_id}/p{role}"
-    os.makedirs(f"{base}/{shared}", exist_ok=True)
 
-    result_success = download_blob_to_filename(
+    result_name = "result.txt"
+    result_file = download_blob_to_bytes(
         constants.RESULTS_BUCKET,
-        f"{shared}/result.txt",
-        f"{base}/{shared}/result.txt",
+        os.path.join(shared, result_name)
     )
 
-    plot_name = "manhattan" if "GWAS" in doc_ref_dict["study_type"] else "pca_plot"
-    plot_success = download_blob_to_filename(
+    plot_name = ("manhattan" if "GWAS" in doc_ref_dict["study_type"] else "pca_plot") + ".png"
+    plot_file = download_blob_to_bytes(
         constants.RESULTS_BUCKET,
-        f"{shared}/{plot_name}.png",
-        f"{base}/{shared}/{plot_name}.png",
+        os.path.join(shared, plot_name),
     )
 
-    if not (result_success or plot_success):
+    if not (result_file and plot_file):
         return await send_file(
             io.BytesIO("Failed to get results".encode()),
             attachment_filename="result.txt",
@@ -214,10 +212,8 @@ async def download_results_file() -> Response:
 
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-        if result_success:
-            add_file_to_zip(zip_file, f"{base}/{shared}/result.txt", "result.txt")
-        if plot_success:
-            add_file_to_zip(zip_file, f"{base}/{shared}/{plot_name}.png", f"{plot_name}.png")
+        zip_file.writestr(result_name, result_file)
+        zip_file.writestr(plot_name, plot_file)
 
     zip_buffer.seek(0)
     return await send_file(
