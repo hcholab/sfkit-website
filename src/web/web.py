@@ -1,7 +1,6 @@
 import asyncio
 import io
 import os
-import tempfile
 import zipfile
 from datetime import datetime
 
