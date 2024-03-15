@@ -40,7 +40,7 @@ FIREBASE_API_KEY = os.getenv("FIREBASE_API_KEY")
 FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID", SERVER_GCP_PROJECT)
 FIRESTORE_DATABASE = os.getenv("FIRESTORE_DATABASE", "(default)")
 
-PARMETERS_TYPE = Dict[str, Union[Dict[str, Any], List[str]]]
+PARAMETERS_TYPE = Dict[str, Union[Dict[str, Any], List[str]]]
 
 MPCGWAS_SHARED_PARAMETERS = {
     "NUM_SNPS": {
@@ -297,17 +297,6 @@ SFGWAS_SHARED_PARAMETERS = {
     ],
 }
 
-SFRELATE_SHARED_PARAMETERS = {
-    "num_snps": {
-        "name": "Number of Single Nucleotide Polymorphisms",
-        "description": "The number of SNPs in the dataset.",
-        "value": 145181,
-    },
-    "index": [
-        "num_snps",
-    ],
-}
-
 SFGWAS_ADVANCED_PARAMETERS = {
     "iter_per_eigenval": {
         "name": "Iterations per Evaluation",
@@ -350,6 +339,56 @@ SFGWAS_ADVANCED_PARAMETERS = {
     ],
 }
 
+SFRELATE_SHARED_PARAMETERS: PARAMETERS_TYPE = {"index": []}
+
+SFRELATE_ADVANCED_PARAMETERS = {
+    "ENCLEN": {
+        "name": "ENCLEN",
+        "description": "the number of snps in each encoded split haplotype ssegemnt (default: 80)",
+        "value": 80,
+    },
+    "SEGLEN": {
+        "name": "SEGLEN",
+        "description": "centi-Morgan length of each split haplotype segment (default: 8.0)",
+        "value": 8.0,
+    },
+    "STEPLEN": {
+        "name": "STEPLEN",
+        "description": "centi-Morgan spacing between the beginning of each split haplotype segment (default: 4.0)",
+        "value": 4.0,
+    },
+    "K": {
+        "name": "K",
+        "description": "number of SNPs in each kSNP token for hashing (default: 8)",
+        "value": 8,
+    },
+    "L": {
+        "name": "L",
+        "description": "number of hash tokens to construct every hash index (default: 4)",
+        "value": 4,
+    },
+    "MAXL": {
+        "name": "MAXL",
+        "description": "max number of repetitive hashing; increase and retry if table saturation is low (default: 6)",
+        "value": 6,
+    },
+    "s": {
+        "name": "s",
+        "description": "subsampling rate (default: 0.7)",
+        "value": 0.7,
+    },
+    "index": [
+        "ENCLEN",
+        "SEGLEN",
+        "STEPLEN",
+        "K",
+        "L",
+        "MAXL",
+        "s",
+    ],
+}
+
+
 SHARED_PARAMETERS = {
     "MPC-GWAS": MPCGWAS_SHARED_PARAMETERS,
     "PCA": PCA_SHARED_PARAMETERS,
@@ -361,7 +400,7 @@ ADVANCED_PARAMETERS = {
     "MPC-GWAS": MPCGWAS_ADVANCED_PARAMETERS,
     "PCA": PCA_ADVANCED_PARAMETERS,
     "SF-GWAS": SFGWAS_ADVANCED_PARAMETERS,
-    "SF-RELATE": PCA_ADVANCED_PARAMETERS,  # TODO: update for SF-RELATE
+    "SF-RELATE": SFRELATE_ADVANCED_PARAMETERS,
 }
 
 
@@ -431,7 +470,7 @@ DEFAULT_USER_PARAMETERS = {
     "PORTS": {
         "name": "Ports",
         "description": "The ports (comma separated) used by the VM instance that will be running the GWAS protocol.",
-        "value": "null,8020,8040",
+        "value": "null,8060,8080",
     },
     "AUTH_KEY": {
         "name": "Authentication Key",
@@ -486,7 +525,6 @@ def default_user_parameters(study_type: str, demo: bool = False) -> dict:
             parameters["NUM_INDS"]["value"] = "2504"
         elif study_type == "SF-GWAS":
             parameters["NUM_INDS"]["value"] = "2000"
-    parameters["PORTS"]["value"] = "null,8060,8080"
     return parameters
 
 

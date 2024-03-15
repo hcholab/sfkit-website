@@ -1,6 +1,6 @@
 import io
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from google.cloud import firestore
 from google.cloud.firestore_v1.field_path import FieldPath
@@ -121,7 +121,7 @@ async def create_study() -> Response:
             "description": description,
             "study_information": study_information,
             "owner": user_id,
-            "created": datetime.now(),
+            "created": datetime.now(timezone.utc),
             "participants": [cp0_id, user_id],
             "status": {cp0_id: "ready to begin protocol", user_id: ""},
             "tasks": {cp0_id: [], user_id: []},

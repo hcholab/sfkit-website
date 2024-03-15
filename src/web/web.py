@@ -2,7 +2,7 @@ import asyncio
 import io
 import os
 import zipfile
-from datetime import datetime
+from datetime import datetime, timezone
 
 from firebase_admin import auth as firebase_auth
 from quart import Blueprint, Response, current_app, jsonify, request, send_file
@@ -148,22 +148,23 @@ async def start_protocol() -> Response:
 @bp.route("/send_message", methods=["POST"])
 @authenticate
 async def send_message() -> Response:
+    user_id = await get_user_id()
+
     db = current_app.config["DATABASE"]
 
     data = await request.get_json()
     study_id = data.get("study_id")
     message = data.get("message")
-    sender = data.get("sender")
 
-    if not message or not sender or not study_id:
+    if not message or not study_id:
         raise BadRequest("Missing required fields")
 
     doc_ref = db.collection("studies").document(study_id)
     doc_ref_dict: dict = (await doc_ref.get()).to_dict()
 
     new_message = {
-        "sender": sender,
-        "time": datetime.now().strftime("%m/%d/%Y %H:%M"),
+        "sender": user_id,
+        "time": datetime.now(timezone.utc).strftime("%m/%d/%Y %H:%M"),
         "body": message,
     }
 
@@ -190,10 +191,7 @@ async def download_results_file() -> Response:
     shared = f"{study_id}/p{role}"
 
     result_name = "result.txt"
-    result_file = download_blob_to_bytes(
-        constants.RESULTS_BUCKET,
-        os.path.join(shared, result_name)
-    )
+    result_file = download_blob_to_bytes(constants.RESULTS_BUCKET, os.path.join(shared, result_name))
 
     plot_name = ("manhattan" if "GWAS" in doc_ref_dict["study_type"] else "pca_plot") + ".png"
     plot_file = download_blob_to_bytes(
