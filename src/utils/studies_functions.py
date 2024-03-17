@@ -16,7 +16,7 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Email, Mail
 from werkzeug.exceptions import BadRequest
 
-from src.api_utils import APIException
+from src.api_utils import APIException, fetch_study
 from src.auth import get_service_account_headers
 from src.utils import constants, custom_logging
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, format_instance_name
@@ -80,9 +80,7 @@ async def make_auth_key(study_id: str, user_id: str) -> str:
     :param user_id: The ID of the user.
     :return: The generated auth_key.
     """
-    db = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(study_id)
-    doc_ref_dict: dict = (await doc_ref.get()).to_dict()
+    _, doc_ref, doc_ref_dict = await fetch_study(study_id, user_id)
 
     auth_key = secrets.token_hex(16)
     doc_ref_dict["personal_parameters"][user_id]["AUTH_KEY"]["value"] = auth_key
@@ -135,7 +133,7 @@ async def setup_gcp(doc_ref: AsyncDocumentReference, role: str) -> None:
             {"key": "auth_key", "value": user_parameters["AUTH_KEY"]["value"]},
             {"key": "demo", "value": doc_ref_dict["demo"]},
             {"key": "study_type", "value": doc_ref_dict["study_type"]},
-            {"key": "SFKIT_API_URL", "value": constants.SFKIT_API_URL}
+            {"key": "SFKIT_API_URL", "value": constants.SFKIT_API_URL},
         ]
 
         gcloudCompute.setup_instance(

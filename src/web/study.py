@@ -3,12 +3,11 @@ import uuid
 from datetime import datetime, timezone
 
 from google.cloud import firestore
-from google.cloud.firestore_v1.field_path import FieldPath
 from quart import Blueprint, Response, current_app, jsonify, request, send_file
-from werkzeug.exceptions import BadRequest, Conflict, Forbidden
+from werkzeug.exceptions import BadRequest, Conflict
 
-from src.api_utils import ID_KEY, add_user_to_db
-from src.auth import authenticate, authenticate_on_terra, get_auth_header, get_cp0_id, get_user_id
+from src.api_utils import ID_KEY, add_user_to_db, fetch_study, validate_json, validate_uuid
+from src.auth import authenticate, authenticate_on_terra, get_cp0_id
 from src.utils import constants, custom_logging
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, format_instance_name
 from src.utils.studies_functions import make_auth_key, study_title_already_exists
@@ -19,19 +18,9 @@ bp = Blueprint("study", __name__, url_prefix="/api")
 
 @bp.route("/study", methods=["GET"])
 @authenticate
-async def study() -> Response:
-    user_id = await get_user_id()
-    study_id = request.args.get("study_id") or ""
-    db: firestore.AsyncClient = current_app.config["DATABASE"]
-
-    try:
-        study: dict = (await db.collection("studies").document(study_id).get()).to_dict() or {}
-    except Exception as e:
-        logger.error(f"Failed to fetch study: {e}")
-        raise Forbidden()
-
-    if user_id not in study["participants"]:
-        raise Forbidden()
+async def study(user_id) -> Response:
+    study_id = validate_uuid(request.args.get("study_id"))
+    db, _, doc_ref_dict = await fetch_study(study_id, user_id)
 
     try:
         display_names = (await db.collection("users").document("display_names").get()).to_dict() or {}
@@ -39,25 +28,23 @@ async def study() -> Response:
         logger.error(f"Failed to fetch display names: {e}")
         raise BadRequest()
 
-    study["owner_name"] = display_names.get(study["owner"], study["owner"])
-    study["display_names"] = {
+    doc_ref_dict["owner_name"] = display_names.get(doc_ref_dict["owner"], doc_ref_dict["owner"])
+    doc_ref_dict["display_names"] = {
         participant: display_names.get(participant, participant)
-        for participant in study["participants"]
-        + list(study["requested_participants"].keys())
-        + study["invited_participants"]
+        for participant in doc_ref_dict["participants"]
+        + list(doc_ref_dict["requested_participants"].keys())
+        + doc_ref_dict["invited_participants"]
     }
 
-    return jsonify({"study": study})
+    return jsonify({"study": doc_ref_dict})
 
 
 # TODO: use asyncio to delete in parallel. This requires making the google_cloud_compute functions async. Using multiple processing failed because inside daemon. Threads failed because of GIL.
 @bp.route("/restart_study", methods=["GET"])
 @authenticate
-async def restart_study() -> Response:
-    study_id = request.args.get("study_id") or ""
-    db: firestore.AsyncClient = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(study_id)
-    doc_ref_dict: dict = (await doc_ref.get()).to_dict() or {}
+async def restart_study(user_id) -> Response:
+    study_id = validate_uuid(request.args.get("study_id"))
+    _, doc_ref, doc_ref_dict = await fetch_study(study_id, user_id)
 
     if not constants.TERRA:  # TODO: add equivalent for terra
         for role, v in enumerate(doc_ref_dict["participants"]):
@@ -83,15 +70,13 @@ async def restart_study() -> Response:
 
 @bp.route("/create_study", methods=["POST"])
 @authenticate_on_terra
-async def create_study() -> Response:
-    if not get_auth_header(request):
+async def create_study(user_id="") -> Response:
+    if not user_id:
         user_id = str(uuid.uuid4())
         await add_user_to_db({ID_KEY: user_id, "given_name": "Anonymous"})
         logger.info(f"Creating study for anonymous user {user_id}")
-    else:
-        user_id = await get_user_id()
 
-    data: dict = await request.json
+    data: dict = validate_json(await request.json)
     study_type = data.get("study_type") or ""
     setup_configuration = data.get("setup_configuration")
     study_title = data.get("title") or ""
@@ -143,11 +128,9 @@ async def create_study() -> Response:
 
 @bp.route("/delete_study", methods=["DELETE"])
 @authenticate
-async def delete_study() -> Response:
-    study_id = request.args.get("study_id") or ""
-    db: firestore.AsyncClient = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(study_id)
-    doc_ref_dict: dict = (await doc_ref.get()).to_dict() or {}
+async def delete_study(user_id) -> Response:
+    study_id = validate_uuid(request.args.get("study_id"))
+    db, doc_ref, doc_ref_dict = await fetch_study(study_id, user_id)
 
     if not constants.TERRA:  # TODO: add equivalent for terra
         for participant in doc_ref_dict["personal_parameters"].values():
@@ -175,14 +158,14 @@ async def delete_study() -> Response:
 
 @bp.route("/study_information", methods=["POST"])
 @authenticate
-async def study_information() -> Response:
+async def study_information(user_id) -> Response:
     try:
-        study_id = request.args.get("study_id")
-        data = await request.json
+        study_id = validate_uuid(request.args.get("study_id"))
+        _, doc_ref, _ = await fetch_study(study_id, user_id)
+        data = validate_json(await request.json)
         description = data.get("description")
         study_information = data.get("information")
 
-        doc_ref = current_app.config["DATABASE"].collection("studies").document(study_id)
         await doc_ref.set(
             {
                 "description": description,
@@ -199,14 +182,11 @@ async def study_information() -> Response:
 
 @bp.route("/parameters", methods=["POST"])
 @authenticate
-async def parameters() -> Response:
+async def parameters(user_id) -> Response:
     try:
-        user_id = await get_user_id()
-        study_id = request.args.get("study_id") or ""
-        data = await request.json
-        db: firestore.AsyncClient = current_app.config["DATABASE"]
-        doc_ref = db.collection("studies").document(study_id)
-        doc_ref_dict = (await doc_ref.get()).to_dict() or {}
+        study_id = validate_uuid(request.args.get("study_id"))
+        _, doc_ref, doc_ref_dict = await fetch_study(study_id, user_id)
+        data = validate_json(await request.json)
 
         for p, value in data.items():
             if p in doc_ref_dict["parameters"]:
@@ -231,12 +211,9 @@ async def parameters() -> Response:
 
 @bp.route("/download_auth_key", methods=["GET"])
 @authenticate
-async def download_auth_key() -> Response:
-    study_id = request.args.get("study_id") or ""
-    db: firestore.AsyncClient = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(study_id)
-    doc_ref_dict = (await doc_ref.get()).to_dict() or {}
-    user_id = await get_user_id()
+async def download_auth_key(user_id) -> Response:
+    study_id = validate_uuid(request.args.get("study_id"))
+    _, _, doc_ref_dict = await fetch_study(study_id, user_id)
     auth_key = doc_ref_dict["personal_parameters"][user_id]["AUTH_KEY"]["value"] or await make_auth_key(
         study_id, user_id
     )
