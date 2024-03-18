@@ -123,7 +123,7 @@ async def add_user_to_db(decoded_token: dict) -> None:
 
 def is_valid_uuid(val) -> bool:
     try:
-        uuid.UUID(str(val))
+        uuid.UUID(str(val), version=4)
         return True
     except ValueError:
         return False
