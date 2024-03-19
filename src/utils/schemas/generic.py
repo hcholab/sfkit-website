@@ -1,4 +1,4 @@
-validation_schema = {
+generic_schema = {
     "type": "object",
     "patternProperties": {
         ".*": {

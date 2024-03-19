@@ -14,6 +14,9 @@ from src.utils import constants, custom_logging
 from src.utils.generic_functions import add_notification, remove_notification
 from src.utils.google_cloud.google_cloud_secret_manager import get_firebase_api_key
 from src.utils.google_cloud.google_cloud_storage import download_blob_to_bytes
+from src.utils.schemas.profile import profile_schema
+from src.utils.schemas.send_message import send_message_schema
+from src.utils.schemas.update_notifications import update_notifications_schema
 from src.utils.studies_functions import check_conditions, update_status_and_start_setup
 
 logger = custom_logging.setup_logging(__name__)
@@ -96,8 +99,8 @@ async def profile(user_id: str, target_user_id: str = "") -> Response:
         if user_id != target_user_id:
             raise Forbidden("You are not authorized to update this profile")
 
+        data = validate_json(await request.get_json(), schema=profile_schema)
         try:
-            data = validate_json(await request.get_json())
             display_names = (await db.collection("users").document("display_names").get()).to_dict() or {}
             display_names[user_id] = data["displayName"]
             await db.collection("users").document("display_names").set(display_names)
@@ -137,7 +140,7 @@ async def start_protocol(user_id) -> Response:
 @bp.route("/send_message", methods=["POST"])
 @authenticate
 async def send_message(user_id) -> Response:
-    data = validate_json(await request.get_json())
+    data = validate_json(await request.get_json(), schema=send_message_schema)
     study_id = validate_uuid(data.get("study_id"))
     message = data.get("message")
 
@@ -222,7 +225,7 @@ async def fetch_plot_file(user_id) -> Response:
 @bp.route("/update_notifications", methods=["POST"])
 @authenticate
 async def update_notifications(user_id) -> Response:
-    data = validate_json(await request.get_json())
+    data = validate_json(await request.get_json(), schema=update_notifications_schema)
 
     await remove_notification(data.get("notification", ""), user_id)
     await add_notification(data.get("notification", ""), user_id, "old_notifications")

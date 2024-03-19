@@ -1,11 +1,13 @@
-from google.cloud import firestore
-from quart import Blueprint, Response, current_app, jsonify, request
+from quart import Blueprint, Response, jsonify, request
 from werkzeug.exceptions import BadRequest
-from src.api_utils import fetch_study, validate_json, validate_uuid
 
-from src.auth import authenticate, get_user_id
+from src.api_utils import fetch_study, validate_json, validate_uuid
+from src.auth import authenticate
 from src.utils import constants, custom_logging
 from src.utils.generic_functions import add_notification
+from src.utils.schemas.invite_participant import invite_participant_schema
+from src.utils.schemas.remove_participant import remove_participant_schema
+from src.utils.schemas.request_join_study import request_join_study_schema
 from src.utils.studies_functions import email, make_auth_key
 
 logger = custom_logging.setup_logging(__name__)
@@ -15,13 +17,13 @@ bp = Blueprint("participants", __name__, url_prefix="/api")
 @bp.route("/invite_participant", methods=["POST"])
 @authenticate
 async def invite_participant(user_id) -> Response:
-    try:
-        data: dict = validate_json(await request.json)
-        study_id = validate_uuid(data.get("study_id")) or ""
-        inviter = data.get("inviter_id") or ""
-        invitee = data.get("invitee_email") or ""
-        message = data.get("message", "") or ""
+    data = validate_json(await request.json, schema=invite_participant_schema)
+    study_id = validate_uuid(data.get("study_id")) or ""
+    inviter = data.get("inviter_id") or ""
+    invitee = data.get("invitee_email") or ""
+    message = data.get("message", "") or ""
 
+    try:
         db, doc_ref, study_dict = await fetch_study(study_id, user_id)
         display_names = (await db.collection("users").document("display_names").get()).to_dict() or {}
         inviter_name = display_names.get(inviter, inviter)
@@ -47,7 +49,7 @@ async def invite_participant(user_id) -> Response:
 @authenticate
 async def accept_invitation(user_id) -> Response:
     study_id = validate_uuid(request.args.get("study_id"))
-    db, doc_ref, doc_ref_dict = await fetch_study(study_id, user_id)
+    db, doc_ref, doc_ref_dict = await fetch_study(study_id)
 
     user_doc = await db.collection("users").document(user_id).get()
     user_email = (user_doc.to_dict() or {}).get("email")
@@ -65,7 +67,7 @@ async def accept_invitation(user_id) -> Response:
 @bp.route("/remove_participant", methods=["POST"])
 @authenticate
 async def remove_participant(user_id) -> Response:
-    data = validate_json(await request.get_json())
+    data = validate_json(await request.get_json(), schema=remove_participant_schema)
     study_id = validate_uuid(data.get("study_id"))
     target_user_id = data.get("userId") or ""
 
@@ -107,10 +109,10 @@ async def approve_join_study(user_id) -> Response:
 async def request_join_study(user_id: str) -> Response:
     try:
         study_id = validate_uuid(request.args.get("study_id"))
-        data = validate_json(await request.get_json())
+        data = validate_json(await request.get_json(), schema=request_join_study_schema)
         message: str = data.get("message", "")
 
-        _, doc_ref, doc_ref_dict = await fetch_study(study_id, user_id)
+        _, doc_ref, doc_ref_dict = await fetch_study(study_id)
 
         requested_participants = doc_ref_dict.get("requested_participants", {})
         requested_participants[user_id] = message

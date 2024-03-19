@@ -12,7 +12,7 @@ from werkzeug.exceptions import BadRequest, HTTPException, Forbidden
 from werkzeug.wrappers import Response
 
 from src.utils import constants, custom_logging
-from src.utils.schemas.validation_schema import validation_schema
+from src.utils.schemas.generic import generic_schema
 
 logger = custom_logging.setup_logging(__name__)
 
@@ -150,10 +150,11 @@ async def fetch_study(study_id: str, user_id: str = "") -> tuple[firestore.Async
     return db, doc_ref, doc_ref_dict
 
 
-def validate_json(data: dict, schema: dict = validation_schema) -> dict:
+def validate_json(data: dict, schema: dict = generic_schema) -> dict:
     try:
         validate(instance=data, schema=schema)
         return data
     except ValidationError as e:
-        logger.error(f"Invalid JSON: {e}")
-        raise BadRequest("Invalid JSON")
+        errorMessage: str = e.message
+        logger.error(errorMessage)
+        raise BadRequest(description=errorMessage)

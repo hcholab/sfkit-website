@@ -235,7 +235,7 @@ SFGWAS_SHARED_PARAMETERS = {
     "num_covs": {
         "name": "Number of Covariates",
         "description": "The number of covariates in the dataset.",
-        "value": "2",
+        "value": 2,
     },
     "num_pcs_to_remove": {
         "name": "Number of PCs for Population Stratification",

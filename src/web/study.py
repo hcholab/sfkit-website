@@ -10,6 +10,9 @@ from src.api_utils import ID_KEY, add_user_to_db, fetch_study, validate_json, va
 from src.auth import authenticate, authenticate_on_terra, get_cp0_id
 from src.utils import constants, custom_logging
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, format_instance_name
+from src.utils.schemas.create_study import create_study_schema
+from src.utils.schemas.study_information import study_information_schema
+from src.utils.schemas.parameters import parameters_schema
 from src.utils.studies_functions import make_auth_key, study_title_already_exists
 
 logger = custom_logging.setup_logging(__name__)
@@ -76,7 +79,7 @@ async def create_study(user_id="") -> Response:
         await add_user_to_db({ID_KEY: user_id, "given_name": "Anonymous"})
         logger.info(f"Creating study for anonymous user {user_id}")
 
-    data: dict = validate_json(await request.json)
+    data = validate_json(await request.json, create_study_schema)
     study_type = data.get("study_type") or ""
     setup_configuration = data.get("setup_configuration")
     study_title = data.get("title") or ""
@@ -159,10 +162,10 @@ async def delete_study(user_id) -> Response:
 @bp.route("/study_information", methods=["POST"])
 @authenticate
 async def study_information(user_id) -> Response:
+    data = validate_json(await request.json, schema=study_information_schema)
+    study_id = validate_uuid(request.args.get("study_id"))
     try:
-        study_id = validate_uuid(request.args.get("study_id"))
         _, doc_ref, _ = await fetch_study(study_id, user_id)
-        data = validate_json(await request.json)
         description = data.get("description")
         study_information = data.get("information")
 
@@ -183,10 +186,10 @@ async def study_information(user_id) -> Response:
 @bp.route("/parameters", methods=["POST"])
 @authenticate
 async def parameters(user_id) -> Response:
+    data = validate_json(await request.json, schema=parameters_schema)
+    study_id = validate_uuid(request.args.get("study_id"))
     try:
-        study_id = validate_uuid(request.args.get("study_id"))
         _, doc_ref, doc_ref_dict = await fetch_study(study_id, user_id)
-        data = validate_json(await request.json)
 
         for p, value in data.items():
             if p in doc_ref_dict["parameters"]:
