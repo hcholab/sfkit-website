@@ -73,7 +73,6 @@ async def my_studies(user_id) -> Response:
         study["owner_name"] = display_names.get(study["owner"], study["owner"])
 
     email = await get_user_email(user_id)
-    print(user_id)
     my_studies = [
         study for study in my_studies if user_id in study["participants"] or email in study["invited_participants"]
     ]

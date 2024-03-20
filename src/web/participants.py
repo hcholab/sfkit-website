@@ -19,14 +19,13 @@ bp = Blueprint("participants", __name__, url_prefix="/api")
 async def invite_participant(user_id) -> Response:
     data = validate_json(await request.json, schema=invite_participant_schema)
     study_id = validate_uuid(data.get("study_id")) or ""
-    inviter = data.get("inviter_id") or ""
     invitee = data.get("invitee_email") or ""
     message = data.get("message", "") or ""
     db, doc_ref, study_dict = await fetch_study(study_id, user_id)
 
     try:
         display_names = (await db.collection("users").document("display_names").get()).to_dict() or {}
-        inviter_name = display_names.get(inviter, inviter)
+        inviter_name = display_names.get(user_id, user_id)
 
         study_title = study_dict["title"]
 
@@ -72,6 +71,9 @@ async def remove_participant(user_id) -> Response:
     target_user_id = data.get("userId") or ""
 
     _, doc_ref, doc_ref_dict = await fetch_study(study_id, user_id)
+
+    if user_id != doc_ref_dict["owner"]:
+        raise BadRequest("Only the owner can remove participants")
 
     if target_user_id not in doc_ref_dict.get("participants", []):
         raise BadRequest("User not a participant in this study")
