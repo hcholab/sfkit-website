@@ -22,9 +22,9 @@ async def invite_participant(user_id) -> Response:
     inviter = data.get("inviter_id") or ""
     invitee = data.get("invitee_email") or ""
     message = data.get("message", "") or ""
+    db, doc_ref, study_dict = await fetch_study(study_id, user_id)
 
     try:
-        db, doc_ref, study_dict = await fetch_study(study_id, user_id)
         display_names = (await db.collection("users").document("display_names").get()).to_dict() or {}
         inviter_name = display_names.get(inviter, inviter)
 
