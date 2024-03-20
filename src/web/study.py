@@ -164,8 +164,8 @@ async def delete_study(user_id) -> Response:
 async def study_information(user_id) -> Response:
     data = validate_json(await request.json, schema=study_information_schema)
     study_id = validate_uuid(request.args.get("study_id"))
+    _, doc_ref, _ = await fetch_study(study_id, user_id)
     try:
-        _, doc_ref, _ = await fetch_study(study_id, user_id)
         description = data.get("description")
         study_information = data.get("information")
 
@@ -188,9 +188,8 @@ async def study_information(user_id) -> Response:
 async def parameters(user_id) -> Response:
     data = validate_json(await request.json, schema=parameters_schema)
     study_id = validate_uuid(request.args.get("study_id"))
+    _, doc_ref, doc_ref_dict = await fetch_study(study_id, user_id)
     try:
-        _, doc_ref, doc_ref_dict = await fetch_study(study_id, user_id)
-
         for p, value in data.items():
             if p in doc_ref_dict["parameters"]:
                 doc_ref_dict["parameters"][p]["value"] = value

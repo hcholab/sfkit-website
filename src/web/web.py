@@ -84,30 +84,28 @@ async def my_studies(user_id) -> Response:
 @authenticate
 async def profile(user_id: str, target_user_id: str = "") -> Response:
     db = current_app.config["DATABASE"]
+    display_names = (await db.collection("users").document("display_names").get()).to_dict() or {}
+    profile = (await db.collection("users").document(target_user_id).get()).to_dict() or {}
 
     if request.method == "GET":
         try:
-            display_names = (await db.collection("users").document("display_names").get()).to_dict() or {}
-            profile = (await db.collection("users").document(user_id).get()).to_dict() or {}
             profile["displayName"] = display_names.get(target_user_id, target_user_id)
+            profile = {key: profile[key] for key in ["about", "displayName", "email"] if key in profile}
             return jsonify({"profile": profile})
         except Exception as e:
             logger.error(f"Failed to fetch profile: {e}")
             raise BadRequest("Failed to fetch profile")
-
     else:
         if user_id != target_user_id:
             raise Forbidden("You are not authorized to update this profile")
 
         data = validate_json(await request.get_json(), schema=profile_schema)
         try:
-            display_names = (await db.collection("users").document("display_names").get()).to_dict() or {}
-            display_names[user_id] = data["displayName"]
+            display_names[target_user_id] = data["displayName"]
             await db.collection("users").document("display_names").set(display_names)
 
-            profile = (await db.collection("users").document(user_id).get()).to_dict() or {}
             profile["about"] = data["about"]
-            await db.collection("users").document(user_id).set(profile)
+            await db.collection("users").document(target_user_id).set(profile)
 
             return jsonify({"message": "Profile updated successfully"})
         except Exception as e:

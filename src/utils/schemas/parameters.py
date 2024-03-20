@@ -103,7 +103,7 @@ parameters_schema = {
         **default_user_parameters_properties,
     },
     "patternProperties": {
-        "^NUM_INDS[0-9a-zA-Z-]+$": {
+        "^NUM_INDS[\\w-]{,64}$": {
             "type": "integer",
             "minimum": 1,
             "maximum": 1_000_000_000,
