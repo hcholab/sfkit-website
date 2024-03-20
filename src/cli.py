@@ -6,7 +6,6 @@ from google.cloud.firestore import AsyncClient, AsyncDocumentReference
 from quart import Blueprint, current_app, request
 from werkzeug.exceptions import BadRequest, Conflict, Forbidden
 
-from src.api_utils import TERRA_ID_KEY
 from src.auth import get_cli_user_id
 from src.utils import constants, custom_logging
 from src.utils.api_functions import process_parameter, process_status, process_task
@@ -112,7 +111,7 @@ async def get_username() -> Tuple[dict, int]:
     return {"username": username}, 200
 
 
-@bp.route("/update_firestore", methods=["GET"])
+@bp.route("/update_firestore", methods=["GET", "POST"])  # TODO: Use only POST
 async def update_firestore() -> Tuple[dict, int]:
     try:
         _, parameter = request.args.get("msg", "").split("::")

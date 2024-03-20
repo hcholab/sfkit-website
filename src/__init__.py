@@ -3,7 +3,7 @@ import secrets
 
 import firebase_admin
 from google.cloud import firestore
-from quart import Quart, json
+from quart import Quart, Response, json
 from quart_cors import cors
 from werkzeug.exceptions import HTTPException
 
@@ -55,6 +55,23 @@ def create_app() -> Quart:
             res.data = json.dumps({"error": e.description})  # type: ignore
             res.content_type = "application/json"
         return res
+
+    @app.after_request
+    async def apply_security_headers(response: Response) -> Response:
+        # no caching
+        response.headers["Cache-Control"] = "no-store"
+        response.headers["Pragma"] = "no-cache"
+
+        # security
+        response.headers["Access-Control-Allow-Headers"] = (
+            "authorization,content-type,accept,origin,x-app-id,x-mpc-study-id"
+        )
+        response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD"
+        response.headers["Access-Control-Max-Age"] = "1728000"
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+
+        return response
 
     return app
 

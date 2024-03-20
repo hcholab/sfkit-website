@@ -3,8 +3,9 @@ from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Dict, List
 
-from quart import Blueprint, Websocket, abort, current_app, websocket
+from quart import Blueprint, Websocket, abort, websocket
 
+from src.api_utils import fetch_study
 from src.auth import get_cli_user, get_user_id
 from src.utils import constants, custom_logging
 
@@ -135,8 +136,7 @@ async def _get_user_id(ws: Websocket):
 
 
 async def _get_study_participants(study_id: str) -> List[str]:
-    db = current_app.config["DATABASE"]
-    doc_ref_dict = (await db.collection("studies").document(study_id).get()).to_dict()
+    _, _, doc_ref_dict = await fetch_study(study_id)
     return doc_ref_dict.get("participants", [])
 
 
