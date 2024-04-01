@@ -3,12 +3,16 @@ from typing import Union
 from urllib.parse import urlparse, urlunsplit
 
 import httpx
+from google.cloud import firestore
+from google.cloud.firestore import AsyncDocumentReference
 from google.cloud.firestore_v1 import FieldFilter
+from jsonschema import ValidationError, validate
 from quart import current_app
-from werkzeug.exceptions import HTTPException
+from werkzeug.exceptions import BadRequest, HTTPException, Forbidden
 from werkzeug.wrappers import Response
 
 from src.utils import constants, custom_logging
+from src.utils.schemas.generic import generic_schema
 
 logger = custom_logging.setup_logging(__name__)
 
@@ -119,7 +123,38 @@ async def add_user_to_db(decoded_token: dict) -> None:
 
 def is_valid_uuid(val) -> bool:
     try:
-        uuid.UUID(str(val))
+        uuid.UUID(str(val), version=4)
         return True
     except ValueError:
         return False
+
+
+def validate_uuid(val) -> str:
+    if not is_valid_uuid(val):
+        logger.error(f"Not valid UUID: {val}")
+        raise BadRequest("Not valid UUID")
+    return str(val)
+
+
+async def fetch_study(study_id: str, user_id: str = "") -> tuple[firestore.AsyncClient, AsyncDocumentReference, dict]:
+    db: firestore.AsyncClient = current_app.config["DATABASE"]
+    doc_ref = db.collection("studies").document(study_id)
+    doc_ref_dict = (await doc_ref.get()).to_dict() or {}
+    if not doc_ref_dict:
+        logger.error(f"Study not found: {study_id}")
+        raise BadRequest("Study not found")
+
+    if user_id and user_id not in doc_ref_dict["participants"]:
+        raise Forbidden()
+
+    return db, doc_ref, doc_ref_dict
+
+
+def validate_json(data: dict, schema: dict = generic_schema) -> dict:
+    try:
+        validate(instance=data, schema=schema)
+        return data
+    except ValidationError as e:
+        errorMessage: str = e.message
+        logger.error(errorMessage)
+        raise BadRequest(description=errorMessage)
