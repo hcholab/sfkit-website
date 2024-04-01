@@ -202,7 +202,7 @@ def authenticate(f):
             user_id = await get_user_id()
         except Exception as e:
             logger.error(f"Failed to authenticate user: {e}")
-            raise Unauthorized(str(e))
+            raise Unauthorized()
 
         return await f(user_id, *args, **kwargs)
 
