@@ -61,6 +61,7 @@ sfgwas_advanced_parameters_properties = {
 
 # sfrelate_shared_parameters_properties = {}
 sfrelate_advanced_parameters_properties = {
+    "PARA": {"type": "number", "minimum": 1, "maximum": 100},
     "ENCLEN": {"type": "integer", "minimum": 1, "maximum": 1000},
     "SEGLEN": {"type": "number", "minimum": 0.0, "maximum": 100.0},
     "STEPLEN": {"type": "number", "minimum": 0.0, "maximum": 100.0},
