@@ -342,6 +342,11 @@ SFGWAS_ADVANCED_PARAMETERS = {
 SFRELATE_SHARED_PARAMETERS: PARAMETERS_TYPE = {"index": []}
 
 SFRELATE_ADVANCED_PARAMETERS = {
+    "PARA": {
+        "name": "PARA",
+        "description": "Number of parallel processes to use. Should be set as large as possible to utilize all CPUs and memory. Exact value depends on the machine and dataset sizes. Users can provide reasonable parameters like 5 and retry with a smaller one if it fails due to memory constraints.",
+        "value": 2,
+    },
     "ENCLEN": {
         "name": "ENCLEN",
         "description": "the number of snps in each encoded split haplotype ssegemnt (default: 80)",
@@ -378,6 +383,7 @@ SFRELATE_ADVANCED_PARAMETERS = {
         "value": 0.7,
     },
     "index": [
+        "PARA",
         "ENCLEN",
         "SEGLEN",
         "STEPLEN",
@@ -470,7 +476,7 @@ DEFAULT_USER_PARAMETERS = {
     "PORTS": {
         "name": "Ports",
         "description": "The ports (comma separated) used by the VM instance that will be running the GWAS protocol.",
-        "value": "null,8060,8080",
+        "value": "null,3110,7320",
     },
     "AUTH_KEY": {
         "name": "Authentication Key",

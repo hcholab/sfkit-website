@@ -165,30 +165,28 @@ async def download_results_file(user_id) -> Response:
     _, _, doc_ref_dict = await fetch_study(study_id, user_id)
 
     role: str = str(doc_ref_dict["participants"].index(user_id))
-
     shared = f"{study_id}/p{role}"
 
     result_name = "result.txt"
     result_file = download_blob_to_bytes(constants.RESULTS_BUCKET, os.path.join(shared, result_name))
 
-    plot_name = ("manhattan" if "GWAS" in doc_ref_dict["study_type"] else "pca_plot") + ".png"
-    plot_file = download_blob_to_bytes(
-        constants.RESULTS_BUCKET,
-        os.path.join(shared, plot_name),
-    )
+    plot_file, plot_name = None, ""
+    if "GWAS" in doc_ref_dict["study_type"]:
+        plot_name = "manhattan.png"
+    elif "PCA" in doc_ref_dict["study_type"]:
+        plot_name = "pca_plot.png"
+    if plot_name:
+        plot_file = download_blob_to_bytes(constants.RESULTS_BUCKET, os.path.join(shared, plot_name))
 
-    if not (result_file and plot_file):
-        return await send_file(
-            io.BytesIO("Failed to get results".encode()),
-            attachment_filename="result.txt",
-            mimetype="text/plain",
-            as_attachment=True,
-        )
+    if not result_file and not plot_file:
+        result_file = "Failed to get results".encode()
 
     zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-        zip_file.writestr(result_name, result_file)
-        zip_file.writestr(plot_name, plot_file)
+        if result_file:
+            zip_file.writestr(result_name, result_file)
+        if plot_file:
+            zip_file.writestr(plot_name, plot_file)
 
     zip_buffer.seek(0)
     return await send_file(
