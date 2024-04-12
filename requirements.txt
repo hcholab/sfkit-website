@@ -36,7 +36,7 @@ httplib2==0.22.0
 httpx==0.25.0
 hypercorn==0.14.4
 hyperframe==6.0.1
-idna==3.4
+idna==3.7
 ipaddr==2.2.0
 itsdangerous==2.1.2
 jsonschema==4.21.1
