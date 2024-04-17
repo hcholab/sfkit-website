@@ -107,7 +107,7 @@ def get_cp0_id():
     return _cp0_id
 
 
-async def register_terra_service_account():
+async def register_terra_service_account() -> None:
     global _cp0_id
 
     headers = get_service_account_headers()
@@ -130,7 +130,7 @@ async def register_terra_service_account():
     _cp0_id = res[TERRA_ID_KEY]
 
 
-async def _get_azure_b2c_user(auth_header: str):
+async def _get_azure_b2c_user(auth_header: str) -> dict:
     if not auth_header.startswith(BEARER_PREFIX):
         raise Unauthorized("Invalid Authorization header")
 
@@ -199,14 +199,22 @@ def authenticate(f):
     @wraps(f)
     async def decorated_function(*args, **kwargs):
         try:
-            await get_user_id()
+            user_id = await get_user_id()
         except Exception as e:
-            raise Unauthorized(str(e))
+            logger.error(f"Failed to authenticate user: {e}")
+            raise Unauthorized()
 
-        return await f(*args, **kwargs)
+        return await f(user_id, *args, **kwargs)
 
     return decorated_function
 
 
 def authenticate_on_terra(f):
-    return authenticate(f) if constants.TERRA else f
+    @wraps(f)
+    async def decorated_function(*args, **kwargs):
+        if constants.TERRA or get_auth_header(request):
+            return await authenticate(f)(*args, **kwargs)
+        else:
+            return await f(*args, **kwargs)
+
+    return decorated_function

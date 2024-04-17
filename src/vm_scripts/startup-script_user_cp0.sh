@@ -36,7 +36,6 @@ fi
 
 docker pull us-central1-docker.pkg.dev/dsp-artifact-registry/sfkit/sfkit # Pull image once
 
-# TODO: don't hardcode API_URL
 cat > run_docker_commands.sh << 'EOF'
 #!/bin/bash
 commands=("auth" "networking --ports 8020,8040" "generate_keys" "run_protocol")
