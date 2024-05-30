@@ -29,6 +29,7 @@ def create_app() -> Quart:
     if constants.SENTRY_DSN:
         sentry_sdk.init(
             dsn=constants.SENTRY_DSN,
+            environment=constants.SENTRY_ENVIRONMENT,
             enable_tracing=True,
             integrations=[QuartIntegration()],
         )
