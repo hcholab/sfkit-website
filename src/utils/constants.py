@@ -26,7 +26,9 @@ SERVER_ZONE = f"{SERVER_REGION}-a"
 NETWORK_NAME_ROOT = "sfkit"
 INSTANCE_NAME_ROOT = "sfkit"
 DEVELOPER_USER_ID = "developer"
-GOOGLE_CLIENT_ID = "419003787216-rcif34r976a9qm3818qgeqed7c582od6.apps.googleusercontent.com"
+GOOGLE_CLIENT_ID = (
+    "419003787216-rcif34r976a9qm3818qgeqed7c582od6.apps.googleusercontent.com"
+)
 # these are used only when TERRA is NOT set
 AZURE_B2C_CLIENT_ID = os.getenv(
     "AZURE_B2C_CLIENT_ID", "a605ffae-592a-4096-b029-78ba66b6d614"
