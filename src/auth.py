@@ -25,12 +25,11 @@ PUBLIC_KEYS = {}
 USER_IDS: Set = set()
 
 
-if not constants.TERRA:
-    # Prepare public keys from Microsoft's JWKS endpoint for token verification
-    jwks = requests.get(constants.AZURE_B2C_JWKS_URL).json()
-    for key in jwks["keys"]:
-        kid = key["kid"]
-        PUBLIC_KEYS[kid] = algorithms.RSAAlgorithm.from_jwk(key)
+# Prepare public keys from Microsoft's JWKS endpoint for token verification
+jwks = requests.get(constants.AZURE_B2C_JWKS_URL).json()
+for key in jwks["keys"]:
+    kid = key["kid"]
+    PUBLIC_KEYS[kid] = algorithms.RSAAlgorithm.from_jwk(key)
 
 
 def get_auth_header(req: Union[Request, Websocket]) -> str:
@@ -39,13 +38,12 @@ def get_auth_header(req: Union[Request, Websocket]) -> str:
 
 async def get_user_id(req: Union[Request, Websocket] = request) -> str:
     auth_header = get_auth_header(req)
+    if not auth_header.startswith(BEARER_PREFIX):  # use auth_key for anon user
+        _, user_id = await get_cli_user_id()
+        return user_id
+    user = await _get_azure_b2c_user(auth_header)
     if constants.TERRA:
-        user = await _get_terra_user(auth_header)
-    else:
-        if not auth_header.startswith(BEARER_PREFIX):  # use auth_key for anon user
-            _, user_id = await get_cli_user_id()
-            return user_id
-        user = await _get_azure_b2c_user(auth_header)
+        user.update(await _get_terra_user(auth_header))
 
     user_id = user[TERRA_ID_KEY] if constants.TERRA else user[ID_KEY]
     if user_id in USER_IDS:
@@ -64,7 +62,9 @@ async def get_user_id(req: Union[Request, Websocket] = request) -> str:
     return user_id
 
 
-async def _sam_request(method: HTTPMethod, path: str, headers: Dict[str, str], json: dict | None = None):
+async def _sam_request(
+    method: HTTPMethod, path: str, headers: Dict[str, str], json: dict | None = None
+):
     async with httpx.AsyncClient() as http:
         return await http.request(
             method.name,
@@ -172,7 +172,9 @@ async def get_cli_user(req: Union[Request, Websocket]) -> dict:
             raise Unauthorized("Missing authorization key")
 
         db: firestore.AsyncClient = current_app.config["DATABASE"]
-        doc_ref_dict = (await db.collection("users").document("auth_keys").get()).to_dict() or {}
+        doc_ref_dict = (
+            await db.collection("users").document("auth_keys").get()
+        ).to_dict() or {}
         user = doc_ref_dict.get(auth_header) or None
 
         if not user:
