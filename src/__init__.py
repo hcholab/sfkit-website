@@ -80,6 +80,9 @@ def create_app() -> Quart:
             "GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD"
         )
         response.headers["Access-Control-Max-Age"] = "1728000"
+        response.headers["Content-Security-Policy"] = \
+            "default-src 'none'; script-src 'self'; connect-src 'self'; " \
+            "img-src 'self'; style-src 'self'; base-uri 'self'; form-action 'self'"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Server"] = "Apache"
         response.headers["Strict-Transport-Security"] = (
