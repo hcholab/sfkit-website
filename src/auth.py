@@ -41,9 +41,18 @@ async def get_user_id(req: Union[Request, Websocket] = request) -> str:
     if not auth_header.startswith(BEARER_PREFIX):  # use auth_key for anon user
         _, user_id = await get_cli_user_id()
         return user_id
-    user = await _get_azure_b2c_user(auth_header)
+    if isinstance(req, Websocket):
+        user = {}
+    else:
+        user = await _get_azure_b2c_user(auth_header)
     if constants.TERRA:
         user.update(await _get_terra_user(auth_header))
+    else:
+        # if not using an auth key and not on Terra,
+        # Websocket auth will fail,
+        # since we don't currently have a solution to tie
+        # Google OAuth token IDs to user identities outside of Terra
+        pass
 
     user_id = user[TERRA_ID_KEY] if constants.TERRA else user[ID_KEY]
     if user_id in USER_IDS:
