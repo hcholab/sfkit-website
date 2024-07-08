@@ -1,3 +1,4 @@
+import traceback
 import uuid
 from typing import Union
 from urllib.parse import urlparse, urlunsplit
@@ -121,7 +122,7 @@ async def add_user_to_db(decoded_token: dict) -> None:
         if constants.SENTRY_DSN:
             capture_event({"user_id": user_id}, "user_added")
     except Exception as e:
-        raise RuntimeError({"error": "Failed to create user", "details": str(e)}) from e
+        raise RuntimeError({"error": "Failed to create user", "details": str(e), "stacktrace": traceback.format_exc()}) from e
 
 
 def is_valid_uuid(val) -> bool:
