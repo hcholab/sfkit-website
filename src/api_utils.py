@@ -122,7 +122,7 @@ async def add_user_to_db(decoded_token: dict) -> None:
         if constants.SENTRY_DSN:
             capture_event(
                 {
-                    "message": "User_added",
+                    "message": "User added",
                     "user": {
                         "id": user_id,
                     },
