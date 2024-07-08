@@ -120,7 +120,7 @@ async def add_user_to_db(decoded_token: dict) -> None:
             merge=True,
         )
         if constants.SENTRY_DSN:
-            sentry_sdk.Scope.capture_event({"user_id": user_id}, {"type": "user_added"})
+            sentry_sdk.capture_event({"user_id": user_id}, {"type": "user_added"})
     except Exception as e:
         raise RuntimeError({"error": "Failed to create user", "details": str(e), "stacktrace": traceback.format_exc()}) from e
 
