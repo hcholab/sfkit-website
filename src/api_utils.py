@@ -123,6 +123,7 @@ async def add_user_to_db(decoded_token: dict) -> None:
             capture_event(
                 {
                     "message": "User added",
+                    "level": "info",
                     "user": {
                         "id": user_id,
                     },
