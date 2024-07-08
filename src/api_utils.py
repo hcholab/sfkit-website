@@ -4,12 +4,12 @@ from typing import Union
 from urllib.parse import urlparse, urlunsplit
 
 import httpx
+import sentry_sdk
 from google.cloud import firestore
 from google.cloud.firestore import AsyncDocumentReference
 from google.cloud.firestore_v1 import FieldFilter
 from jsonschema import ValidationError, validate
 from quart import current_app
-from sentry_sdk import capture_event
 from werkzeug.exceptions import BadRequest, Forbidden, HTTPException
 from werkzeug.wrappers import Response
 
@@ -120,7 +120,7 @@ async def add_user_to_db(decoded_token: dict) -> None:
             merge=True,
         )
         if constants.SENTRY_DSN:
-            capture_event({"user_id": user_id}, "user_added")
+            sentry_sdk.Scope.capture_event({"user_id": user_id}, {"type": "user_added"})
     except Exception as e:
         raise RuntimeError({"error": "Failed to create user", "details": str(e), "stacktrace": traceback.format_exc()}) from e
 
