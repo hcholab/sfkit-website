@@ -8,7 +8,8 @@ from google.cloud.firestore import AsyncDocumentReference
 from google.cloud.firestore_v1 import FieldFilter
 from jsonschema import ValidationError, validate
 from quart import current_app
-from werkzeug.exceptions import BadRequest, HTTPException, Forbidden
+from sentry_sdk import capture_event
+from werkzeug.exceptions import BadRequest, Forbidden, HTTPException
 from werkzeug.wrappers import Response
 
 from src.utils import constants, custom_logging
@@ -117,6 +118,8 @@ async def add_user_to_db(decoded_token: dict) -> None:
             },
             merge=True,
         )
+        if constants.SENTRY_DSN:
+            capture_event({"user_id": user_id}, "user_added")
     except Exception as e:
         raise RuntimeError({"error": "Failed to create user", "details": str(e)}) from e
 
