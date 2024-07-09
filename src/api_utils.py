@@ -1,3 +1,4 @@
+import traceback
 import uuid
 from typing import Union
 from urllib.parse import urlparse, urlunsplit
@@ -8,7 +9,8 @@ from google.cloud.firestore import AsyncDocumentReference
 from google.cloud.firestore_v1 import FieldFilter
 from jsonschema import ValidationError, validate
 from quart import current_app
-from werkzeug.exceptions import BadRequest, HTTPException, Forbidden
+from sentry_sdk import capture_event
+from werkzeug.exceptions import BadRequest, Forbidden, HTTPException
 from werkzeug.wrappers import Response
 
 from src.utils import constants, custom_logging
@@ -117,8 +119,18 @@ async def add_user_to_db(decoded_token: dict) -> None:
             },
             merge=True,
         )
+        if constants.SENTRY_DSN:
+            capture_event(
+                {
+                    "message": "User added",
+                    "level": "info",
+                    "user": {
+                        "id": user_id,
+                    },
+                }
+            )
     except Exception as e:
-        raise RuntimeError({"error": "Failed to create user", "details": str(e)}) from e
+        raise RuntimeError({"error": "Failed to create user", "details": str(e), "stacktrace": traceback.format_exc()}) from e
 
 
 def is_valid_uuid(val) -> bool:
