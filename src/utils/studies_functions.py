@@ -43,7 +43,7 @@ async def email(inviter: str, recipient: str, invitation_message: str, study_tit
     """
     doc_ref_dict: dict = (await current_app.config["DATABASE"].collection("meta").document("sendgrid").get()).to_dict()
 
-    api_key = os.getenv("SENDGRID_API_KEY") or doc_ref_dict.get("api_key")
+    api_key = constants.SENDGRID_API_KEY or doc_ref_dict.get("api_key")
     if not api_key:
         raise BadRequest("No SendGrid API key found")
     sg = SendGridAPIClient(api_key=api_key)
@@ -54,9 +54,11 @@ async def email(inviter: str, recipient: str, invitation_message: str, study_tit
         study_title=escape(study_title),
     )
 
+    from_email = constants.SENDGRID_FROM_EMAIL or doc_ref_dict.get("from_email", "")
+    from_user = "Terra" if constants.TERRA else doc_ref_dict.get("from_user", "")
     message = Mail(
         to_emails=recipient,
-        from_email=Email(doc_ref_dict.get("from_email", ""), doc_ref_dict.get("from_user", "")),
+        from_email=Email(from_email, from_user),
         subject=f"sfkit: Invitation to join {study_title} study",
         html_content=html_content,
     )
