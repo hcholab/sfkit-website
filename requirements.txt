@@ -19,6 +19,6 @@ Quart==0.19.6
 quart-cors==0.7.0
 requests==2.32.3
 sendgrid==6.11.0
-sentry-sdk==2.3.1
+sentry-sdk==2.8.0
 tenacity==8.3.0
 Werkzeug==3.0.3
