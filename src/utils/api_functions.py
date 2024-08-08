@@ -43,8 +43,8 @@ async def process_task(db: AsyncClient, username: str, parameter: str, doc_ref: 
         try:
             await update_tasks(db.transaction(), {"username": username, "task": task, "doc_ref": doc_ref})
             return {}, 200
-        except Exception as e:
-            logger.error(f"Failed to update task: {e}")
+        except:
+            logger.exception("Failed to update task:")
             time.sleep(1)
 
     return {"error": "Failed to update task"}, 400
@@ -57,8 +57,8 @@ async def process_parameter(db: AsyncClient, username: str, parameter: str, doc_
                 db.transaction(), {"username": username, "parameter": parameter, "doc_ref": doc_ref}
             ):
                 return {}, 200
-        except Exception as e:
-            logger.error(f"Failed to update parameter: {e}")
+        except:
+            logger.exception("Failed to update parameter:")
             time.sleep(1)
 
     return {"error": "Failed to update parameter"}, 400

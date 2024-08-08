@@ -27,8 +27,8 @@ async def study(user_id) -> Response:
 
     try:
         display_names = (await db.collection("users").document("display_names").get()).to_dict() or {}
-    except Exception as e:
-        logger.error(f"Failed to fetch display names: {e}")
+    except:
+        logger.exception("Failed to fetch display names:")
         raise BadRequest()
 
     doc_ref_dict["owner_name"] = display_names.get(doc_ref_dict["owner"], doc_ref_dict["owner"])
@@ -178,8 +178,8 @@ async def study_information(user_id) -> Response:
         )
 
         return jsonify({"message": "Study information updated successfully"})
-    except Exception as e:
-        logger.error(f"Failed to update study information: {e}")
+    except:
+        logger.exception("Failed to update study information:")
         raise BadRequest()
 
 
@@ -206,8 +206,8 @@ async def parameters(user_id) -> Response:
         await doc_ref.set(doc_ref_dict, merge=True)
 
         return jsonify({"message": "Parameters updated successfully"})
-    except Exception as e:
-        logger.error(f"Failed to update parameters: {e}")
+    except:
+        logger.exception("Failed to update parameters:")
         raise BadRequest()
 
 
