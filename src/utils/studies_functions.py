@@ -62,7 +62,7 @@ async def email(inviter: str, recipient: str, invitation_message: str, study_tit
         subject=f"sfkit: Invitation to join {study_title} study",
         html_content=html_content,
     )
-    message.add_bcc(doc_ref_dict.get("from_email", ""))
+    message.add_bcc(from_email)
 
     try:
         response = sg.send(message)
