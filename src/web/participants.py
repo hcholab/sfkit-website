@@ -39,8 +39,8 @@ async def invite_participant(user_id) -> Response:
         )
 
         return jsonify({"message": "Invitation sent successfully"})
-    except Exception as e:
-        logger.error(f"Failed to send invitation: {e}")
+    except:
+        logger.exception("Failed to send invitation")
         raise BadRequest("Failed to send invitation")
 
 
@@ -126,8 +126,8 @@ async def request_join_study(user_id: str) -> Response:
 
         return jsonify({"message": "Join study request submitted successfully"})
 
-    except Exception as e:
-        logger.error(f"Failed to request to join study: {e}")
+    except:
+        logger.exception("Failed to request to join study:")
         raise BadRequest("Failed to request to join study")
 
 

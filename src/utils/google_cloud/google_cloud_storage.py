@@ -45,7 +45,7 @@ def upload_blob_from_file(bucket_name: str, file_storage: FileStorage, destinati
         blob = bucket.blob(destination_blob_name)
         blob.upload_from_file(file_storage)
     except GoogleAPIError as e:
-        logger.error(f"Error uploading file {file_storage.filename}: {e}")
+        logger.error(f"Error uploading file {file_storage.filename}: {e}", exc_info=True)
         return False
 
     return True

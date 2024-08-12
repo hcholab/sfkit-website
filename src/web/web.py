@@ -38,8 +38,8 @@ async def create_custom_token(user_id) -> Response:
             }
         )
 
-    except Exception as e:
-        logger.error(f"Failed to create custom token: {e}")
+    except:
+        logger.exception("Failed to create custom token:")
         raise BadRequest("Error creating custom token")
 
 
@@ -49,8 +49,8 @@ async def public_studies(user_id="") -> Response:
     try:
         public_studies = await get_studies(private_filter=False)
         display_names = await get_display_names()
-    except Exception as e:
-        logger.error(f"Failed to fetch public studies: {e}")
+    except:
+        logger.exception(f"Failed to fetch public studies:")
         raise BadRequest("Failed to fetch public studies")
 
     for study in public_studies:
@@ -65,8 +65,8 @@ async def my_studies(user_id) -> Response:
     try:
         my_studies = await get_studies()
         display_names = await get_display_names()
-    except Exception as e:
-        logger.error(f"Failed to fetch my studies: {e}")
+    except:
+        logger.exception("Failed to fetch my studies:")
         raise BadRequest("Failed to fetch my studies")
 
     for study in my_studies:
@@ -91,8 +91,8 @@ async def profile(user_id: str, target_user_id: str = "") -> Response:
             profile["displayName"] = display_names.get(target_user_id, target_user_id)
             profile = {key: profile[key] for key in ["about", "displayName", "email"] if key in profile}
             return jsonify({"profile": profile})
-        except Exception as e:
-            logger.error(f"Failed to fetch profile: {e}")
+        except:
+            logger.exception("Failed to fetch profile:")
             raise BadRequest("Failed to fetch profile")
     else:
         if user_id != target_user_id:
@@ -107,8 +107,8 @@ async def profile(user_id: str, target_user_id: str = "") -> Response:
             await db.collection("users").document(target_user_id).set(profile)
 
             return jsonify({"message": "Profile updated successfully"})
-        except Exception as e:
-            logger.error(f"Failed to update profile: {e}")
+        except:
+            logger.exception("Failed to update profile:")
             raise BadRequest("Failed to update profile")
 
 

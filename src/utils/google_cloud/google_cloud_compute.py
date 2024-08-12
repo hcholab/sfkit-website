@@ -45,8 +45,8 @@ class GoogleCloudCompute:
 
         try:
             firewalls: list = self.compute.firewalls().list(project=self.gcp_project).execute()["items"]
-        except Exception as e:
-            logger.error(f"Error getting firewalls: {e}")
+        except:
+            logger.exception("Error getting firewalls:")
             firewalls = []
         firewall_names: list[str] = [firewall["name"] for firewall in firewalls]
         for firewall_name in firewall_names:
@@ -59,8 +59,8 @@ class GoogleCloudCompute:
                 .list(project=self.gcp_project, region=constants.SERVER_REGION)
                 .execute()["items"]
             )
-        except Exception as e:
-            logger.error(f"Error getting subnets: {e}")
+        except:
+            logger.exception("Error getting subnets:")
             subnets = []
         for subnet in subnets:
             if subnet["name"][:-1] == create_subnet_name(self.network_name, ""):
@@ -103,8 +103,8 @@ class GoogleCloudCompute:
     def delete_network(self) -> None:
         try:
             networks: list = self.compute.networks().list(project=self.gcp_project).execute()["items"]
-        except Exception as e:
-            logger.error(f"Error getting networks: {e}")
+        except:
+            logger.exception("Error getting networks:")
             networks = []
         network_names: list[str] = [net["name"] for net in networks]
 
@@ -167,8 +167,8 @@ class GoogleCloudCompute:
         # a peering is conflicting if it connects to a project that is not in the allowed_gcp_projects list
         try:
             network_info = self.compute.networks().get(project=self.gcp_project, network=self.network_name).execute()
-        except Exception as e:
-            logger.error(f"Error getting network info: {e}")
+        except:
+            logger.exception("Error getting network info:")
             return False
 
         peerings = [peer["name"].split("peering-")[1] for peer in network_info.get("peerings", [])]
@@ -411,8 +411,8 @@ class GoogleCloudCompute:
         logger.info("Listing VM instances...")
         try:
             result = self.compute.instances().list(project=self.gcp_project, zone=self.zone).execute()
-        except Exception as e:
-            logger.error(f"Error listing instances: {e}")
+        except:
+            logger.exception("Error listing instances:")
             return []
         return [
             instance["name"]

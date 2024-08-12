@@ -70,7 +70,7 @@ async def email(inviter: str, recipient: str, invitation_message: str, study_tit
         return response.status_code  # type: ignore
 
     except HTTPError as e:
-        logger.error(f"Email failed to send: {e}")
+        logger.error(f"Email failed to send: {e}", exc_info=True)
         return e.status_code  # type: ignore
 
 
@@ -145,8 +145,8 @@ async def setup_gcp(doc_ref: AsyncDocumentReference, role: str) -> None:
             num_cpus=int(user_parameters["NUM_CPUS"]["value"]),
             boot_disk_size=int(user_parameters["BOOT_DISK_SIZE"]["value"]),
         )
-    except Exception as e:
-        logger.error(f"An error occurred during GCP setup: {e}")
+    except:
+        logger.exception("An error occurred during GCP setup:")
         doc_ref_dict["status"][
             user
         ] = "FAILED - sfkit failed to set up your networking and VM instance. Please restart the study and double-check your parameters and configuration. If the problem persists, please contact us."

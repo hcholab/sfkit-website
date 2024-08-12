@@ -211,8 +211,8 @@ def authenticate(f):
     async def decorated_function(*args, **kwargs):
         try:
             user_id = await get_user_id()
-        except Exception as e:
-            logger.error(f"Failed to authenticate user: {e}")
+        except:
+            logger.exception("Failed to authenticate user:")
             raise Unauthorized()
 
         return await f(user_id, *args, **kwargs)
