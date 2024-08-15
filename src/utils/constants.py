@@ -529,6 +529,7 @@ DEFAULT_USER_PARAMETERS = {
         "AUTH_KEY",
         "SEND_RESULTS",
         "RESULTS_PATH",
+        "CREATE_VM",
         "DELETE_VM",
     ],
 }
