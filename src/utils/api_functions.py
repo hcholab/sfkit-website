@@ -3,11 +3,11 @@ import time
 
 from google.cloud import firestore
 from google.cloud.firestore import AsyncClient, AsyncDocumentReference
-from studies_functions import is_create_vm
 
 from src.utils import custom_logging
 from src.utils.google_cloud.google_cloud_compute import (GoogleCloudCompute,
                                                          format_instance_name)
+from src.utils.studies_functions import is_create_vm
 
 logger = custom_logging.setup_logging(__name__)
 

@@ -6,12 +6,12 @@ from typing import Optional
 import googleapiclient.discovery as googleapi
 import ipaddr
 from googleapiclient.errors import HttpError
-from studies_functions import is_create_vm
 from tenacity import retry
 from tenacity.stop import stop_after_attempt
 from tenacity.wait import wait_fixed
 
 from src.utils import constants, custom_logging
+from src.utils.studies_functions import is_create_vm
 
 logger = custom_logging.setup_logging(__name__)
 
