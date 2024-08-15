@@ -236,6 +236,13 @@ def is_participant(study) -> bool:
     )
 
 
+def is_create_vm(study, participant: str) -> bool:
+    return study["personal_parameters"][participant].get("CREATE_VM", {
+        # for backwards compatibility with study-wide setup_configuration
+        "value": "Yes" if study.get("setup_configuration", "website") == "website" else "No"
+    })["value"] == "Yes"
+
+
 async def is_study_title_unique(study_title: str, db) -> bool:
     study_ref = db.collection("studies").where("title", "==", study_title).limit(1).stream()
     async for _ in study_ref:

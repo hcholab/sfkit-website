@@ -87,6 +87,7 @@ default_user_parameters_properties = {
     # "AUTH_KEY":
     "SEND_RESULTS": {"type": "string", "enum": ["Yes", "No"]},
     "RESULTS_PATH": {"type": "string", "pattern": "^$|^[a-z0-9][a-z0-9._-]{2,62}/.+$"},
+    "CREATE_VM": {"type": "string", "enum": ["Yes", "No"]},
     "DELETE_VM": {"type": "string", "enum": ["Yes", "No"]},
 }
 

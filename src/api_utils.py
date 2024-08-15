@@ -68,7 +68,7 @@ async def get_studies(private_filter=None) -> list:
         "private",
         "invited_participants",
         "study_type",
-        "setup_configuration",
+        "setup_configuration", # deprecated
         "demo",
     ]
     try:

@@ -81,14 +81,13 @@ async def create_study(user_id="") -> Response:
 
     data = validate_json(await request.json, create_study_schema)
     study_type = data.get("study_type") or ""
-    setup_configuration = data.get("setup_configuration")
     study_title = data.get("title") or ""
     demo = data.get("demo_study") or False
     private_study = data.get("private_study")
     description = data.get("description")
     study_information = data.get("study_information")
 
-    logger.info(f"Creating {study_type} study with {setup_configuration} configuration")
+    logger.info(f"Creating {study_type} study")
 
     if await study_title_already_exists(study_title):
         raise Conflict("Study title already exists")
@@ -103,7 +102,6 @@ async def create_study(user_id="") -> Response:
             "study_id": study_id,
             "title": study_title,
             "study_type": study_type,
-            "setup_configuration": setup_configuration,
             "private": private_study or demo,
             "demo": demo,
             "description": description,
