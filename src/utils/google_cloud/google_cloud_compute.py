@@ -11,7 +11,7 @@ from tenacity.stop import stop_after_attempt
 from tenacity.wait import wait_fixed
 
 from src.utils import constants, custom_logging
-from src.utils.studies_functions import is_create_vm
+from src.utils.generic_functions import is_create_vm
 
 logger = custom_logging.setup_logging(__name__)
 

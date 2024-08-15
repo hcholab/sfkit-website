@@ -21,3 +21,10 @@ async def add_notification(notification: str, user_id: str, location: str = "not
     notifications: list[str] = doc_ref_dict.get(location, [])
     notifications.append(notification)
     await doc_ref.set({location: notifications}, merge=True)
+
+
+def is_create_vm(study: dict, participant: str) -> bool:
+    return study["personal_parameters"][participant].get("CREATE_VM", {
+        # for backwards compatibility with study-wide setup_configuration
+        "value": "Yes" if study.get("setup_configuration", "website") == "website" else "No"
+    })["value"] == "Yes"
