@@ -11,6 +11,7 @@ from tenacity.stop import stop_after_attempt
 from tenacity.wait import wait_fixed
 
 from src.utils import constants, custom_logging
+from src.utils.generic_functions import is_create_vm
 
 logger = custom_logging.setup_logging(__name__)
 
@@ -71,18 +72,22 @@ class GoogleCloudCompute:
     def setup_networking(self, doc_ref_dict: dict, role: str) -> None:
         logger.info(f"Setting up networking for role {role}...")
         gcp_projects: list = [constants.SERVER_GCP_PROJECT]
-        gcp_projects.extend(
-            doc_ref_dict["personal_parameters"][participant]["GCP_PROJECT"]["value"]
-            for participant in doc_ref_dict["participants"]
-        )
+        gcp_projects_peerings: list = [constants.SERVER_GCP_PROJECT]
+
+        for username, participant in doc_ref_dict["participants"].items():
+            gcp_project = participant["GCP_PROJECT"]["value"]
+            gcp_projects.extend(gcp_project)
+
+            if is_create_vm(doc_ref_dict, username):
+                gcp_projects_peerings.extend(gcp_project)
 
         self.create_network_if_it_does_not_already_exist(doc_ref_dict)
         self.create_firewall(doc_ref_dict)
         self.remove_conflicting_peerings(gcp_projects)
         self.remove_conflicting_subnets(gcp_projects)
         self.create_subnet(role)
-        if doc_ref_dict["setup_configuration"] == "website":
-            self.create_peerings(gcp_projects)
+        if gcp_projects_peerings:
+            self.create_peerings(gcp_projects_peerings)
 
     def create_network_if_it_does_not_already_exist(self, doc_ref_dict: dict) -> None:
         networks: list = self.compute.networks().list(project=self.gcp_project).execute()["items"]

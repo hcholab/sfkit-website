@@ -503,6 +503,11 @@ DEFAULT_USER_PARAMETERS = {
                 This could be in the same bucket as your data, or a different one.",
         "value": "",
     },
+    "CREATE_VM": {
+        "name": "Create VM",
+        "description": "Whether or not to automatically create a VM instance on protocol start.",
+        "value": "Yes",
+    },
     "DELETE_VM": {
         "name": "Delete VM",
         "description": "Whether or not to immediately and automatically delete the VM instance on protocol completion.",
@@ -524,6 +529,7 @@ DEFAULT_USER_PARAMETERS = {
         "AUTH_KEY",
         "SEND_RESULTS",
         "RESULTS_PATH",
+        "CREATE_VM",
         "DELETE_VM",
     ],
 }
