@@ -116,7 +116,6 @@ async def profile(user_id: str, target_user_id: str = "") -> Response:
 @authenticate
 async def start_protocol(user_id) -> Response:
     study_id = validate_uuid(request.args.get("study_id"))
-    dry_run = "dry_run" in request.args
     _, doc_ref, doc_ref_dict = await fetch_study(study_id, user_id)
     statuses = doc_ref_dict["status"]
 
@@ -124,7 +123,7 @@ async def start_protocol(user_id) -> Response:
         if message := check_conditions(doc_ref_dict, user_id):
             raise Conflict(message)
 
-        if dry_run:
+        if "dry_run" in request.args:
             return jsonify({"message": "Protocol would have started successfully"})
 
         statuses[user_id] = "ready to begin sfkit"

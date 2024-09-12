@@ -265,13 +265,15 @@ def check_conditions(doc_ref_dict, user_id) -> str:
         return "Non-demo studies require at least 2 participants to run the protocol."
     if not demo and not num_inds:
         return "You have not set the number of individuals/rows in your data. Please click on the 'Study Parameters' button to set this value and any other parameters you wish to change before running the protocol."
+    if not is_create_vm(doc_ref_dict, user_id):
+        return ""
     if not gcp_project:
         return "Your GCP project ID is not set. Please follow the instructions in the 'Configure Study' button before running the protocol."
-    if not demo and "broad-cho-priv1" in gcp_project and constants.FLASK_DEBUG != "development":
+    if not demo and gcp_project == constants.SERVER_GCP_PROJECT and constants.FLASK_DEBUG != "development":
         return "This project ID is only allowed for a demo study. Please follow the instructions in the 'Configure Study' button to set up your own GCP project before running the protocol."
     if not demo and not data_path:
         return "Your data path is not set. Please follow the instructions in the 'Configure Study' button before running the protocol."
-    if is_create_vm(doc_ref_dict, user_id) and not GoogleCloudIAM().test_permissions(gcp_project):
+    if not GoogleCloudIAM().test_permissions(gcp_project):
         return "You have not given the website the necessary GCP permissions for the project you have entered. Please click on 'Configure Study' to double-check that your project ID is correct and that you have given the website the necessary permissions (and they are not expired) in that GCP project."
     return ""
 
