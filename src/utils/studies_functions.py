@@ -271,7 +271,7 @@ def check_conditions(doc_ref_dict, user_id) -> str:
         return "This project ID is only allowed for a demo study. Please follow the instructions in the 'Configure Study' button to set up your own GCP project before running the protocol."
     if not demo and not data_path:
         return "Your data path is not set. Please follow the instructions in the 'Configure Study' button before running the protocol."
-    if not GoogleCloudIAM().test_permissions(gcp_project):
+    if is_create_vm(doc_ref_dict, user_id) and not GoogleCloudIAM().test_permissions(gcp_project):
         return "You have not given the website the necessary GCP permissions for the project you have entered. Please click on 'Configure Study' to double-check that your project ID is correct and that you have given the website the necessary permissions (and they are not expired) in that GCP project."
     return ""
 
