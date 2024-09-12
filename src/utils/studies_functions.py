@@ -19,6 +19,7 @@ from werkzeug.exceptions import BadRequest
 from src.api_utils import APIException, fetch_study
 from src.auth import get_service_account_headers
 from src.utils import constants, custom_logging
+from src.utils.generic_functions import is_create_vm
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, format_instance_name
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 
@@ -284,6 +285,7 @@ async def update_status_and_start_setup(doc_ref, doc_ref_dict, study_id):
         statuses[user] = "setting up your vm instance"
         await doc_ref.set({"status": statuses}, merge=True)
 
-        asyncio.create_task(setup_gcp(doc_ref, str(role)))
+        if is_create_vm(doc_ref_dict, user):
+            asyncio.create_task(setup_gcp(doc_ref, str(role)))
 
         time.sleep(1)
