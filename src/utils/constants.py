@@ -506,7 +506,7 @@ DEFAULT_USER_PARAMETERS = {
     "CREATE_VM": {
         "name": "Create VM",
         "description": "Whether or not to automatically create a VM instance on protocol start.",
-        "value": "Yes",
+        "value": "No",
     },
     "DELETE_VM": {
         "name": "Delete VM",

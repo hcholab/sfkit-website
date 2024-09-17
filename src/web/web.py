@@ -123,6 +123,9 @@ async def start_protocol(user_id) -> Response:
         if message := check_conditions(doc_ref_dict, user_id):
             raise Conflict(message)
 
+        if "dry_run" in request.args:
+            return jsonify({"message": "Protocol would have started successfully"})
+
         statuses[user_id] = "ready to begin sfkit"
         await doc_ref.set({"status": statuses}, merge=True)
 

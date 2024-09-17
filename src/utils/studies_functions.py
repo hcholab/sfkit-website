@@ -19,6 +19,7 @@ from werkzeug.exceptions import BadRequest
 from src.api_utils import APIException, fetch_study
 from src.auth import get_service_account_headers
 from src.utils import constants, custom_logging
+from src.utils.generic_functions import is_create_vm
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, format_instance_name
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 
@@ -264,9 +265,11 @@ def check_conditions(doc_ref_dict, user_id) -> str:
         return "Non-demo studies require at least 2 participants to run the protocol."
     if not demo and not num_inds:
         return "You have not set the number of individuals/rows in your data. Please click on the 'Study Parameters' button to set this value and any other parameters you wish to change before running the protocol."
+    if not is_create_vm(doc_ref_dict, user_id):
+        return ""
     if not gcp_project:
         return "Your GCP project ID is not set. Please follow the instructions in the 'Configure Study' button before running the protocol."
-    if not demo and "broad-cho-priv1" in gcp_project and constants.FLASK_DEBUG != "development":
+    if not demo and gcp_project == constants.SERVER_GCP_PROJECT and constants.FLASK_DEBUG != "development":
         return "This project ID is only allowed for a demo study. Please follow the instructions in the 'Configure Study' button to set up your own GCP project before running the protocol."
     if not demo and not data_path:
         return "Your data path is not set. Please follow the instructions in the 'Configure Study' button before running the protocol."
@@ -284,6 +287,7 @@ async def update_status_and_start_setup(doc_ref, doc_ref_dict, study_id):
         statuses[user] = "setting up your vm instance"
         await doc_ref.set({"status": statuses}, merge=True)
 
-        asyncio.create_task(setup_gcp(doc_ref, str(role)))
+        if is_create_vm(doc_ref_dict, user):
+            asyncio.create_task(setup_gcp(doc_ref, str(role)))
 
         time.sleep(1)
