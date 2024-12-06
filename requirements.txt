@@ -15,10 +15,10 @@ ipaddr==2.2.0
 jsonschema==4.22.0
 PyJWT==2.8.0
 python-http-client==3.3.7
-Quart==0.19.6
+Quart==0.19.9
 quart-cors==0.7.0
 requests==2.32.3
 sendgrid==6.11.0
 sentry-sdk==2.8.0
 tenacity==8.3.0
-Werkzeug==3.0.3
+Werkzeug==3.1.3
