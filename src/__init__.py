@@ -2,9 +2,11 @@ import os
 import secrets
 
 import firebase_admin
+import sentry_sdk
 from google.cloud import firestore
-from quart import Quart, json
+from quart import Quart, Response, json
 from quart_cors import cors
+from sentry_sdk.integrations.quart import QuartIntegration
 from werkzeug.exceptions import HTTPException
 
 from src import cli, signaling, status
@@ -23,6 +25,14 @@ def create_app() -> Quart:
         logger.info("Creating app - NOT on Terra")
 
     initialize_firebase_app()
+
+    if constants.SENTRY_DSN:
+        sentry_sdk.init(
+            dsn=constants.SENTRY_DSN,
+            environment=constants.SENTRY_ENVIRONMENT,
+            integrations=[QuartIntegration()],
+            enable_tracing=True,
+        )
 
     app = Quart(__name__)
 
@@ -56,6 +66,31 @@ def create_app() -> Quart:
             res.content_type = "application/json"
         return res
 
+    @app.after_request
+    async def apply_security_headers(response: Response) -> Response:
+        # no caching
+        response.headers["Cache-Control"] = "no-store"
+        response.headers["Pragma"] = "no-cache"
+
+        # security
+        response.headers["Access-Control-Allow-Headers"] = (
+            "authorization,content-type,accept,origin,x-app-id,x-mpc-study-id"
+        )
+        response.headers["Access-Control-Allow-Methods"] = (
+            "GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD"
+        )
+        response.headers["Access-Control-Max-Age"] = "1728000"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Server"] = "Apache"
+        response.headers["Strict-Transport-Security"] = (
+            "max-age=31536000; includeSubDomains"
+        )
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+
+        return response
+
     return app
 
 
@@ -65,12 +100,18 @@ def initialize_firebase_app() -> None:
         "projectId": constants.FIREBASE_PROJECT_ID,
     }
     if os.path.exists(key):  # local testing
-        firebase_admin.initialize_app(credential=firebase_admin.credentials.Certificate(key), options=options)
+        firebase_admin.initialize_app(
+            credential=firebase_admin.credentials.Certificate(key), options=options
+        )
     else:
         logger.info("No service account key found, using default for firebase_admin")
         firebase_admin.initialize_app(options=options)
 
     # test firestore connection
     logger.info(f"Using firestore database: {constants.FIRESTORE_DATABASE}")
-    db = firestore.Client(project=constants.FIREBASE_PROJECT_ID, database=constants.FIRESTORE_DATABASE)
-    logger.info(f'Firestore test: {db.collection("test").document("test").get().exists}')
+    db = firestore.Client(
+        project=constants.FIREBASE_PROJECT_ID, database=constants.FIRESTORE_DATABASE
+    )
+    logger.info(
+        f'Firestore test: {db.collection("test").document("test").get().exists}'
+    )

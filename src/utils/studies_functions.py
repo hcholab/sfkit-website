@@ -5,7 +5,7 @@ import time
 from html import escape
 from http import HTTPStatus
 from string import Template
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import httpx
 from google.cloud import firestore
@@ -16,9 +16,10 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Email, Mail
 from werkzeug.exceptions import BadRequest
 
-from src.api_utils import APIException
+from src.api_utils import APIException, fetch_study
 from src.auth import get_service_account_headers
 from src.utils import constants, custom_logging
+from src.utils.generic_functions import is_create_vm
 from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, format_instance_name
 from src.utils.google_cloud.google_cloud_iam import GoogleCloudIAM
 
@@ -43,7 +44,7 @@ async def email(inviter: str, recipient: str, invitation_message: str, study_tit
     """
     doc_ref_dict: dict = (await current_app.config["DATABASE"].collection("meta").document("sendgrid").get()).to_dict()
 
-    api_key = os.getenv("SENDGRID_API_KEY") or doc_ref_dict.get("api_key")
+    api_key = constants.SENDGRID_API_KEY or doc_ref_dict.get("api_key")
     if not api_key:
         raise BadRequest("No SendGrid API key found")
     sg = SendGridAPIClient(api_key=api_key)
@@ -54,13 +55,15 @@ async def email(inviter: str, recipient: str, invitation_message: str, study_tit
         study_title=escape(study_title),
     )
 
+    from_email = constants.SENDGRID_FROM_EMAIL or doc_ref_dict.get("from_email", "")
+    from_user = "Terra" if constants.TERRA else doc_ref_dict.get("from_user", "")
     message = Mail(
         to_emails=recipient,
-        from_email=Email(doc_ref_dict.get("from_email", ""), doc_ref_dict.get("from_user", "")),
+        from_email=Email(from_email, from_user),
         subject=f"sfkit: Invitation to join {study_title} study",
         html_content=html_content,
     )
-    message.add_bcc(doc_ref_dict.get("from_email", ""))
+    message.add_bcc(from_email)
 
     try:
         response = sg.send(message)
@@ -68,7 +71,7 @@ async def email(inviter: str, recipient: str, invitation_message: str, study_tit
         return response.status_code  # type: ignore
 
     except HTTPError as e:
-        logger.error(f"Email failed to send: {e}")
+        logger.error(f"Email failed to send: {e}", exc_info=True)
         return e.status_code  # type: ignore
 
 
@@ -80,9 +83,7 @@ async def make_auth_key(study_id: str, user_id: str) -> str:
     :param user_id: The ID of the user.
     :return: The generated auth_key.
     """
-    db = current_app.config["DATABASE"]
-    doc_ref = db.collection("studies").document(study_id)
-    doc_ref_dict: dict = (await doc_ref.get()).to_dict()
+    _, doc_ref, doc_ref_dict = await fetch_study(study_id, user_id)
 
     auth_key = secrets.token_hex(16)
     doc_ref_dict["personal_parameters"][user_id]["AUTH_KEY"]["value"] = auth_key
@@ -135,7 +136,7 @@ async def setup_gcp(doc_ref: AsyncDocumentReference, role: str) -> None:
             {"key": "auth_key", "value": user_parameters["AUTH_KEY"]["value"]},
             {"key": "demo", "value": doc_ref_dict["demo"]},
             {"key": "study_type", "value": doc_ref_dict["study_type"]},
-            {"key": "SFKIT_API_URL", "value": constants.SFKIT_API_URL}
+            {"key": "SFKIT_API_URL", "value": constants.SFKIT_API_URL},
         ]
 
         gcloudCompute.setup_instance(
@@ -145,8 +146,8 @@ async def setup_gcp(doc_ref: AsyncDocumentReference, role: str) -> None:
             num_cpus=int(user_parameters["NUM_CPUS"]["value"]),
             boot_disk_size=int(user_parameters["BOOT_DISK_SIZE"]["value"]),
         )
-    except Exception as e:
-        logger.error(f"An error occurred during GCP setup: {e}")
+    except:
+        logger.exception("An error occurred during GCP setup:")
         doc_ref_dict["status"][
             user
         ] = "FAILED - sfkit failed to set up your networking and VM instance. Please restart the study and double-check your parameters and configuration. If the problem persists, please contact us."
@@ -212,11 +213,6 @@ async def generate_ports(doc_ref: AsyncDocumentReference, role: str) -> None:
     await doc_ref.set(doc_ref_dict, merge=True)
 
 
-def add_file_to_zip(zip_file, filepath: str, archive_name: Optional[str] = None) -> None:
-    with open(filepath, "rb") as f:
-        zip_file.writestr(archive_name or os.path.basename(filepath), f.read())
-
-
 def sanitize_path(path: str) -> str:
     # remove trailing slash if present
     if path and path[-1] == "/":
@@ -269,9 +265,11 @@ def check_conditions(doc_ref_dict, user_id) -> str:
         return "Non-demo studies require at least 2 participants to run the protocol."
     if not demo and not num_inds:
         return "You have not set the number of individuals/rows in your data. Please click on the 'Study Parameters' button to set this value and any other parameters you wish to change before running the protocol."
+    if not is_create_vm(doc_ref_dict, user_id):
+        return ""
     if not gcp_project:
         return "Your GCP project ID is not set. Please follow the instructions in the 'Configure Study' button before running the protocol."
-    if not demo and "broad-cho-priv1" in gcp_project and constants.FLASK_DEBUG != "development":
+    if not demo and gcp_project == constants.SERVER_GCP_PROJECT and constants.FLASK_DEBUG != "development":
         return "This project ID is only allowed for a demo study. Please follow the instructions in the 'Configure Study' button to set up your own GCP project before running the protocol."
     if not demo and not data_path:
         return "Your data path is not set. Please follow the instructions in the 'Configure Study' button before running the protocol."
@@ -289,6 +287,7 @@ async def update_status_and_start_setup(doc_ref, doc_ref_dict, study_id):
         statuses[user] = "setting up your vm instance"
         await doc_ref.set({"status": statuses}, merge=True)
 
-        asyncio.create_task(setup_gcp(doc_ref, str(role)))
+        if is_create_vm(doc_ref_dict, user):
+            asyncio.create_task(setup_gcp(doc_ref, str(role)))
 
         time.sleep(1)

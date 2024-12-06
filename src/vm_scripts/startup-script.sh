@@ -37,7 +37,7 @@ echo "SFKIT_API_URL: $SFKIT_API_URL"
 #     export SFKIT_PROXY_ON=true
 # fi
 
-apt-get --assume-yes update
+apt-get --assume-yes update && apt-get --assume-yes upgrade
 apt-get --assume-yes install build-essential
 apt-get install python3-pip python3-numpy wget git zip unzip -y 
 

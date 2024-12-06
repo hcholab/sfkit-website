@@ -11,6 +11,7 @@ from tenacity.stop import stop_after_attempt
 from tenacity.wait import wait_fixed
 
 from src.utils import constants, custom_logging
+from src.utils.generic_functions import is_create_vm
 
 logger = custom_logging.setup_logging(__name__)
 
@@ -45,8 +46,8 @@ class GoogleCloudCompute:
 
         try:
             firewalls: list = self.compute.firewalls().list(project=self.gcp_project).execute()["items"]
-        except Exception as e:
-            logger.error(f"Error getting firewalls: {e}")
+        except:
+            logger.exception("Error getting firewalls:")
             firewalls = []
         firewall_names: list[str] = [firewall["name"] for firewall in firewalls]
         for firewall_name in firewall_names:
@@ -59,8 +60,8 @@ class GoogleCloudCompute:
                 .list(project=self.gcp_project, region=constants.SERVER_REGION)
                 .execute()["items"]
             )
-        except Exception as e:
-            logger.error(f"Error getting subnets: {e}")
+        except:
+            logger.exception("Error getting subnets:")
             subnets = []
         for subnet in subnets:
             if subnet["name"][:-1] == create_subnet_name(self.network_name, ""):
@@ -71,18 +72,22 @@ class GoogleCloudCompute:
     def setup_networking(self, doc_ref_dict: dict, role: str) -> None:
         logger.info(f"Setting up networking for role {role}...")
         gcp_projects: list = [constants.SERVER_GCP_PROJECT]
-        gcp_projects.extend(
-            doc_ref_dict["personal_parameters"][participant]["GCP_PROJECT"]["value"]
-            for participant in doc_ref_dict["participants"]
-        )
+        gcp_projects_peerings: list = [constants.SERVER_GCP_PROJECT]
+
+        for username, participant in doc_ref_dict["participants"].items():
+            gcp_project = participant["GCP_PROJECT"]["value"]
+            gcp_projects.extend(gcp_project)
+
+            if is_create_vm(doc_ref_dict, username):
+                gcp_projects_peerings.extend(gcp_project)
 
         self.create_network_if_it_does_not_already_exist(doc_ref_dict)
         self.create_firewall(doc_ref_dict)
         self.remove_conflicting_peerings(gcp_projects)
         self.remove_conflicting_subnets(gcp_projects)
         self.create_subnet(role)
-        if doc_ref_dict["setup_configuration"] == "website":
-            self.create_peerings(gcp_projects)
+        if gcp_projects_peerings:
+            self.create_peerings(gcp_projects_peerings)
 
     def create_network_if_it_does_not_already_exist(self, doc_ref_dict: dict) -> None:
         networks: list = self.compute.networks().list(project=self.gcp_project).execute()["items"]
@@ -103,8 +108,8 @@ class GoogleCloudCompute:
     def delete_network(self) -> None:
         try:
             networks: list = self.compute.networks().list(project=self.gcp_project).execute()["items"]
-        except Exception as e:
-            logger.error(f"Error getting networks: {e}")
+        except:
+            logger.exception("Error getting networks:")
             networks = []
         network_names: list[str] = [net["name"] for net in networks]
 
@@ -167,8 +172,8 @@ class GoogleCloudCompute:
         # a peering is conflicting if it connects to a project that is not in the allowed_gcp_projects list
         try:
             network_info = self.compute.networks().get(project=self.gcp_project, network=self.network_name).execute()
-        except Exception as e:
-            logger.error(f"Error getting network info: {e}")
+        except:
+            logger.exception("Error getting network info:")
             return False
 
         peerings = [peer["name"].split("peering-")[1] for peer in network_info.get("peerings", [])]
@@ -411,8 +416,8 @@ class GoogleCloudCompute:
         logger.info("Listing VM instances...")
         try:
             result = self.compute.instances().list(project=self.gcp_project, zone=self.zone).execute()
-        except Exception as e:
-            logger.error(f"Error listing instances: {e}")
+        except:
+            logger.exception("Error listing instances:")
             return []
         return [
             instance["name"]

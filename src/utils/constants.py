@@ -18,6 +18,7 @@ CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*")
 APP_VERSION = os.getenv("APP_VERSION", "")
 BUILD_VERSION = os.getenv("BUILD_VERSION", "")
 CLOUD_RUN = os.getenv("CLOUD_RUN", "False")
+RESULTS_BUCKET = os.getenv("RESULTS_BUCKET", "sfkit")
 SERVICE_URL = os.getenv("SERVICE_URL", "")
 SERVER_GCP_PROJECT = "broad-cho-priv1"
 SERVER_REGION = "us-central1"
@@ -25,7 +26,9 @@ SERVER_ZONE = f"{SERVER_REGION}-a"
 NETWORK_NAME_ROOT = "sfkit"
 INSTANCE_NAME_ROOT = "sfkit"
 DEVELOPER_USER_ID = "developer"
-GOOGLE_CLIENT_ID = "419003787216-rcif34r976a9qm3818qgeqed7c582od6.apps.googleusercontent.com"
+GOOGLE_CLIENT_ID = (
+    "419003787216-rcif34r976a9qm3818qgeqed7c582od6.apps.googleusercontent.com"
+)
 # these are used only when TERRA is NOT set
 AZURE_B2C_CLIENT_ID = os.getenv(
     "AZURE_B2C_CLIENT_ID", "a605ffae-592a-4096-b029-78ba66b6d614"
@@ -39,7 +42,13 @@ FIREBASE_API_KEY = os.getenv("FIREBASE_API_KEY")
 FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID", SERVER_GCP_PROJECT)
 FIRESTORE_DATABASE = os.getenv("FIRESTORE_DATABASE", "(default)")
 
-PARMETERS_TYPE = Dict[str, Union[Dict[str, Any], List[str]]]
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY", "")
+SENDGRID_FROM_EMAIL = os.getenv("SENDGRID_FROM_EMAIL", "")
+
+SENTRY_DSN = os.getenv("SENTRY_DSN", "")
+SENTRY_ENVIRONMENT = os.getenv("SENTRY_ENVIRONMENT", "development")
+
+PARAMETERS_TYPE = Dict[str, Union[Dict[str, Any], List[str]]]
 
 MPCGWAS_SHARED_PARAMETERS = {
     "NUM_SNPS": {
@@ -234,7 +243,7 @@ SFGWAS_SHARED_PARAMETERS = {
     "num_covs": {
         "name": "Number of Covariates",
         "description": "The number of covariates in the dataset.",
-        "value": "2",
+        "value": 2,
     },
     "num_pcs_to_remove": {
         "name": "Number of PCs for Population Stratification",
@@ -296,17 +305,6 @@ SFGWAS_SHARED_PARAMETERS = {
     ],
 }
 
-SFRELATE_SHARED_PARAMETERS = {
-    "num_snps": {
-        "name": "Number of Single Nucleotide Polymorphisms",
-        "description": "The number of SNPs in the dataset.",
-        "value": 145181,
-    },
-    "index": [
-        "num_snps",
-    ],
-}
-
 SFGWAS_ADVANCED_PARAMETERS = {
     "iter_per_eigenval": {
         "name": "Iterations per Evaluation",
@@ -349,6 +347,62 @@ SFGWAS_ADVANCED_PARAMETERS = {
     ],
 }
 
+SFRELATE_SHARED_PARAMETERS: PARAMETERS_TYPE = {"index": []}
+
+SFRELATE_ADVANCED_PARAMETERS = {
+    "PARA": {
+        "name": "PARA",
+        "description": "Number of parallel processes to use. Should be set as large as possible to utilize all CPUs and memory. Exact value depends on the machine and dataset sizes. Users can provide reasonable parameters like 5 and retry with a smaller one if it fails due to memory constraints.",
+        "value": 2,
+    },
+    "ENCLEN": {
+        "name": "ENCLEN",
+        "description": "the number of snps in each encoded split haplotype ssegemnt (default: 80)",
+        "value": 80,
+    },
+    "SEGLEN": {
+        "name": "SEGLEN",
+        "description": "centi-Morgan length of each split haplotype segment (default: 8.0)",
+        "value": 8.0,
+    },
+    "STEPLEN": {
+        "name": "STEPLEN",
+        "description": "centi-Morgan spacing between the beginning of each split haplotype segment (default: 4.0)",
+        "value": 4.0,
+    },
+    "K": {
+        "name": "K",
+        "description": "number of SNPs in each kSNP token for hashing (default: 8)",
+        "value": 8,
+    },
+    "L": {
+        "name": "L",
+        "description": "number of hash tokens to construct every hash index (default: 4)",
+        "value": 4,
+    },
+    "MAXL": {
+        "name": "MAXL",
+        "description": "max number of repetitive hashing; increase and retry if table saturation is low (default: 6)",
+        "value": 6,
+    },
+    "s": {
+        "name": "s",
+        "description": "subsampling rate (default: 0.7)",
+        "value": 0.7,
+    },
+    "index": [
+        "PARA",
+        "ENCLEN",
+        "SEGLEN",
+        "STEPLEN",
+        "K",
+        "L",
+        "MAXL",
+        "s",
+    ],
+}
+
+
 SHARED_PARAMETERS = {
     "MPC-GWAS": MPCGWAS_SHARED_PARAMETERS,
     "PCA": PCA_SHARED_PARAMETERS,
@@ -360,7 +414,7 @@ ADVANCED_PARAMETERS = {
     "MPC-GWAS": MPCGWAS_ADVANCED_PARAMETERS,
     "PCA": PCA_ADVANCED_PARAMETERS,
     "SF-GWAS": SFGWAS_ADVANCED_PARAMETERS,
-    "SF-RELATE": PCA_ADVANCED_PARAMETERS,  # TODO: update for SF-RELATE
+    "SF-RELATE": SFRELATE_ADVANCED_PARAMETERS,
 }
 
 
@@ -430,7 +484,7 @@ DEFAULT_USER_PARAMETERS = {
     "PORTS": {
         "name": "Ports",
         "description": "The ports (comma separated) used by the VM instance that will be running the GWAS protocol.",
-        "value": "null,8020,8040",
+        "value": "null,3110,7320",
     },
     "AUTH_KEY": {
         "name": "Authentication Key",
@@ -448,6 +502,11 @@ DEFAULT_USER_PARAMETERS = {
             Leave blank if you don't want to send the results to a GCP bucket. \
                 This could be in the same bucket as your data, or a different one.",
         "value": "",
+    },
+    "CREATE_VM": {
+        "name": "Create VM",
+        "description": "Whether or not to automatically create a VM instance on protocol start.",
+        "value": "No",
     },
     "DELETE_VM": {
         "name": "Delete VM",
@@ -470,6 +529,7 @@ DEFAULT_USER_PARAMETERS = {
         "AUTH_KEY",
         "SEND_RESULTS",
         "RESULTS_PATH",
+        "CREATE_VM",
         "DELETE_VM",
     ],
 }
@@ -485,7 +545,6 @@ def default_user_parameters(study_type: str, demo: bool = False) -> dict:
             parameters["NUM_INDS"]["value"] = "2504"
         elif study_type == "SF-GWAS":
             parameters["NUM_INDS"]["value"] = "2000"
-    parameters["PORTS"]["value"] = "null,8060,8080"
     return parameters
 
 
