@@ -234,6 +234,65 @@ PCA_ADVANCED_PARAMETERS = {
     ],
 }
 
+SECURE_DTI_SHARED_PARAMETERS = {
+    "FEATURE_RANK": {
+        "name": "Iterations per Evaluation",
+        "description": "",
+        "value": 5,
+    },
+    "FEATURES_FILE": {
+        "name": "Oversampling Parameter for PCA",
+        "description": "",
+        "value": 10,
+    },
+    "LABELS_FILE": {
+        "name": "Number of Power Iterations",
+        "description": "",
+        "value": 20,
+    },
+    "TRAIN_SUFFIXES": {
+        "name": "NBIT_K",
+        "description": "",
+        "value": 90,
+    },
+    "TEST_SUFFIXES": {
+        "name": "NBIT_F",
+        "description": "",
+        "value": 30,
+    },
+    "index": [
+        "FEATURE_RANK",
+        "FEATURES_FILE",
+        "LABELS_FILE",
+        "TRAIN_SUFFIXES",
+        "TEST_SUFFIXES",
+    ],
+}
+
+SECURE_DTI_ADVANCED_PARAMETERS = {
+    "NBIT_K": {
+        "name": "NBIT_K",
+        "description": "Total number of bits used to represent data values",
+        "value": 90,
+    },
+    "NBIT_F": {
+        "name": "NBIT_F",
+        "description": "Number of bits assigned to the fractional range",
+        "value": 30,
+    },
+    "NBIT_V": {
+        "name": "NBIT_V",
+        "description": "Number of additional bits used as a buffer for statistical security",
+        "value": 64,
+    },
+    "BASE_P": {
+        "name": "BASE_P",
+        "description": "Base prime used for cryptography (default is the largest 160 bit prime)",
+        "value": "1461501637330902918203684832716283019655932542929",
+    },
+    "index": [],
+}
+
 SFGWAS_SHARED_PARAMETERS = {
     "num_snps": {
         "name": "Number of Single Nucleotide Polymorphisms",
@@ -406,6 +465,7 @@ SFRELATE_ADVANCED_PARAMETERS = {
 SHARED_PARAMETERS = {
     "MPC-GWAS": MPCGWAS_SHARED_PARAMETERS,
     "PCA": PCA_SHARED_PARAMETERS,
+    "Secure-DTI": SECURE_DTI_SHARED_PARAMETERS,
     "SF-GWAS": SFGWAS_SHARED_PARAMETERS,
     "SF-RELATE": SFRELATE_SHARED_PARAMETERS,
 }
@@ -413,6 +473,7 @@ SHARED_PARAMETERS = {
 ADVANCED_PARAMETERS = {
     "MPC-GWAS": MPCGWAS_ADVANCED_PARAMETERS,
     "PCA": PCA_ADVANCED_PARAMETERS,
+    "Secure-DTI": SECURE_DTI_ADVANCED_PARAMETERS,
     "SF-GWAS": SFGWAS_ADVANCED_PARAMETERS,
     "SF-RELATE": SFRELATE_ADVANCED_PARAMETERS,
 }
