@@ -236,29 +236,29 @@ PCA_ADVANCED_PARAMETERS = {
 
 SECURE_DTI_SHARED_PARAMETERS = {
     "FEATURE_RANK": {
-        "name": "Iterations per Evaluation",
+        "name": "Feature Rank",
         "description": "",
-        "value": 5,
+        "value": 6903,
     },
     "FEATURES_FILE": {
-        "name": "Oversampling Parameter for PCA",
+        "name": "Features file",
         "description": "",
-        "value": 10,
+        "value": "",
     },
     "LABELS_FILE": {
-        "name": "Number of Power Iterations",
+        "name": "Labels file",
         "description": "",
-        "value": 20,
+        "value": "",
     },
     "TRAIN_SUFFIXES": {
-        "name": "NBIT_K",
+        "name": "Train suffixes file",
         "description": "",
-        "value": 90,
+        "value": "",
     },
     "TEST_SUFFIXES": {
-        "name": "NBIT_F",
+        "name": "Test suffixes file",
         "description": "",
-        "value": 30,
+        "value": "",
     },
     "index": [
         "FEATURE_RANK",
