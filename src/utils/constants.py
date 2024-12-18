@@ -240,32 +240,8 @@ SECURE_DTI_SHARED_PARAMETERS = {
         "description": "",
         "value": 6903,
     },
-    "FEATURES_FILE": {
-        "name": "Features file",
-        "description": "",
-        "value": "",
-    },
-    "LABELS_FILE": {
-        "name": "Labels file",
-        "description": "",
-        "value": "",
-    },
-    "TRAIN_SUFFIXES": {
-        "name": "Train suffixes file",
-        "description": "",
-        "value": "",
-    },
-    "TEST_SUFFIXES": {
-        "name": "Test suffixes file",
-        "description": "",
-        "value": "",
-    },
     "index": [
         "FEATURE_RANK",
-        "FEATURES_FILE",
-        "LABELS_FILE",
-        "TRAIN_SUFFIXES",
-        "TEST_SUFFIXES",
     ],
 }
 

@@ -73,10 +73,6 @@ sfrelate_advanced_parameters_properties = {
 
 secure_dti_shared_parameters_properties = {
     "FEATURE_RANK": {"type": "integer", "minimum": 1, "maximum": 1_000_000_000},
-    "FEATURES_FILE": {"type": "string", "pattern": "^$|^[a-z0-9][a-z0-9._-]{2,62}/.+$"},
-    "LABELS_FILE": {"type": "string", "pattern": "^$|^[a-z0-9][a-z0-9._-]{2,62}/.+$"},
-    "TRAIN_SUFFIXES": {"type": "string", "pattern": "^$|^[a-z0-9][a-z0-9._-]{2,62}/.+$"},
-    "TEST_SUFFIXES": {"type": "string", "pattern": "^$|^[a-z0-9][a-z0-9._-]{2,62}/.+$"},
 }
 
 secure_dti_advanced_parameters_properties = {
