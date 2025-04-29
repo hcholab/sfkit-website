@@ -74,12 +74,12 @@ class GoogleCloudCompute:
         gcp_projects: list = [constants.SERVER_GCP_PROJECT]
         gcp_projects_peerings: list = [constants.SERVER_GCP_PROJECT]
 
-        print("participants", doc_ref_dict["participants"])
-        for username, participant in doc_ref_dict["participants"].items():
-            gcp_project = participant["GCP_PROJECT"]["value"]
+        for participant in doc_ref_dict["participants"]:
+            params = doc_ref_dict["personal_parameters"][participant]
+            gcp_project = params["GCP_PROJECT"]["value"]
             gcp_projects.extend(gcp_project)
 
-            if is_create_vm(doc_ref_dict, username):
+            if is_create_vm(doc_ref_dict, participant):
                 gcp_projects_peerings.extend(gcp_project)
 
         self.create_network_if_it_does_not_already_exist(doc_ref_dict)
