@@ -25,7 +25,7 @@ steps:
       - "--region=$_DEPLOY_REGION"
       - "--min-instances=1"
       - "--quiet"
-      - "--set-env-vars=^@^CLOUD_RUN=True@SERVICE_URL=https://$_SERVICE_NAME-$_DEPLOY_REGION.a.run.app@CORS_ORIGINS=$_CORS_ORIGINS@FLASK_DEBUG=$_FLASK_DEBUG@FIRESTORE_DATABASE=$_FIRESTORE_DATABASE@SFKIT_API_URL=$_SFKIT_API_URL"
+      - "--set-env-vars=^@^CLOUD_RUN=True@SERVICE_URL=https://$_SERVICE_NAME-$PROJECT_NUMBER.$_DEPLOY_REGION.run.app@CORS_ORIGINS=$_CORS_ORIGINS@FLASK_DEBUG=$_FLASK_DEBUG@FIRESTORE_DATABASE=$_FIRESTORE_DATABASE@SFKIT_API_URL=$_SFKIT_API_URL"
     id: Deploy
     entrypoint: gcloud
 images:
