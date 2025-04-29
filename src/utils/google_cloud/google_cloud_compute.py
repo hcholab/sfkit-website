@@ -334,7 +334,7 @@ class GoogleCloudCompute:
         other_projects = [p for p in gcp_projects if p != self.gcp_project]
         for other_project in other_projects:
             if other_project not in existing_peerings:
-                peering_name = f"sfkit-{self.study_id[:8]}-{other_project}"[:63]
+                peering_name = f"sfkit-{self.study_id}-{other_project}"[:63]
                 logger.info(f"Creating peering called {peering_name}")
                 body = {
                     "networkPeering": {
