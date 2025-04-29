@@ -74,6 +74,7 @@ class GoogleCloudCompute:
         gcp_projects: list = [constants.SERVER_GCP_PROJECT]
         gcp_projects_peerings: list = [constants.SERVER_GCP_PROJECT]
 
+        print("participants", doc_ref_dict["participants"])
         for username, participant in doc_ref_dict["participants"].items():
             gcp_project = participant["GCP_PROJECT"]["value"]
             gcp_projects.extend(gcp_project)
