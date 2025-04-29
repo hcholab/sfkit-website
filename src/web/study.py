@@ -6,14 +6,18 @@ from google.cloud import firestore
 from quart import Blueprint, Response, current_app, jsonify, request, send_file
 from werkzeug.exceptions import BadRequest, Conflict
 
-from src.api_utils import ID_KEY, add_user_to_db, fetch_study, validate_json, validate_uuid
+from src.api_utils import (ID_KEY, add_user_to_db, fetch_study, validate_json,
+                           validate_uuid)
 from src.auth import authenticate, authenticate_on_terra, get_cp0_id
+from src.signaling import reset_study_websockets
 from src.utils import constants, custom_logging
-from src.utils.google_cloud.google_cloud_compute import GoogleCloudCompute, format_instance_name
+from src.utils.google_cloud.google_cloud_compute import (GoogleCloudCompute,
+                                                         format_instance_name)
 from src.utils.schemas.create_study import create_study_schema
-from src.utils.schemas.study_information import study_information_schema
 from src.utils.schemas.parameters import parameters_schema
-from src.utils.studies_functions import make_auth_key, study_title_already_exists
+from src.utils.schemas.study_information import study_information_schema
+from src.utils.studies_functions import (make_auth_key,
+                                         study_title_already_exists)
 
 logger = custom_logging.setup_logging(__name__)
 bp = Blueprint("study", __name__, url_prefix="/api")
@@ -67,6 +71,8 @@ async def restart_study(user_id) -> Response:
         doc_ref_dict["personal_parameters"][participant]["IP_ADDRESS"]["value"] = ""
     doc_ref_dict["tasks"] = {key: [] for key in doc_ref_dict["tasks"].keys()}
     await doc_ref.set(doc_ref_dict)
+
+    reset_study_websockets(study_id)
 
     return jsonify({"message": "Successfully restarted study"})
 

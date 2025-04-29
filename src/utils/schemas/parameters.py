@@ -71,6 +71,17 @@ sfrelate_advanced_parameters_properties = {
     "s": {"type": "number", "minimum": 0.0, "maximum": 1.0},
 }
 
+secure_dti_shared_parameters_properties = {
+    "FEATURE_RANK": {"type": "integer", "minimum": 1, "maximum": 1_000_000_000},
+}
+
+secure_dti_advanced_parameters_properties = {
+    "NBIT_K": {"type": "integer", "minimum": 1, "maximum": 1000},
+    "NBIT_F": {"type": "integer", "minimum": 1, "maximum": 1000},
+    "NBIT_V": {"type": "integer", "minimum": 1, "maximum": 1000},
+    "BASE_P": {"type": "string", "pattern": "^[0-9]{1,999}$"},
+}
+
 default_user_parameters_properties = {
     # "PUBLIC_KEY":
     "GCP_PROJECT": {"type": "string", "pattern": "^$|^[a-z]([a-z0-9-]{4,28}[a-z0-9])?$"},
@@ -102,6 +113,8 @@ parameters_schema = {
         **sfgwas_advanced_parameters_properties,
         # **sfrelate_shared_parameters_properties,
         **sfrelate_advanced_parameters_properties,
+        **secure_dti_shared_parameters_properties,
+        **secure_dti_advanced_parameters_properties,
         **default_user_parameters_properties,
     },
     "patternProperties": {

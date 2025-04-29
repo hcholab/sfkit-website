@@ -53,6 +53,12 @@ study_parties: Dict[str, Dict[PID, Websocket]] = {}
 
 STUDY_ID_HEADER = "X-MPC-Study-ID"
 
+def reset_study_websockets(study_id: str):
+    if study_id in study_barriers:
+        del study_barriers[study_id]
+    if study_id in study_parties:
+        del study_parties[study_id]
+
 
 @bp.websocket("/ice")
 async def ice_ws():

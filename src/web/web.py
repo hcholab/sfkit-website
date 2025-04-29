@@ -207,14 +207,20 @@ async def fetch_plot_file(user_id) -> Response:
     _, _, doc_ref_dict = await fetch_study(study_id, user_id)
     role: str = str(doc_ref_dict["participants"].index(user_id))
 
-    plot_name = "manhattan" if "GWAS" in doc_ref_dict["study_type"] else "pca_plot"
+    if "GWAS" in doc_ref_dict["study_type"]:
+        plot_file = f"{study_id}/p{role}/manhattan.png"
+    elif "DTI" in doc_ref_dict["study_type"]:
+        plot_file = f"{study_id}/roc_pr_test.png"
+        role = "1"
+    else:
+        plot_file = f"{study_id}/p{role}/pca_plot.png"
 
-    if plot := download_blob_to_bytes(constants.RESULTS_BUCKET, f"{study_id}/p{role}/{plot_name}.png"):
+    if plot := download_blob_to_bytes(constants.RESULTS_BUCKET, plot_file):
         return await send_file(
             io.BytesIO(plot),
             mimetype="image/png",
             as_attachment=True,
-            attachment_filename=f"{plot_name}.png",
+            attachment_filename=os.path.basename(plot_file),
         )
     else:
         raise BadRequest("Failed to fetch plot")
