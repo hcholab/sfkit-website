@@ -400,7 +400,7 @@ class GoogleCloudCompute:
 
         image_response = (
             self.compute.images()
-            .getFromFamily(project="debian-cloud", family="debian-11")
+            .getFromFamily(project="debian-cloud", family="debian-12")
             .execute()
         )
         # image_response = self.compute.images().getFromFamily(project="ubuntu-os-cloud", family="ubuntu-2110").execute()
