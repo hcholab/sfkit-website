@@ -39,7 +39,7 @@ echo "SFKIT_API_URL: $SFKIT_API_URL"
 
 apt-get --assume-yes update && apt-get --assume-yes upgrade
 apt-get --assume-yes install build-essential
-apt-get install python3-pip python3-numpy wget git zip unzip -y 
+apt-get install python3-pip python3-numpy wget git zip unzip -y
 
 # install google-cloud-ops-agent
 curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
@@ -51,13 +51,13 @@ export PYTHONUNBUFFERED=TRUE
 
 cd /sfkit
 cp ../auth_key.txt .
-sfkit auth 
-sfkit networking --ports ${ports} 
+sfkit auth
+sfkit networking --ports ${ports}
 sfkit generate_keys
 
 if [[ $demo_study == "true" ]]; then
     sfkit register_data --geno_binary_file_prefix demo --data_path demo
-    nohup sfkit run_protocol > output.log 2>&1 &
+    nohup sfkit run_protocol &
     exit 0
 fi
 
@@ -70,9 +70,9 @@ if [[ $role != "0" ]]; then
 
     # copy dummy file to the gs bucket to make sure we have write access
     touch .dummy_file && gsutil cp .dummy_file gs://${data_path}/.dummy_file && rm .dummy_file
-    
+
     geno_absolute_path=$(pwd)/data_path/${geno_binary_file_prefix}
-    sfkit register_data --geno_binary_file_prefix ${geno_absolute_path} --data_path $(pwd)/data_path 
+    sfkit register_data --geno_binary_file_prefix ${geno_absolute_path} --data_path $(pwd)/data_path
 fi
 
 # increase allowed number of open file and processes; had an issue once with sfgwas where it seems that this was the problem
@@ -95,7 +95,7 @@ handle_error() {
 }
 
 trap 'handle_error "sfkit run_protocol"' ERR
-sfkit run_protocol > output.log 2>&1
+sfkit run_protocol
 EOF
 
 # Make the script executable
