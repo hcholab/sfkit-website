@@ -17,7 +17,7 @@ PyJWT==2.8.0
 python-http-client==3.3.7
 Quart==0.19.9
 quart-cors==0.7.0
-requests==2.32.3
+requests==2.32.4
 sendgrid==6.11.0
 sentry-sdk==2.8.0
 tenacity==8.3.0
