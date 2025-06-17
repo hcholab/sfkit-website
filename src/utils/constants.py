@@ -513,6 +513,7 @@ SF_GWAS_LMM_ADVANCED_PARAMETERS = {
         "name": "CKKS Parameters",
         "description": "CKKS encryption scheme parameters (e.g., PN14QP438).",
         "value": "PN14QP438",
+        "type": "text",
     },
     "index": [
         "mpc_objs_per_block",
