@@ -382,6 +382,95 @@ SFGWAS_ADVANCED_PARAMETERS = {
     ],
 }
 
+SFGWAS_LMM_SHARED_PARAMETERS = {
+    "num_snps": {
+        "name": "Number of Single Nucleotide Polymorphisms",
+        "description": "The number of SNPs in the dataset.",
+        "value": 100000,
+    },
+    "num_covs": {
+        "name": "Number of Covariates",
+        "description": "The number of covariates in the dataset.",
+        "value": 5,
+    },
+    "geno_num_blocks": {
+        "name": "Number of Genotype Blocks",
+        "description": "The number of blocks for distributed genotype computation.",
+        "value": 22,
+    },
+    "geno_num_folds": {
+        "name": "Number of Genotype Folds",
+        "description": "The number of folds for cross-validation.",
+        "value": 5,
+    },
+    "step_2_num_snps": {
+        "name": "Step 2 Number of SNPs",
+        "description": "The number of SNPs for step 2 analysis.",
+        "value": 100000,
+    },
+    "step_2_geno_num_blocks": {
+        "name": "Step 2 Number of Genotype Blocks",
+        "description": "The number of genotype blocks for step 2 analysis.",
+        "value": 22,
+    },
+    "index": [
+        "num_snps",
+        "num_covs",
+        "geno_num_blocks",
+        "geno_num_folds",
+        "step_2_num_snps",
+        "step_2_geno_num_blocks",
+    ],
+}
+
+SFGWAS_LMM_ADVANCED_PARAMETERS = {
+    "mpc_objs_per_block": {
+        "name": "MPC Objects per Block",
+        "description": "Number of MPC objects per block for parallel processing.",
+        "value": 6,
+    },
+    "mpc_num_main_threads": {
+        "name": "MPC Main Threads",
+        "description": "Number of main threads for MPC computation.",
+        "value": 21,
+    },
+    "mpc_field_size": {
+        "name": "MPC Field Size",
+        "description": "MPC Field Size for cryptographic operations.",
+        "value": 256,
+    },
+    "mpc_data_bits": {
+        "name": "MPC Data Bits",
+        "description": "Total number of bits used to represent data values.",
+        "value": 120,
+    },
+    "mpc_frac_bits": {
+        "name": "MPC Fractional Bits",
+        "description": "Number of bits assigned to the fractional range.",
+        "value": 40,
+    },
+    "calc_g_capacity": {
+        "name": "Calculate G Capacity",
+        "description": "Capacity for G matrix calculations.",
+        "value": 6,
+    },
+    "ckks_params": {
+        "name": "CKKS Parameters",
+        "description": "CKKS encryption scheme parameters (e.g., PN14QP438).",
+        "value": "PN14QP438",
+        "type": "text",
+    },
+    "index": [
+        "mpc_objs_per_block",
+        "mpc_num_main_threads",
+        "mpc_field_size",
+        "mpc_data_bits",
+        "mpc_frac_bits",
+        "calc_g_capacity",
+        "ckks_params",
+    ],
+}
+
 SFRELATE_SHARED_PARAMETERS: PARAMETERS_TYPE = {"index": []}
 
 SFRELATE_ADVANCED_PARAMETERS = {
@@ -437,102 +526,12 @@ SFRELATE_ADVANCED_PARAMETERS = {
     ],
 }
 
-SF_GWAS_LMM_SHARED_PARAMETERS = {
-    "num_snps": {
-        "name": "Number of Single Nucleotide Polymorphisms",
-        "description": "The number of SNPs in the dataset.",
-        "value": 100000,
-    },
-    "num_covs": {
-        "name": "Number of Covariates",
-        "description": "The number of covariates in the dataset.",
-        "value": 5,
-    },
-    "geno_num_blocks": {
-        "name": "Number of Genotype Blocks",
-        "description": "The number of blocks for distributed genotype computation.",
-        "value": 22,
-    },
-    "geno_num_folds": {
-        "name": "Number of Genotype Folds",
-        "description": "The number of folds for cross-validation.",
-        "value": 5,
-    },
-    "step_2_num_snps": {
-        "name": "Step 2 Number of SNPs",
-        "description": "The number of SNPs for step 2 analysis.",
-        "value": 100000,
-    },
-    "step_2_geno_num_blocks": {
-        "name": "Step 2 Number of Genotype Blocks",
-        "description": "The number of genotype blocks for step 2 analysis.",
-        "value": 22,
-    },
-    "index": [
-        "num_snps",
-        "num_covs",
-        "geno_num_blocks",
-        "geno_num_folds",
-        "step_2_num_snps",
-        "step_2_geno_num_blocks",
-    ],
-}
-
-SF_GWAS_LMM_ADVANCED_PARAMETERS = {
-    "mpc_objs_per_block": {
-        "name": "MPC Objects per Block",
-        "description": "Number of MPC objects per block for parallel processing.",
-        "value": 6,
-    },
-    "mpc_num_main_threads": {
-        "name": "MPC Main Threads",
-        "description": "Number of main threads for MPC computation.",
-        "value": 21,
-    },
-    "mpc_field_size": {
-        "name": "MPC Field Size",
-        "description": "MPC Field Size for cryptographic operations.",
-        "value": 256,
-    },
-    "mpc_data_bits": {
-        "name": "MPC Data Bits",
-        "description": "Total number of bits used to represent data values.",
-        "value": 120,
-    },
-    "mpc_frac_bits": {
-        "name": "MPC Fractional Bits",
-        "description": "Number of bits assigned to the fractional range.",
-        "value": 40,
-    },
-    "calc_g_capacity": {
-        "name": "Calculate G Capacity",
-        "description": "Capacity for G matrix calculations.",
-        "value": 6,
-    },
-    "ckks_params": {
-        "name": "CKKS Parameters",
-        "description": "CKKS encryption scheme parameters (e.g., PN14QP438).",
-        "value": "PN14QP438",
-        "type": "text",
-    },
-    "index": [
-        "mpc_objs_per_block",
-        "mpc_num_main_threads",
-        "mpc_field_size",
-        "mpc_data_bits",
-        "mpc_frac_bits",
-        "calc_g_capacity",
-        "ckks_params",
-    ],
-}
-
-
 SHARED_PARAMETERS = {
     "MPC-GWAS": MPCGWAS_SHARED_PARAMETERS,
     "PCA": PCA_SHARED_PARAMETERS,
     "Secure-DTI": SECURE_DTI_SHARED_PARAMETERS,
     "SF-GWAS": SFGWAS_SHARED_PARAMETERS,
-    "SF-GWAS-LMM": SF_GWAS_LMM_SHARED_PARAMETERS,
+    "SF-GWAS-LMM": SFGWAS_LMM_SHARED_PARAMETERS,
     "SF-RELATE": SFRELATE_SHARED_PARAMETERS,
 }
 
@@ -541,7 +540,7 @@ ADVANCED_PARAMETERS = {
     "PCA": PCA_ADVANCED_PARAMETERS,
     "Secure-DTI": SECURE_DTI_ADVANCED_PARAMETERS,
     "SF-GWAS": SFGWAS_ADVANCED_PARAMETERS,
-    "SF-GWAS-LMM": SF_GWAS_LMM_ADVANCED_PARAMETERS,
+    "SF-GWAS-LMM": SFGWAS_LMM_ADVANCED_PARAMETERS,
     "SF-RELATE": SFRELATE_ADVANCED_PARAMETERS,
 }
 

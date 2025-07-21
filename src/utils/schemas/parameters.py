@@ -59,6 +59,25 @@ sfgwas_advanced_parameters_properties = {
     "mpc_frac_bits": {"type": "integer", "minimum": 1, "maximum": 1000},
 }
 
+sfgwas_lmm_shared_parameters_properties = {
+    "num_snps": {"type": "integer", "minimum": 1, "maximum": 1_000_000_000},
+    "num_covs": {"type": "integer", "minimum": 1, "maximum": 1000},
+    "geno_num_blocks": {"type": "integer", "minimum": 1, "maximum": 100},
+    "geno_num_folds": {"type": "integer", "minimum": 1, "maximum": 100},
+    "step_2_num_snps": {"type": "integer", "minimum": 1, "maximum": 1_000_000_000},
+    "step_2_geno_num_blocks": {"type": "integer", "minimum": 1, "maximum": 100},
+}
+
+sfgwas_lmm_advanced_parameters_properties = {
+    "mpc_objs_per_block": {"type": "integer", "minimum": 1, "maximum": 100},
+    "mpc_num_main_threads": {"type": "integer", "minimum": 1, "maximum": 100},
+    "mpc_field_size": {"type": "integer", "minimum": 1, "maximum": 1000},
+    "mpc_data_bits": {"type": "integer", "minimum": 1, "maximum": 1000},
+    "mpc_frac_bits": {"type": "integer", "minimum": 1, "maximum": 1000},
+    "calc_g_capacity": {"type": "integer", "minimum": 1, "maximum": 100},
+    "ckks_params": {"type": "string", "pattern": "^PN[0-9]+QP[0-9]+$"},
+}
+
 # sfrelate_shared_parameters_properties = {}
 sfrelate_advanced_parameters_properties = {
     "PARA": {"type": "number", "minimum": 1, "maximum": 100},
@@ -82,29 +101,17 @@ secure_dti_advanced_parameters_properties = {
     "BASE_P": {"type": "string", "pattern": "^[0-9]{1,999}$"},
 }
 
-sf_gwas_lmm_shared_parameters_properties = {
-    "num_snps": {"type": "integer", "minimum": 1, "maximum": 1_000_000_000},
-    "num_covs": {"type": "integer", "minimum": 1, "maximum": 1000},
-    "geno_num_blocks": {"type": "integer", "minimum": 1, "maximum": 100},
-    "geno_num_folds": {"type": "integer", "minimum": 1, "maximum": 100},
-    "step_2_num_snps": {"type": "integer", "minimum": 1, "maximum": 1_000_000_000},
-    "step_2_geno_num_blocks": {"type": "integer", "minimum": 1, "maximum": 100},
-}
-
-sf_gwas_lmm_advanced_parameters_properties = {
-    "mpc_objs_per_block": {"type": "integer", "minimum": 1, "maximum": 100},
-    "mpc_num_main_threads": {"type": "integer", "minimum": 1, "maximum": 100},
-    "mpc_field_size": {"type": "integer", "minimum": 1, "maximum": 1000},
-    "mpc_data_bits": {"type": "integer", "minimum": 1, "maximum": 1000},
-    "mpc_frac_bits": {"type": "integer", "minimum": 1, "maximum": 1000},
-    "calc_g_capacity": {"type": "integer", "minimum": 1, "maximum": 100},
-    "ckks_params": {"type": "string", "pattern": "^PN[0-9]+QP[0-9]+$"},
-}
-
 default_user_parameters_properties = {
     # "PUBLIC_KEY":
-    "GCP_PROJECT": {"type": "string", "pattern": "^$|^[a-z]([a-z0-9-]{4,28}[a-z0-9])?$"},
-    "DATA_PATH": {"type": "string", "pattern": "^$|^([a-zA-Z0-9_.-]+/)*([a-zA-Z0-9_.-]+)$", "maxLength": 1000},
+    "GCP_PROJECT": {
+        "type": "string",
+        "pattern": "^$|^[a-z]([a-z0-9-]{4,28}[a-z0-9])?$",
+    },
+    "DATA_PATH": {
+        "type": "string",
+        "pattern": "^$|^([a-zA-Z0-9_.-]+/)*([a-zA-Z0-9_.-]+)$",
+        "maxLength": 1000,
+    },
     # "GENO_BINARY_FILE_PREFIX":
     # NUM_INDS<UUID> (see patternProperties below)
     # "NUM_THREADS":
@@ -130,8 +137,8 @@ parameters_schema = {
         **pca_advanced_parameters_properties,
         **sfgwas_shared_parameters_properties,
         **sfgwas_advanced_parameters_properties,
-        **sf_gwas_lmm_shared_parameters_properties,
-        **sf_gwas_lmm_advanced_parameters_properties,
+        **sfgwas_lmm_shared_parameters_properties,
+        **sfgwas_lmm_advanced_parameters_properties,
         # **sfrelate_shared_parameters_properties,
         **sfrelate_advanced_parameters_properties,
         **secure_dti_shared_parameters_properties,
