@@ -36,7 +36,7 @@ fi
 
 cat > run_docker_commands.sh << 'EOF'
 #!/bin/bash
-docker run --pull always --net host \
+docker run --pull always \
     -e SFKIT_API_URL \
     -v $PWD/sfkit:/sfkit/.sfkit \
     -v $PWD/auth_key.txt:/sfkit/auth_key.txt:ro \
