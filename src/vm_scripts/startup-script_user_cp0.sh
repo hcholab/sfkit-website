@@ -44,4 +44,4 @@ docker run \
 EOF
 
 chmod +x run_docker_commands.sh
-nohup ./run_docker_commands.sh > output.log 2>&1 &
+nohup ./run_docker_commands.sh &
