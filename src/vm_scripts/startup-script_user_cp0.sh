@@ -34,14 +34,8 @@ if [ $attempt -eq $max_attempts ]; then
   exit 1
 fi
 
-cat > run_docker_commands.sh << 'EOF'
-#!/bin/bash
-docker run \
+nohup docker run \
     -e SFKIT_API_URL \
-    -v $PWD/sfkit:/sfkit/.sfkit \
-    -v $PWD/auth_key.txt:/sfkit/auth_key.txt:ro \
-    ghcr.io/hcholab/sfkit run
-EOF
-
-chmod +x run_docker_commands.sh
-nohup ./run_docker_commands.sh &
+    -v "$PWD/sfkit:/sfkit/.sfkit" \
+    -v "$PWD/auth_key.txt:/sfkit/auth_key.txt:ro" \
+    ghcr.io/hcholab/sfkit run &
