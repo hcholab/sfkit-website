@@ -11,10 +11,6 @@ substitutions:
 
 options:
   logging: CLOUD_LOGGING_ONLY
-  substitutionOption: ALLOW_LOOSE
-
-tags:
-  - sfkit-website
 
 steps:
   - name: gcr.io/k8s-skaffold/pack
