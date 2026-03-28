@@ -2,7 +2,7 @@ import os
 from copy import deepcopy
 from typing import Any, Dict, List, Union
 
-FLASK_DEBUG = os.getenv("FLASK_DEBUG")
+FLASK_DEBUG = os.getenv("FLASK_DEBUG", "0").lower() == "1"
 LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")
 
 TERRA = os.getenv("TERRA", "")
@@ -19,8 +19,7 @@ APP_VERSION = os.getenv("APP_VERSION", "")
 BUILD_VERSION = os.getenv("BUILD_VERSION", "")
 CLOUD_RUN = os.getenv("CLOUD_RUN", "False")
 RESULTS_BUCKET = os.getenv("RESULTS_BUCKET", "sfkit")
-SERVICE_URL = os.getenv("SERVICE_URL", "")
-SERVER_GCP_PROJECT = "broad-cho-priv1"
+SERVER_GCP_PROJECT = os.getenv("SERVER_GCP_PROJECT", "broad-cho-priv1")
 SERVER_REGION = "us-central1"
 SERVER_ZONE = f"{SERVER_REGION}-a"
 NETWORK_NAME_ROOT = "sfkit"

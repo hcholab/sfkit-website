@@ -11,8 +11,7 @@ if __name__ == "__main__":
 
     # use dev environment
     constants.FIRESTORE_DATABASE = "sfkit-dev"
-    constants.FLASK_DEBUG = "development"
+    constants.FLASK_DEBUG = True
     constants.SFKIT_API_URL = "https://sfkit-website-dev-bhj5a4wkqa-uc.a.run.app/api"
-    constants.SERVICE_URL = "dev"
 
     src.create_app().run(port=port)

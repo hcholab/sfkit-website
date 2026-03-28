@@ -222,7 +222,7 @@ def sanitize_path(path: str) -> str:
 
 def is_developer() -> bool:
     return (
-        constants.FLASK_DEBUG == "development"
+        constants.FLASK_DEBUG
         and g.user
         and "id" in g.user
         and g.user["id"] == constants.DEVELOPER_USER_ID
@@ -269,7 +269,7 @@ def check_conditions(doc_ref_dict, user_id) -> str:
         return ""
     if not gcp_project:
         return "Your GCP project ID is not set. Please follow the instructions in the 'Configure Study' button before running the protocol."
-    if not demo and gcp_project == constants.SERVER_GCP_PROJECT and constants.FLASK_DEBUG != "development":
+    if not demo and gcp_project == constants.SERVER_GCP_PROJECT and not constants.FLASK_DEBUG:
         return "This project ID is only allowed for a demo study. Please follow the instructions in the 'Configure Study' button to set up your own GCP project before running the protocol."
     if not demo and not data_path:
         return "Your data path is not set. Please follow the instructions in the 'Configure Study' button before running the protocol."
