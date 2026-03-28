@@ -16,7 +16,7 @@ steps:
   - name: gcr.io/k8s-skaffold/pack
     args:
       - build
-      - $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
+      - $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$SHORT_SHA
       - --builder=gcr.io/buildpacks/builder:google-24
       - --publish
 
@@ -32,7 +32,7 @@ steps:
       - apply
       - -auto-approve
       - -var=project_id=$PROJECT_ID
-      - -var=image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
+      - -var=image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$SHORT_SHA
       - -var=cors_origins=$_CORS_ORIGINS
       - -var=service_name=$_SERVICE_NAME
       - -var=database_name=$_DATABASE_NAME
