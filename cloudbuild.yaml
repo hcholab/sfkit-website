@@ -7,7 +7,6 @@ substitutions:
   _STORAGE_REGION: us-central1
   _RESULTS_BUCKET: $PROJECT_ID-sfkit
   _TF_STATE_BUCKET: $PROJECT_ID-terraform
-  _IMAGE: $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
   _FLASK_DEBUG: "0"
 
 options:
@@ -17,20 +16,13 @@ options:
 tags:
   - sfkit-website
 
-images:
-  - $_IMAGE
-
 steps:
   - name: gcr.io/k8s-skaffold/pack
     args:
       - build
-      - $_IMAGE
+      - $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
       - --builder=gcr.io/buildpacks/builder:google-24
-
-  - name: gcr.io/cloud-builders/docker
-    args:
-      - push
-      - $_IMAGE
+      - --publish
 
   - name: hashicorp/terraform
     dir: terraform
@@ -44,7 +36,7 @@ steps:
       - apply
       - -auto-approve
       - -var=project_id=$PROJECT_ID
-      - -var=image=$_IMAGE
+      - -var=image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
       - -var=cors_origins=$_CORS_ORIGINS
       - -var=service_name=$_SERVICE_NAME
       - -var=database_name=$_DATABASE_NAME
