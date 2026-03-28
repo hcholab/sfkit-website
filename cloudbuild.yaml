@@ -22,12 +22,10 @@ images:
 
 steps:
   - name: gcr.io/k8s-skaffold/pack
-    entrypoint: pack
     args:
       - build
       - $_IMAGE
-      - --builder=gcr.io/buildpacks/builder:v1
-      - --path=.
+      - --builder=gcr.io/buildpacks/builder:google-24
 
   - name: gcr.io/cloud-builders/docker
     args:
