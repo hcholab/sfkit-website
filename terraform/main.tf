@@ -91,6 +91,12 @@ resource "google_secret_manager_secret_iam_member" "cloud_run_secret" {
   member    = local.sa_member
 }
 
+resource "google_service_account_iam_member" "cloud_run_token_creator" {
+  service_account_id = google_service_account.cloud_run.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = local.sa_member
+}
+
 resource "google_cloud_run_v2_service" "website" {
   name     = var.service_name
   location = var.service_region
@@ -132,5 +138,10 @@ resource "google_cloud_run_v2_service" "website" {
     }
   }
 
-  depends_on = [google_project_service.apis]
+  depends_on = [
+    google_project_iam_member.cloud_run_firestore,
+    google_storage_bucket_iam_member.cloud_run_bucket,
+    google_secret_manager_secret_iam_member.cloud_run_secret,
+    google_service_account_iam_member.cloud_run_token_creator
+  ]
 }
