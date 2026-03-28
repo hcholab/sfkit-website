@@ -162,6 +162,29 @@ async def fetch_study(study_id: str, user_id: str = "") -> tuple[firestore.Async
     return db, doc_ref, doc_ref_dict
 
 
+def filter_personal_params(study_dict: dict, user_id: str) -> dict:
+    personal_parameters = study_dict.get("personal_parameters", {})
+    filtered_params = {}
+
+    # Fields needed by MPC protocols for cross-participant communication
+    mpc_required_fields = {"PUBLIC_KEY", "IP_ADDRESS", "PORTS", "NUM_INDS"}
+
+    for participant_id, params in personal_parameters.items():
+        if participant_id == user_id:
+            # Current user gets all their parameters
+            filtered_params[participant_id] = params
+        else:
+            # Other participants: only expose MPC-required fields
+            filtered_params[participant_id] = {
+                field: params[field]
+                for field in mpc_required_fields
+                if field in params
+            }
+
+    study_dict["personal_parameters"] = filtered_params
+    return study_dict
+
+
 def validate_json(data: dict, schema: dict = generic_schema) -> dict:
     try:
         validate(instance=data, schema=schema)

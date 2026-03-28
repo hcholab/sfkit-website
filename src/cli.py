@@ -6,6 +6,7 @@ from google.cloud.firestore import AsyncClient, AsyncDocumentReference
 from quart import Blueprint, current_app, request
 from werkzeug.exceptions import BadRequest, Conflict, Forbidden
 
+from src.api_utils import filter_personal_params
 from src.auth import get_cli_user_id
 from src.utils import constants, custom_logging
 from src.utils.api_functions import process_parameter, process_status, process_task
@@ -96,7 +97,7 @@ async def upload_file() -> Tuple[dict, int]:
 @bp.route("/get_doc_ref_dict", methods=["GET"])
 async def get_doc_ref_dict() -> Tuple[dict, int]:
     study = await _get_study()
-    return study.dict, 200
+    return filter_personal_params(study.dict, study.user_id), 200
 
 
 @bp.route("/get_study_options", methods=["GET"])

@@ -6,7 +6,8 @@ from google.cloud import firestore
 from quart import Blueprint, Response, current_app, jsonify, request, send_file
 from werkzeug.exceptions import BadRequest, Conflict
 
-from src.api_utils import (ID_KEY, add_user_to_db, fetch_study, validate_json,
+from src.api_utils import (ID_KEY, add_user_to_db, fetch_study,
+                           filter_personal_params, validate_json,
                            validate_uuid)
 from src.auth import authenticate, authenticate_on_terra, get_cp0_id
 from src.signaling import reset_study_websockets
@@ -43,7 +44,7 @@ async def study(user_id) -> Response:
         + doc_ref_dict["invited_participants"]
     }
 
-    return jsonify({"study": doc_ref_dict})
+    return jsonify({"study": filter_personal_params(doc_ref_dict, user_id)})
 
 
 # TODO: use asyncio to delete in parallel. This requires making the google_cloud_compute functions async. Using multiple processing failed because inside daemon. Threads failed because of GIL.
