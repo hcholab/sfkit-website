@@ -47,7 +47,7 @@ resource "google_storage_bucket" "results" {
   name                        = var.results_bucket
   location                    = var.storage_region
   uniform_bucket_level_access = true
-  force_destroy               = false
+  public_access_prevention    = "enforced"
 
   depends_on = [google_project_service.apis]
 }
