@@ -26,7 +26,7 @@ USER_IDS: Set = set()
 
 
 # Prepare public keys from Microsoft's JWKS endpoint for token verification
-jwks = requests.get(constants.AZURE_B2C_JWKS_URL).json()
+jwks = requests.get(constants.OIDC_JWKS_URL).json()
 for key in jwks["keys"]:
     kid = key["kid"]
     PUBLIC_KEYS[kid] = algorithms.RSAAlgorithm.from_jwk(key)
@@ -159,7 +159,7 @@ async def _get_azure_b2c_user(auth_header: str) -> dict:
             token,
             public_key,
             algorithms=["RS256"],
-            audience=constants.AZURE_B2C_CLIENT_ID,
+            audience=constants.OIDC_AUDIENCE,
         )
 
     except jwt.ExpiredSignatureError as e:
