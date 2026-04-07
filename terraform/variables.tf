@@ -54,3 +54,13 @@ variable "flask_debug" {
   type        = number
   default     = 0
 }
+
+variable "oidc_audience" {
+  description = "OIDC audience (for example, Google or Azure B2C client ID)."
+  type        = string
+}
+
+variable "oidc_jwks_url" {
+  description = "OIDC JWKS URL"
+  type        = string
+}

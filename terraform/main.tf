@@ -135,6 +135,14 @@ resource "google_cloud_run_v2_service" "website" {
         name  = "RESULTS_BUCKET"
         value = google_storage_bucket.results.name
       }
+      env {
+        name  = "OIDC_AUDIENCE"
+        value = var.oidc_audience
+      }
+      env {
+        name  = "OIDC_JWKS_URL"
+        value = var.oidc_jwks_url
+      }
     }
   }
 

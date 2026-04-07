@@ -27,13 +27,8 @@ INSTANCE_NAME_ROOT = "sfkit"
 DEVELOPER_USER_ID = "developer"
 
 # these are used only when TERRA is NOT set
-OIDC_AUDIENCE = os.getenv(
-    "OIDC_AUDIENCE", "a605ffae-592a-4096-b029-78ba66b6d614" # Azure sfkitdevb2c
-)  # public; used for authentication
-OIDC_JWKS_URL = os.getenv(
-    "OIDC_JWKS_URL",
-    "https://sfkitdevb2c.b2clogin.com/sfkitdevb2c.onmicrosoft.com/discovery/v2.0/keys?p=B2C_1_signupsignin1",
-)
+OIDC_AUDIENCE = os.getenv("OIDC_AUDIENCE")
+OIDC_JWKS_URL = os.getenv("OIDC_JWKS_URL")
 
 FIREBASE_API_KEY = os.getenv("FIREBASE_API_KEY")
 FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID", SERVER_GCP_PROJECT)

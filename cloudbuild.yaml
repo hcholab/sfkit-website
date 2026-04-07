@@ -8,6 +8,8 @@ substitutions:
   _RESULTS_BUCKET: $PROJECT_ID-sfkit
   _TF_STATE_BUCKET: $PROJECT_ID-terraform
   _FLASK_DEBUG: "0"
+  _OIDC_AUDIENCE: "" # Typically, OAuth client ID
+  _OIDC_JWKS_URL: https://www.googleapis.com/oauth2/v3/certs
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -40,3 +42,5 @@ steps:
       - -var=storage_region=$_STORAGE_REGION
       - -var=results_bucket=$_RESULTS_BUCKET
       - -var=flask_debug=$_FLASK_DEBUG
+      - -var=oidc_audience=$_OIDC_AUDIENCE
+      - -var=oidc_jwks_url=$_OIDC_JWKS_URL
