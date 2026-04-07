@@ -15,6 +15,16 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 steps:
+  - name: python@sha256:739e7213785e88c0f702dcdc12c0973afcbd606dbf021a589cab77d6b00b579d # 3.13-slim
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        pip install -r requirements.txt -r requirements-dev.txt
+        python -m flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        python -m flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        python -m pytest
+
   - name: gcr.io/k8s-skaffold/pack
     args:
       - build
