@@ -15,7 +15,8 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 steps:
-  - name: python@sha256:739e7213785e88c0f702dcdc12c0973afcbd606dbf021a589cab77d6b00b579d # 3.13-slim
+  - id: test
+    name: python@sha256:739e7213785e88c0f702dcdc12c0973afcbd606dbf021a589cab77d6b00b579d # 3.13-slim
     entrypoint: bash
     args:
       - -c
@@ -25,20 +26,25 @@ steps:
         python -m flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
         python -m pytest
 
-  - name: gcr.io/k8s-skaffold/pack
+  - id: pack
+    name: gcr.io/k8s-skaffold/pack
+    waitFor: ["-"]
     args:
       - build
       - $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$SHORT_SHA
       - --builder=gcr.io/buildpacks/builder:google-24
       - --publish
 
-  - name: hashicorp/terraform
+  - id: tf-init
+    name: hashicorp/terraform
+    waitFor: ["-"]
     dir: terraform
     args:
       - init
       - -backend-config=bucket=$_TF_STATE_BUCKET
 
   - name: hashicorp/terraform
+    waitFor: ["test", "pack", "tf-init"]
     dir: terraform
     args:
       - apply
