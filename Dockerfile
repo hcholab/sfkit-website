@@ -1,7 +1,8 @@
 # hadolint global ignore=DL3059
 
 # Install dependencies, lint and test
-FROM cgr.dev/chainguard/python:latest-dev AS builder
+#    python:3.13.13-slim-trixie
+FROM python@sha256:d168b8d9eb761f4d3fe305ebd04aeb7e7f2de0297cec5fb2f8f6403244621664 AS builder
 
 WORKDIR /app
 
@@ -29,12 +30,13 @@ RUN pip uninstall -yr requirements-dev.txt
 
 
 # Copy everything into the minimal runtime image
-FROM us.gcr.io/broad-dsp-gcr-public/base/python:distroless
+#    gcr.io/distroless/python3-debian13:nonroot
+FROM gcr.io/distroless/python3-debian13@sha256:51b1acc177d535f20fa30a175a657079ee7dce6e326541cfd83a474d9928e123
 
 WORKDIR /app
 
-COPY --from=builder /home/nonroot/.local/bin/hypercorn /bin/
-COPY --from=builder /home/nonroot/.local/lib /usr/lib/
+COPY --from=builder /root/.local/bin/hypercorn /bin/
+COPY --from=builder /root/.local/lib /usr/lib/
 COPY --from=builder /app/*.py /app/*.toml ./
 COPY --from=builder /app/src ./src/
 
@@ -42,6 +44,7 @@ ARG APP_VERSION=latest
 ARG BUILD_VERSION=latest
 
 ENV APP_VERSION=${APP_VERSION} \
-    BUILD_VERSION=${BUILD_VERSION}
+    BUILD_VERSION=${BUILD_VERSION} \
+    PYTHONPATH=/usr/lib/python3.13/site-packages
 
-ENTRYPOINT ["hypercorn", "app:app", "--bind", "0.0.0.0:8080", "--config", "hypercorn_config.toml"]
+ENTRYPOINT ["/usr/bin/python3.13", "-m", "hypercorn", "app:app", "--bind", "0.0.0.0:8080", "--config", "hypercorn_config.toml"]

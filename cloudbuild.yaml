@@ -10,30 +10,21 @@ substitutions:
   _FLASK_DEBUG: "0"
   _OIDC_AUDIENCE: "" # Typically, OAuth client ID
   _OIDC_JWKS_URL: https://www.googleapis.com/oauth2/v3/certs
+  _IMAGE: $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME
 
 options:
+  dynamicSubstitutions: true
   logging: CLOUD_LOGGING_ONLY
 
 steps:
-  - id: test
-    name: python@sha256:739e7213785e88c0f702dcdc12c0973afcbd606dbf021a589cab77d6b00b579d # 3.13-slim
-    entrypoint: bash
-    args:
-      - -c
-      - |
-        pip install -r requirements.txt -r requirements-dev.txt
-        python -m flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        python -m flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-        python -m pytest
-
-  - id: pack
-    name: gcr.io/k8s-skaffold/pack
-    waitFor: ["-"]
-    args:
-      - build
-      - $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$SHORT_SHA
-      - --builder=gcr.io/buildpacks/builder:google-24
-      - --publish
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    script: >-
+      docker build --push -t $_IMAGE:$SHORT_SHA
+        --cache-from type=registry,ref=$_IMAGE:cache
+        --cache-to type=registry,ref=$_IMAGE:cache,mode=max
+        --build-arg APP_VERSION=$SHORT_SHA
+        --build-arg BUILD_VERSION=$SHORT_SHA .
 
   - id: tf-init
     name: hashicorp/terraform
@@ -44,13 +35,12 @@ steps:
       - -backend-config=bucket=$_TF_STATE_BUCKET
 
   - name: hashicorp/terraform
-    waitFor: ["test", "pack", "tf-init"]
     dir: terraform
     args:
       - apply
       - -auto-approve
       - -var=project_id=$PROJECT_ID
-      - -var=image=$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME:$SHORT_SHA
+      - -var=image=$_IMAGE:$SHORT_SHA
       - -var=cors_origins=$_CORS_ORIGINS
       - -var=service_name=$_SERVICE_NAME
       - -var=database_name=$_DATABASE_NAME
