@@ -10,7 +10,7 @@ substitutions:
   _FLASK_DEBUG: "0"
   _OIDC_AUDIENCE: "" # Typically, OAuth client ID
   _OIDC_JWKS_URL: https://www.googleapis.com/oauth2/v3/certs
-  _IMAGE: '$_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME'
+  _IMAGE: $_GCR_HOSTNAME/$PROJECT_ID/$REPO_NAME/$_SERVICE_NAME
 
 options:
   logging: CLOUD_LOGGING_ONLY
