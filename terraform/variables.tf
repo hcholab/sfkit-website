@@ -15,6 +15,12 @@ variable "service_name" {
   default     = "sfkit-website"
 }
 
+variable "frontend_service_name" {
+  description = "Cloud Run service name for the frontend"
+  type        = string
+  default     = "sfkit-react"
+}
+
 variable "image" {
   description = "Full container image URI (e.g. us.gcr.io/project/repo/service:tag)"
   type        = string

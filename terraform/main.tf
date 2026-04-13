@@ -153,3 +153,10 @@ resource "google_cloud_run_v2_service" "website" {
     google_service_account_iam_member.cloud_run_token_creator
   ]
 }
+
+resource "google_service_account" "frontend" {
+  account_id   = "${var.frontend_service_name}-sa"
+  display_name = "Service Account for ${var.frontend_service_name} Cloud Run"
+
+  depends_on = [google_project_service.apis]
+}
