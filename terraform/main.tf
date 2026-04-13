@@ -33,16 +33,6 @@ resource "google_project_service" "apis" {
   disable_on_destroy = false
 }
 
-resource "google_firestore_database" "db" {
-  name        = var.database_name
-  location_id = var.database_region
-  type        = "FIRESTORE_NATIVE"
-
-  delete_protection_state = "DELETE_PROTECTION_ENABLED"
-
-  depends_on = [google_project_service.apis]
-}
-
 resource "google_storage_bucket" "results" {
   name                        = var.results_bucket
   location                    = var.storage_region
@@ -159,4 +149,49 @@ resource "google_service_account" "frontend" {
   display_name = "Service Account for ${var.frontend_service_name} Cloud Run"
 
   depends_on = [google_project_service.apis]
+}
+
+# Firestore
+
+resource "google_firestore_database" "db" {
+  name        = var.database_name
+  location_id = var.database_region
+  type        = "FIRESTORE_NATIVE"
+
+  delete_protection_state = "DELETE_PROTECTION_ENABLED"
+
+  depends_on = [google_project_service.apis]
+}
+
+resource "google_firebaserules_ruleset" "firestore" {
+  project = var.project_id
+
+  source {
+    files {
+      name    = "firestore.rules"
+      content = <<-EOT
+        rules_version = '2';
+        service cloud.firestore {
+          match /databases/{database}/documents {
+            match /users/{userId} {
+              allow read: if request.auth.uid == userId;
+            }
+            match /users/display_names {
+              allow read: if request.auth != null;
+            }
+          }
+        }
+      EOT
+    }
+  }
+
+  depends_on = [
+    google_firestore_database.db
+  ]
+}
+
+resource "google_firebaserules_release" "firestore" {
+  project      = var.project_id
+  name         = var.database_name == "(default)" ? "cloud.firestore" : "cloud.firestore/${var.database_name}"
+  ruleset_name = google_firebaserules_ruleset.firestore.name
 }
