@@ -21,8 +21,14 @@ variable "frontend_service_name" {
   default     = "sfkit-react"
 }
 
+variable "artifact_repository" {
+  description = "Artifact Registry repository ID"
+  type        = string
+  default     = "us.gcr.io"
+}
+
 variable "image" {
-  description = "Full container image URI (e.g. us.gcr.io/project/repo/service:tag)"
+  description = "Full container image URI"
   type        = string
 }
 

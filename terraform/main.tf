@@ -21,6 +21,7 @@ data "google_project" "current" {}
 
 resource "google_project_service" "apis" {
   for_each = toset([
+    "artifactregistry.googleapis.com",
     "cloudresourcemanager.googleapis.com",
     "compute.googleapis.com",
     "firestore.googleapis.com",
@@ -194,4 +195,43 @@ resource "google_firebaserules_release" "firestore" {
   project      = var.project_id
   name         = var.database_name == "(default)" ? "cloud.firestore" : "cloud.firestore/${var.database_name}"
   ruleset_name = google_firebaserules_ruleset.firestore.name
+}
+
+# Artifact Registry
+
+import {
+  to = google_artifact_registry_repository.docker
+  id = "projects/${var.project_id}/locations/us/repositories/${var.artifact_repository}"
+}
+
+resource "google_artifact_registry_repository" "docker" {
+  location               = "us"
+  repository_id          = var.artifact_repository
+  format                 = "DOCKER"
+  cleanup_policy_dry_run = true
+
+  cleanup_policies {
+    id     = "keep-recent"
+    action = "KEEP"
+    most_recent_versions {
+      keep_count = 10
+    }
+  }
+
+  cleanup_policies {
+    id     = "delete-old"
+    action = "DELETE"
+    condition {
+      tag_state  = "TAGGED"
+      older_than = "30d"
+    }
+  }
+
+  cleanup_policies {
+    id     = "delete-untagged"
+    action = "DELETE"
+    condition {
+      tag_state = "UNTAGGED"
+    }
+  }
 }
