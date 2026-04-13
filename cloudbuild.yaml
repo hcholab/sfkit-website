@@ -13,12 +13,12 @@ substitutions:
   _IMAGE: ${_GCR_HOSTNAME}/${PROJECT_ID}/${REPO_NAME}/${_SERVICE_NAME}
 
 options:
-  automapSubstitutions: true
   logging: CLOUD_LOGGING_ONLY
 
 steps:
   - id: build
     name: gcr.io/cloud-builders/docker
+    automapSubstitutions: true
     script: >-
       docker buildx create --use --driver docker-container &&
       docker buildx build --push -t $_IMAGE:$SHORT_SHA
