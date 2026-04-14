@@ -10,6 +10,7 @@ This directory contains Terraform infrastructure for deploying cloud infrastruct
 - Project IAM Admin
 - Secret Manager Admin
 - Service Account Admin
+- Service Account User
 - Service Usage Admin
 - Storage Admin
 
