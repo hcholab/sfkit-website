@@ -174,12 +174,12 @@ locals {
 
 import {
   to = google_firebaserules_release.firestore
-  id = locals.firebaserules_release
+  id = local.firebaserules_release
 }
 
 resource "google_firebaserules_release" "firestore" {
   project      = var.project_id
-  name         = locals.firebaserules_release
+  name         = local.firebaserules_release
   ruleset_name = google_firebaserules_ruleset.firestore.name
 }
 
