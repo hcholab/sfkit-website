@@ -168,6 +168,21 @@ resource "google_firestore_database" "db" {
   depends_on = [google_project_service.apis]
 }
 
+locals {
+  firebaserules_release = "projects/${var.project_id}/releases/${var.database_name == "(default)" ? "cloud.firestore" : "cloud.firestore/${var.database_name}"}"
+}
+
+import {
+  to = google_firebaserules_release.firestore
+  id = locals.firebaserules_release
+}
+
+resource "google_firebaserules_release" "firestore" {
+  project      = var.project_id
+  name         = locals.firebaserules_release
+  ruleset_name = google_firebaserules_ruleset.firestore.name
+}
+
 resource "google_firebaserules_ruleset" "firestore" {
   project = var.project_id
 
@@ -196,12 +211,6 @@ resource "google_firebaserules_ruleset" "firestore" {
   depends_on = [
     google_firestore_database.db
   ]
-}
-
-resource "google_firebaserules_release" "firestore" {
-  project      = var.project_id
-  name         = var.database_name == "(default)" ? "cloud.firestore" : "cloud.firestore/${var.database_name}"
-  ruleset_name = google_firebaserules_ruleset.firestore.name
 }
 
 # Artifact Registry
