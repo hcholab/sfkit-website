@@ -47,7 +47,11 @@ resource "google_secret_manager_secret" "firebase_api_key" {
   secret_id = "FIREBASE_API_KEY"
 
   replication {
-    auto {}
+    user_managed {
+      replicas {
+        location = var.service_region
+      }
+    }
   }
 
   depends_on = [google_project_service.apis]
