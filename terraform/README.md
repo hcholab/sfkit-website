@@ -2,11 +2,11 @@
 
 This directory contains Terraform infrastructure for deploying cloud infrastructure for *sfkit*. The Cloud Build service account requires specific IAM roles to execute the Terraform successfully:
 
-- Artifact Registry Admin
-- Cloud Logging Writer
+- Artifact Registry Administrator
+- Cloud Datastore Admin
 - Cloud Run Admin
-- Datastore Owner
 - Firebase Rules Admin
+- Logs Writer
 - Project IAM Admin
 - Secret Manager Admin
 - Service Account Admin
