@@ -169,12 +169,12 @@ resource "google_firestore_database" "db" {
 }
 
 locals {
-  firebaserules_release = "projects/${var.project_id}/releases/${var.database_name == "(default)" ? "cloud.firestore" : "cloud.firestore/${var.database_name}"}"
+  firebaserules_release = var.database_name == "(default)" ? "cloud.firestore" : "cloud.firestore/${var.database_name}"
 }
 
 import {
   to = google_firebaserules_release.firestore
-  id = local.firebaserules_release
+  id = "projects/${var.project_id}/releases/${local.firebaserules_release}"
 }
 
 resource "google_firebaserules_release" "firestore" {
