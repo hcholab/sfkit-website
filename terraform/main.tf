@@ -180,6 +180,9 @@ resource "google_firebaserules_ruleset" "firestore" {
             match /users/display_names {
               allow read: if request.auth != null;
             }
+            match /studies/{studyId} {
+              allow read: if request.auth.uid in resource.data.participants;
+            }
           }
         }
       EOT
