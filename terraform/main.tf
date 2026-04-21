@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 7.25.0"
     }
+    google-beta = {
+      source  = "hashicorp/google-beta"
+      version = "~> 7.25.0"
+    }
   }
 
   backend "gcs" {
@@ -14,19 +18,28 @@ terraform {
 }
 
 provider "google" {
-  project = var.project_id
+  project               = var.project_id
+  billing_project       = var.project_id
+  user_project_override = true
+}
+
+provider "google-beta" {
+  project               = var.project_id
+  billing_project       = var.project_id
+  user_project_override = true
 }
 
 data "google_project" "current" {}
 
 resource "google_project_service" "apis" {
   for_each = toset([
+    "apikeys.googleapis.com",
     "artifactregistry.googleapis.com",
     "cloudresourcemanager.googleapis.com",
     "compute.googleapis.com",
+    "firebase.googleapis.com",
     "firestore.googleapis.com",
     "iam.googleapis.com",
-    "secretmanager.googleapis.com",
     "run.googleapis.com",
   ])
 
@@ -43,17 +56,35 @@ resource "google_storage_bucket" "results" {
   depends_on = [google_project_service.apis]
 }
 
-resource "google_secret_manager_secret" "firebase_api_key" {
-  secret_id = "FIREBASE_API_KEY"
+resource "google_firebase_web_app" "firebase" {
+  provider     = google-beta
+  project      = var.project_id
+  display_name = var.service_name
+  api_key_id   = google_apikeys_key.sfkit.uid
+  depends_on   = [google_project_service.apis]
+}
 
-  replication {
-    user_managed {
-      replicas {
-        location = var.service_region
-      }
+data "google_firebase_web_app_config" "firebase" {
+  provider   = google-beta
+  web_app_id = google_firebase_web_app.firebase.app_id
+}
+
+resource "google_apikeys_key" "sfkit" {
+  project      = var.project_id
+  name         = "sfkit-firebase"
+  display_name = "Sfkit Firebase API key"
+
+  restrictions {
+    browser_key_restrictions {
+      allowed_referrers = split(",", var.cors_origins)
+    }
+    api_targets {
+      service = "firestore.googleapis.com"
+    }
+    api_targets {
+      service = "identitytoolkit.googleapis.com"
     }
   }
-
   depends_on = [google_project_service.apis]
 }
 
@@ -78,12 +109,6 @@ resource "google_storage_bucket_iam_member" "cloud_run_bucket" {
   bucket = google_storage_bucket.results.name
   role   = "roles/storage.objectUser"
   member = local.sa_member
-}
-
-resource "google_secret_manager_secret_iam_member" "cloud_run_secret" {
-  secret_id = google_secret_manager_secret.firebase_api_key.id
-  role      = "roles/secretmanager.secretAccessor"
-  member    = local.sa_member
 }
 
 resource "google_service_account_iam_member" "cloud_run_token_creator" {
@@ -119,6 +144,10 @@ resource "google_cloud_run_v2_service" "website" {
         value = google_firestore_database.db.name
       }
       env {
+        name  = "FIREBASE_API_KEY"
+        value = data.google_firebase_web_app_config.firebase.api_key
+      }
+      env {
         name  = "SFKIT_API_URL"
         value = "https://${var.service_name}-${data.google_project.current.number}.${var.service_region}.run.app/api"
       }
@@ -144,7 +173,6 @@ resource "google_cloud_run_v2_service" "website" {
   depends_on = [
     google_project_iam_member.cloud_run_firestore,
     google_storage_bucket_iam_member.cloud_run_bucket,
-    google_secret_manager_secret_iam_member.cloud_run_secret,
     google_service_account_iam_member.cloud_run_token_creator
   ]
 }
@@ -184,8 +212,6 @@ resource "google_firebaserules_release" "firestore" {
 }
 
 resource "google_firebaserules_ruleset" "firestore" {
-  project = var.project_id
-
   source {
     files {
       name    = "firestore.rules"
