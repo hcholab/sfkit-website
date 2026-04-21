@@ -8,6 +8,7 @@ This directory contains Terraform infrastructure for deploying cloud infrastruct
 - Firebase Rules Admin
 - Logs Writer
 - Project IAM Admin
+- Role Administrator
 - Secret Manager Admin
 - Service Account Admin
 - Service Account User
