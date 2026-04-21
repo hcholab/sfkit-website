@@ -126,6 +126,7 @@ resource "google_project_iam_custom_role" "sfkit_compute" {
     "compute.networks.get",
     "compute.networks.list",
     "compute.networks.removePeering",
+    "compute.networks.updatePolicy",
     "compute.regionOperations.get",
     "compute.subnetworks.create",
     "compute.subnetworks.delete",
