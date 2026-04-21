@@ -99,6 +99,47 @@ locals {
   sa_member = "serviceAccount:${google_service_account.cloud_run.email}"
 }
 
+resource "google_project_iam_custom_role" "sfkit_compute" {
+  project     = var.project_id
+  role_id     = "sfkitCompute"
+  title       = "sfkit Compute Manager"
+  description = "Minimal Compute Engine permissions required by sfkit-website to manage P0 VMs and networking"
+  permissions = [
+    "compute.disks.create",
+    "compute.firewalls.create",
+    "compute.firewalls.delete",
+    "compute.firewalls.list",
+    "compute.globalOperations.get",
+    "compute.instances.create",
+    "compute.instances.delete",
+    "compute.instances.get",
+    "compute.instances.list",
+    "compute.instances.setMetadata",
+    "compute.instances.setServiceAccount",
+    "compute.instances.setTags",
+    "compute.instances.stop",
+    "compute.networks.addPeering",
+    "compute.networks.create",
+    "compute.networks.delete",
+    "compute.networks.get",
+    "compute.networks.list",
+    "compute.networks.removePeering",
+    "compute.regionOperations.get",
+    "compute.subnetworks.create",
+    "compute.subnetworks.delete",
+    "compute.subnetworks.list",
+    "compute.subnetworks.use",
+    "compute.subnetworks.useExternalIp",
+    "compute.zoneOperations.get",
+  ]
+}
+
+resource "google_project_iam_member" "cloud_run_compute" {
+  project = var.project_id
+  role    = google_project_iam_custom_role.sfkit_compute.name
+  member  = local.sa_member
+}
+
 resource "google_project_iam_member" "cloud_run_firestore" {
   project = var.project_id
   role    = "roles/datastore.user"
@@ -156,6 +197,10 @@ resource "google_cloud_run_v2_service" "website" {
         value = var.project_id
       }
       env {
+        name  = "SFKIT_P0_SERVICE_ACCOUNT"
+        value = google_service_account.p0_vm.email
+      }
+      env {
         name  = "RESULTS_BUCKET"
         value = google_storage_bucket.results.name
       }
@@ -175,6 +220,35 @@ resource "google_cloud_run_v2_service" "website" {
     google_storage_bucket_iam_member.cloud_run_bucket,
     google_service_account_iam_member.cloud_run_token_creator
   ]
+}
+
+locals {
+  p0_vm_member = "serviceAccount:${google_service_account.p0_vm.email}"
+}
+
+resource "google_service_account" "p0_vm" {
+  account_id   = "${var.service_name}-p0"
+  display_name = "Service Account for ${var.service_name} P0 VMs"
+
+  depends_on = [google_project_service.apis]
+}
+
+resource "google_storage_bucket_iam_member" "p0_vm_results_reader" {
+  bucket = google_storage_bucket.results.name
+  role   = "roles/storage.objectViewer"
+  member = local.p0_vm_member
+}
+
+resource "google_project_iam_member" "p0_vm_log_writer" {
+  project = var.project_id
+  role    = "roles/logging.logWriter"
+  member  = local.p0_vm_member
+}
+
+resource "google_service_account_iam_member" "cloud_run_p0_vm_sa_user" {
+  service_account_id = google_service_account.p0_vm.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = local.sa_member
 }
 
 resource "google_service_account" "frontend" {

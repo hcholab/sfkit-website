@@ -21,6 +21,7 @@ CLOUD_RUN = os.getenv("CLOUD_RUN", "False")
 RESULTS_BUCKET = os.getenv("RESULTS_BUCKET", "sfkit")
 SERVER_GCP_PROJECT = os.getenv("SERVER_GCP_PROJECT", "broad-cho-priv1")
 SERVER_REGION = "us-central1"
+SFKIT_P0_SERVICE_ACCOUNT = os.getenv("SFKIT_P0_SERVICE_ACCOUNT")
 SERVER_ZONE = f"{SERVER_REGION}-a"
 NETWORK_NAME_ROOT = "sfkit"
 INSTANCE_NAME_ROOT = "sfkit"
