@@ -56,12 +56,16 @@ resource "google_storage_bucket" "results" {
   depends_on = [google_project_service.apis]
 }
 
+resource "google_firebase_project" "firebase" {
+  provider   = google-beta
+  depends_on = [google_project_service.apis]
+}
+
 resource "google_firebase_web_app" "firebase" {
   provider     = google-beta
-  project      = var.project_id
   display_name = var.service_name
   api_key_id   = google_apikeys_key.sfkit.uid
-  depends_on   = [google_project_service.apis]
+  depends_on   = [google_firebase_project.firebase]
 }
 
 data "google_firebase_web_app_config" "firebase" {
@@ -70,7 +74,6 @@ data "google_firebase_web_app_config" "firebase" {
 }
 
 resource "google_apikeys_key" "sfkit" {
-  project      = var.project_id
   name         = "sfkit-firebase"
   display_name = "Sfkit Firebase API key"
 
@@ -100,7 +103,6 @@ locals {
 }
 
 resource "google_project_iam_custom_role" "sfkit_compute" {
-  project     = var.project_id
   role_id     = "sfkitCompute"
   title       = "sfkit Compute Manager"
   description = "Minimal Compute Engine permissions required by sfkit-website to manage P0 VMs and networking"
@@ -280,7 +282,6 @@ import {
 }
 
 resource "google_firebaserules_release" "firestore" {
-  project      = var.project_id
   name         = local.firebaserules_release
   ruleset_name = google_firebaserules_ruleset.firestore.name
 }
