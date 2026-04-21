@@ -12,14 +12,15 @@ substitutions:
   _OIDC_AUDIENCE: "" # Typically, OAuth client ID
   _OIDC_JWKS_URL: https://www.googleapis.com/oauth2/v3/certs
   _IMAGE: ${_GCR_HOSTNAME}/${PROJECT_ID}/${_SERVICE_NAME}
+  _TF_AUTO_APPROVE: "false"
 
 options:
   logging: CLOUD_LOGGING_ONLY
+  automapSubstitutions: true
 
 steps:
   - id: build
     name: gcr.io/cloud-builders/docker
-    automapSubstitutions: true
     script: >-
       docker buildx create --use --driver docker-container &&
       docker buildx build --push -t $_IMAGE:$SHORT_SHA
@@ -38,19 +39,27 @@ steps:
 
   - name: hashicorp/terraform
     dir: terraform
+    entrypoint: sh
     args:
-      - apply
-      - -auto-approve
-      - -var=project_id=$PROJECT_ID
-      - -var=artifact_repository=$_GCR_HOSTNAME
-      - -var=image=$_IMAGE:$SHORT_SHA
-      - -var=cors_origins=$_CORS_ORIGINS
-      - -var=service_name=$_SERVICE_NAME
-      - -var=database_name=$_DATABASE_NAME
-      - -var=database_region=$_DATABASE_REGION
-      - -var=storage_region=$_STORAGE_REGION
-      - -var=results_bucket=$_RESULTS_BUCKET
-      - -var=flask_debug=$_FLASK_DEBUG
-      - -var=oidc_audience=$_OIDC_AUDIENCE
-      - -var=oidc_jwks_url=$_OIDC_JWKS_URL
-      - -var=frontend_service_name=$_FRONTEND_SERVICE_NAME
+      - -c
+      - |
+        set -e
+        if [ "$_TF_AUTO_APPROVE" = "true" ]; then
+          CMD="apply -auto-approve"
+        else
+          CMD="plan"
+        fi
+        terraform $CMD \
+          -var=project_id=$PROJECT_ID \
+          -var=artifact_repository=$_GCR_HOSTNAME \
+          -var=image=$_IMAGE:$SHORT_SHA \
+          -var=cors_origins=$_CORS_ORIGINS \
+          -var=service_name=$_SERVICE_NAME \
+          -var=database_name=$_DATABASE_NAME \
+          -var=database_region=$_DATABASE_REGION \
+          -var=storage_region=$_STORAGE_REGION \
+          -var=results_bucket=$_RESULTS_BUCKET \
+          -var=flask_debug=$_FLASK_DEBUG \
+          -var=oidc_audience=$_OIDC_AUDIENCE \
+          -var=oidc_jwks_url=$_OIDC_JWKS_URL \
+          -var=frontend_service_name=$_FRONTEND_SERVICE_NAME
