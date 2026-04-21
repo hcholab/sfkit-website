@@ -439,7 +439,7 @@ class GoogleCloudCompute:
             ],
             "serviceAccounts": [
                 {
-                    "email": constants.SFKIT_P0_SERVICE_ACCOUNT if role == "0" else "default",
+                    "email": constants.SFKIT_CP0_SERVICE_ACCOUNT if role == "0" else "default",
                     "scopes": [
                         "https://www.googleapis.com/auth/devstorage.read_write",
                         "https://www.googleapis.com/auth/logging.write",

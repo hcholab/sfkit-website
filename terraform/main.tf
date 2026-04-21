@@ -200,7 +200,7 @@ resource "google_cloud_run_v2_service" "website" {
         value = var.project_id
       }
       env {
-        name  = "SFKIT_P0_SERVICE_ACCOUNT"
+        name  = "SFKIT_CP0_SERVICE_ACCOUNT"
         value = google_service_account.p0_vm.email
       }
       env {
