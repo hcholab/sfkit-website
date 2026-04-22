@@ -225,6 +225,12 @@ resource "google_cloud_run_v2_service" "website" {
   ]
 }
 
+resource "google_cloud_run_v2_service_iam_member" "website_public" {
+  name   = google_cloud_run_v2_service.website.name
+  role   = "roles/run.invoker"
+  member = "allUsers"
+}
+
 locals {
   p0_vm_member = "serviceAccount:${google_service_account.p0_vm.email}"
 }
