@@ -165,8 +165,6 @@ resource "google_cloud_run_v2_service" "website" {
   name     = var.service_name
   location = var.service_region
 
-  invoker_iam_disabled = true
-
   template {
     service_account = google_service_account.cloud_run.email
 
