@@ -165,6 +165,8 @@ resource "google_cloud_run_v2_service" "website" {
   name     = var.service_name
   location = var.service_region
 
+  invoker_iam_disabled = true
+
   template {
     service_account = google_service_account.cloud_run.email
 
@@ -223,13 +225,6 @@ resource "google_cloud_run_v2_service" "website" {
     google_storage_bucket_iam_member.cloud_run_bucket,
     google_service_account_iam_member.cloud_run_token_creator
   ]
-}
-
-resource "google_cloud_run_v2_service_iam_member" "website_public" {
-  name     = google_cloud_run_v2_service.website.name
-  location = google_cloud_run_v2_service.website.location
-  role     = "roles/run.invoker"
-  member   = "allUsers"
 }
 
 locals {
