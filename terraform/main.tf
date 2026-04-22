@@ -168,6 +168,10 @@ resource "google_cloud_run_v2_service" "website" {
   template {
     service_account = google_service_account.cloud_run.email
 
+    scaling {
+      min_instance_count = 1
+    }
+
     containers {
       image = var.image
 
