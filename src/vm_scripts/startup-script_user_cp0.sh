@@ -36,6 +36,7 @@ fi
 
 docker run \
     -e SFKIT_API_URL \
+    -e SFKIT_PROXY_ARGS="-v -v" \
     -v "$PWD/sfkit:/sfkit/.sfkit" \
     -v "$PWD/auth_key.txt:/sfkit/auth_key.txt:ro" \
     ghcr.io/hcholab/sfkit run
