@@ -14,9 +14,14 @@ ulimit -n 1000000
 ulimit -u 1000000
 export PYTHONUNBUFFERED=TRUE
 
-SFKIT_API_URL=$(curl "http://metadata.google.internal/computeMetadata/v1/instance/attributes/SFKIT_API_URL" -H "Metadata-Flavor: Google")
+METADATA_URL="http://metadata.google.internal/computeMetadata/v1/instance/attributes"
+
+SFKIT_API_URL=$(curl -H "Metadata-Flavor: Google" "$METADATA_URL/SFKIT_API_URL" )
 export SFKIT_API_URL
 echo "SFKIT_API_URL: $SFKIT_API_URL"
+
+SFKIT_PROXY_ARGS=$(curl -H "Metadata-Flavor: Google" "$METADATA_URL/SFKIT_PROXY_ARGS" )
+export SFKIT_PROXY_ARGS
 
 apt-get --assume-yes update
 mkdir -p sfkit && chmod -R 777 sfkit
@@ -36,7 +41,7 @@ fi
 
 docker run \
     -e SFKIT_API_URL \
-    -e SFKIT_PROXY_ARGS="-v -v" \
+    -e SFKIT_PROXY_ARGS \
     -v "$PWD/sfkit:/sfkit/.sfkit" \
     -v "$PWD/auth_key.txt:/sfkit/auth_key.txt:ro" \
     ghcr.io/hcholab/sfkit run
