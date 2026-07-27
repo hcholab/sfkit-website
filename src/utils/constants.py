@@ -283,6 +283,11 @@ SFGWAS_SHARED_PARAMETERS = {
         "description": "A binary value to skip quality control and use all individuals/SNPs.",
         "value": "false",
     },
+    "use_cached_qc": {
+            "name": "Use Cached Quality Control",
+            "description": "A binary value to use cached quality control results.",
+            "value": "false",
+    },
     "imiss_ub": {
         "name": "Individual Missing Rate Upper Bound",
         "description": "The individual missing rate upper bound.",
@@ -323,6 +328,7 @@ SFGWAS_SHARED_PARAMETERS = {
         "num_covs",
         "num_pcs_to_remove",
         "skip_qc",
+        "use_cached_qc",
         "imiss_ub",
         "het_lb",
         "het_ub",
