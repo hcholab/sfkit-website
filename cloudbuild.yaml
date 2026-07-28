@@ -12,7 +12,7 @@ substitutions:
   _OIDC_AUDIENCE: "" # Typically, OAuth client ID
   _OIDC_JWKS_URL: https://www.googleapis.com/oauth2/v3/certs
   _IMAGE: ${_GCR_HOSTNAME}/${PROJECT_ID}/${_SERVICE_NAME}
-  _SFKIT_PROXY_ARGS: ${_SFKIT_PROXY_ARGS}
+  _SFKIT_PROXY_ARGS: "-v"
   _TF_AUTO_APPROVE: "false"
 
 options:
