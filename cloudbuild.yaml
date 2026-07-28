@@ -12,6 +12,7 @@ substitutions:
   _OIDC_AUDIENCE: "" # Typically, OAuth client ID
   _OIDC_JWKS_URL: https://www.googleapis.com/oauth2/v3/certs
   _IMAGE: ${_GCR_HOSTNAME}/${PROJECT_ID}/${_SERVICE_NAME}
+  _SFKIT_PROXY_ARGS: ${_SFKIT_PROXY_ARGS}
   _TF_AUTO_APPROVE: "false"
 
 options:
@@ -62,4 +63,5 @@ steps:
           "-var=flask_debug=$_FLASK_DEBUG" \
           "-var=oidc_audience=$_OIDC_AUDIENCE" \
           "-var=oidc_jwks_url=$_OIDC_JWKS_URL" \
+          "-var=sfkit_proxy_args=$_SFKIT_PROXY_ARGS" \
           "-var=frontend_service_name=$_FRONTEND_SERVICE_NAME"

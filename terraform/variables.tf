@@ -76,3 +76,9 @@ variable "oidc_jwks_url" {
   description = "OIDC JWKS URL"
   type        = string
 }
+
+variable "sfkit_proxy_args" {
+  description = "Arguments to pass to the sfkit proxy"
+  type        = string
+  default     = "-v"
+}

@@ -209,6 +209,10 @@ resource "google_cloud_run_v2_service" "website" {
         value = google_service_account.p0_vm.email
       }
       env {
+        name  = "SFKIT_PROXY_ARGS"
+        value = var.sfkit_proxy_args
+      }
+      env {
         name  = "RESULTS_BUCKET"
         value = google_storage_bucket.results.name
       }
