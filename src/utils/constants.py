@@ -44,6 +44,10 @@ SENTRY_ENVIRONMENT = os.getenv("SENTRY_ENVIRONMENT", "development")
 
 PARAMETERS_TYPE = Dict[str, Union[Dict[str, Any], List[str]]]
 
+# Each parameter is a dict of {name, description, value} plus an optional "type" that tells the UI
+# which form control to render: "number" (the default), "text", or "boolean" (a No/Yes select whose
+# value is the string "false" or "true").
+
 MPCGWAS_SHARED_PARAMETERS = {
     "NUM_SNPS": {
         "name": "Number of Single Nucleotide Polymorphisms",
@@ -157,6 +161,7 @@ MPCGWAS_ADVANCED_PARAMETERS = {
         "name": "BASE_P",
         "description": "Base prime used for cryptography (default is the largest 160 bit prime)",
         "value": "1461501637330902918203684832716283019655932542929",
+        "type": "text",
     },
     "index": [  # index is used to order the parameters in the UI
         "ITER_PER_EVAL",
@@ -259,6 +264,7 @@ SECURE_DTI_ADVANCED_PARAMETERS = {
         "name": "BASE_P",
         "description": "Base prime used for cryptography (default is the largest 160 bit prime)",
         "value": "1461501637330902918203684832716283019655932542929",
+        "type": "text",
     },
     "index": [],
 }
@@ -283,21 +289,25 @@ SFGWAS_SHARED_PARAMETERS = {
         "name": "Skip Quality Control",
         "description": "A binary value to skip quality control and use all individuals/SNPs.",
         "value": "false",
+        "type": "boolean",
     },
     "use_cached_qc": {
-            "name": "Use Cached Quality Control",
-            "description": "A binary value to use cached quality control results.",
-            "value": "false",
+        "name": "Use Cached Quality Control",
+        "description": "A binary value to use cached quality control results.",
+        "value": "false",
+        "type": "boolean",
     },
     "use_cached_pca": {
-                "name": "Use Cached PCA Results",
-                "description": "A binary value to use cached principal component analysis results.",
-                "value": "false",
+        "name": "Use Cached PCA Results",
+        "description": "A binary value to use cached principal component analysis results.",
+        "value": "false",
+        "type": "boolean",
     },
     "use_cached_power_iter": {
-                    "name": "Use Cached Power Iteration Results",
-                    "description": "A binary value to use cached power iteration results.",
-                    "value": "false",
+        "name": "Use Cached Power Iteration Results",
+        "description": "A binary value to use cached power iteration results.",
+        "value": "false",
+        "type": "boolean",
     },
     "imiss_ub": {
         "name": "Individual Missing Rate Upper Bound",
