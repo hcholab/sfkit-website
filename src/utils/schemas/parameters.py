@@ -43,6 +43,8 @@ sfgwas_shared_parameters_properties = {
     "num_pcs_to_remove": {"type": "integer", "minimum": 0, "maximum": 100},
     "skip_qc": {"type": "string", "enum": ["false", "true"]},
     "use_cached_qc": {"type": "string", "enum": ["false", "true"]},
+    "use_cached_pca": {"type": "string", "enum": ["false", "true"]},
+    "use_cached_power_iter": {"type": "string", "enum": ["false", "true"]},
     "imiss_ub": {"type": "number", "minimum": 0.0, "maximum": 1.0},
     "het_lb": {"type": "number", "minimum": 0.0, "maximum": 1.0},
     "het_ub": {"type": "number", "minimum": 0.0, "maximum": 1.0},

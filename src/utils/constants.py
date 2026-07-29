@@ -288,6 +288,16 @@ SFGWAS_SHARED_PARAMETERS = {
             "description": "A binary value to use cached quality control results.",
             "value": "false",
     },
+    "use_cached_pca": {
+                "name": "Use Cached PCA Results",
+                "description": "A binary value to use cached principal component analysis results.",
+                "value": "false",
+    },
+    "use_cached_power_iter": {
+                    "name": "Use Cached Power Iteration Results",
+                    "description": "A binary value to use cached power iteration results.",
+                    "value": "false",
+    },
     "imiss_ub": {
         "name": "Individual Missing Rate Upper Bound",
         "description": "The individual missing rate upper bound.",
@@ -329,6 +339,8 @@ SFGWAS_SHARED_PARAMETERS = {
         "num_pcs_to_remove",
         "skip_qc",
         "use_cached_qc",
+        "use_cached_pca",
+        "use_cached_power_iter",
         "imiss_ub",
         "het_lb",
         "het_ub",
