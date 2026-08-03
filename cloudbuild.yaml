@@ -24,12 +24,12 @@ steps:
     name: gcr.io/cloud-builders/docker
     script: >-
       docker buildx create --use --driver docker-container &&
-      [ "$_TF_AUTO_APPROVE" = "false" ] ||
+      ([ "$_TF_AUTO_APPROVE" = "false" ] ||
       docker buildx build --push -t $_IMAGE:$SHORT_SHA
       --cache-from type=registry,ref=$_IMAGE:cache
       --cache-to type=registry,ref=$_IMAGE:cache,mode=max
       --build-arg APP_VERSION=$SHORT_SHA
-      --build-arg BUILD_VERSION=$SHORT_SHA .
+      --build-arg BUILD_VERSION=$SHORT_SHA .)
 
   - id: tf-init
     name: hashicorp/terraform
