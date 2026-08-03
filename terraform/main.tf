@@ -295,8 +295,6 @@ import {
 resource "google_firebaserules_release" "firestore" {
   name         = local.firebaserules_release
   ruleset_name = google_firebaserules_ruleset.firestore.name
-
-  depends_on = [google_project_service.apis]
 }
 
 resource "google_firebaserules_ruleset" "firestore" {
