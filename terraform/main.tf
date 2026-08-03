@@ -38,6 +38,7 @@ resource "google_project_service" "apis" {
     "cloudresourcemanager.googleapis.com",
     "compute.googleapis.com",
     "firebase.googleapis.com",
+    "firebaserules.googleapis.com",
     "firestore.googleapis.com",
     "iam.googleapis.com",
     "run.googleapis.com",
