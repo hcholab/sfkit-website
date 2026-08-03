@@ -287,11 +287,6 @@ locals {
   firebaserules_release = var.database_name == "(default)" ? "cloud.firestore" : "cloud.firestore/${var.database_name}"
 }
 
-import {
-  to = google_firebaserules_release.firestore
-  id = "projects/${var.project_id}/releases/${local.firebaserules_release}"
-}
-
 resource "google_firebaserules_release" "firestore" {
   name         = local.firebaserules_release
   ruleset_name = google_firebaserules_ruleset.firestore.name
