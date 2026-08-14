@@ -92,10 +92,7 @@ resource "google_apikeys_key" "sfkit" {
 
   restrictions {
     browser_key_restrictions {
-      allowed_referrers = concat(
-        split(",", var.cors_origins),
-        ["https://${var.project_id}.firebaseapp.com"],
-      )
+      allowed_referrers = split(",", var.cors_origins)
     }
     api_targets {
       service = "firestore.googleapis.com"
