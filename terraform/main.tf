@@ -41,6 +41,7 @@ resource "google_project_service" "apis" {
     "firebaserules.googleapis.com",
     "firestore.googleapis.com",
     "iam.googleapis.com",
+    "identitytoolkit.googleapis.com",
     "run.googleapis.com",
   ])
 
@@ -72,6 +73,17 @@ resource "google_firebase_web_app" "firebase" {
 data "google_firebase_web_app_config" "firebase" {
   provider   = google-beta
   web_app_id = google_firebase_web_app.firebase.app_id
+}
+
+resource "google_identity_platform_config" "default" {
+  authorized_domains = [
+    for origin in split(",", var.cors_origins) :
+    split(":", split("://", origin)[1])[0]
+  ]
+  multi_tenant {
+    allow_tenants = false
+  }
+  depends_on = [google_project_service.apis]
 }
 
 resource "google_apikeys_key" "sfkit" {
