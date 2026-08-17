@@ -10,7 +10,7 @@ substitutions:
   _TF_STATE_BUCKET: ${PROJECT_ID}-terraform
   _FLASK_DEBUG: "0"
   _OIDC_AUDIENCE: "" # Typically, OAuth client ID
-  _OIDC_JWKS_URL: https://www.googleapis.com/oauth2/v3/certs
+  _OIDC_JWKS_URL: ""
   _IMAGE: ${_GCR_HOSTNAME}/${PROJECT_ID}/${_SERVICE_NAME}
   _SFKIT_PROXY_ARGS: "-v"
   _TF_AUTO_APPROVE: "false"
