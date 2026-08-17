@@ -7,6 +7,7 @@ import httpx
 import jwt
 import requests
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
+from firebase_admin import auth as firebase_auth
 from google.auth.transport.requests import Request as GAuthRequest
 from google.cloud import firestore
 from jwt import algorithms
@@ -24,12 +25,12 @@ BEARER_PREFIX = "Bearer "
 PUBLIC_KEYS = {}
 USER_IDS: Set = set()
 
-
-# Prepare public keys from Microsoft's JWKS endpoint for token verification
-jwks = requests.get(constants.OIDC_JWKS_URL).json()
-for key in jwks["keys"]:
-    kid = key["kid"]
-    PUBLIC_KEYS[kid] = algorithms.RSAAlgorithm.from_jwk(key)
+# Prepare public keys from OIDC JWKS endpoint for token verification
+if constants.OIDC_JWKS_URL:
+  jwks = requests.get(constants.OIDC_JWKS_URL).json()
+  for key in jwks["keys"]:
+      kid = key["kid"]
+      PUBLIC_KEYS[kid] = algorithms.RSAAlgorithm.from_jwk(key)
 
 
 def get_auth_header(req: Union[Request, Websocket]) -> str:
@@ -43,8 +44,10 @@ async def get_user_id(req: Union[Request, Websocket] = request) -> str:
         return user_id
     if isinstance(req, Websocket):
         user = {}
+    elif constants.OIDC_JWKS_URL:
+        user = await _get_azure_oidc_user(auth_header)
     else:
-        user = await _get_azure_b2c_user(auth_header)
+        user = await _get_firebase_user(auth_header)
     if constants.TERRA:
         user.update(await _get_terra_user(auth_header))
     else:
@@ -139,7 +142,15 @@ async def register_terra_service_account() -> None:
     _cp0_id = res[TERRA_ID_KEY]
 
 
-async def _get_azure_b2c_user(auth_header: str) -> dict:
+async def _get_firebase_user(auth_header: str) -> dict:
+  if not auth_header.startswith(BEARER_PREFIX):
+      raise Unauthorized("Invalid Authorization header")
+
+  token = auth_header[len(BEARER_PREFIX) :]
+  return firebase_auth.verify_id_token(token)
+
+
+async def _get_azure_oidc_user(auth_header: str) -> dict:
     if not auth_header.startswith(BEARER_PREFIX):
         raise Unauthorized("Invalid Authorization header")
 
