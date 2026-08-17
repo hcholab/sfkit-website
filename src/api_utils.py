@@ -103,12 +103,19 @@ async def add_user_to_db(decoded_token: dict) -> None:
         if constants.TERRA and "email" in decoded_token:
             display_name = decoded_token["email"]
             email = decoded_token["email"]
-        if "given_name" in decoded_token:
+
+        if "name" in decoded_token:
+            display_name = decoded_token["name"]
+        elif "given_name" in decoded_token:
             display_name = decoded_token["given_name"]
             if "family_name" in decoded_token:
                 display_name += " " + decoded_token["family_name"]
-        if "emails" in decoded_token:
+
+        if "email" in decoded_token:
+            email = decoded_token["email"]
+        elif "emails" in decoded_token:
             email = decoded_token["emails"][0]
+
         await db.collection("users").document("display_names").set({user_id: display_name}, merge=True)
         await db.collection("users").document(user_id).set(
             {
