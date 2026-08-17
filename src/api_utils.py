@@ -102,7 +102,6 @@ async def add_user_to_db(decoded_token: dict) -> None:
         email = ""
         if constants.TERRA and "email" in decoded_token:
             display_name = decoded_token["email"]
-            email = decoded_token["email"]
 
         if "name" in decoded_token:
             display_name = decoded_token["name"]
