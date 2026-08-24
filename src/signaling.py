@@ -1,8 +1,10 @@
 import asyncio
+import json
 from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Dict, List
 
+import httpx
 from quart import Blueprint, Websocket, abort, websocket
 
 from src.api_utils import fetch_study
@@ -20,6 +22,7 @@ class MessageType(Enum):
     CREDENTIAL = "credential"
     CERTIFICATE = "certificate"
     ERROR = "error"
+    TURN = "turn"
 
 
 @dataclass
@@ -92,6 +95,10 @@ async def ice_ws():
         parties[pid] = websocket._get_current_object()  # type: ignore
         logger.info("Registered websocket for party %d", pid)
 
+        turn = await _get_cloudflare_turn_credentials()
+        if turn:
+            await Message(MessageType.TURN, turn).send(websocket)
+
         # using a study-specific barrier,
         # wait until all participants in a study are connected,
         # and then initiate the ICE protocol for it
@@ -148,3 +155,34 @@ async def _get_study_participants(study_id: str) -> List[str]:
 
 def _get_pid(study: List[str], user_id: str) -> PID:
     return study.index(user_id) if user_id in study else -1
+
+
+async def _get_cloudflare_turn_credentials():
+  if not constants.CLOUDFLARE_TURN_KEY_ID:
+    return
+
+  async with httpx.AsyncClient() as http:
+    res = await http.post(
+      f"https://rtc.live.cloudflare.com/v1/turn/keys/{constants.CLOUDFLARE_TURN_KEY_ID}/credentials/generate-ice-servers",
+      headers={
+        "Authorization": "Bearer " + constants.CLOUDFLARE_TURN_KEY_API_TOKEN,
+      }, json={
+        "ttl": constants.CLOUDFLARE_TURN_CREDENTIAL_TTL_SEC
+      },
+    )
+
+  res.raise_for_status()
+  for data in res.json()["iceServers"]:
+    if not data["username"] or not data["credential"]:
+      continue
+
+    urls = []
+    for url in data["urls"]:
+      if url.startswith("turns:"):
+        urls.append(url)
+
+    return json.dumps({
+      "urls": urls,
+      "username": data["username"],
+      "password": data["credential"],
+    })
