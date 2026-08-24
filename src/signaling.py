@@ -95,9 +95,8 @@ async def ice_ws():
         parties[pid] = websocket._get_current_object()  # type: ignore
         logger.info("Registered websocket for party %d", pid)
 
-        turn = await _get_cloudflare_turn_credentials()
-        if turn:
-            await Message(MessageType.TURN, turn).send(websocket)
+        turn = await _get_cloudflare_turn_credentials() or "{}"
+        await Message(MessageType.TURN, turn).send(websocket)
 
         # using a study-specific barrier,
         # wait until all participants in a study are connected,
