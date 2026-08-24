@@ -43,6 +43,7 @@ resource "google_project_service" "apis" {
     "iam.googleapis.com",
     "identitytoolkit.googleapis.com",
     "run.googleapis.com",
+    "secretmanager.googleapis.com",
   ])
 
   service            = each.value
@@ -310,6 +311,8 @@ resource "google_secret_manager_secret" "cloudflare_turn_key_api_token" {
       }
     }
   }
+
+  depends_on = [google_project_service.apis]
 }
 
 resource "google_secret_manager_secret_iam_member" "cloud_run_turn_key_api_token" {
