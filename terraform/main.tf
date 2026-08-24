@@ -247,7 +247,7 @@ resource "google_cloud_run_v2_service" "website" {
           name = "CLOUDFLARE_TURN_KEY_API_TOKEN"
           value_source {
             secret_key_ref {
-              secret  = local.cloudflare_turn_key_secret.id
+              secret  = google_secret_manager_secret.cloudflare_turn_key_api_token[0].id
               version = "latest"
             }
           }
@@ -299,10 +299,6 @@ resource "google_service_account" "frontend" {
   depends_on = [google_project_service.apis]
 }
 
-locals {
-  cloudflare_turn_key_secret = google_secret_manager_secret.cloudflare_turn_key_api_token[0]
-}
-
 resource "google_secret_manager_secret" "cloudflare_turn_key_api_token" {
   count     = var.cloudflare_turn_key_id == "" ? 0 : 1
   secret_id = "cloudflare_turn_key_api_token"
@@ -318,7 +314,7 @@ resource "google_secret_manager_secret" "cloudflare_turn_key_api_token" {
 
 resource "google_secret_manager_secret_iam_member" "cloud_run_turn_key_api_token" {
   count     = var.cloudflare_turn_key_id == "" ? 0 : 1
-  secret_id = local.cloudflare_turn_key_secret.id
+  secret_id = google_secret_manager_secret.cloudflare_turn_key_api_token[0].id
   role      = "roles/secretmanager.secretAccessor"
   member    = local.sa_member
 }
