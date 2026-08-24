@@ -75,10 +75,17 @@ variable "oidc_audience" {
 variable "oidc_jwks_url" {
   description = "OIDC JWKS URL"
   type        = string
+  default     = ""
 }
 
 variable "sfkit_proxy_args" {
   description = "Arguments to pass to the sfkit proxy"
   type        = string
   default     = "-v"
+}
+
+variable "cloudflare_turn_key_id" {
+  description = "Cloudflare TURN key ID"
+  type        = string
+  default     = ""
 }
