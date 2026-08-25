@@ -435,6 +435,12 @@ resource "google_compute_subnetwork" "cp0" {
   network       = google_compute_network.cp0.id
   region        = var.service_region
   ip_cidr_range = "10.0.0.0/24"
+
+  log_config {
+    aggregation_interval = var.vpc_flow_logs_interval
+    flow_sampling        = var.vpc_flow_logs_sampling
+    metadata             = "EXCLUDE_ALL_METADATA"
+  }
 }
 
 resource "google_compute_router" "cp0" {

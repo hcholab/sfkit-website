@@ -89,3 +89,15 @@ variable "cloudflare_turn_key_id" {
   type        = string
   default     = ""
 }
+
+variable "vpc_flow_logs_interval" {
+  description = "VPC flow logs interval"
+  type        = string
+  default     = "INTERVAL_15_MIN"
+}
+
+variable "vpc_flow_logs_sampling" {
+  description = "VPC flow logs sampling"
+  type        = number
+  default     = 1.0
+}
