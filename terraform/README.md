@@ -6,6 +6,7 @@ This directory contains Terraform infrastructure for deploying cloud infrastruct
 - Artifact Registry Administrator
 - Cloud Datastore Admin
 - Cloud Run Admin
+- Compute Network Admin
 - Firebase Editor
 - Logs Writer
 - Project IAM Admin
