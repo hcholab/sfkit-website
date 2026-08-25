@@ -24,7 +24,12 @@ class GoogleCloudCompute:
     def __init__(self, study_id: str, gcp_project: str) -> None:
         self.gcp_project: str = gcp_project
         self.study_id: str = study_id
-        self.network_name = f"{constants.NETWORK_NAME_ROOT}-{study_id}"
+        self.is_cp0: bool = gcp_project == constants.SERVER_GCP_PROJECT
+        self.network_name: str = (
+            constants.SFKIT_CP0_NETWORK_NAME
+            if self.is_cp0
+            else f"{constants.NETWORK_NAME_ROOT}-{study_id}"
+        )
         self.firewall_name = f"{self.network_name}-vm-ingress"
         self.zone = constants.SERVER_ZONE
         self.compute = googleapi.build("compute", "v1")
@@ -60,6 +65,9 @@ class GoogleCloudCompute:
             if firewall_name == self.firewall_name:
                 self.delete_firewall(firewall_name)
 
+        if self.is_cp0:
+          return
+
         try:
             subnets: list = (
                 self.compute.subnetworks()
@@ -88,11 +96,11 @@ class GoogleCloudCompute:
             if is_create_vm(doc_ref_dict, participant):
                 gcp_projects_peerings.append(gcp_project)
 
-        self.create_network_if_it_does_not_already_exist(doc_ref_dict)
-        self.create_firewall(doc_ref_dict)
+        if not self.is_cp0:
+            self.create_network_if_it_does_not_already_exist(doc_ref_dict)
+            self.remove_conflicting_subnets(gcp_projects)
+            self.create_subnet(role)
         self.remove_conflicting_peerings(gcp_projects)
-        self.remove_conflicting_subnets(gcp_projects)
-        self.create_subnet(role)
         if gcp_projects_peerings:
             unique_peerings = list(set(gcp_projects_peerings))
             self.create_peerings(unique_peerings)
@@ -336,10 +344,15 @@ class GoogleCloudCompute:
             if other_project not in existing_peerings:
                 peering_name = f"sfkit-{self.study_id}-{other_project}"[:63]
                 logger.info(f"Creating peering called {peering_name}")
+                other_network_name = (
+                    constants.SFKIT_CP0_NETWORK_NAME
+                    if other_project == constants.SERVER_GCP_PROJECT
+                    else f"{constants.NETWORK_NAME_ROOT}-{self.study_id}"
+                )
                 body = {
                     "networkPeering": {
                         "name": peering_name,
-                        "network": f"https://www.googleapis.com/compute/v1/projects/{other_project}/global/networks/{self.network_name}",
+                        "network": f"https://www.googleapis.com/compute/v1/projects/{other_project}/global/networks/{other_network_name}",
                         "exchangeSubnetRoutes": True,
                     }
                 }
@@ -420,13 +433,15 @@ class GoogleCloudCompute:
                     "network": f"projects/{self.gcp_project}/global/networks/{self.network_name}",
                     "subnetwork": f"regions/{constants.SERVER_REGION}/subnetworks/{self.network_name}-subnet{role}",
                     "networkIP": f"10.0.{role}.10",
-                    "accessConfigs": [
+                    **({} if self.is_cp0 else {
+                      "accessConfigs": [
                         {
                             "type": "ONE_TO_ONE_NAT",
                             "name": "External NAT",
                         }  # This is necessary to give the VM access to the internet, which it needs to do things like download the git repos.
                         # See (https://cloud.google.com/compute/docs/reference/rest/v1/instances) for more information.  If it helps, the external IP address is ephemeral.
-                    ],
+                      ]
+                    }),
                 }
             ],
             "disks": [
@@ -584,6 +599,8 @@ class GoogleCloudCompute:
             .get(project=self.gcp_project, zone=self.zone, instance=instance)
             .execute()
         )
+        if self.is_cp0:
+            return response["networkInterfaces"][0]["networkIP"]
         return response["networkInterfaces"][0]["accessConfigs"][0]["natIP"]
 
 

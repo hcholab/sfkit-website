@@ -219,8 +219,16 @@ resource "google_cloud_run_v2_service" "website" {
         value = var.project_id
       }
       env {
+        name  = "SERVER_REGION"
+        value = var.service_region
+      }
+      env {
         name  = "SFKIT_CP0_SERVICE_ACCOUNT"
         value = google_service_account.p0_vm.email
+      }
+      env {
+        name  = "SFKIT_CP0_NETWORK_NAME"
+        value = google_compute_network.cp0.name
       }
       env {
         name  = "SFKIT_PROXY_ARGS"
@@ -407,5 +415,43 @@ resource "google_artifact_registry_repository" "docker" {
     condition {
       tag_state = "UNTAGGED"
     }
+  }
+}
+
+# CP0 static VPC + Cloud NAT
+
+locals {
+  cp0_net = "sfkit-cp0"
+}
+
+resource "google_compute_network" "cp0" {
+  name                    = local.cp0_net
+  auto_create_subnetworks = false
+  depends_on              = [google_project_service.apis]
+}
+
+resource "google_compute_subnetwork" "cp0" {
+  name          = "${local.cp0_net}-subnet0"
+  network       = google_compute_network.cp0.id
+  region        = var.service_region
+  ip_cidr_range = "10.0.0.0/24"
+}
+
+resource "google_compute_router" "cp0" {
+  name    = "${local.cp0_net}-router"
+  network = google_compute_network.cp0.id
+  region  = var.service_region
+}
+
+resource "google_compute_router_nat" "cp0" {
+  name                                = "${local.cp0_net}-nat"
+  router                              = google_compute_router.cp0.name
+  region                              = var.service_region
+  nat_ip_allocate_option              = "AUTO_ONLY"
+  source_subnetwork_ip_ranges_to_nat  = "LIST_OF_SUBNETWORKS"
+  enable_endpoint_independent_mapping = true
+  subnetwork {
+    name                    = google_compute_subnetwork.cp0.id
+    source_ip_ranges_to_nat = ["ALL_IP_RANGES"]
   }
 }
