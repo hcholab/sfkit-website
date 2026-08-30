@@ -262,6 +262,15 @@ resource "google_cloud_run_v2_service" "website" {
           }
         }
       }
+      env {
+        name = "SENDGRID_API_KEY"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.sendgrid_api_key.id
+            version = "latest"
+          }
+        }
+      }
     }
   }
 
@@ -307,6 +316,30 @@ resource "google_service_account" "frontend" {
 
   depends_on = [google_project_service.apis]
 }
+
+# SendGrid API Key
+
+resource "google_secret_manager_secret" "sendgrid_api_key" {
+  secret_id = "sendgrid_api_key"
+
+  replication {
+    user_managed {
+      replicas {
+        location = var.service_region
+      }
+    }
+  }
+
+  depends_on = [google_project_service.apis]
+}
+
+resource "google_secret_manager_secret_iam_member" "cloud_run_sendgrid_api_key" {
+  secret_id = google_secret_manager_secret.sendgrid_api_key.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = local.sa_member
+}
+
+# Cloudflare TURN Key
 
 resource "google_secret_manager_secret" "cloudflare_turn_key_api_token" {
   count     = var.cloudflare_turn_key_id == "" ? 0 : 1
