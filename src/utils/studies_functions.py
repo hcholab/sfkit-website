@@ -56,7 +56,7 @@ async def email(inviter: str, recipient: str, invitation_message: str, study_tit
     )
 
     from_email = constants.SENDGRID_FROM_EMAIL or doc_ref_dict.get("from_email", "")
-    from_user = "Terra" if constants.TERRA else doc_ref_dict.get("from_user", "")
+    from_user = constants.SENDGRID_FROM_USER or doc_ref_dict.get("from_user", "")
     message = Mail(
         to_emails=recipient,
         from_email=Email(from_email, from_user),
