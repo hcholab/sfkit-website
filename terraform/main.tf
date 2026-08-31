@@ -235,6 +235,10 @@ resource "google_cloud_run_v2_service" "website" {
         value = var.sfkit_proxy_args
       }
       env {
+        name  = "SFKIT_CLI_IMAGE"
+        value = var.sfkit_cli_image
+      }
+      env {
         name  = "RESULTS_BUCKET"
         value = google_storage_bucket.results.name
       }

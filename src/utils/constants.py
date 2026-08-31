@@ -15,6 +15,7 @@ RAWLS_API_URL = os.getenv("RAWLS_API_URL", "https://rawls.dsde-dev.broadinstitut
 SAM_API_URL = os.getenv("SAM_API_URL", "https://sam.dsde-dev.broadinstitute.org")
 SFKIT_API_URL = os.getenv("SFKIT_API_URL", "http://localhost:8080")
 SFKIT_PROXY_ARGS = os.getenv("SFKIT_PROXY_ARGS", "-v -v")
+SFKIT_CLI_IMAGE = os.getenv("SFKIT_CLI_IMAGE", "ghcr.io/hcholab/sfkit")
 CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*")
 APP_VERSION = os.getenv("APP_VERSION", "")
 BUILD_VERSION = os.getenv("BUILD_VERSION", "")

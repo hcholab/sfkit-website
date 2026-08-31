@@ -13,6 +13,7 @@ substitutions:
   _OIDC_JWKS_URL: ""
   _IMAGE: ${_GCR_HOSTNAME}/${PROJECT_ID}/${_SERVICE_NAME}
   _SFKIT_PROXY_ARGS: "-v"
+  _SFKIT_CLI_IMAGE: ghcr.io/hcholab/sfkit
   _CLOUDFLARE_TURN_KEY_ID: ""
   _TF_AUTO_APPROVE: "false"
 
@@ -66,5 +67,6 @@ steps:
           "-var=oidc_audience=$_OIDC_AUDIENCE" \
           "-var=oidc_jwks_url=$_OIDC_JWKS_URL" \
           "-var=sfkit_proxy_args=$_SFKIT_PROXY_ARGS" \
+          "-var=sfkit_cli_image=$_SFKIT_CLI_IMAGE" \
           "-var=cloudflare_turn_key_id=$_CLOUDFLARE_TURN_KEY_ID" \
           "-var=frontend_service_name=$_FRONTEND_SERVICE_NAME"

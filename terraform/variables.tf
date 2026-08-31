@@ -84,6 +84,12 @@ variable "sfkit_proxy_args" {
   default     = "-v"
 }
 
+variable "sfkit_cli_image" {
+  description = "Full sfkit CLI Docker image URI"
+  type        = string
+  default     = "ghcr.io/hcholab/sfkit"
+}
+
 variable "cloudflare_turn_key_id" {
   description = "Cloudflare TURN key ID"
   type        = string

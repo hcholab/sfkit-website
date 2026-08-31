@@ -23,6 +23,8 @@ echo "SFKIT_API_URL: $SFKIT_API_URL"
 SFKIT_PROXY_ARGS=$(curl -H "Metadata-Flavor: Google" "$METADATA_URL/SFKIT_PROXY_ARGS" )
 export SFKIT_PROXY_ARGS
 
+SFKIT_CLI_IMAGE=$(curl -H "Metadata-Flavor: Google" "$METADATA_URL/SFKIT_CLI_IMAGE" )
+
 apt-get --assume-yes update
 mkdir -p sfkit && chmod -R 777 sfkit
 
@@ -44,4 +46,4 @@ docker run \
     -e SFKIT_PROXY_ARGS \
     -v "$PWD/sfkit:/sfkit/.sfkit" \
     -v "$PWD/auth_key.txt:/sfkit/auth_key.txt:ro" \
-    ghcr.io/hcholab/sfkit run
+    "${SFKIT_CLI_IMAGE}" run
