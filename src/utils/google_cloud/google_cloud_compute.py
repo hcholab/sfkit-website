@@ -494,7 +494,7 @@ class GoogleCloudCompute:
             "items": [
                 {"key": "startup-script", "value": startup_script},
                 {"key": "enable-oslogin", "value": True},
-                {"key": "serial-port-logging-enable", "value": True},
+                {"key": "serial-port-logging-enable", "value": False},
             ]
         }
 
