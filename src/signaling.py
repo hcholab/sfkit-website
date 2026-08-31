@@ -172,7 +172,7 @@ async def _get_cloudflare_turn_credentials():
 
   res.raise_for_status()
   for data in res.json()["iceServers"]:
-    if ("username" not in data) or ("credential" not in data):
+    if not data.get("username") or not data.get("credential"):
       continue
 
     urls = []
