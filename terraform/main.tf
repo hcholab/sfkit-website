@@ -10,6 +10,10 @@ terraform {
       source  = "hashicorp/google-beta"
       version = "~> 7.25.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.9.0"
+    }
   }
 
   backend "gcs" {
@@ -497,4 +501,59 @@ resource "google_compute_router_nat" "sfkit" {
     name                    = google_compute_subnetwork.cp0.id
     source_ip_ranges_to_nat = ["ALL_IP_RANGES"]
   }
+}
+
+# TURN server
+
+locals {
+  turn_vm_member = "serviceAccount:${google_service_account.turn_vm.email}"
+}
+
+resource "random_password" "coturn_auth_secret" {
+  length  = 32
+  special = false
+}
+
+resource "google_secret_manager_secret" "coturn_auth_secret" {
+  secret_id = "coturn_auth_secret"
+
+  replication {
+    user_managed {
+      replicas {
+        location = var.service_region
+      }
+    }
+  }
+
+  depends_on = [google_project_service.apis]
+}
+
+resource "google_secret_manager_secret_version" "coturn_auth_secret" {
+  secret      = google_secret_manager_secret.coturn_auth_secret.id
+  secret_data = random_password.coturn_auth_secret.result
+}
+
+resource "google_service_account" "turn_vm" {
+  account_id   = "${var.service_name}-turn"
+  display_name = "TURN server VM Service Account"
+
+  depends_on = [google_project_service.apis]
+}
+
+resource "google_secret_manager_secret_iam_member" "turn_vm_coturn_secret" {
+  secret_id = google_secret_manager_secret.coturn_auth_secret.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = local.turn_vm_member
+}
+
+resource "google_project_iam_member" "turn_vm_log_writer" {
+  project = var.project_id
+  role    = "roles/logging.logWriter"
+  member  = local.turn_vm_member
+}
+
+resource "google_secret_manager_secret_iam_member" "cloud_run_coturn_secret" {
+  secret_id = google_secret_manager_secret.coturn_auth_secret.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = local.sa_member
 }
