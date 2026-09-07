@@ -1,10 +1,13 @@
 import asyncio
+import base64
+import hmac
 import json
+import time
 from dataclasses import asdict, dataclass
 from enum import Enum
+from hashlib import sha1
 from typing import Dict, List
 
-import httpx
 from quart import Blueprint, Websocket, abort, websocket
 
 from src.api_utils import fetch_study
@@ -95,7 +98,7 @@ async def ice_ws():
         parties[pid] = websocket._get_current_object()  # type: ignore
         logger.info("Registered websocket for party %d", pid)
 
-        turn = await _get_cloudflare_turn_credentials() or "{}"
+        turn = _get_turn_credentials() or "{}"
         await Message(MessageType.TURN, turn).send(websocket)
 
         # using a study-specific barrier,
@@ -156,32 +159,17 @@ def _get_pid(study: List[str], user_id: str) -> PID:
     return study.index(user_id) if user_id in study else -1
 
 
-async def _get_cloudflare_turn_credentials():
-  if not constants.CLOUDFLARE_TURN_KEY_ID:
+def _get_turn_credentials():
+  if not constants.TURN_URL:
     return
 
-  async with httpx.AsyncClient() as http:
-    res = await http.post(
-      f"https://rtc.live.cloudflare.com/v1/turn/keys/{constants.CLOUDFLARE_TURN_KEY_ID}/credentials/generate-ice-servers",
-      headers={
-        "Authorization": "Bearer " + constants.CLOUDFLARE_TURN_KEY_API_TOKEN,
-      }, json={
-        "ttl": constants.CLOUDFLARE_TURN_CREDENTIAL_TTL_SEC
-      },
-    )
+  username = str(int(time.time()) + constants.TURN_CREDENTIAL_TTL_SEC)
+  password = base64.b64encode(
+    hmac.new(constants.TURN_SECRET.encode(), username.encode(), sha1).digest()
+  ).decode()
 
-  res.raise_for_status()
-  for data in res.json()["iceServers"]:
-    if not data.get("username") or not data.get("credential"):
-      continue
-
-    urls = []
-    for url in data["urls"]:
-      if url.startswith("turns:"):
-        urls.append(url)
-
-    return json.dumps({
-      "urls": urls,
-      "username": data["username"],
-      "password": data["credential"],
-    })
+  return json.dumps({
+    "urls": [constants.TURN_URL],
+    "username": username,
+    "password": password,
+  })
