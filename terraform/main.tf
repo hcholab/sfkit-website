@@ -557,7 +557,7 @@ resource "google_secret_manager_secret_iam_member" "cloud_run_coturn_secret" {
   member    = local.sa_member
 }
 
-# TURN static IP + passthrough LB
+# TURN static IP + passthrough LB + firewall
 
 resource "google_compute_address" "turn" {
   name = "${local.network}-turn-ip"
@@ -604,4 +604,26 @@ resource "google_compute_forwarding_rule" "turn_relay" {
   port_range      = "49152-65535"
   ip_address      = google_compute_address.turn.address
   backend_service = google_compute_region_backend_service.turn.id
+}
+
+resource "google_compute_firewall" "turn_dtls_relay" {
+  name          = "${local.network}-turn-dtls-relay"
+  network       = google_compute_network.sfkit.id
+  source_ranges = ["0.0.0.0/0"]
+
+  allow {
+    protocol = "udp"
+    ports    = [var.turn_port, "49152-65535"]
+  }
+}
+
+resource "google_compute_firewall" "turn_healthcheck" {
+  name          = "${local.network}-turn-healthcheck"
+  network       = google_compute_network.sfkit.id
+  source_ranges = ["35.191.0.0/16", "130.211.0.0/22"]
+
+  allow {
+    protocol = "tcp"
+    ports    = [var.turn_port]
+  }
 }
