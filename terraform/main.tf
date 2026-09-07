@@ -446,7 +446,7 @@ resource "google_compute_network" "sfkit" {
   depends_on              = [google_project_service.apis]
 }
 
-resource "google_compute_subnetwork" "cp0" {
+resource "google_compute_subnetwork" "sfkit" {
   name          = "${local.network}-subnet0"
   network       = google_compute_network.sfkit.id
   ip_cidr_range = "10.0.0.0/24"
@@ -470,7 +470,7 @@ resource "google_compute_router_nat" "sfkit" {
   source_subnetwork_ip_ranges_to_nat  = "LIST_OF_SUBNETWORKS"
   enable_endpoint_independent_mapping = true
   subnetwork {
-    name                    = google_compute_subnetwork.cp0.id
+    name                    = google_compute_subnetwork.sfkit.id
     source_ip_ranges_to_nat = ["ALL_IP_RANGES"]
   }
 }
@@ -530,7 +530,7 @@ resource "google_secret_manager_secret_iam_member" "cloud_run_coturn_secret" {
   member    = local.sa_member
 }
 
-# TURN static IP + passthrough LB + firewall
+# TURN instance + firewall + passthrough LB with static IP
 
 resource "google_compute_address" "turn" {
   name = "${local.network}-turn-ip"
@@ -539,8 +539,44 @@ resource "google_compute_address" "turn" {
 }
 
 resource "google_compute_instance_group" "turn" {
-  name = "${local.network}-turn"
-  zone = "${var.service_region}-a"
+  name      = "${local.network}-turn"
+  zone      = google_compute_instance.turn.zone
+  instances = [google_compute_instance.turn.self_link]
+}
+
+resource "google_compute_instance" "turn" {
+  name         = "${local.network}-turn"
+  machine_type = "e2-small"
+  zone         = "${var.service_region}-a"
+
+  boot_disk {
+    initialize_params {
+      image = "cos-cloud/cos-stable"
+    }
+  }
+
+  network_interface {
+    network    = google_compute_network.sfkit.id
+    subnetwork = google_compute_subnetwork.sfkit.id
+  }
+
+  service_account {
+    email  = google_service_account.turn_vm.email
+    scopes = ["cloud-platform"]
+  }
+
+  metadata = {
+    startup-script = templatefile("${path.module}/turn-startup.sh.tpl", {
+      project_id = var.project_id
+      secret     = google_secret_manager_secret.coturn_auth_secret.secret_id
+      nlb_ip     = google_compute_address.turn.address
+      turn_port  = var.turn_port
+    })
+  }
+
+  depends_on = [
+    google_secret_manager_secret_version.coturn_auth_secret,
+  ]
 }
 
 resource "google_compute_health_check" "turn" {
