@@ -90,6 +90,12 @@ variable "sfkit_cli_image" {
   default     = "ghcr.io/hcholab/sfkit"
 }
 
+variable "turn_port" {
+  description = "TURN server port"
+  type        = number
+  default     = 15830
+}
+
 variable "cloudflare_turn_key_id" {
   description = "Cloudflare TURN key ID"
   type        = string

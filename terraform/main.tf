@@ -24,12 +24,14 @@ terraform {
 provider "google" {
   project               = var.project_id
   billing_project       = var.project_id
+  region                = var.service_region
   user_project_override = true
 }
 
 provider "google-beta" {
   project               = var.project_id
   billing_project       = var.project_id
+  region                = var.service_region
   user_project_override = true
 }
 
@@ -474,7 +476,6 @@ resource "google_compute_network" "sfkit" {
 resource "google_compute_subnetwork" "cp0" {
   name          = "${local.network}-subnet0"
   network       = google_compute_network.sfkit.id
-  region        = var.service_region
   ip_cidr_range = "10.0.0.0/24"
 
   log_config {
@@ -487,13 +488,11 @@ resource "google_compute_subnetwork" "cp0" {
 resource "google_compute_router" "sfkit" {
   name    = "${local.network}-router"
   network = google_compute_network.sfkit.id
-  region  = var.service_region
 }
 
 resource "google_compute_router_nat" "sfkit" {
   name                                = "${local.network}-nat"
   router                              = google_compute_router.sfkit.name
-  region                              = var.service_region
   nat_ip_allocate_option              = "AUTO_ONLY"
   source_subnetwork_ip_ranges_to_nat  = "LIST_OF_SUBNETWORKS"
   enable_endpoint_independent_mapping = true
@@ -503,7 +502,7 @@ resource "google_compute_router_nat" "sfkit" {
   }
 }
 
-# TURN server
+# TURN server SA and secret
 
 locals {
   turn_vm_member = "serviceAccount:${google_service_account.turn_vm.email}"
@@ -556,4 +555,53 @@ resource "google_secret_manager_secret_iam_member" "cloud_run_coturn_secret" {
   secret_id = google_secret_manager_secret.coturn_auth_secret.id
   role      = "roles/secretmanager.secretAccessor"
   member    = local.sa_member
+}
+
+# TURN static IP + passthrough LB
+
+resource "google_compute_address" "turn" {
+  name = "${local.network}-turn-ip"
+
+  depends_on = [google_project_service.apis]
+}
+
+resource "google_compute_instance_group" "turn" {
+  name = "${local.network}-turn"
+  zone = "${var.service_region}-a"
+}
+
+resource "google_compute_health_check" "turn" {
+  name = "${local.network}-turn-hc"
+
+  tcp_health_check {
+    port = var.turn_port
+  }
+}
+
+resource "google_compute_region_backend_service" "turn" {
+  name     = "${local.network}-turn"
+  protocol = "UDP"
+
+  backend {
+    group          = google_compute_instance_group.turn.self_link
+    balancing_mode = "CONNECTION"
+  }
+
+  health_checks = [google_compute_health_check.turn.id]
+}
+
+resource "google_compute_forwarding_rule" "turn_dtls" {
+  name            = "${local.network}-turn-dtls"
+  ip_protocol     = "UDP"
+  port_range      = var.turn_port
+  ip_address      = google_compute_address.turn.address
+  backend_service = google_compute_region_backend_service.turn.id
+}
+
+resource "google_compute_forwarding_rule" "turn_relay" {
+  name            = "${local.network}-turn-relay"
+  ip_protocol     = "UDP"
+  port_range      = "49152-65535"
+  ip_address      = google_compute_address.turn.address
+  backend_service = google_compute_region_backend_service.turn.id
 }
