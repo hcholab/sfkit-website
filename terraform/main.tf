@@ -257,18 +257,15 @@ resource "google_cloud_run_v2_service" "website" {
         value = var.oidc_jwks_url
       }
       env {
-        name  = "CLOUDFLARE_TURN_KEY_ID"
-        value = var.cloudflare_turn_key_id
+        name  = "TURN_URL"
+        value = "turns:${google_compute_address.turn.address}:${var.turn_port}?transport=udp"
       }
-      dynamic "env" {
-        for_each = var.cloudflare_turn_key_id == "" ? [] : [1]
-        content {
-          name = "CLOUDFLARE_TURN_KEY_API_TOKEN"
-          value_source {
-            secret_key_ref {
-              secret  = google_secret_manager_secret.cloudflare_turn_key_api_token[0].id
-              version = "latest"
-            }
+      env {
+        name = "TURN_SECRET"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.coturn_auth_secret.id
+            version = "latest"
           }
         }
       }
@@ -345,30 +342,6 @@ resource "google_secret_manager_secret" "sendgrid_api_key" {
 
 resource "google_secret_manager_secret_iam_member" "cloud_run_sendgrid_api_key" {
   secret_id = google_secret_manager_secret.sendgrid_api_key.id
-  role      = "roles/secretmanager.secretAccessor"
-  member    = local.sa_member
-}
-
-# Cloudflare TURN Key
-
-resource "google_secret_manager_secret" "cloudflare_turn_key_api_token" {
-  count     = var.cloudflare_turn_key_id == "" ? 0 : 1
-  secret_id = "cloudflare_turn_key_api_token"
-
-  replication {
-    user_managed {
-      replicas {
-        location = var.service_region
-      }
-    }
-  }
-
-  depends_on = [google_project_service.apis]
-}
-
-resource "google_secret_manager_secret_iam_member" "cloud_run_turn_key_api_token" {
-  count     = var.cloudflare_turn_key_id == "" ? 0 : 1
-  secret_id = google_secret_manager_secret.cloudflare_turn_key_api_token[0].id
   role      = "roles/secretmanager.secretAccessor"
   member    = local.sa_member
 }

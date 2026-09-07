@@ -96,12 +96,6 @@ variable "turn_port" {
   default     = 15830
 }
 
-variable "cloudflare_turn_key_id" {
-  description = "Cloudflare TURN key ID"
-  type        = string
-  default     = ""
-}
-
 variable "vpc_flow_logs_interval" {
   description = "VPC flow logs interval"
   type        = string
