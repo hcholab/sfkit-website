@@ -579,7 +579,7 @@ resource "google_compute_instance" "turn" {
   ]
 }
 
-resource "google_compute_health_check" "turn" {
+resource "google_compute_region_health_check" "turn" {
   name = "${local.network}-turn-hc"
 
   tcp_health_check {
@@ -588,15 +588,20 @@ resource "google_compute_health_check" "turn" {
 }
 
 resource "google_compute_region_backend_service" "turn" {
-  name     = "${local.network}-turn"
-  protocol = "UDP"
+  name                  = "${local.network}-turn"
+  protocol              = "UDP"
+  load_balancing_scheme = "EXTERNAL"
+
+  log_config {
+    enable = true
+  }
 
   backend {
     group          = google_compute_instance_group.turn.self_link
     balancing_mode = "CONNECTION"
   }
 
-  health_checks = [google_compute_health_check.turn.id]
+  health_checks = [google_compute_region_health_check.turn.id]
 }
 
 resource "google_compute_forwarding_rule" "turn_dtls" {
