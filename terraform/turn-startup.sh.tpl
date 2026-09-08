@@ -13,7 +13,7 @@ get_secret() {
 
 CONF="turnserver.conf"
 CONF_DIR="/etc/coturn"
-PRIVATE_IP=$(ip route get 1.1.1.1 | awk '{print $NF}')
+PRIVATE_IP=$(hostname -i)
 SECRET=$(get_secret)
 USER="65534:65534"
 
@@ -22,6 +22,7 @@ listening-ip=${nlb_ip}
 listening-ip=$${PRIVATE_IP}
 relay-ip=${nlb_ip}
 tls-listening-port=${turn_port}
+dtls
 cert=$${CONF_DIR}/cert.pem
 pkey=$${CONF_DIR}/key.pem
 realm=local
@@ -37,6 +38,7 @@ openssl req -new -x509 -key key.pem -out cert.pem \
   -days 7 -subj "/CN=sfkit-turn-server" -nodes
 chown "$${USER}" ./*
 
+sysctl -w net.ipv4.ip_nonlocal_bind=1
 docker rm -f coturn || true
 docker run -d --name coturn --restart always --net host -u "$${USER}" -v "$${PWD}:$${CONF_DIR}:ro" \
   coturn/coturn:alpine -c "$${CONF_DIR}/turnserver.conf"
