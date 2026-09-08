@@ -545,6 +545,11 @@ resource "google_compute_instance_group" "turn" {
   name      = "${local.network}-turn"
   zone      = google_compute_instance.turn.zone
   instances = [google_compute_instance.turn.self_link]
+
+  named_port {
+    name = "turn"
+    port = var.turn_port
+  }
 }
 
 resource "google_compute_instance" "turn" {
@@ -594,6 +599,7 @@ resource "google_compute_region_health_check" "turn" {
 resource "google_compute_region_backend_service" "turn" {
   name                  = "${local.network}-turn"
   protocol              = "UDP"
+  port_name             = "turn"
   load_balancing_scheme = "EXTERNAL"
 
   log_config {
