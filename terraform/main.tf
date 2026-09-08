@@ -479,6 +479,9 @@ resource "google_compute_router_nat" "sfkit" {
 
 locals {
   turn_vm_member = "serviceAccount:${google_service_account.turn_vm.email}"
+
+  # https://docs.cloud.google.com/load-balancing/docs/health-check-concepts#ip-ranges-passthrough
+  hc_ranges = ["35.191.0.0/16", "209.85.204.0/22"]
 }
 
 resource "random_password" "coturn_auth_secret" {
@@ -571,6 +574,7 @@ resource "google_compute_instance" "turn" {
       secret     = google_secret_manager_secret.coturn_auth_secret.secret_id
       nlb_ip     = google_compute_address.turn.address
       turn_port  = var.turn_port
+      hc_ranges  = join(" ", local.hc_ranges)
     })
   }
 
@@ -634,7 +638,7 @@ resource "google_compute_firewall" "turn_dtls_relay" {
 resource "google_compute_firewall" "turn_healthcheck" {
   name          = "${local.network}-turn-healthcheck"
   network       = google_compute_network.sfkit.id
-  source_ranges = ["35.191.0.0/16", "130.211.0.0/22"]
+  source_ranges = local.hc_ranges
 
   allow {
     protocol = "tcp"

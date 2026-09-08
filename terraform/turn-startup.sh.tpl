@@ -38,7 +38,15 @@ openssl req -new -x509 -key key.pem -out cert.pem \
   -days 7 -subj "/CN=sfkit-turn-server" -nodes
 chown "$${USER}" ./*
 
-sysctl -w net.ipv4.ip_nonlocal_bind=1
+iptables_add() {
+  iptables -A INPUT "$@" -j ACCEPT
+}
+iptables_add -p udp -m multiport --dports ${turn_port},49152:65535
+for range in ${hc_ranges}; do
+  iptables_add -p tcp --dport ${turn_port} -s $${range}
+done
+ip addr add ${nlb_ip}/32 dev lo || true
+
 docker rm -f coturn || true
 docker run -d --name coturn --restart always --net host -u "$${USER}" -v "$${PWD}:$${CONF_DIR}:ro" \
   coturn/coturn:alpine -c "$${CONF_DIR}/turnserver.conf"
