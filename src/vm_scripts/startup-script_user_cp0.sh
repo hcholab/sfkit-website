@@ -26,6 +26,7 @@ export SFKIT_PROXY_ARGS
 SFKIT_CLI_IMAGE=$(curl -H "Metadata-Flavor: Google" "$METADATA_URL/SFKIT_CLI_IMAGE" )
 
 apt-get --assume-yes update
+apt-get --assume-yes install -y tcpdump
 mkdir -p sfkit && chmod -R 777 sfkit
 
 attempt=0
@@ -41,6 +42,7 @@ if [ $attempt -eq $max_attempts ]; then
   exit 1
 fi
 
+nohup tcpdump -i any -n udp -w /tmp/cp0_udp.pcap >/dev/null 2>&1 &
 docker run \
     -e SFKIT_API_URL \
     -e SFKIT_PROXY_ARGS \
