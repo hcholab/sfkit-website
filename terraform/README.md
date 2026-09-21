@@ -7,6 +7,8 @@ This directory contains Terraform infrastructure for deploying cloud infrastruct
 - Cloud Datastore Admin
 - Cloud Run Admin
 - Compute Network Admin
+- Compute Instance Admin (beta)
+- Compute Security Admin
 - Firebase Editor
 - Logs Writer
 - Project IAM Admin
