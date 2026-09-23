@@ -548,6 +548,93 @@ SFRELATE_ADVANCED_PARAMETERS = {
     ],
 }
 
+SFSKAT_SHARED_PARAMETERS = {
+    "chromosomes": {
+        "name": "Chromosomes",
+        "description": "Comma-separated list of chromosomes to analyze (e.g., 1,2,21,22).",
+        "value": "21,22",
+        "type": "text",
+    },
+    "ancestries": {
+        "name": "Ancestries",
+        "description": "Comma-separated list of ancestry labels to analyze as separate cohorts (e.g., EUR,AFR,AMR). Must match the ancestry labels already used when preparing your data.",
+        "value": "EUR",
+        "type": "text",
+    },
+    "masks": {
+        "name": "Variant Masks",
+        "description": "Comma-separated list of annotation_column=value filters used to select which variants are included (e.g., LoF=HC).",
+        "value": "LoF=HC",
+        "type": "text",
+    },
+    "max_maf": {
+        "name": "Max Minor Allele Frequency",
+        "description": "Maximum minor allele frequency (MAF) for a variant to be included in the burden/SKAT test.",
+        "value": 0.01,
+    },
+    "phenotype_columns": {
+        "name": "Phenotype Columns",
+        "description": "Comma-separated list of phenotype column names to test (e.g., phenotype1,phenotype2).",
+        "value": "phenotype1",
+        "type": "text",
+    },
+    "num_cov": {
+        "name": "Number of Covariates",
+        "description": "Number of covariate columns in your cov.txt files.",
+        "value": 16,
+    },
+    "index": [
+        "chromosomes",
+        "ancestries",
+        "masks",
+        "max_maf",
+        "phenotype_columns",
+        "num_cov",
+    ],
+}
+
+SFSKAT_ADVANCED_PARAMETERS = {
+    "ckks": {
+        "name": "CKKS Parameters",
+        "description": "CKKS encryption scheme parameters (e.g., PN14QP436S45).",
+        "value": "PN14QP436S45",
+        "type": "text",
+    },
+    "mpc_num_threads": {
+        "name": "MPC Threads",
+        "description": "Number of independent MPC lanes to run in parallel. More lanes increase concurrent memory and communication use.",
+        "value": 2,
+    },
+    "data_bits": {
+        "name": "Data Bits",
+        "description": "Total bit length of the secret-shared fixed-point representation.",
+        "value": 60,
+    },
+    "fractional_bits": {
+        "name": "Fractional Bits",
+        "description": "Number of fractional bits of the secret-shared fixed-point representation.",
+        "value": 30,
+    },
+    "probes": {
+        "name": "Probes",
+        "description": "Number of probe vectors used for the stochastic trace estimator.",
+        "value": 30,
+    },
+    "seed": {
+        "name": "Random Seed",
+        "description": "Random seed used by the secure protocol.",
+        "value": 42,
+    },
+    "index": [
+        "ckks",
+        "mpc_num_threads",
+        "data_bits",
+        "fractional_bits",
+        "probes",
+        "seed",
+    ],
+}
+
 SHARED_PARAMETERS = {
     "MPC-GWAS": MPCGWAS_SHARED_PARAMETERS,
     "PCA": PCA_SHARED_PARAMETERS,
@@ -555,6 +642,7 @@ SHARED_PARAMETERS = {
     "SF-GWAS": SFGWAS_SHARED_PARAMETERS,
     "SF-GWAS-LMM": SFGWAS_LMM_SHARED_PARAMETERS,
     "SF-RELATE": SFRELATE_SHARED_PARAMETERS,
+    "SF-SKAT": SFSKAT_SHARED_PARAMETERS,
 }
 
 ADVANCED_PARAMETERS = {
@@ -564,6 +652,7 @@ ADVANCED_PARAMETERS = {
     "SF-GWAS": SFGWAS_ADVANCED_PARAMETERS,
     "SF-GWAS-LMM": SFGWAS_LMM_ADVANCED_PARAMETERS,
     "SF-RELATE": SFRELATE_ADVANCED_PARAMETERS,
+    "SF-SKAT": SFSKAT_ADVANCED_PARAMETERS,
 }
 
 

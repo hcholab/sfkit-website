@@ -104,6 +104,24 @@ secure_dti_advanced_parameters_properties = {
     "BASE_P": {"type": "string", "pattern": "^[0-9]{1,999}$"},
 }
 
+sfskat_shared_parameters_properties = {
+    "chromosomes": {"type": "string", "pattern": "^[0-9]{1,2}(,[0-9]{1,2}){0,21}$"},
+    "ancestries": {"type": "string", "pattern": "^[A-Za-z]+(,[A-Za-z]+)*$"},
+    "masks": {"type": "string", "pattern": "^[\\w.]+=[\\w.]+(,[\\w.]+=[\\w.]+)*$"},
+    "max_maf": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+    "phenotype_columns": {"type": "string", "pattern": "^[\\w.]+(,[\\w.]+)*$"},
+    "num_cov": {"type": "integer", "minimum": 0, "maximum": 1000},
+}
+
+sfskat_advanced_parameters_properties = {
+    "ckks": {"type": "string", "pattern": "^PN[0-9]+QP[0-9]+S[0-9]+$"},
+    "mpc_num_threads": {"type": "integer", "minimum": 1, "maximum": 128},
+    "data_bits": {"type": "integer", "minimum": 1, "maximum": 1000},
+    "fractional_bits": {"type": "integer", "minimum": 1, "maximum": 1000},
+    "probes": {"type": "integer", "minimum": 1, "maximum": 1000},
+    "seed": {"type": "integer", "minimum": 0, "maximum": 1_000_000_000},
+}
+
 default_user_parameters_properties = {
     # "PUBLIC_KEY":
     "GCP_PROJECT": {
@@ -146,6 +164,8 @@ parameters_schema = {
         **sfrelate_advanced_parameters_properties,
         **secure_dti_shared_parameters_properties,
         **secure_dti_advanced_parameters_properties,
+        **sfskat_shared_parameters_properties,
+        **sfskat_advanced_parameters_properties,
         **default_user_parameters_properties,
     },
     "patternProperties": {
