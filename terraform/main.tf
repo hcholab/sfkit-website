@@ -469,6 +469,11 @@ resource "google_compute_router_nat" "sfkit" {
   nat_ip_allocate_option              = "AUTO_ONLY"
   source_subnetwork_ip_ranges_to_nat  = "LIST_OF_SUBNETWORKS"
   enable_endpoint_independent_mapping = true
+
+  # sfkit-proxy on the CP0 VM sets up its STUN/TURN bindings at startup and then waits for the
+  # other parties. With the 30s default, those bindings may expire before a 3-party study connects.
+  udp_idle_timeout_sec = 600
+
   subnetwork {
     name                    = google_compute_subnetwork.sfkit.id
     source_ip_ranges_to_nat = ["ALL_IP_RANGES"]
