@@ -471,7 +471,7 @@ resource "google_compute_router_nat" "sfkit" {
   enable_endpoint_independent_mapping = true
 
   # sfkit-proxy on the CP0 VM sets up its STUN/TURN bindings at startup and then waits for the
-  # other parties. With the 30s default, those bindings expire before a 3-party study connects.
+  # other parties. With the 30s default, those bindings may expire before a 3-party study connects.
   udp_idle_timeout_sec = 600
 
   subnetwork {
