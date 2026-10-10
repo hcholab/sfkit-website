@@ -31,7 +31,7 @@ steps:
       --cache-from type=registry,ref=$_IMAGE:cache
       --cache-to type=registry,ref=$_IMAGE:cache,mode=max
       --build-arg APP_VERSION=$SHORT_SHA
-      --build-arg BUILD_VERSION=$SHORT_SHA .)
+      --build-arg BUILD_VERSION=$BUILD_ID .)
 
   - id: tf-init
     name: hashicorp/terraform
