@@ -107,6 +107,7 @@ secure_dti_advanced_parameters_properties = {
 sfskat_shared_parameters_properties = {
     "chromosomes": {"type": "string", "pattern": "^[0-9]{1,2}(,[0-9]{1,2}){0,21}$"},
     "ancestries": {"type": "string", "pattern": "^[A-Za-z]+(,[A-Za-z]+)*$"},
+    # shared only in studies created before each participant had their own MASKS
     "masks": {"type": "string", "pattern": "^[\\w.]+=[\\w.]+(,[\\w.]+=[\\w.]+)*$"},
     "max_maf": {"type": "number", "minimum": 0.0, "maximum": 1.0},
     "phenotype_columns": {"type": "string", "pattern": "^[\\w.]+(,[\\w.]+)*$"},
@@ -143,6 +144,7 @@ default_user_parameters_properties = {
     # "IP_ADDRESS":
     # "PORTS":
     # "AUTH_KEY":
+    "MASKS": {"type": "string", "pattern": "^[\\w.]+=[\\w.]+(,[\\w.]+=[\\w.]+)*$"},
     "SEND_RESULTS": {"type": "string", "enum": ["Yes", "No"]},
     "RESULTS_PATH": {"type": "string", "pattern": "^$|^[a-z0-9][a-z0-9._-]{2,62}/.+$"},
     "CREATE_VM": {"type": "string", "enum": ["Yes", "No"]},
@@ -170,9 +172,11 @@ parameters_schema = {
     },
     "patternProperties": {
         "^NUM_INDS[\\w-]{,64}$": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 1_000_000_000,
+            "anyOf": [
+                {"type": "integer", "minimum": 1, "maximum": 1_000_000_000},
+                # SF-SKAT counts individuals per ancestry, e.g. "EUR=1000,AFR=500"
+                {"type": "string", "pattern": "^[A-Za-z]+=[1-9][0-9]{0,8}(,[A-Za-z]+=[1-9][0-9]{0,8})*$"},
+            ]
         }
     },
     "additionalProperties": False,

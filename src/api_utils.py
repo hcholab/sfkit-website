@@ -172,8 +172,9 @@ def filter_personal_params(study_dict: dict, user_id: str) -> dict:
     personal_parameters = study_dict.get("personal_parameters", {})
     filtered_params = {}
 
-    # Fields needed by MPC protocols for cross-participant communication
-    mpc_required_fields = {"PUBLIC_KEY", "IP_ADDRESS", "PORTS", "NUM_INDS"}
+    # Fields needed by MPC protocols for cross-participant communication,
+    # and those every participant sees in the Study Parameters
+    mpc_required_fields = {"PUBLIC_KEY", "IP_ADDRESS", "PORTS", "NUM_INDS", "MASKS"}
 
     for participant_id, params in personal_parameters.items():
         if participant_id == user_id:

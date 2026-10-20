@@ -564,14 +564,8 @@ SFSKAT_SHARED_PARAMETERS = {
     },
     "ancestries": {
         "name": "Ancestries",
-        "description": "Comma-separated list of ancestry labels to analyze as separate cohorts (e.g., EUR,AFR,AMR). Must match the ancestry labels already used when preparing your data.",
+        "description": "Comma-separated list of ancestry labels to analyze as separate cohorts (e.g., EUR,AFR,AMR). Must match the ancestry labels already used when preparing your data. Each participant then enters their number of individuals for each ancestry.",
         "value": "EUR",
-        "type": "text",
-    },
-    "masks": {
-        "name": "Variant Masks",
-        "description": "Comma-separated list of annotation_column=value filters used to select which variants are included (e.g., LoF=HC).",
-        "value": "LoF=HC",
         "type": "text",
     },
     "max_maf": {
@@ -593,7 +587,6 @@ SFSKAT_SHARED_PARAMETERS = {
     "index": [
         "chromosomes",
         "ancestries",
-        "masks",
         "max_maf",
         "phenotype_columns",
         "num_cov",
@@ -780,8 +773,28 @@ DEFAULT_USER_PARAMETERS = {
 }
 
 
+# Per-workflow additions to DEFAULT_USER_PARAMETERS, which each participant sets for their own data
+SFSKAT_USER_PARAMETERS = {
+    "MASKS": {
+        "name": "Variant Masks",
+        "description": "Comma-separated list of annotation_column=value filters used to select which variants of your data are included (e.g., LoF=HC).",
+        "value": "LoF=HC",
+        "type": "text",
+    },
+    "index": ["MASKS"],
+}
+
+USER_PARAMETERS = {
+    "SF-SKAT": SFSKAT_USER_PARAMETERS,
+}
+
+
 def default_user_parameters(study_type: str, demo: bool = False) -> dict:
     parameters: dict = deepcopy(DEFAULT_USER_PARAMETERS)
+    if study_type in USER_PARAMETERS:
+        extra: dict = deepcopy(USER_PARAMETERS[study_type])
+        parameters["index"] += extra.pop("index")
+        parameters |= extra
     if demo:
         parameters["GCP_PROJECT"]["value"] = SERVER_GCP_PROJECT
         if study_type == "MPC-GWAS":
