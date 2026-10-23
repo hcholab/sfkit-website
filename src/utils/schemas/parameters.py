@@ -120,6 +120,7 @@ sfskat_advanced_parameters_properties = {
     "data_bits": {"type": "integer", "minimum": 1, "maximum": 1000},
     "fractional_bits": {"type": "integer", "minimum": 1, "maximum": 1000},
     "probes": {"type": "integer", "minimum": 1, "maximum": 1000},
+    # no longer used, but still sent by studies created before secure-skat dropped it
     "seed": {"type": "integer", "minimum": 0, "maximum": 1_000_000_000},
 }
 
