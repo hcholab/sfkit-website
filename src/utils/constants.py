@@ -620,18 +620,12 @@ SFSKAT_ADVANCED_PARAMETERS = {
         "description": "Number of probe vectors used for the stochastic trace estimator.",
         "value": 30,
     },
-    "seed": {
-        "name": "Random Seed",
-        "description": "Random seed used by the secure protocol.",
-        "value": 42,
-    },
     "index": [
         "ckks",
         "mpc_num_threads",
         "data_bits",
         "fractional_bits",
         "probes",
-        "seed",
     ],
 }
 
