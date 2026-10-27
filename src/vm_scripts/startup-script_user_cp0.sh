@@ -42,7 +42,9 @@ if [ $attempt -eq $max_attempts ]; then
   exit 1
 fi
 
-nohup tcpdump -i any -n udp -w /tmp/cp0_udp.pcap >/dev/null 2>&1 &
+# Disabled: this captures every full UDP packet with no size limit, and all MPC traffic
+# is UDP, so a long study fills the boot disk (an SF-SKAT run filled 128 GB in ~5 hours).
+# nohup tcpdump -i any -n udp -w /tmp/cp0_udp.pcap >/dev/null 2>&1 &
 docker run \
     -e SFKIT_API_URL \
     -e SFKIT_PROXY_ARGS \
