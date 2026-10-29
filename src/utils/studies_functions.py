@@ -265,7 +265,8 @@ def check_conditions(doc_ref_dict, user_id) -> str:
 
     if not demo and len(participants) < 3:
         return "Non-demo studies require at least 2 participants to run the protocol."
-    if not demo and not num_inds:
+    # SF-SKAT takes each cohort's number of individuals from its prepared data
+    if not demo and not num_inds and doc_ref_dict["study_type"] != "SF-SKAT":
         return "You have not set the number of individuals/rows in your data. Please click on the 'Study Parameters' button to set this value and any other parameters you wish to change before running the protocol."
     if not is_create_vm(doc_ref_dict, user_id):
         return ""

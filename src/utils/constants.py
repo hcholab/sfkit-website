@@ -558,13 +558,13 @@ SFRELATE_ADVANCED_PARAMETERS = {
 SFSKAT_SHARED_PARAMETERS = {
     "chromosomes": {
         "name": "Chromosomes",
-        "description": "Comma-separated list of chromosomes to analyze (e.g., 1,2,21,22).",
+        "description": "Comma-separated list of chromosomes to analyze (e.g., 1,2,21,22), or all for chromosomes 1 to 22.",
         "value": "21,22",
         "type": "text",
     },
     "ancestries": {
         "name": "Ancestries",
-        "description": "Comma-separated list of ancestry labels to analyze as separate cohorts (e.g., EUR,AFR,AMR). Must match the ancestry labels already used when preparing your data. Each participant then enters their number of individuals for each ancestry.",
+        "description": "Comma-separated list of ancestry labels to analyze as separate cohorts, e.g. EUR,AMR,AFR,ALL (ALL analyzes all samples together). Must match the ancestry labels already used when preparing your data.",
         "value": "EUR",
         "type": "text",
     },
@@ -575,21 +575,22 @@ SFSKAT_SHARED_PARAMETERS = {
     },
     "phenotype_columns": {
         "name": "Phenotype Columns",
-        "description": "Comma-separated list of phenotype column names to test (e.g., phenotype1,phenotype2).",
-        "value": "phenotype1",
+        "description": "Comma-separated list of the phenotype column names used when preparing your data, in the same order, e.g. LDLC_final_mgdl_6sd_masked,HDLC_mgdl_6sd_masked,TotChol_corrected_mvp_explicit_duration_mgdl_6sd_masked,ln_Trig_6sd_masked,nonHDL_corrected_mvp_explicit_duration_mgdl_6sd_masked.",
+        "value": "LDLC_final_mgdl_6sd_masked,HDLC_mgdl_6sd_masked",
         "type": "text",
     },
-    "num_cov": {
-        "name": "Number of Covariates",
-        "description": "Number of covariate columns in your cov.txt files.",
-        "value": 16,
+    "covariate_columns": {
+        "name": "Covariate Columns",
+        "description": "Comma-separated list of the covariate column names used when preparing your data (e.g., PC1,PC2,PC3). Their number must equal the number of columns in your cov.txt files.",
+        "value": "PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8,PC9,PC10",
+        "type": "text",
     },
     "index": [
         "chromosomes",
         "ancestries",
         "max_maf",
         "phenotype_columns",
-        "num_cov",
+        "covariate_columns",
     ],
 }
 
@@ -769,13 +770,13 @@ DEFAULT_USER_PARAMETERS = {
 
 # Per-workflow additions to DEFAULT_USER_PARAMETERS, which each participant sets for their own data
 SFSKAT_USER_PARAMETERS = {
-    "MASKS": {
-        "name": "Variant Masks",
-        "description": "Comma-separated list of annotation_column=value filters used to select which variants of your data are included (e.g., LoF=HC).",
-        "value": "LoF=HC",
-        "type": "text",
+    "PRINT_LOGS": {
+        "name": "Print Logs",
+        "description": "Whether SF-SKAT prints its progress, timings and a summary of the p-values in your terminal.",
+        "value": "true",
+        "type": "boolean",
     },
-    "index": ["MASKS"],
+    "index": ["PRINT_LOGS"],
 }
 
 USER_PARAMETERS = {

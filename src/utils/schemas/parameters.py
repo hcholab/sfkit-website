@@ -105,13 +105,15 @@ secure_dti_advanced_parameters_properties = {
 }
 
 sfskat_shared_parameters_properties = {
-    "chromosomes": {"type": "string", "pattern": "^[0-9]{1,2}(,[0-9]{1,2}){0,21}$"},
+    "chromosomes": {"type": "string", "pattern": "^([Aa][Ll][Ll]|[0-9]{1,2}(,[0-9]{1,2}){0,21})$"},
     "ancestries": {"type": "string", "pattern": "^[A-Za-z]+(,[A-Za-z]+)*$"},
-    # shared only in studies created before each participant had their own MASKS
-    "masks": {"type": "string", "pattern": "^[\\w.]+=[\\w.]+(,[\\w.]+=[\\w.]+)*$"},
     "max_maf": {"type": "number", "minimum": 0.0, "maximum": 1.0},
     "phenotype_columns": {"type": "string", "pattern": "^[\\w.]+(,[\\w.]+)*$"},
+    "covariate_columns": {"type": "string", "pattern": "^[\\w.]+(,[\\w.]+)*$"},
+    # no longer used, but still sent by studies created before covariate_columns replaced num_cov,
+    # or before each participant had their own MASKS
     "num_cov": {"type": "integer", "minimum": 0, "maximum": 1000},
+    "masks": {"type": "string", "pattern": "^[\\w.]+=[\\w.]+(,[\\w.]+=[\\w.]+)*$"},
 }
 
 sfskat_advanced_parameters_properties = {
@@ -145,7 +147,9 @@ default_user_parameters_properties = {
     # "IP_ADDRESS":
     # "PORTS":
     # "AUTH_KEY":
+    # SF-SKAT only; MASKS is no longer used, but still sent for studies created before it was dropped
     "MASKS": {"type": "string", "pattern": "^[\\w.]+=[\\w.]+(,[\\w.]+=[\\w.]+)*$"},
+    "PRINT_LOGS": {"type": "string", "enum": ["false", "true"]},
     "SEND_RESULTS": {"type": "string", "enum": ["Yes", "No"]},
     "RESULTS_PATH": {"type": "string", "pattern": "^$|^[a-z0-9][a-z0-9._-]{2,62}/.+$"},
     "CREATE_VM": {"type": "string", "enum": ["Yes", "No"]},
@@ -175,7 +179,7 @@ parameters_schema = {
         "^NUM_INDS[\\w-]{,64}$": {
             "anyOf": [
                 {"type": "integer", "minimum": 1, "maximum": 1_000_000_000},
-                # SF-SKAT counts individuals per ancestry, e.g. "EUR=1000,AFR=500"
+                # SF-SKAT no longer asks for it, but earlier versions counted it per ancestry, e.g. "EUR=1000,AFR=500"
                 {"type": "string", "pattern": "^[A-Za-z]+=[1-9][0-9]{0,8}(,[A-Za-z]+=[1-9][0-9]{0,8})*$"},
             ]
         }
