@@ -31,9 +31,11 @@ async def process_status(
     is_role_zero = role == "0"
 
     if is_finished_protocol:
-        if create_vm and delete_vm:
+        # Every CP0 VM gets the same internal IP, which a stopped VM keeps, so CP0 is deleted
+        # for the next study's CP0 to be created
+        if is_role_zero or (create_vm and delete_vm):
             asyncio.create_task(delete_instance(study_id, gcp_project, role))
-        elif create_vm or is_role_zero:
+        elif create_vm:
             asyncio.create_task(stop_instance(study_id, gcp_project, role))
 
     return {}, 200
