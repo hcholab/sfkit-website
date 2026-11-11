@@ -568,10 +568,11 @@ SFSKAT_SHARED_PARAMETERS = {
         "value": "EUR",
         "type": "text",
     },
-    "max_maf": {
-        "name": "Max Minor Allele Frequency",
-        "description": "Maximum minor allele frequency (MAF) for a variant to be included in the burden/SKAT test.",
-        "value": 0.01,
+    "global_max_maf": {
+        "name": "Global Max Minor Allele Frequencies",
+        "description": "Comma-separated list of maximum minor allele frequencies (MAF), e.g. 0.01,0.001. Each ancestry is analyzed once per threshold, leaving out the variants whose MAF over all samples of both cohorts is above it, and the results are stored in secure/<ancestry>/maf<threshold>. Each threshold must be above 0 and at most 0.5; 0.5 keeps every prepared variant.",
+        "value": "0.01,0.001",
+        "type": "text",
     },
     "phenotype_columns": {
         "name": "Phenotype Columns",
@@ -588,7 +589,7 @@ SFSKAT_SHARED_PARAMETERS = {
     "index": [
         "chromosomes",
         "ancestries",
-        "max_maf",
+        "global_max_maf",
         "phenotype_columns",
         "covariate_columns",
     ],

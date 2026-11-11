@@ -104,16 +104,21 @@ secure_dti_advanced_parameters_properties = {
     "BASE_P": {"type": "string", "pattern": "^[0-9]{1,999}$"},
 }
 
+# a minor allele frequency above 0 and at most 0.5, in decimal notation (below 0.1, from 0.1, or 0.5)
+maf_pattern = "0?\\.(0[0-9]*[1-9][0-9]*|[1-4][0-9]*|50*)"
+
 sfskat_shared_parameters_properties = {
     "chromosomes": {"type": "string", "pattern": "^([Aa][Ll][Ll]|[0-9]{1,2}(,[0-9]{1,2}){0,21})$"},
     "ancestries": {"type": "string", "pattern": "^[A-Za-z]+(,[A-Za-z]+)*$"},
-    "max_maf": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+    "global_max_maf": {"type": "string", "pattern": f"^{maf_pattern}(,{maf_pattern})*$"},
     "phenotype_columns": {"type": "string", "pattern": "^[\\w.]+(,[\\w.]+)*$"},
     "covariate_columns": {"type": "string", "pattern": "^[\\w.]+(,[\\w.]+)*$"},
     # no longer used, but still sent by studies created before covariate_columns replaced num_cov,
-    # or before each participant had their own MASKS
+    # before each participant had their own MASKS, or before secure-skat replaced max_maf with
+    # global_max_maf and the prepare-only local_max_maf
     "num_cov": {"type": "integer", "minimum": 0, "maximum": 1000},
     "masks": {"type": "string", "pattern": "^[\\w.]+=[\\w.]+(,[\\w.]+=[\\w.]+)*$"},
+    "max_maf": {"type": "number", "minimum": 0.0, "maximum": 1.0},
 }
 
 sfskat_advanced_parameters_properties = {
